@@ -18,19 +18,33 @@ tokens/            the one source: W3C DTCG 2025.10 JSON
   role.light.json  semantic roles, light theme (aliases into the files above)
   role.dark.json   the same roles, dark theme
   geometry.json    radii, the 4px space scale, the two type ladders, font families
+fonts/             Archivo, Archivo Condensed, Space Mono (and Roboto Medium for Google's button),
+                   woff2, Latin subset, with their OFL licences (account D-17)
+css/
+  components.css   the component layer, on the roles only (D-5)
+  google-button.css  Google's button, with Google's colours (optional)
 src/dtcg.ts        reads and validates DTCG: groups, inherited $type, aliases, 2025.10 value shapes
-src/emit.ts        writes the outputs
+src/emit.ts        writes the token outputs
+src/assets.ts      writes fonts.css, the component CSS and the demo page
+src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6)
 src/color.ts       WCAG contrast and OKLab distance (normal and colour-blind vision)
-scripts/build.ts   pnpm build: tokens/ -> dist/
+demo/index.ts      the demo page, drawn with src/html.ts
+demo/account-home.html  parity fixture: the account's home markup on this package's CSS
+scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/
+scripts/demo.ts    pnpm demo: serves the repo at http://127.0.0.1:4319/dist/demo/
 dist/              committed build output (D-2)
   tokens.css       roles as custom properties (light-dark()), [data-theme], [data-product]
   theme.css        Tailwind v4 @theme over the same roles, and a dark: variant
   tokens.js/.d.ts  typed values for code, charts and MCP Apps
-test/              vitest: contrast, chart palette, DTCG validity, dist snapshot
+  fonts.css        @font-face rules pointing at ../fonts/
+  components.css, google-button.css
+  html.js/.d.ts    the helpers, compiled, so a product needs no TypeScript loader
+  demo/index.html  every component, every product, light and dark
+test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
+                   rules, HTML escaping
 ```
 
-Coming in later ticks of epic 8f4: self-hosted font files, the server-rendered component layer
-with a demo page, and the design audit CLI.
+Coming in a later tick of epic 8f4: the design audit CLI.
 
 ## Commands
 
@@ -38,7 +52,8 @@ with a demo page, and the design audit CLI.
 pnpm install --frozen-lockfile
 pnpm build        # tokens/ -> dist/
 pnpm typecheck
-pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the tokens
+pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the sources
+pnpm demo         # the demo page, for a look or an agent-browser screenshot and axe run
 ```
 
 Node 22.18 or later (the build runs TypeScript directly).
@@ -46,9 +61,12 @@ Node 22.18 or later (the build runs TypeScript directly).
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.1.0"
+"@forspring/ui": "github:forspringai/ui#v0.2.0"
 ```
 
+- Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
+  `google-button.css` on a sign-in page), markup from `@forspring/ui/html`. A product that inlines
+  its CSS serves the package's `fonts/` itself and uses `fontFaces("/its/path/")` (README).
 - Plain CSS: link or inline `@forspring/ui/tokens.css`, set `data-product="<key>"` on `<html>`
   (unset means Forspring), and write `var(--primary)`, `var(--radius-button)` and so on.
 - Tailwind v4 / shadcn: `@import "tailwindcss"; @import "@forspring/ui/theme.css";` then
@@ -70,6 +88,18 @@ Node 22.18 or later (the build runs TypeScript directly).
   colour, and always come with a word or icon. Chart slots encode identity only, in fixed order.
 - **No third-party requests.** Nothing in this package, or in a page built from it, loads fonts,
   scripts or styles from a CDN or any outside origin (account D-17).
+- **Components use roles only.** No hex, rgb() or named colour in `css/components.css` (a test
+  greps for them), type sizes from the two ladders, radii from the tokens. A shade the roles lack
+  is a `color-mix()` of roles (`--_link`, `--_hover`, `--_tint`). Google's button is the one
+  exception and lives in its own file.
+- **The account's class names are the API** (D-5). Renaming one breaks every product's markup;
+  add, don't rename, and record a removal as a decision.
+- **The helpers escape everything.** Strings are text; only `Html` from a helper or `raw()` passes
+  through. Never call `raw()` on anything a person or another system wrote.
+- **After a component change**, run `pnpm demo` and look at it with agent-browser at 1280 and
+  380 px, light and dark, and run `agent-browser a11y` on it: zero violations.
+- **No text under 11px; touch targets at least 24px, primary controls 44px under 560px; focus
+  visible with --ring; motion off under prefers-reduced-motion.**
 - Run the contrast and chart tests after any colour change; don't lower a test threshold to make
   a colour pass.
 - Copy and comments: plain words, no em dashes. Comments explain why.

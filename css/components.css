@@ -1,0 +1,1014 @@
+/* The server-rendered component layer (hub ui-standard §2): the account's layout.ts stylesheet as
+   classes, on the roles in tokens.css. Plain class names, the account's own, so its markup moves over
+   unchanged (D-5). Colours only through roles: test/components.test.ts fails on a hex, rgb() or hsl()
+   literal here. Both layers are named so a product's own unlayered rules win without !important. */
+
+@layer forspring.base, forspring.components;
+
+@layer forspring.base {
+  /* Shades the account had as extra tokens (--blue-deep links, --blue-hover, --tint), derived from
+     the roles so they follow every product's accent and both themes. Declared wherever the accent can
+     change, because a custom property resolves its var()s where it is declared. */
+  :root,
+  [data-product],
+  [data-theme] {
+    --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
+    --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
+    --_tint: color-mix(in srgb, var(--primary) 8%, var(--card));
+    --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--body-foreground);
+    font: 400 var(--text-content-body)/1.55 var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1,
+  h2,
+  h3 {
+    color: var(--foreground);
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h1 {
+    font: 800 clamp(var(--text-content-h1-min), 4.4vw, var(--text-content-h1))/1.05 var(--font-display);
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    font: 800 var(--text-content-h2)/1.15 var(--font-display);
+    letter-spacing: -0.01em;
+    margin-bottom: 14px;
+  }
+
+  h3 {
+    font: 600 var(--text-content-h3)/1.3 var(--font-sans);
+    margin-bottom: var(--space-2);
+  }
+
+  p {
+    margin: 0 0 14px;
+  }
+
+  b,
+  strong {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+
+  section {
+    margin-top: var(--space-10);
+  }
+
+  a {
+    color: var(--_link);
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+
+  a:hover {
+    color: var(--_hover);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  label {
+    color: var(--foreground);
+  }
+
+  /* A bare button is the primary action, as in the account. */
+  button {
+    font: 600 var(--text-content-body)/1.2 var(--font-sans);
+    cursor: pointer;
+    border-radius: var(--radius-button);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+
+  button:hover {
+    background: var(--_hover);
+    border-color: var(--_hover);
+    color: var(--primary-foreground);
+  }
+
+  input,
+  select,
+  textarea {
+    font: 400 var(--text-content-body)/var(--space-5) var(--font-sans);
+    padding: var(--space-3);
+    border: 1px solid var(--input);
+    border-radius: var(--radius-input);
+    background: var(--card);
+    color: var(--foreground);
+    min-width: 0;
+    width: 100%;
+  }
+
+  textarea {
+    min-height: calc(var(--space-16) * 2);
+    resize: vertical;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 0;
+    border-color: var(--ring);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    padding: 0;
+    accent-color: var(--primary);
+    flex: none;
+  }
+
+  input[aria-invalid="true"],
+  select[aria-invalid="true"],
+  textarea[aria-invalid="true"] {
+    border-color: var(--danger);
+  }
+
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  legend {
+    padding: 0;
+    margin-bottom: var(--space-2);
+    font-size: var(--text-chrome-body);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  fieldset label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-content-body);
+    min-height: var(--space-6);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  tr:last-child td {
+    border-bottom: 0;
+  }
+
+  th {
+    font: 400 var(--text-chrome-meta)/1.3 var(--font-mono);
+    color: var(--muted-foreground);
+    background: var(--muted);
+    white-space: nowrap;
+  }
+
+  tr:target td {
+    background: var(--_tint);
+  }
+
+  main {
+    flex: 1;
+    padding-block: var(--space-11) var(--space-16);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
+
+@layer forspring.components {
+  /* --- Page frame ---------------------------------------------------------------------------- */
+
+  .wrap {
+    width: 100%;
+    max-width: 920px;
+    margin: 0 auto;
+    padding-inline: var(--space-5);
+  }
+
+  main.narrow {
+    max-width: 480px;
+    padding-top: max(var(--space-11), 8vh);
+  }
+
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .skip:focus {
+    left: var(--space-2);
+    top: var(--space-2);
+    z-index: 10;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    padding: 10px 14px;
+    border-radius: var(--radius-button);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* --- Shell: the bar with the mark, "Forspring", the product, a switcher and the person -------- */
+
+  .bar {
+    border-bottom: 1px solid var(--border);
+    background: var(--background);
+  }
+
+  .bar-inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+    min-height: var(--space-16);
+    flex-wrap: wrap;
+    padding-block: 10px;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--foreground);
+    text-decoration: none;
+    border-radius: var(--radius-button);
+    min-height: var(--space-11);
+  }
+
+  .brand:hover {
+    color: var(--foreground);
+  }
+
+  .brand .mark {
+    width: var(--space-7);
+    height: var(--space-7);
+    flex: none;
+  }
+
+  .brand .mark .fill {
+    fill: var(--primary);
+  }
+
+  .brand .mark .coil {
+    stroke: var(--primary);
+  }
+
+  .brand .word {
+    font: 900 var(--text-content-h2)/1 var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  .brand .sub {
+    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    color: var(--muted-foreground);
+    border-left: 1px solid var(--input);
+    padding-left: 10px;
+    margin-left: 2px;
+  }
+
+  .spacer {
+    flex: 1;
+  }
+
+  .who {
+    font: 400 var(--text-chrome-meta)/1.2 var(--font-mono);
+    color: var(--muted-foreground);
+    overflow-wrap: anywhere;
+  }
+
+  /* The product switcher: a details element, so it opens with no script. */
+  .switcher {
+    position: relative;
+  }
+
+  .switcher > summary {
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--input);
+    border-radius: var(--radius-button);
+    font: 400 var(--text-chrome-meta)/1.2 var(--font-mono);
+    color: var(--muted-foreground);
+    cursor: pointer;
+  }
+
+  .switcher > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .switcher > summary::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  .switcher > summary:hover,
+  .switcher[open] > summary {
+    color: var(--foreground);
+    border-color: var(--foreground);
+  }
+
+  .switcher > ul {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    min-width: 12rem;
+    margin: 0;
+    padding: var(--space-1);
+    list-style: none;
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+  }
+
+  .switcher a {
+    display: flex;
+    align-items: center;
+    min-height: var(--space-10);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-button);
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .switcher a:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .switcher a[aria-current="page"] {
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  /* --- Footer --------------------------------------------------------------------------------- */
+
+  footer {
+    border-top: 1px solid var(--border);
+    font: 400 var(--text-chrome-meta)/1.5 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+
+  .foot {
+    display: flex;
+    gap: var(--space-2) var(--space-5);
+    flex-wrap: wrap;
+    padding-block: var(--space-5) var(--space-7);
+  }
+
+  footer a {
+    color: var(--muted-foreground);
+  }
+
+  footer a:hover {
+    color: var(--foreground);
+  }
+
+  /* --- Text ----------------------------------------------------------------------------------- */
+
+  h1 + .list,
+  h1 + .table-wrap {
+    margin-top: 22px;
+  }
+
+  .kicker {
+    font: 400 var(--text-content-small)/1.4 var(--font-mono);
+    color: var(--primary);
+    margin: 0 0 10px;
+  }
+
+  .lede {
+    font-size: var(--text-content-lede);
+    color: var(--muted-foreground);
+    margin-bottom: var(--space-7);
+  }
+
+  .muted {
+    color: var(--muted-foreground);
+  }
+
+  .small {
+    font-size: var(--text-content-small);
+  }
+
+  .fine {
+    font-size: var(--text-content-small);
+    color: var(--muted-foreground);
+    margin: 14px 0 0;
+  }
+
+  .fine + .fine {
+    margin-top: 6px;
+  }
+
+  .fine a {
+    color: inherit;
+  }
+
+  .fine a:hover {
+    color: var(--foreground);
+  }
+
+  .back {
+    display: inline-block;
+    font: 400 var(--text-content-small)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+    text-decoration: none;
+    margin-bottom: 22px;
+  }
+
+  .back:hover {
+    color: var(--foreground);
+  }
+
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  th.num,
+  td.num {
+    text-align: right;
+  }
+
+  .stack > * + * {
+    margin-top: var(--space-3);
+  }
+
+  /* --- Card and list -------------------------------------------------------------------------- */
+
+  .card {
+    background: var(--card);
+    color: var(--card-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: var(--space-7);
+  }
+
+  .card h1 {
+    font-size: var(--text-content-h1-min);
+  }
+
+  ul.list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+  }
+
+  ul.list li {
+    display: flex;
+    align-items: center;
+    gap: 10px var(--space-4);
+    padding: 14px 18px;
+    flex-wrap: wrap;
+  }
+
+  ul.list li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .grow {
+    flex: 1;
+    min-width: 12rem;
+  }
+
+  .name {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .meta {
+    font-size: var(--text-content-small);
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .go {
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .go::after {
+    content: "\00a0\203A";
+  }
+
+  /* --- Buttons -------------------------------------------------------------------------------- */
+
+  .button {
+    font: 600 var(--text-content-body)/1.2 var(--font-sans);
+    cursor: pointer;
+    border-radius: var(--radius-button);
+    padding: var(--space-3) var(--space-5);
+    border: 1px solid var(--primary);
+    background: var(--primary);
+    color: var(--primary-foreground);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.15s, border-color 0.15s;
+  }
+
+  .button:hover {
+    background: var(--_hover);
+    border-color: var(--_hover);
+    color: var(--primary-foreground);
+  }
+
+  :is(button, .button).ghost {
+    background: transparent;
+    color: var(--foreground);
+    border-color: var(--input);
+  }
+
+  :is(button, .button).ghost:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+    background: transparent;
+  }
+
+  /* Destructive, and never the loudest thing on the page: danger text on the surface. */
+  :is(button, .button).danger {
+    background: transparent;
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+
+  :is(button, .button).danger:hover {
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+
+  :is(button, .button).small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-3);
+    font-size: var(--text-content-small);
+  }
+
+  :is(button, .button).wide {
+    width: 100%;
+  }
+
+  :is(button, .button):disabled,
+  :is(button, .button)[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  form.inline {
+    display: inline;
+    margin: 0;
+  }
+
+  td form.inline {
+    display: inline-flex;
+    vertical-align: middle;
+  }
+
+  .actions {
+    display: inline-flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  /* --- Forms ---------------------------------------------------------------------------------- */
+
+  .form {
+    display: grid;
+    gap: var(--space-4);
+    max-width: 30rem;
+  }
+
+  .form p {
+    margin: 0;
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+    font-size: var(--text-chrome-body);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .hint {
+    margin: 0;
+    font-size: var(--text-content-small);
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+
+  .field-error {
+    margin: -4px 0 0;
+    font-size: var(--text-content-small);
+    font-weight: 400;
+    color: var(--danger);
+  }
+
+  .field > .field-error {
+    margin: 0;
+  }
+
+  .check {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--space-6);
+  }
+
+  /* --- Table ---------------------------------------------------------------------------------- */
+
+  /* Wider than the page scrolls inside the frame, never clipped. Give the wrap tabindex="0", a role
+     of region and a label, so a keyboard can reach and scroll it; the shadows at the edges show
+     there is more (they are covered while the content sits flush with that edge). */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow-x: auto;
+    background:
+      linear-gradient(to right, var(--card) 30%, transparent) left / var(--space-10) 100% no-repeat local,
+      linear-gradient(to left, var(--card) 30%, transparent) right / var(--space-10) 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, var(--_shadow), transparent) left / var(--space-3) 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, var(--_shadow), transparent) right / var(--space-3) 100% no-repeat scroll,
+      var(--card);
+  }
+
+  .table-wrap:focus-visible {
+    outline-offset: 2px;
+  }
+
+  .table-wrap caption {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  td .email {
+    color: var(--muted-foreground);
+    font-size: var(--text-content-small);
+    overflow-wrap: anywhere;
+  }
+
+  .phone-only {
+    display: none;
+  }
+
+  /* --- Switch: a button[role=switch] whose aria-checked the server sets --------------------- */
+
+  .switch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: transparent;
+    color: var(--muted-foreground);
+    border: 0;
+    padding: 6px 0;
+    font-weight: 400;
+    font-size: var(--text-content-small);
+    min-height: var(--space-6);
+  }
+
+  .switch:hover {
+    background: transparent;
+    color: var(--foreground);
+  }
+
+  .switch .track {
+    width: 38px;
+    height: 22px;
+    border-radius: 999px;
+    background: var(--input);
+    position: relative;
+    flex: none;
+    transition: background-color 0.15s;
+  }
+
+  .switch .track::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: var(--space-4);
+    height: var(--space-4);
+    border-radius: 999px;
+    background: light-dark(var(--card), var(--foreground));
+    box-shadow: 0 1px 2px var(--_shadow);
+    transition: transform 0.15s;
+  }
+
+  .switch[aria-checked="true"] .track {
+    background: var(--primary);
+  }
+
+  .switch[aria-checked="true"] .track::after {
+    transform: translateX(var(--space-4));
+  }
+
+  .switch[aria-checked="true"] .state {
+    color: var(--foreground);
+  }
+
+  .switch:focus-visible {
+    outline-offset: 2px;
+    border-radius: 999px;
+  }
+
+  /* --- Notice: what just happened, in words; the colour only repeats it --------------------- */
+
+  .notice {
+    --_tone: var(--primary);
+    border: 1px solid var(--_tone);
+    background: color-mix(in srgb, var(--_tone) 9%, var(--card));
+    color: var(--foreground);
+    border-radius: var(--radius-card);
+    padding: var(--space-3) var(--space-4);
+    margin: 0 0 var(--space-6);
+  }
+
+  .notice.success {
+    --_tone: var(--success);
+  }
+
+  .notice.warning {
+    --_tone: var(--warning);
+  }
+
+  .notice.error {
+    --_tone: var(--danger);
+  }
+
+  .notice > :last-child {
+    margin-bottom: 0;
+  }
+
+  .notice-title {
+    display: block;
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  /* --- Tag ------------------------------------------------------------------------------------ */
+
+  .tag {
+    font: 400 var(--text-chrome-label)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+    border: 1px solid var(--input);
+    border-radius: 999px;
+    padding: 2px 9px;
+    white-space: nowrap;
+  }
+
+  .tag.primary {
+    color: var(--_link);
+    border-color: var(--primary);
+  }
+
+  .tag.success {
+    color: var(--success);
+    border-color: var(--success);
+  }
+
+  .tag.warning {
+    color: var(--warning);
+    border-color: var(--warning);
+  }
+
+  .tag.danger {
+    color: var(--danger);
+    border-color: var(--danger);
+  }
+
+  /* --- States: empty, loading, failed (Canonify DESIGN-SURFACE §3) ------------------------- */
+
+  /* A state takes the footprint of the list or table it stands in for, so nothing jumps when the
+     data arrives. Empty says there is nothing (or nothing matching a filter); failed says the read
+     failed and never claims there is nothing; loading shows the shape of what is coming. */
+  .data-state {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    padding: var(--space-8) var(--space-7);
+    min-height: calc(var(--space-16) * 2);
+  }
+
+  .data-state-title {
+    margin: 0 0 var(--space-1);
+    font: 600 var(--text-content-lede)/1.4 var(--font-sans);
+    color: var(--foreground);
+  }
+
+  .data-state-text {
+    margin: 0;
+    color: var(--muted-foreground);
+    max-width: 40rem;
+  }
+
+  .data-state-actions {
+    margin-top: var(--space-4);
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .data-state.failed {
+    border-color: var(--danger);
+  }
+
+  .data-state.failed .data-state-title {
+    color: var(--danger);
+  }
+
+  .data-state.loading {
+    display: grid;
+    gap: var(--space-3);
+    align-content: start;
+  }
+
+  .skeleton {
+    display: block;
+    height: var(--space-3);
+    border-radius: var(--radius-button);
+    background: var(--border);
+    animation: forspring-pulse 1.4s ease-in-out infinite;
+  }
+
+  .skeleton:nth-child(3n + 1) {
+    width: 60%;
+  }
+
+  .skeleton:nth-child(3n + 2) {
+    width: 85%;
+  }
+
+  .skeleton:nth-child(3n) {
+    width: 40%;
+  }
+
+  @keyframes forspring-pulse {
+    50% {
+      opacity: 0.45;
+    }
+  }
+
+  /* --- The "or" divider between two ways to sign in ----------------------------------------- */
+
+  .or {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-5) 0;
+    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+
+  .or::before,
+  .or::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  /* --- Phone ---------------------------------------------------------------------------------- */
+
+  /* On a phone the primary controls grow to 44px, the person's address leaves the bar, and tables
+     drop the columns marked to go. */
+  @media (max-width: 560px) {
+    .wrap {
+      padding-inline: var(--space-4);
+    }
+
+    main {
+      padding-block: var(--space-7) var(--space-12);
+    }
+
+    .who {
+      display: none;
+    }
+
+    .brand .word {
+      font-size: var(--text-content-h3);
+    }
+
+    .card {
+      padding: 22px 18px;
+    }
+
+    .grow {
+      min-width: 8rem;
+    }
+
+    th,
+    td {
+      padding: 10px var(--space-3);
+    }
+
+    /* Text links that stand alone get a 24px target where fingers are used. */
+    .go,
+    footer a {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--space-6);
+    }
+
+    .phone-hide {
+      display: none;
+    }
+
+    .phone-only {
+      display: inline;
+    }
+
+    .switch {
+      min-height: var(--space-11);
+    }
+
+    .switch .state {
+      display: none;
+    }
+
+    ul.list li {
+      padding: 14px;
+    }
+
+    .data-state {
+      padding: var(--space-6) 18px;
+    }
+
+    :is(button, .button):not(.switch, .gsi),
+    .switcher > summary {
+      min-height: var(--space-11);
+    }
+  }
+}
