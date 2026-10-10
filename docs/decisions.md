@@ -122,7 +122,7 @@ Colours come only from the roles. The shades the account kept as extra tokens ar
 declared on `:root`, `[data-product]` and `[data-theme]` so they follow the accent: links
 (`--_link`, the accent 30% towards the foreground, `#1D36BA` for Forspring light against the
 account's `#1D33B8`), hover (`--_hover`, 20% towards the ground in light and the ink in dark, so
-the dark buttons' dark text keeps its contrast), the target-row tint and status tints. The mark
+the dark buttons' dark text keeps its contrast) and the status tints. The mark
 takes the product's accent, as the account's mark takes its blue. The Google button keeps Google's
 own colours and lives in `css/google-button.css`, outside the no-literal test.
 
@@ -133,6 +133,18 @@ padding 10, the switch track 38 by 22. The design audit (a later tick of epic 8f
 them as the reference, or they move to the scale in a decision of their own. Where the account
 used a size off the ladders, the nearest step replaced it: field labels and legends 13.5 to 14,
 the wordmark 22 to 21 (18 on a phone, was 20), a card's h1 28-34 to 30.
+
+**The accent fills actions only.** An accent can be red-ish (SiteSpring's terracotta,
+PulseSpring's magenta), so nothing that is not an action or the brand is drawn in the accent's hue
+at strength: the plain (info) notice is the card surface with a `--border` hairline, foreground
+text and a 3px accent rule at its left edge; `.tag.primary` ("Ny") is neutral text with a small
+accent dot; the row a link points at (`tr:target`) is `--muted` with an accent edge rule, where
+the account had an 8% accent tint. The first cut drew the info notice as an accent outline and
+tint, which on SiteSpring was 10 (OKLab x100) from the error notice's border (controller review,
+2026-10-10). `test/notice.test.ts` resolves the notice rules against the tokens for every product
+in both themes and holds the plain notice at least 20 from the error notice's border and 4 from
+its background (today 50.8 / 5.7 light, 43.4 / 4.7 dark). Success, warning and error notices are
+unchanged. Buttons, the checked switch, the mark, the kicker and focus rings keep the accent.
 
 **States** follow Canonify's DESIGN-SURFACE grammar: `.data-state` with `.empty` (by truth, or by
 filter: the copy says which), `.loading` (skeleton lines, announced politely, pulse off under

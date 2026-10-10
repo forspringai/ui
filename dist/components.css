@@ -9,14 +9,14 @@
 
 @layer forspring.base {
   /* Shades the account had as extra tokens (--blue-deep links, --blue-hover, --tint), derived from
-     the roles so they follow every product's accent and both themes. Declared wherever the accent can
+     the roles so they follow every product's accent and both themes. The account's --tint (the
+     accent at 8%) is gone: no non-action state is filled with the accent, which can be red-ish. Declared wherever the accent can
      change, because a custom property resolves its var()s where it is declared. */
   :root,
   [data-product],
   [data-theme] {
     --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
     --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
-    --_tint: color-mix(in srgb, var(--primary) 8%, var(--card));
     --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
   }
 
@@ -209,8 +209,13 @@
     white-space: nowrap;
   }
 
+  /* The row a link pointed at: neutral, with the accent as an edge rule (see .notice). */
   tr:target td {
-    background: var(--_tint);
+    background: var(--muted);
+  }
+
+  tr:target td:first-child {
+    box-shadow: inset 3px 0 0 var(--primary);
   }
 
   main {
@@ -789,10 +794,13 @@
 
   /* --- Notice: what just happened, in words; the colour only repeats it --------------------- */
 
+  /* A plain notice is neutral, with the accent only as a thin rule at its edge: an accent can be
+     red-ish (SiteSpring's terracotta, PulseSpring's magenta), and at notice strength it read as an
+     error (controller review of hen, 2026-10-10). Only status notices take a status colour. */
   .notice {
-    --_tone: var(--primary);
-    border: 1px solid var(--_tone);
-    background: color-mix(in srgb, var(--_tone) 9%, var(--card));
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--primary);
+    background: var(--card);
     color: var(--foreground);
     border-radius: var(--radius-card);
     padding: var(--space-3) var(--space-4);
@@ -800,15 +808,18 @@
   }
 
   .notice.success {
-    --_tone: var(--success);
+    border: 1px solid var(--success);
+    background: color-mix(in srgb, var(--success) 9%, var(--card));
   }
 
   .notice.warning {
-    --_tone: var(--warning);
+    border: 1px solid var(--warning);
+    background: color-mix(in srgb, var(--warning) 9%, var(--card));
   }
 
   .notice.error {
-    --_tone: var(--danger);
+    border: 1px solid var(--danger);
+    background: color-mix(in srgb, var(--danger) 9%, var(--card));
   }
 
   .notice > :last-child {
@@ -832,9 +843,21 @@
     white-space: nowrap;
   }
 
+  /* "Ny", "Beta": neutral text with an accent dot, never an accent outline, for the same reason as
+     the plain notice. */
   .tag.primary {
-    color: var(--_link);
-    border-color: var(--primary);
+    color: var(--foreground);
+  }
+
+  .tag.primary::before {
+    content: "";
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    margin-right: var(--space-1);
+    border-radius: 999px;
+    background: var(--primary);
+    vertical-align: 1px;
   }
 
   .tag.success {
