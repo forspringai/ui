@@ -292,3 +292,9 @@ get it; audit one product's pages per run.
 audited, instead of failing `page-load`. A refusal page is a page a person reads; it must meet the
 standard as much as the home page. Any status not listed still fails, so a page that breaks into a
 500 is not hidden by a flag meant for its 403.
+
+## D-11 — The repo is public (2026-10-10)
+
+Peter made `forspringai/ui` public so every product's build (Workers Builds, Google Cloud) installs
+it by git tag with no token. It holds only tokens, CSS, fonts (SIL OFL) and the audit tool: no
+secrets and no customer data. There is no licence file, so others may read it but not reuse it.

@@ -114,7 +114,6 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
-      - run: git config --global url."https://x-access-token:${{ secrets.FORSPRING_UI_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - run: pnpm install --frozen-lockfile
       - run: pnpm exec playwright install --with-deps chromium
       - name: audit the pages
