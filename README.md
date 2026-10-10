@@ -65,5 +65,67 @@ import { themeFor, chart } from "@forspring/ui";
 themeFor("dataspring", "dark").primary; // "#2ba7ad"
 ```
 
+## Run the audit in CI
+
+`ui-audit` opens each page in Chromium at 1280 and 380 px wide, in light and dark, and checks it
+against the tokens: contrast, type sizes and families, radii, spacing on the 4 px grid, colours,
+touch targets, axe-core, third-party requests and the script budget (rules and severities: D-8).
+It prints JSON (`--format text` for people) and exits 0 when there are no errors, 1 when there
+are, 2 on an invalid value, 5 when Playwright or its browser is missing, 64 on a usage error.
+
+Playwright is a peer dependency: the product installs it and the browser. axe-core comes with
+this package and is injected from `node_modules`, never a CDN.
+
+```
+pnpm add -D playwright
+pnpm exec playwright install chromium        # in CI: --with-deps chromium
+pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/settings \
+  --product sitespring --format text
+```
+
+Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script files), `--product
+<key>` to accept only that product's accent, `--allow-spacing 2,6,9,10,14,18,22` while a page still
+carries the account's off-grid values (the component layer does today, D-5 and D-8). The audit
+never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
+offline apart from the pages themselves.
+
+A Worker, locally with wrangler:
+
+```
+pnpm exec wrangler dev --port 8787 &
+until curl -sf http://127.0.0.1:8787/ >/dev/null; do sleep 1; done
+pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/keys --product dataspring --format text
+kill %1
+```
+
+GitHub Actions (the package is private, so the install needs a token that can read
+`forspringai/ui`):
+
+```yaml
+name: design audit
+on: [pull_request]
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: git config --global url."https://x-access-token:${{ secrets.FORSPRING_UI_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: audit the pages
+        run: |
+          pnpm exec wrangler dev --port 8787 &
+          timeout 60 sh -c 'until curl -sf http://127.0.0.1:8787/ >/dev/null; do sleep 1; done'
+          pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/keys --product dataspring --format text
+```
+
+`wrangler dev` runs the Worker locally (local bindings, no deploy). The audit only reads pages, as a
+signed-out visitor: it sends no cookies, so a signed-in page needs a local route that renders it
+(a fixture or a dev-only preview).
+From code: `import { audit } from "@forspring/ui/audit"` with a Playwright `Browser` of your own.
+
 Products: `forspring`, `sitespring`, `dataspring`, `appspring`, `pulsespring`.
 See [AGENTS.md](AGENTS.md) for the rules and [docs/decisions.md](docs/decisions.md) for why.

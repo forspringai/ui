@@ -28,6 +28,8 @@ src/emit.ts        writes the token outputs
 src/assets.ts      writes fonts.css, the component CSS and the demo page
 src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6)
 src/color.ts       WCAG contrast and OKLab distance (normal and colour-blind vision)
+src/audit/         the design audit, ui-audit (D-8, D-9): cli.ts (bin), args.ts (flags, refusals),
+                   audit.ts (rules, Playwright runs), page.ts (measurements inside Chromium)
 demo/index.ts      the demo page, drawn with src/html.ts
 demo/account-home.html  parity fixture: the account's home markup on this package's CSS
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/
@@ -39,12 +41,11 @@ dist/              committed build output (D-2)
   fonts.css        @font-face rules pointing at ../fonts/
   components.css, google-button.css
   html.js/.d.ts    the helpers, compiled, so a product needs no TypeScript loader
+  audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
   demo/index.html  every component, every product, light and dark
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
-                   rules, HTML escaping
+                   rules, HTML escaping, the audit (demo passes, test/fixtures/broken.html fails)
 ```
-
-Coming in a later tick of epic 8f4: the design audit CLI.
 
 ## Commands
 
@@ -54,9 +55,11 @@ pnpm build        # tokens/ -> dist/
 pnpm typecheck
 pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the sources
 pnpm demo         # the demo page, for a look or an agent-browser screenshot and axe run
+pnpm audit <url>  # the design audit (dist/audit/cli.js); see README "Run the audit in CI"
 ```
 
-Node 22.18 or later (the build runs TypeScript directly).
+Node 22.18 or later (the build runs TypeScript directly). The audit tests need Chromium:
+`pnpm exec playwright install chromium` once per machine.
 
 ## Using it in a product
 
@@ -102,5 +105,14 @@ Node 22.18 or later (the build runs TypeScript directly).
   visible with --ring; motion off under prefers-reduced-motion.**
 - Run the contrast and chart tests after any colour change; don't lower a test threshold to make
   a colour pass.
+- **The audit is the standard made executable.** After a component or token change, `pnpm demo`
+  and `pnpm audit http://127.0.0.1:4319/dist/demo/ --allow-spacing 2,6,9,10,14,18,22` must exit 0
+  (test/audit.test.ts runs the same). Don't loosen a rule, add an allowlist value or demote a
+  severity to make a page pass; fix the page, or record the change as a decision (D-8).
+- **The audit never fetches off-origin.** It answers every off-origin request itself and resolves
+  only the audited hosts; tests must stay offline the same way. Something on the dev host probes
+  new localhost ports, so a test server never counts its requests.
+- **page.ts runs inside Chromium.** `collect()` is sent as source text: it must not call anything
+  outside its own body, and it measures only; verdicts and token values live in audit.ts.
 - Copy and comments: plain words, no em dashes. Comments explain why.
 - Commit messages: `tick <id>: <summary>`, a body explaining why.

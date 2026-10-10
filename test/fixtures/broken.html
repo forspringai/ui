@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broken on purpose</title>
+<!-- Each line below breaks one rule; test/audit.test.ts expects every one of them. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700">
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/components.css">
+<script src="https://cdn.example.com/analytics.js"></script>
+<script src="/test/fixtures/app.js"></script>
+<style>
+.off-scale { font-size: 17px; }
+.tiny { font-size: 10px; }
+.faint { color: #bbbbbb; }
+@media (prefers-color-scheme: dark) { .faint { color: #444444; } }
+.odd-radius { border-radius: 5px; }
+.off-grid { padding: 7px; }
+.row { display: flex; }
+button.mini { width: 16px; height: 16px; min-height: 0; padding: 0; font-size: 11px; line-height: 1; }
+.inter { font-family: Inter, sans-serif; }
+</style>
+</head>
+<body>
+<main id="main" class="wrap">
+<h1>Broken on purpose</h1>
+<p class="off-scale">Seventeen pixels is on neither ladder.</p>
+<p class="tiny">Ten pixels is under the floor.</p>
+<p class="faint">Light grey on paper.</p>
+<div class="card odd-radius">A five pixel radius.</div>
+<div class="off-grid">Seven pixels of padding.</div>
+<div class="row"><button class="mini" type="button" aria-label="Close">x</button><a href="#main">Next</a></div>
+<p class="inter">Inter, from Google Fonts.</p>
+<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="24" height="24">
+</main>
+</body>
+</html>

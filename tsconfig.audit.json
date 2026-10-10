@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "removeComments": false
+  },
+  "include": [],
+  "files": ["src/audit/cli.ts", "src/audit/audit.ts"]
+}

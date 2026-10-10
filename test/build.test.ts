@@ -3,7 +3,7 @@
 // fails here. Run pnpm build after changing tokens.
 
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
@@ -24,6 +24,14 @@ test("dist/html.js and html.d.ts match a fresh compile of src/html.ts", () => {
   const out = mkdtempSync(join(tmpdir(), "forspring-ui-html-"));
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json"), "--outDir", out]);
   for (const f of ["html.js", "html.d.ts"]) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
+});
+
+test("dist/audit/ matches a fresh compile of src/audit/", () => {
+  const out = mkdtempSync(join(tmpdir(), "forspring-ui-audit-"));
+  execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json"), "--outDir", out]);
+  const built = readdirSync(join(out, "audit")).sort();
+  expect(readdirSync(join(root, "dist/audit")).sort()).toEqual(built);
+  for (const f of built) expect(readFileSync(join(out, "audit", f), "utf8")).toBe(readFileSync(join(root, "dist/audit", f), "utf8"));
 });
 
 test("fonts.css points at the package's fonts/ folder, swaps, and covers the files' Latin subset", () => {
