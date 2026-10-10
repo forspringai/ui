@@ -2,18 +2,37 @@
 // token change shows up in review as a diff of the CSS and the types, and a dist/ that was not rebuilt
 // fails here. Run pnpm build after changing tokens.
 
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
+import { assets } from "../src/assets.ts";
 import { build } from "../src/emit.ts";
 import * as tokens from "../dist/tokens.js";
 
 const root = join(import.meta.dirname, "..");
-const files = build(join(root, "tokens"));
+const files = { ...build(join(root, "tokens")), ...assets(root) };
 
 describe.each(Object.keys(files))("dist/%s", (name) => {
   test("matches a fresh build", async () => {
     await expect(files[name]).toMatchFileSnapshot(join(root, "dist", name));
   });
+});
+
+test("dist/html.js and html.d.ts match a fresh compile of src/html.ts", () => {
+  const out = mkdtempSync(join(tmpdir(), "forspring-ui-html-"));
+  execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json"), "--outDir", out]);
+  for (const f of ["html.js", "html.d.ts"]) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
+});
+
+test("fonts.css points at the package's fonts/ folder, swaps, and covers the files' Latin subset", () => {
+  const css = files["fonts.css"]!;
+  for (const f of ["archivo.woff2", "archivo-condensed.woff2", "space-mono.woff2"]) expect(css).toContain(`url("../fonts/${f}")`);
+  expect(css.match(/font-display: swap;/g)).toHaveLength(3);
+  expect(css.match(/unicode-range: U\+0000-00FF/g)).toHaveLength(3);
+  expect(css).not.toContain("Roboto");
+  expect(files["google-button.css"]).toContain('url("../fonts/roboto-medium.woff2")');
 });
 
 test("tokens.css: roles pair light and dark, the theme override sets color-scheme, every product swaps primary", () => {

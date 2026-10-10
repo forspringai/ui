@@ -99,3 +99,100 @@ body, 30 figure) for tables, tags, meta lines and controls. `text.content` is fo
 15 body, 16 lede, 18, 21, 30 to 40 for h1). Its steps are the account's rather than Canonify's
 product-chrome ladder (14 body), because the account is the reference D-90 builds from and must
 move onto this package with no visual change. Nothing is under 11px.
+
+## D-5 — The component layer keeps the account's plain class names, in two cascade layers (2026-10-10)
+
+`css/components.css` is the account's `layout.ts` stylesheet turned into a shared file (hub
+ui-standard §2), so its class names are the account's own, plain and unprefixed: `.bar`, `.brand`,
+`.card`, `ul.list`, `.table-wrap`, `.button`, `.ghost`, `.small`, `.notice`, `.tag`, `.switch`,
+`.or`, `.skip`, `.field`, `.field-error`. Modifiers are extra classes (`.notice.error`,
+`.button.ghost`), not BEM. Why not BEM or a prefix (`.fs-button`): the account must move onto the
+package with no visual change and as little markup change as possible, and server-rendered pages
+are written by hand or by `src/html.ts`, where short names read best. The collision risk a prefix
+guards against is small here: the React apps take `theme.css`, not this file. Additions follow
+the same style; new blocks that would clash with a common word are compound (`.data-state`, after
+the first draft's `.state` collided with the account's switch label `.switch .state`).
+
+Bare elements are styled too, as in the account (a bare `button` is the primary action, inputs,
+tables and headings have the family look). Everything sits in `@layer forspring.base` (elements)
+and `@layer forspring.components` (classes), declared in that order, so a product's own unlayered
+CSS wins without `!important` or specificity games.
+
+Colours come only from the roles. The shades the account kept as extra tokens are mixes of roles,
+declared on `:root`, `[data-product]` and `[data-theme]` so they follow the accent: links
+(`--_link`, the accent 30% towards the foreground, `#1D36BA` for Forspring light against the
+account's `#1D33B8`), hover (`--_hover`, 20% towards the ground in light and the ink in dark, so
+the dark buttons' dark text keeps its contrast) and the status tints. The mark
+takes the product's accent, as the account's mark takes its blue. The Google button keeps Google's
+own colours and lives in `css/google-button.css`, outside the no-literal test.
+
+Type sizes, radii and the main spacing are tokens. A handful of the account's small optical
+values sit off the 4px scale and stay as px for parity (all on a 2px grid): heading and paragraph
+margins 10 and 14, the list row padding 14/18, the tag padding 2/9, the field gap 6, the bar
+padding 10, the switch track 38 by 22. The design audit (a later tick of epic 8f4) should treat
+them as the reference, or they move to the scale in a decision of their own. Where the account
+used a size off the ladders, the nearest step replaced it: field labels and legends 13.5 to 14,
+the wordmark 22 to 21 (18 on a phone, was 20), a card's h1 28-34 to 30.
+
+**The accent fills actions only.** An accent can be red-ish (SiteSpring's terracotta,
+PulseSpring's magenta), so nothing that is not an action or the brand is drawn in the accent's hue
+at strength: the plain (info) notice is the card surface with a `--border` hairline, foreground
+text and a 3px accent rule at its left edge; `.tag.primary` ("Ny") is neutral text with a small
+accent dot; the row a link points at (`tr:target`) is `--muted` with an accent edge rule, where
+the account had an 8% accent tint. The first cut drew the info notice as an accent outline and
+tint, which on SiteSpring was 10 (OKLab x100) from the error notice's border (controller review,
+2026-10-10). `test/notice.test.ts` resolves the notice rules against the tokens for every product
+in both themes and holds the plain notice at least 20 from the error notice's border and 4 from
+its background (today 50.8 / 5.7 light, 43.4 / 4.7 dark). Success, warning and error notices are
+unchanged. Buttons, the checked switch, the mark, the kicker and focus rings keep the accent.
+
+**States** follow Canonify's DESIGN-SURFACE grammar: `.data-state` with `.empty` (by truth, or by
+filter: the copy says which), `.loading` (skeleton lines, announced politely, pulse off under
+reduced motion) and `.failed` (danger border and title; it says the read failed and never that
+there is nothing). Each takes a card's footprint (at least 128px), so the page does not jump when
+data arrives.
+
+**Phone (560px and below):** the account's layout plus the standard's floors: buttons, small
+buttons and the switcher are 44px tall, the switch's hit area 44px, standalone links (`.go`,
+footer) 24px. On desktop the small buttons stay 32px, above the 24px floor. Nothing is under 11px.
+
+**Tables** scroll inside `.table-wrap`, which the helper makes a labelled region with
+`tabindex="0"`, and edge shadows (background-attachment local/scroll) show there is more. axe
+reports the cells' contrast as "needs review" because of that background image; the text is on
+`--card`, the same as the lists, which pass.
+
+## D-6 — Typed HTML helpers that escape by default, compiled to dist/html.js (2026-10-10)
+
+`src/html.ts` gives Workers products the shell and blocks without a framework: `shell`, `button`,
+`field`, `notice`, `tag`, `card`, `list`, `table`, `switchButton`, `state`, `orDivider`,
+`googleButton`, `mark`, plus `html`` `, `raw`, `esc`, `safeHref` and `fontFaces`. They return an
+`Html` value, not a string: inside `html`` ` and every helper, a string is always text and is
+escaped, and only `Html` passes through. A plain string could not tell markup from text at run
+time, which is how double escaping or, worse, no escaping happens. `String(h)` gives the HTML.
+`Html` is recognised by a registered symbol, not `instanceof`, so two copies of the module work
+together. Hrefs pass `safeHref`, which turns any scheme but http(s) and mailto into `#`, after
+dropping the whitespace and controls a browser would drop (`java\nscript:`).
+
+The helpers carry no copy of their own except the skip link's ("Spring til indhold" / "Skip to
+content") and the switch's default state words ("Til" / "Fra"); everything else comes from the
+product's catalog.
+
+The build compiles `src/html.ts` with `tsc` to `dist/html.js` and `dist/html.d.ts` (export
+`@forspring/ui/html`), because Node will not strip types from a file in `node_modules`; the build
+test compiles it again and compares.
+
+## D-7 — Fonts ship as files with a CSS file and a function for other paths (2026-10-10)
+
+`fonts/` holds the account's files (forspring.ai's own cuts) and their OFL licences: Archivo
+(variable 100 to 900), Archivo Condensed (700 to 900), Space Mono 400, and Roboto Medium for
+Google's button. `dist/fonts.css` points at `../fonts/`, which a bundler resolves inside the
+package. A product that inlines its CSS (the account does, to save a request) cannot use relative
+URLs, because they resolve against the page, so it copies `fonts/` into its own static assets and
+calls `fontFaces("/assets/fonts/")`. Roboto's face is only in `google-button.css`, so it loads on
+the sign-in page alone.
+
+`unicode-range` matches what the files contain: Google Fonts' "latin" subset (Basic Latin,
+Latin-1, the common punctuation and a few extras such as Œ and €), and Latin-1 for Roboto. The
+account declared no range; the files have no Latin Extended glyphs, so declaring that range would
+promise what they do not hold. A name with, say, ł or ő falls back to Arial for that letter, as it
+does today. A Latin Extended cut is a new file (with a new name, account D-17) if it is wanted.
