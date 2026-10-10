@@ -298,3 +298,20 @@ standard as much as the home page. Any status not listed still fails, so a page 
 Peter made `forspringai/ui` public so every product's build (Workers Builds, Google Cloud) installs
 it by git tag with no token. It holds only tokens, CSS, fonts (SIL OFL) and the audit tool: no
 secrets and no customer data. There is no licence file, so others may read it but not reuse it.
+
+## D-12 — Redirects: a redirected page fails; an off-origin redirect hop is reported (2026-10-10)
+
+Found in the final review of epic 8f4 (tick 8sn), checked with Playwright 1.64. A route sees only
+the first URL of a redirect chain, so when an audited, same-origin URL answers 302 to another
+origin, Chromium follows it itself and the route in D-9 never answers it. `--host-resolver-rules`
+stops that for names, but an IP literal needs no resolving: a page whose `/r` redirects to
+`http://192.0.2.1/` reaches that address. The audit cannot stop the hop from inside the browser,
+so it records every redirect hop to another origin as a `third-party` error ("reached through a
+same-origin redirect") rather than letting it pass unseen. The `--cookie-env` header was not sent on
+any redirect hop, same-origin or not (measured at the receiving server), so the session does not
+leak this way.
+
+That second fact made a quieter failure possible: a signed-in URL that redirects is audited signed
+out, and the page it lands on (a sign-in page, say) can pass in its place. A page whose own
+navigation redirected is now a `page-load` error naming where it led; give the audit that URL. The
+account's audited URLs answer directly (200, 403) and are unaffected.

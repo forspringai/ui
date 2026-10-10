@@ -114,9 +114,13 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
   environment only, sends it to the audited origins only, and everything the CLI prints passes the
   redactor. A new output path must go through it too, and a test must show the value absent.
 - **The audit never fetches off-origin.** It answers every off-origin request itself and resolves
-  only the audited hosts; tests must stay offline the same way. Something on the dev host probes
+  only the audited hosts; tests must stay offline the same way. Redirect hops bypass the route
+  (D-12): they are recorded, never trusted to be answered. Something on the dev host probes
   new localhost ports, so a test server never counts its requests.
 - **page.ts runs inside Chromium.** `collect()` is sent as source text: it must not call anything
   outside its own body, and it measures only; verdicts and token values live in audit.ts.
 - Copy and comments: plain words, no em dashes. Comments explain why.
+- **A release bumps `package.json`'s version, and the tag is `v<that version>`.** Products serve
+  the files under the version (account D-20) and cache them for a year, so a new tag with the old
+  version would leave browsers on the old CSS.
 - Commit messages: `tick <id>: <summary>`, a body explaining why.
