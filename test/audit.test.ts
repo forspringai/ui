@@ -38,6 +38,15 @@ beforeAll(async () => {
     if (path.startsWith("/private/")) {
       if (req.headers.cookie !== SESSION) return void res.writeHead(401).end();
       path = path.slice("/private".length);
+    } else if (path.startsWith("/redirect/")) {
+      return void res.writeHead(302, { location: path.slice("/redirect".length) }).end();
+    } else if (path === "/hop") {
+      // An IP literal on a port nothing listens on: needs no resolving, so only the audit's own
+      // record of the hop can catch it.
+      return void res.writeHead(302, { location: "http://127.0.0.1:1/hop.png" }).end();
+    } else if (path === "/hop-page") {
+      res.writeHead(200, { "content-type": TYPES[".html"] });
+      return void res.end(`<!doctype html><html lang="en"><head><title>hop</title></head><body><main><img alt="" src="/hop"></main></body></html>`);
     } else if (path.startsWith("/status/403/")) {
       // The document only: a stylesheet answered 403 would not apply.
       if (path.endsWith("/")) status = 403;
@@ -104,6 +113,22 @@ describe("signed-in and refusal pages", () => {
     expect(all(r).map((f) => [f.rule, f.value])).toEqual([["page-load", "HTTP 403"]]);
     const allowed = await audit(options([`${base}/status/403/dist/demo/`], { ...one, allowStatus: [403] }), browser);
     expect(allowed.ok).toBe(true);
+  }, 60_000);
+});
+
+describe("redirects", () => {
+  const one = { widths: [1280], themes: ["light" as const], allowSpacing: PARITY };
+
+  test("a page that redirects is a page-load error, not an audit of wherever it led", async () => {
+    const r = await audit(options([`${base}/redirect/dist/demo/`], { ...one, cookie: SESSION }), browser);
+    expect(all(r).map((f) => [f.rule, f.value])).toEqual([["page-load", `redirected to ${base}/dist/demo/`]]);
+  }, 60_000);
+
+  test("a same-origin request redirected off-origin is a third-party error, though the route never saw it", async () => {
+    const r = await audit(options([`${base}/hop-page`], one), browser);
+    const hop = all(r).filter((f) => f.rule === "third-party");
+    expect(hop.map((f) => [f.severity, f.value])).toEqual([["error", "http://127.0.0.1:1/hop.png"]]);
+    expect(hop[0]!.note).toContain("redirect");
   }, 60_000);
 });
 

@@ -278,7 +278,8 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
   // bypassCSP lets the audit inject axe into a page whose strict CSP (as it should be) forbids it.
   const context: BrowserContext = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, bypassCSP: true, serviceWorkers: "block" });
   const found: Finding[] = [];
-  const offOrigin = new Map<string, string>();
+  // url -> resource type, and whether Chromium fetched it (a redirect hop) or the audit answered it.
+  const offOrigin = new Map<string, { type: string; fetched: boolean }>();
   const scripts: Promise<number>[] = [];
   try {
     // Off-origin requests are recorded and answered empty, never fetched: the run stays offline
@@ -287,7 +288,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       const req = route.request();
       const u = new URL(req.url());
       if (/^https?:$/.test(u.protocol) && u.origin !== origin) {
-        offOrigin.set(req.url(), req.resourceType());
+        offOrigin.set(req.url(), { type: req.resourceType(), fetched: false });
         return route.fulfill({ status: 204, body: "" });
       }
       return route.continue();
@@ -303,6 +304,15 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       await context.routeWebSocket((u) => u.host !== host, (ws) => ws.close());
     }
     const page = await context.newPage();
+    // Playwright routes only the first URL of a redirect chain, so a same-origin URL that redirects
+    // off-origin is followed by Chromium itself, past the route above (checked with Playwright 1.64,
+    // 2026-10-10). Hosts are not resolved (cli.ts), but an IP literal needs no resolving. The hop
+    // cannot be stopped from here; it is recorded and fails like any other third-party request (D-12).
+    page.on("request", (req) => {
+      if (!req.redirectedFrom()) return;
+      const u = new URL(req.url());
+      if (/^https?:$/.test(u.protocol) && u.origin !== origin) offOrigin.set(req.url(), { type: req.resourceType(), fetched: true });
+    });
     page.on("response", (res) => {
       if (res.request().resourceType() !== "script" || new URL(res.url()).origin !== origin) return;
       scripts.push(
@@ -332,6 +342,13 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       found.push({ rule: "page-load", severity: "error", selector: "document", value: `HTTP ${res?.status() ?? "no response"}`, expected: `HTTP 200${opts.allowStatus?.length ? ` or ${opts.allowStatus.join(", ")} (--allow-status)` : ""}`, note: "the audit measures the page the server returns" });
       return { url, width, theme, findings: found };
     }
+    // A redirected page is not the page asked for, and Chromium sends --cookie-env's header on the
+    // first request only, so a signed-in URL that redirects would be audited signed out and could
+    // pass as someone else's page. Give the audit the final URL instead (D-12).
+    if (res.request().redirectedFrom()) {
+      found.push({ rule: "page-load", severity: "error", selector: "document", value: `redirected to ${res.url()}`, expected: "the page itself, not a redirect", note: "audit the URL the redirect leads to; a redirect drops the --cookie-env session" });
+      return { url, width, theme, findings: found };
+    }
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
 
     const obs = await page.evaluate(collect);
@@ -347,7 +364,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     for (const v of violations)
       for (const target of v.targets) found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
 
-    for (const [u, type] of offOrigin) found.push({ rule: "third-party", severity: "error", selector: type, value: u, expected: `same origin as the page (${origin})`, note: "no fonts, analytics or CDN requests (ui-standard §3); the audit answered it empty" });
+    for (const [u, { type, fetched }] of offOrigin) found.push({ rule: "third-party", severity: "error", selector: type, value: u, expected: `same origin as the page (${origin})`, note: `no fonts, analytics or CDN requests (ui-standard §3); ${fetched ? "reached through a same-origin redirect, which the browser followed" : "the audit answered it empty"}` });
 
     const bytes = (await Promise.all(scripts)).reduce((a, b) => a + b, 0);
     if (bytes > opts.budgetJs)

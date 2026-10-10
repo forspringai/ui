@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.3.0
+pnpm add github:forspringai/ui#v0.3.1
 ```
 
 ## Server-rendered pages (plain CSS, no script)
@@ -89,7 +89,9 @@ carries the account's off-grid values (the component layer does today, D-5 and D
 `--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error), and
 `--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
-offline apart from the pages themselves.
+offline apart from the pages themselves. The one way past that is a redirect from the audited
+origin to an IP address, which Chromium follows on its own; it is reported as a third-party error.
+A page that itself redirects is a `page-load` error: give the URL it leads to (D-12).
 
 A Worker, locally with wrangler:
 
@@ -100,8 +102,7 @@ pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/keys --product d
 kill %1
 ```
 
-GitHub Actions (the package is private, so the install needs a token that can read
-`forspringai/ui`):
+GitHub Actions (the repo is public, so the install needs no token, D-11):
 
 ```yaml
 name: design audit
