@@ -1,12 +1,15 @@
 {
   "name": "@forspring/ui",
   "version": "0.2.0",
-  "description": "Forspring suite UI: design tokens, fonts and a server-rendered component layer (hub D-90)",
+  "description": "Forspring suite UI: design tokens, fonts, a server-rendered component layer and the design audit (hub D-90)",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.22.0",
   "engines": {
     "node": ">=22.18"
+  },
+  "bin": {
+    "ui-audit": "./dist/audit/cli.js"
   },
   "files": [
     "dist",
@@ -30,17 +33,34 @@
     "./google-button.css": "./dist/google-button.css",
     "./fonts/*": "./fonts/*",
     "./tokens/*.json": "./tokens/*.json",
+    "./audit": {
+      "types": "./dist/audit/audit.d.ts",
+      "default": "./dist/audit/audit.js"
+    },
     "./package.json": "./package.json"
   },
   "scripts": {
     "build": "node scripts/build.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "demo": "node scripts/demo.ts"
+    "demo": "node scripts/demo.ts",
+    "audit": "node dist/audit/cli.js"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
+    "playwright": "1.64.0",
     "typescript": "7.0.2",
     "vitest": "5.0.3"
+  },
+  "dependencies": {
+    "axe-core": "4.14.0"
+  },
+  "peerDependencies": {
+    "playwright": ">=1.50"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   }
 }

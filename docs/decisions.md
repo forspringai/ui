@@ -196,3 +196,75 @@ Latin-1, the common punctuation and a few extras such as Œ and €), and Latin-
 account declared no range; the files have no Latin Extended glyphs, so declaring that range would
 promise what they do not hold. A name with, say, ł or ő falls back to Arial for that letter, as it
 does today. A Latin Extended cut is a new file (with a new name, account D-17) if it is wanted.
+
+## D-8 — The design audit: what it checks, and what is an error (2026-10-10)
+
+`ui-audit <url...>` is hub ui-standard §3's enforcement, Canonify's `design-audit` made generic:
+instead of probes per selector it measures every rendered element of a page against the tokens.
+Each URL runs at 1280 and 380 px wide, light and dark (`prefers-color-scheme` emulated), each a
+fresh Chromium context through Playwright, which the product installs (a peer dependency; this
+package carries no browser). axe-core is a dependency and is injected from `node_modules`, with
+CSP bypassed for the audit only, so a page's strict CSP need not allow it.
+
+| Rule | Checks | Severity |
+|---|---|---|
+| `contrast` | text colour, alpha composited, against the background found by walking up the ancestors (Chromium's canvas if none paints); 4.5:1, 3:1 for large text (24 px, or 18.66 px at 700); disabled controls exempt | error |
+| `contrast` | text over a background image or gradient, which cannot be measured | review |
+| `text-min` | text under 11 px | error |
+| `font-size` | a size on neither ladder (`text.chrome`, `text.content`); h1 may sit anywhere between `h1-min` and `h1`, because it is fluid | error |
+| `font-family` | the first family of every text element is Archivo, Archivo Condensed or Space Mono (Roboto only inside `.gsi`); every loaded font face is one of those | error |
+| `radius` | every corner 0, a radius token (3, 6, 8, 10), 50% or a pill (999 px and over) | error |
+| `spacing` | margins, paddings, and gaps on flex and grid containers, in px, on the 4 px grid or in `--allow-spacing`; `auto` and percentages skipped | error |
+| `target-size` | `a[href]`, `button`, `input`, `select`, `[role=switch]`, `summary` at least 24 by 24 px, with SC 2.5.8's exceptions (a link inside a sentence; a control whose label is 24 by 24; an undersized target whose 24 px circle touches no other target or circle) | error |
+| `target-primary` | below 560 px wide, `button`, `.button` and submit inputs at least 44 px tall (the switch and Google's 40 px button excepted, D-5) | error |
+| `palette` | text, background and border colours match a token value within 2/255 per channel, any alpha; the tokens include every role for every product in both themes and every `color-mix()` and `light-dark()` components.css derives from them; `--product` narrows the accents to that product's | warning |
+| `axe` | every violation of axe's WCAG 2.0, 2.1 and 2.2 A and AA rules | error |
+| `third-party` | any request to an origin other than the page's (fonts, analytics, CDNs) | error |
+| `js-budget` | script files per page against `--budget-js` (D-9) | error |
+| `page-load` | the page did not load, or answered 400 or above | error |
+
+Exit 0 with no errors, 1 with any; warnings and reviews never fail a build. **Palette is a warning**
+because the rule is a match against measured colours: D-5 lets a product mix a shade from roles
+(`color-mix()`), which is right but is not a token value, and a near miss after a browser's
+rounding should not break a build. A product that wants it strict reads `severity` from the JSON.
+**Everything the standard states as a floor is an error**, including spacing: geometry is fixed
+(D-90), and drifting from the tokens "is a failing check, not a code review comment".
+
+Google's button (`.gsi`) keeps Google's colours, Roboto, its 4 px radius and its 10 px gap, so its
+subtree is exempt from palette, family, size, radius and spacing; contrast still applies.
+
+**The parity spacings fail without the flag.** D-5 kept a handful of the account's optical values
+off the 4 px scale. Measured on the demo, they are 2, 6, 9, 10, 14, 18 and 22 px: D-5's list
+missed the 22 px (the margin under a heading before a list, `.back`, a card's phone padding) and
+the 2 px before `.brand .sub`. The audit has no built-in exception for them, so the package's own
+demo is audited with `--allow-spacing 2,6,9,10,14,18,22`, and so is every product on the
+component layer until these values move to the scale, in a decision of their own. The flag names
+the debt where everyone sees it, instead of hiding it in the audit.
+
+What the audit does not see: hover, focus and open states (it measures the page at rest),
+pseudo-elements, SVG fills, and text positioned over something other than its DOM ancestors.
+Opacity other than `disabled` is not factored into contrast.
+
+The first run found two real WCAG 2.5.3 (label in name) failures in the demo, through axe's
+`label-content-name-mismatch`: the brand link's visible text read "Forspringkonto" (two spans with
+nothing between them) against the label "Forspring-konto, forside", and a "Log ud her" button was
+labelled "Log ud på Safari på iOS". The shell helper now puts a space between the word and the
+product (invisible in the flex row, a word break to assistive technology), and the demo's labels
+start with their visible text.
+
+## D-9 — The script budget counts gzipped script files; off-origin requests are answered, not fetched (2026-10-10)
+
+Hub ui-standard §3 sets the budgets in gzipped bytes: console pages 0 KB by default, about 20 KB
+with htmx, a rich app's first route at most 300 KB. `--budget-js` takes the same unit (`0`,
+`20kb`, `300kb`; 1 KB is 1024 bytes). For each same-origin script file the audit counts its
+transferred body when the server compressed it, and what the body gzips to when it did not, so a
+local `wrangler dev` (which may not compress) measures what production will send. Inline scripts
+are part of the document and are not counted: the standard's second step, a few lines under a
+nonce, stays possible at a budget of 0.
+
+Off-origin requests are recorded as `third-party` findings and answered with an empty 204 by the
+audit itself; they are never fetched. The CLI also resolves only the audited hosts in Chromium
+(`--host-resolver-rules`), so DNS prefetch and preconnect cannot reach a third party either. A run
+is then the same offline as online, a third party's speed or outage cannot change the result, and
+the tests need no network. The cost: a third-party script's weight is not measured, which does not
+matter, because the request alone fails.

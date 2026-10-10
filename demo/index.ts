@@ -100,7 +100,7 @@ ${list([
   { name: "SiteSpring", action: html`<a class="go" href="#">Åbn SiteSpring</a>` },
   { name: "DataSpring", action: html`<a class="go" href="#">Åbn DataSpring</a>` },
   { name: "Chrome på macOS", meta: "Logget ind 9. okt. 2026 14.02, sidst brugt 10. okt. 2026 08.15", action: tag("Denne enhed") },
-  { name: "Safari på iOS", meta: "Logget ind 2. okt. 2026 19.40, sidst brugt 8. okt. 2026 22.03", action: button({ label: "Log ud her", variant: "ghost", small: true, ariaLabel: "Log ud på Safari på iOS" }) },
+  { name: "Safari på iOS", meta: "Logget ind 2. okt. 2026 19.40, sidst brugt 8. okt. 2026 22.03", action: button({ label: "Log ud her", variant: "ghost", small: true, ariaLabel: "Log ud her, Safari på iOS" }) },
 ])}
 </section>
 
@@ -145,7 +145,7 @@ export function demoPage(): string {
       lang: "da",
       title: "Komponenter",
       productLabel: "konto",
-      homeLabel: "Forspring-konto, forside",
+      homeLabel: "Forspring konto, forside",
       head,
       switcher: {
         label: "Skift produkt",
