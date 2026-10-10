@@ -62,5 +62,6 @@
     "playwright": {
       "optional": true
     }
-  }
+  },
+  "license": "MIT"
 }

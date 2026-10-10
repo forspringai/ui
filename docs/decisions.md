@@ -297,7 +297,10 @@ standard as much as the home page. Any status not listed still fails, so a page 
 
 Peter made `forspringai/ui` public so every product's build (Workers Builds, Google Cloud) installs
 it by git tag with no token. It holds only tokens, CSS, fonts (SIL OFL) and the audit tool: no
-secrets and no customer data. There is no licence file, so others may read it but not reuse it.
+secrets and no customer data.
+
+Licence: **MIT**, copyright Writeflow ApS (Peter, 2026-10-10). The fonts keep their own SIL Open
+Font License 1.1, as LICENSE says.
 
 ## D-12 — Redirects: a redirected page fails; an off-origin redirect hop is reported (2026-10-10)
 
