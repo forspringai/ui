@@ -1,0 +1,140 @@
+{
+  "accent": {
+    "$description": "One accent per product (hub D-90), the only value that varies between products. Each is at least 4.5:1 on the page in its theme.",
+    "forspring": {
+      "$description": "Forspring, the account and Spring. Dark replaces the account's #4D68FF, which is 4.23:1 on the dark ground.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.1333,
+            0.2667,
+            1
+          ],
+          "hex": "#2244ff"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.4196,
+            0.5137,
+            1
+          ],
+          "hex": "#6b83ff"
+        }
+      }
+    },
+    "sitespring": {
+      "$description": "SiteSpring, terracotta.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.7216,
+            0.2667,
+            0.1647
+          ],
+          "hex": "#b8442a"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.8784,
+            0.4431,
+            0.3098
+          ],
+          "hex": "#e0714f"
+        }
+      }
+    },
+    "dataspring": {
+      "$description": "DataSpring, deep teal.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.0431,
+            0.4863,
+            0.5098
+          ],
+          "hex": "#0b7c82"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.1686,
+            0.6549,
+            0.6784
+          ],
+          "hex": "#2ba7ad"
+        }
+      }
+    },
+    "appspring": {
+      "$description": "AppSpring (Canonify), plum.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.4824,
+            0.2471,
+            0.549
+          ],
+          "hex": "#7b3f8c"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.7098,
+            0.4863,
+            0.7765
+          ],
+          "hex": "#b57cc6"
+        }
+      }
+    },
+    "pulsespring": {
+      "$description": "PulseSpring, magenta: green would blur with the success status in a monitoring product.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.6392,
+            0.1373,
+            0.4784
+          ],
+          "hex": "#a3237a"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.8784,
+            0.4275,
+            0.7294
+          ],
+          "hex": "#e06dba"
+        }
+      }
+    }
+  }
+}

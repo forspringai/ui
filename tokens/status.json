@@ -1,0 +1,83 @@
+{
+  "status": {
+    "$description": "Status colours, used as text and icons with a word, never colour alone. Chosen at least 4.5:1 as text on paper, card and soft in each theme, and away from every accent (OKLab distance >= 10, test/contrast.test.ts).",
+    "success": {
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.149,
+            0.4392,
+            0.0588
+          ],
+          "hex": "#26700f"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.3843,
+            0.8196,
+            0.3843
+          ],
+          "hex": "#62d162"
+        }
+      }
+    },
+    "warning": {
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.4784,
+            0.3216,
+            0
+          ],
+          "hex": "#7a5200"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.949,
+            0.7569,
+            0.3059
+          ],
+          "hex": "#f2c14e"
+        }
+      }
+    },
+    "danger": {
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.6078,
+            0.0627,
+            0.1255
+          ],
+          "hex": "#9b1020"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1,
+            0.2392,
+            0.3529
+          ],
+          "hex": "#ff3d5a"
+        }
+      }
+    }
+  }
+}

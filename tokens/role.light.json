@@ -1,0 +1,136 @@
+{
+  "role": {
+    "$description": "Semantic roles, light theme. role.light.json and role.dark.json are two sets of the same names; the build pairs them into light-dark().",
+    "background": {
+      "$type": "color",
+      "$value": "{palette.light.paper}"
+    },
+    "foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}"
+    },
+    "body-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.body}",
+      "$description": "Running text, a step softer than foreground (headings, strong). Not a shadcn role."
+    },
+    "card": {
+      "$type": "color",
+      "$value": "{palette.light.card}"
+    },
+    "card-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}"
+    },
+    "popover": {
+      "$type": "color",
+      "$value": "{palette.light.card}",
+      "$description": "shadcn alias."
+    },
+    "popover-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}",
+      "$description": "shadcn alias."
+    },
+    "muted": {
+      "$type": "color",
+      "$value": "{palette.light.soft}"
+    },
+    "muted-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.muted}"
+    },
+    "secondary": {
+      "$type": "color",
+      "$value": "{palette.light.soft}",
+      "$description": "shadcn alias."
+    },
+    "secondary-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}",
+      "$description": "shadcn alias."
+    },
+    "accent": {
+      "$type": "color",
+      "$value": "{palette.light.soft}",
+      "$description": "shadcn's accent is a hover surface, not the product accent. The product accent is primary."
+    },
+    "accent-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}",
+      "$description": "shadcn alias."
+    },
+    "border": {
+      "$type": "color",
+      "$value": "{palette.light.line}"
+    },
+    "input": {
+      "$type": "color",
+      "$value": "{palette.light.line-strong}"
+    },
+    "primary": {
+      "$type": "color",
+      "$value": "{accent.forspring.light}",
+      "$description": "The product accent. [data-product] swaps it; forspring is the default."
+    },
+    "primary-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.white}",
+      "$description": "Text on primary. White on the light accents; the dark ground on the lifted dark accents, where white is under 4.5:1."
+    },
+    "ring": {
+      "$type": "color",
+      "$value": "{accent.forspring.light}",
+      "$description": "Focus ring: follows primary."
+    },
+    "success": {
+      "$type": "color",
+      "$value": "{status.success.light}"
+    },
+    "warning": {
+      "$type": "color",
+      "$value": "{status.warning.light}"
+    },
+    "danger": {
+      "$type": "color",
+      "$value": "{status.danger.light}"
+    },
+    "destructive": {
+      "$type": "color",
+      "$value": "{status.danger.light}",
+      "$description": "shadcn alias of danger."
+    },
+    "chart-1": {
+      "$type": "color",
+      "$value": "{chart.1.light}"
+    },
+    "chart-2": {
+      "$type": "color",
+      "$value": "{chart.2.light}"
+    },
+    "chart-3": {
+      "$type": "color",
+      "$value": "{chart.3.light}"
+    },
+    "chart-4": {
+      "$type": "color",
+      "$value": "{chart.4.light}"
+    },
+    "chart-5": {
+      "$type": "color",
+      "$value": "{chart.5.light}"
+    },
+    "chart-6": {
+      "$type": "color",
+      "$value": "{chart.6.light}"
+    },
+    "chart-7": {
+      "$type": "color",
+      "$value": "{chart.7.light}"
+    },
+    "chart-8": {
+      "$type": "color",
+      "$value": "{chart.8.light}"
+    }
+  }
+}

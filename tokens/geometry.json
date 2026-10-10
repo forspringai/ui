@@ -1,0 +1,251 @@
+{
+  "radius": {
+    "$description": "Fixed across the suite (hub ui-standard §2). Products choose values, never geometry.",
+    "button": {
+      "$type": "dimension",
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      }
+    },
+    "card": {
+      "$type": "dimension",
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      }
+    },
+    "input": {
+      "$type": "dimension",
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      }
+    },
+    "panel": {
+      "$type": "dimension",
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      }
+    }
+  },
+  "space": {
+    "1": {
+      "$type": "dimension",
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      }
+    },
+    "2": {
+      "$type": "dimension",
+      "$value": {
+        "value": 8,
+        "unit": "px"
+      }
+    },
+    "3": {
+      "$type": "dimension",
+      "$value": {
+        "value": 12,
+        "unit": "px"
+      }
+    },
+    "4": {
+      "$type": "dimension",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      }
+    },
+    "5": {
+      "$type": "dimension",
+      "$value": {
+        "value": 20,
+        "unit": "px"
+      }
+    },
+    "6": {
+      "$type": "dimension",
+      "$value": {
+        "value": 24,
+        "unit": "px"
+      }
+    },
+    "7": {
+      "$type": "dimension",
+      "$value": {
+        "value": 28,
+        "unit": "px"
+      }
+    },
+    "8": {
+      "$type": "dimension",
+      "$value": {
+        "value": 32,
+        "unit": "px"
+      }
+    },
+    "10": {
+      "$type": "dimension",
+      "$value": {
+        "value": 40,
+        "unit": "px"
+      }
+    },
+    "11": {
+      "$type": "dimension",
+      "$value": {
+        "value": 44,
+        "unit": "px"
+      }
+    },
+    "12": {
+      "$type": "dimension",
+      "$value": {
+        "value": 48,
+        "unit": "px"
+      }
+    },
+    "16": {
+      "$type": "dimension",
+      "$value": {
+        "value": 64,
+        "unit": "px"
+      }
+    },
+    "$description": "A 4px base on an 8px grid. The key is the multiple of 4px."
+  },
+  "text": {
+    "$description": "Two ladders, as Canonify's DESIGN-SURFACE has: a dense one for UI chrome and a reading one for page content. Hierarchy comes from weight on these steps, not from colour. Nothing under 11px.",
+    "chrome": {
+      "$description": "Dense UI: table heads, tags, meta, controls, data blocks (Canonify's ViewSpec ladder).",
+      "label": {
+        "$type": "dimension",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        },
+        "$description": "Table header cells, tags, group labels. The floor."
+      },
+      "meta": {
+        "$type": "dimension",
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        },
+        "$description": "Meta lines, chips, counts, footer."
+      },
+      "title": {
+        "$type": "dimension",
+        "$value": {
+          "value": 13,
+          "unit": "px"
+        },
+        "$description": "Block titles, small buttons, hints."
+      },
+      "body": {
+        "$type": "dimension",
+        "$value": {
+          "value": 14,
+          "unit": "px"
+        },
+        "$description": "Table cells, list rows."
+      },
+      "figure": {
+        "$type": "dimension",
+        "$value": {
+          "value": 30,
+          "unit": "px"
+        },
+        "$description": "Metric values."
+      }
+    },
+    "content": {
+      "$description": "Pages: prose and headings. The steps are the account's (the reference, D-90), in the shape of Canonify's product-chrome ladder.",
+      "small": {
+        "$type": "dimension",
+        "$value": {
+          "value": 13,
+          "unit": "px"
+        }
+      },
+      "body": {
+        "$type": "dimension",
+        "$value": {
+          "value": 15,
+          "unit": "px"
+        },
+        "$description": "Default running text. Canonify's chrome body is 14px; the account's 15px is kept."
+      },
+      "lede": {
+        "$type": "dimension",
+        "$value": {
+          "value": 16,
+          "unit": "px"
+        }
+      },
+      "h3": {
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      },
+      "h2": {
+        "$type": "dimension",
+        "$value": {
+          "value": 21,
+          "unit": "px"
+        }
+      },
+      "h1-min": {
+        "$type": "dimension",
+        "$value": {
+          "value": 30,
+          "unit": "px"
+        },
+        "$description": "h1 on a phone."
+      },
+      "h1": {
+        "$type": "dimension",
+        "$value": {
+          "value": 40,
+          "unit": "px"
+        }
+      }
+    }
+  },
+  "font": {
+    "$description": "Families with fallbacks. The files are self-hosted by the product (never a font CDN, account D-17).",
+    "sans": {
+      "$type": "fontFamily",
+      "$value": [
+        "Archivo",
+        "Arial",
+        "sans-serif"
+      ],
+      "$description": "Text."
+    },
+    "display": {
+      "$type": "fontFamily",
+      "$value": [
+        "Archivo Condensed",
+        "Arial Narrow",
+        "Arial",
+        "sans-serif"
+      ],
+      "$description": "Headings and the wordmark, 700 to 900."
+    },
+    "mono": {
+      "$type": "fontFamily",
+      "$value": [
+        "Space Mono",
+        "Courier New",
+        "monospace"
+      ],
+      "$description": "Labels, meta, code."
+    }
+  }
+}
