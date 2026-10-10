@@ -5,6 +5,7 @@
 // so nothing below counts the server's requests.
 
 import { execFile } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { createReadStream, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
@@ -12,7 +13,7 @@ import { extname, join, normalize } from "node:path";
 import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
-import { parseArgs, parseSize } from "../src/audit/args.ts";
+import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
 import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings } from "../src/audit/audit.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
@@ -26,9 +27,23 @@ let server: Server;
 let base: string;
 let browser: Browser;
 
+// A session only this run knows: /private/... answers 401 without it, so a pass proves the audit
+// sent it on the page and every subresource.
+const SESSION = `audit_session=${randomUUID()}; theme=x`;
+
 beforeAll(async () => {
   server = createServer((req, res) => {
-    let file = normalize(join(root, decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname)));
+    let path = decodeURIComponent(new URL(req.url ?? "/", "http://x").pathname);
+    let status = 200;
+    if (path.startsWith("/private/")) {
+      if (req.headers.cookie !== SESSION) return void res.writeHead(401).end();
+      path = path.slice("/private".length);
+    } else if (path.startsWith("/status/403/")) {
+      // The document only: a stylesheet answered 403 would not apply.
+      if (path.endsWith("/")) status = 403;
+      path = path.slice("/status/403".length);
+    }
+    let file = normalize(join(root, path));
     if (!file.startsWith(root)) return void res.writeHead(403).end();
     try {
       if (statSync(file).isDirectory()) file = join(file, "index.html");
@@ -36,7 +51,7 @@ beforeAll(async () => {
     } catch {
       return void res.writeHead(404).end();
     }
-    res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
+    res.writeHead(status, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
     createReadStream(file).pipe(res);
   });
   await new Promise<void>((ok) => server.listen(0, "127.0.0.1", ok));
@@ -71,6 +86,24 @@ describe("the demo page", () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(new Set(errors.map((f) => f.rule))).toEqual(new Set(["spacing"]));
     expect(new Set(errors.map((f) => parseFloat(f.value)))).toEqual(new Set(PARITY));
+  }, 60_000);
+});
+
+describe("signed-in and refusal pages", () => {
+  const one = { widths: [1280], themes: ["light" as const], allowSpacing: PARITY };
+
+  test("--cookie-env's session reaches the page and its stylesheets and fonts; without it the page is a 401", async () => {
+    const ok = await audit(options([`${base}/private/dist/demo/`], { ...one, cookie: SESSION }), browser);
+    expect(all(ok).filter((f) => f.severity !== "review")).toEqual([]);
+    const without = await audit(options([`${base}/private/dist/demo/`], one), browser);
+    expect(all(without).map((f) => [f.rule, f.value])).toEqual([["page-load", "HTTP 401"]]);
+  }, 60_000);
+
+  test("a 403 fails unless --allow-status names it", async () => {
+    const r = await audit(options([`${base}/status/403/dist/demo/`], one), browser);
+    expect(all(r).map((f) => [f.rule, f.value])).toEqual([["page-load", "HTTP 403"]]);
+    const allowed = await audit(options([`${base}/status/403/dist/demo/`], { ...one, allowStatus: [403] }), browser);
+    expect(allowed.ok).toBe(true);
   }, 60_000);
 });
 
@@ -190,6 +223,28 @@ describe("arguments", () => {
     expect(p("http://x/", "--budget-js", "big")).toMatchObject({ exit: 2, refusal: { reason: "invalid_budget" } });
     expect(p("http://x/", "--product", "acme")).toMatchObject({ exit: 2, refusal: { reason: "unknown_product" } });
     expect(p("http://x/", "--allow-spacing", "2,,x")).toMatchObject({ exit: 2, refusal: { reason: "invalid_spacing" } });
+    expect(p("http://x/", "--allow-status", "200")).toMatchObject({ exit: 2, refusal: { reason: "invalid_status" } });
+    expect(p("http://x/", "--allow-status", "403,5o3")).toMatchObject({ exit: 2, refusal: { reason: "invalid_status" } });
+    expect(p("http://x/", "--allow-status", "403, 503")).toMatchObject({ opts: { allowStatus: [403, 503] } });
+  });
+
+  test("--cookie-env reads the cookie from the environment and never repeats it", () => {
+    const env = { AUDIT_COOKIE: "sid=s3cr3t-value" };
+    expect(parseArgs(["http://x/", "--cookie-env", "AUDIT_COOKIE"], tokens.products, env)).toMatchObject({ opts: { cookie: "sid=s3cr3t-value" } });
+    const unset = parseArgs(["http://x/", "--cookie-env", "NOT_SET"], tokens.products, env);
+    expect(unset).toMatchObject({ exit: 2, refusal: { reason: "cookie_env_unset" } });
+    // Someone passing the cookie itself instead of a variable name gets a refusal that does not echo it.
+    const pasted = parseArgs(["http://x/", "--cookie-env", "sid=s3cr3t-value"], tokens.products, env);
+    expect(pasted).toMatchObject({ exit: 2, refusal: { reason: "invalid_cookie_env" } });
+    expect(JSON.stringify(pasted)).not.toContain("s3cr3t");
+    expect(parseArgs(["http://x/", "--cookie-env", "AUDIT_COOKIE"], tokens.products, { AUDIT_COOKIE: "a=b\r\nX-Evil: 1" })).toMatchObject({ exit: 2, refusal: { reason: "invalid_cookie" } });
+  });
+
+  test("the redactor takes out the cookie and each value, raw and URL-encoded", () => {
+    const r = redactor("sid=a%2Bb.c; lang=da-dk");
+    expect(r("Cookie: sid=a%2Bb.c; lang=da-dk")).toBe("Cookie: [redacted]");
+    expect(r("token a+b.c and a%2Bb.c, lang da-dk")).toBe("token [redacted] and [redacted], lang [redacted]");
+    expect(redactor(undefined)("sid=x")).toBe("sid=x");
   });
 });
 
@@ -207,6 +262,17 @@ describe("the bin", () => {
     expect((await run("ftp://example.com/")).code).toBe(2);
     expect((await run("--help")).stdout).toContain("ui-audit <url...>");
   });
+
+  test("--cookie-env: audits a signed-in page, and the cookie is in neither output", async () => {
+    const env = { ...process.env, AUDIT_COOKIE: SESSION };
+    const out = await promisify(execFile)(process.execPath, [join(root, "dist/audit/cli.js"), `${base}/private/dist/demo/`, "--cookie-env", "AUDIT_COOKIE", "--allow-spacing", PARITY.join(","), "--format", "text"], { env }).then(
+      (r) => ({ code: 0, stdout: r.stdout, stderr: r.stderr }),
+      (e: { code: number; stdout: string; stderr: string }) => e,
+    );
+    expect(out.stdout).toMatch(/private\/dist\/demo\/ {2}1280px light {2}ok/);
+    expect(out.code).toBe(0);
+    expect(out.stdout + out.stderr).not.toContain(SESSION.split(";")[0]!.split("=")[1]!);
+  }, 180_000);
 
   test("audits the demo from dist/ and exits 0; the fixture exits 1", async () => {
     const ok = await run(`${base}/dist/demo/`, "--allow-spacing", PARITY.join(","));

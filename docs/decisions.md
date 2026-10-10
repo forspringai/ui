@@ -268,3 +268,27 @@ audit itself; they are never fetched. The CLI also resolves only the audited hos
 is then the same offline as online, a third party's speed or outage cannot change the result, and
 the tests need no network. The cost: a third-party script's weight is not measured, which does not
 matter, because the request alone fails.
+
+## D-10 — The audit can be given a session and expected refusal statuses (2026-10-10)
+
+The account's pages (its first consumer, account tick kts) are mostly signed in, and three of the
+ones people see are refusals: not invited (403), product off (403) and sign-in unavailable (503).
+`ui-audit` as first cut audited signed-out 200 pages only, so it gains two flags.
+
+**`--cookie-env <NAME>`** sends the Cookie header value from environment variable `NAME`. A
+session cookie is a credential, so: it is read from the environment only, never from argv (any
+user on a host can read another's command line); a refusal names the variable, never the value,
+and a value given where the name belongs is refused without being echoed; everything the CLI
+prints, including an unexpected error's stack, passes a redactor that takes out the whole value and
+each cookie's value, raw, URL-encoded, decoded and JSON-escaped. It travels as an extra HTTP
+header on the page's browser context rather than as a cookie in the jar: `route.continue()` cannot
+set `Cookie` in Chromium (it is dropped, checked with Playwright 1.64), and a jar cookie would need
+Domain, Secure and `__Host-` handling over local http. It reaches the audited origin only, because
+every other HTTP request is already answered by the audit inside the browser (D-9) and a WebSocket
+to another host is closed unopened. Each URL runs in its own context, so two audited origins each
+get it; audit one product's pages per run.
+
+**`--allow-status <list>`** (400 to 599) lets a page answer with one of those statuses and still be
+audited, instead of failing `page-load`. A refusal page is a page a person reads; it must meet the
+standard as much as the home page. Any status not listed still fails, so a page that breaks into a
+500 is not hidden by a flag meant for its 403.

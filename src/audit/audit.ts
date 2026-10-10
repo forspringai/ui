@@ -292,6 +292,16 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       }
       return route.continue();
     });
+    if (opts.cookie) {
+      // The session goes as a header on the context's requests rather than a cookie in the jar: no
+      // Domain, Secure or __Host- rules to get right over local http, and nothing a page's script
+      // can read. (route.continue cannot set Cookie; Chromium drops it.) It reaches the audited
+      // origin only: every other HTTP request is answered above without leaving the browser, and a
+      // WebSocket to anywhere else is closed unopened (D-10).
+      await context.setExtraHTTPHeaders({ cookie: opts.cookie });
+      const host = new URL(url).host;
+      await context.routeWebSocket((u) => u.host !== host, (ws) => ws.close());
+    }
     const page = await context.newPage();
     page.on("response", (res) => {
       if (res.request().resourceType() !== "script" || new URL(res.url()).origin !== origin) return;
@@ -316,8 +326,10 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       found.push({ rule: "page-load", severity: "error", selector: "document", value: (e as Error).message.split("\n")[0]!, expected: "the page loads", note: "check the URL and that the server is running" });
       return { url, width, theme, findings: found };
     }
-    if (!res || res.status() >= 400) {
-      found.push({ rule: "page-load", severity: "error", selector: "document", value: `HTTP ${res?.status() ?? "no response"}`, expected: "HTTP 200", note: "the audit measures the page the server returns" });
+    // A refusal page (403, 503) is a page people see and is audited like any other, when the run
+    // says that status is expected (--allow-status, D-10).
+    if (!res || (res.status() >= 400 && !(opts.allowStatus ?? []).includes(res.status()))) {
+      found.push({ rule: "page-load", severity: "error", selector: "document", value: `HTTP ${res?.status() ?? "no response"}`, expected: `HTTP 200${opts.allowStatus?.length ? ` or ${opts.allowStatus.join(", ")} (--allow-status)` : ""}`, note: "the audit measures the page the server returns" });
       return { url, width, theme, findings: found };
     }
     await page.evaluate(() => document.fonts.ready.then(() => undefined));

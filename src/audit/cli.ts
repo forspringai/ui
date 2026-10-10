@@ -2,7 +2,7 @@
 // ui-audit: the design audit a product runs in CI (hub ui-standard §3). JSON on stdout, exit codes
 // per suite-standards §6.
 
-import { parseArgs, USAGE } from "./args.js";
+import { parseArgs, redactor, USAGE } from "./args.js";
 import { audit, formatText, loadTokens } from "./audit.js";
 import type { Refusal } from "./types.js";
 
@@ -11,7 +11,9 @@ const refusalText = (r: Refusal) => `ui-audit: ${r.reason}: ${r.note}`;
 async function main(): Promise<number> {
   const tokens = await loadTokens();
   const parsed = parseArgs(process.argv.slice(2), tokens.products, process.env);
-  const print = (json: unknown, text: string) => console.log(parsed.format === "text" ? text : JSON.stringify(json, null, 2));
+  // Everything printed passes the redactor, so a --cookie-env session cannot reach a build log.
+  const redact = redactor("opts" in parsed ? parsed.opts.cookie : undefined);
+  const print = (json: unknown, text: string) => console.log(redact(parsed.format === "text" ? text : JSON.stringify(json, null, 2)));
   if ("refusal" in parsed) {
     print(parsed.refusal, refusalText(parsed.refusal) + (parsed.exit === 64 ? "\n\n" + USAGE : ""));
     return parsed.exit;
@@ -44,6 +46,10 @@ async function main(): Promise<number> {
     const result = await audit(parsed.opts, browser);
     print(result, formatText(result));
     return result.ok ? 0 : 1;
+  } catch (e) {
+    // An unexpected failure is printed through the redactor too, rather than by Node's own handler.
+    console.error(redact(String((e as Error)?.stack ?? e)));
+    return 1;
   } finally {
     await browser.close();
   }

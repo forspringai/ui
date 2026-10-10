@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.2.0
+pnpm add github:forspringai/ui#v0.3.0
 ```
 
 ## Server-rendered pages (plain CSS, no script)
@@ -85,7 +85,9 @@ pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/settings \
 
 Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script files), `--product
 <key>` to accept only that product's accent, `--allow-spacing 2,6,9,10,14,18,22` while a page still
-carries the account's off-grid values (the component layer does today, D-5 and D-8). The audit
+carries the account's off-grid values (the component layer does today, D-5 and D-8),
+`--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error), and
+`--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
 offline apart from the pages themselves.
 
@@ -122,9 +124,21 @@ jobs:
           pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/keys --product dataspring --format text
 ```
 
-`wrangler dev` runs the Worker locally (local bindings, no deploy). The audit only reads pages, as a
-signed-out visitor: it sends no cookies, so a signed-in page needs a local route that renders it
-(a fixture or a dev-only preview).
+`wrangler dev` runs the Worker locally (local bindings, no deploy).
+
+**Signed-in pages.** `--cookie-env <NAME>` sends the Cookie header value held in environment
+variable `NAME` with every request to the audited origins, and nowhere else (every off-origin
+request is answered by the audit and never leaves the browser). The cookie is never taken from the
+command line, which other users on a host can read, and is redacted from everything the audit
+prints. Seed a local session into the local database (the account signs one with its local
+`.dev.vars` secret), then:
+
+```
+AUDIT_COOKIE="__Host-forspring.session_token=$token" \
+  pnpm exec ui-audit http://127.0.0.1:8787/ --cookie-env AUDIT_COOKIE --format text
+```
+
+Use a local, throwaway session only; never a production one.
 From code: `import { audit } from "@forspring/ui/audit"` with a Playwright `Browser` of your own.
 
 Products: `forspring`, `sitespring`, `dataspring`, `appspring`, `pulsespring`.
