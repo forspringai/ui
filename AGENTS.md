@@ -28,8 +28,9 @@ src/emit.ts        writes the token outputs
 src/assets.ts      writes fonts.css, the component CSS and the demo page
 src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6)
 src/color.ts       WCAG contrast and OKLab distance (normal and colour-blind vision)
-src/audit/         the design audit, ui-audit (D-8, D-9): cli.ts (bin), args.ts (flags, refusals),
-                   audit.ts (rules, Playwright runs), page.ts (measurements inside Chromium)
+src/audit/         the design audit, ui-audit (D-8 to D-10): cli.ts (bin), args.ts (flags, refusals,
+                   the cookie redactor), audit.ts (rules, Playwright runs), page.ts
+                   (measurements inside Chromium)
 demo/index.ts      the demo page, drawn with src/html.ts
 demo/account-home.html  parity fixture: the account's home markup on this package's CSS
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/
@@ -64,7 +65,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.2.0"
+"@forspring/ui": "github:forspringai/ui#v0.3.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -109,6 +110,9 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
   and `pnpm audit http://127.0.0.1:4319/dist/demo/ --allow-spacing 2,6,9,10,14,18,22` must exit 0
   (test/audit.test.ts runs the same). Don't loosen a rule, add an allowlist value or demote a
   severity to make a page pass; fix the page, or record the change as a decision (D-8).
+- **A session given to the audit stays a secret** (D-10): `--cookie-env` reads it from the
+  environment only, sends it to the audited origins only, and everything the CLI prints passes the
+  redactor. A new output path must go through it too, and a test must show the value absent.
 - **The audit never fetches off-origin.** It answers every off-origin request itself and resolves
   only the audited hosts; tests must stay offline the same way. Something on the dev host probes
   new localhost ports, so a test server never counts its requests.

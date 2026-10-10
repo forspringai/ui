@@ -34,6 +34,13 @@ export type AuditOptions = {
     product?: string;
     /** Off-grid spacings (px) accepted for products migrating onto the 4px grid (D-8). */
     allowSpacing: number[];
+    /** HTTP statuses (400 and over) a page may answer with and still be audited: a refusal page (D-10). */
+    allowStatus?: number[];
+    /**
+     * A Cookie header value sent with every request to the audited page's own origin, and nowhere
+     * else, so signed-in pages can be audited (D-10). The CLI reads it from an environment variable.
+     */
+    cookie?: string;
     widths: number[];
     themes: Theme[];
 };

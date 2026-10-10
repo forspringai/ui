@@ -12,6 +12,11 @@ Audits each page at 1280 and 380 px wide, in light and dark, against @forspring/
   --budget-js <size>      script files per page, gzipped (default 0; e.g. 20kb for htmx)
   --product <key>         accept only this product's accent (forspring, sitespring, ...)
   --allow-spacing <list>  off-grid spacings in px to accept while migrating (e.g. 2,6,10,14,18)
+  --allow-status <list>   HTTP statuses a page may answer with and still be audited (e.g. 403,503
+                          for refusal pages); any other status of 400 or over is an error
+  --cookie-env <NAME>     send the Cookie header value in environment variable NAME to the audited
+                          origins only, for signed-in pages; never given on the command line, and
+                          redacted from the output
   --format json|text      json is the default (also --json); text for a person reading a build
   --help
 
@@ -43,7 +48,7 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
     else if (a.startsWith("--")) {
       const eq = a.indexOf("=");
       const name = a.slice(2, eq === -1 ? undefined : eq);
-      if (!["budget-js", "product", "allow-spacing", "format"].includes(name)) return usage(`unknown option --${name}`);
+      if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "format"].includes(name)) return usage(`unknown option --${name}`);
       const value = eq === -1 ? argv[++i] : a.slice(eq + 1);
       if (value === undefined || value.startsWith("--")) return usage(`--${name} needs a value`);
       flags.set(name, value);
@@ -84,5 +89,44 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
     if (parts.some((p) => p === "") || allowSpacing.some((n) => !Number.isFinite(n) || n < 0)) return invalid("invalid_spacing", "--allow-spacing takes px values separated by commas, such as 2,6,10,14,18");
   }
 
-  return { opts: { urls, budgetJs, product, allowSpacing, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
+  let allowStatus: number[] = [];
+  if (flags.has("allow-status")) {
+    const parts = flags.get("allow-status")!.split(",").map((s) => s.trim());
+    allowStatus = parts.map(Number);
+    if (parts.some((p) => !/^\d{3}$/.test(p)) || allowStatus.some((n) => n < 400 || n > 599)) return invalid("invalid_status", "--allow-status takes HTTP statuses from 400 to 599 separated by commas, such as 403,503");
+  }
+
+  // The cookie is a session: it comes from the environment, never argv (which other users on the
+  // host can read in the process list), and is never echoed, not even in a refusal.
+  let cookie: string | undefined;
+  if (flags.has("cookie-env")) {
+    const name = flags.get("cookie-env")!;
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) return invalid("invalid_cookie_env", "--cookie-env takes the name of an environment variable (letters, digits, _), not a cookie");
+    cookie = env[name];
+    if (!cookie) return invalid("cookie_env_unset", `environment variable ${name} is unset or empty; set it to a Cookie header value (name=value; name2=value2)`);
+    if (/[\r\n]/.test(cookie)) return invalid("invalid_cookie", `environment variable ${name} holds a line break; a Cookie header value is one line`);
+  }
+
+  return { opts: { urls, budgetJs, product, allowSpacing, allowStatus, cookie, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
+}
+
+/**
+ * Takes the cookie, and each value in it, out of text about to be printed. Nothing the audit
+ * prints should hold it, but a page or an error message may echo a request header back.
+ */
+const decoded = (s: string) => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
+export function redactor(cookie: string | undefined): (text: string) => string {
+  if (!cookie) return (t) => t;
+  const secrets = [cookie, ...cookie.split(";").map((p) => p.slice(p.indexOf("=") + 1).trim())]
+    .filter((s) => s.length >= 4)
+    .flatMap((s) => [s, encodeURIComponent(s), decoded(s), JSON.stringify(s).slice(1, -1)])
+    .sort((a, b) => b.length - a.length);
+  return (t) => secrets.reduce((acc, s) => acc.split(s).join("[redacted]"), t);
 }
