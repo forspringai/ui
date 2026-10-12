@@ -18,6 +18,8 @@ export declare const chart: Deep<{"light":["#6a87f0","#eb681d","#0da26b","#aa821
 export declare const radius: Deep<{"button":3,"card":6,"input":8,"panel":10}>;
 /** Spacing in px; the key is the multiple of 4px. */
 export declare const space: Deep<{"1":4,"2":8,"3":12,"4":16,"5":20,"6":24,"7":28,"8":32,"10":40,"11":44,"12":48,"16":64}>;
+/** Control heights in px (D-14): height (default), height-small, touch (the phone floor). */
+export declare const control: Deep<{"height":44,"height-small":32,"touch":44}>;
 /** Font sizes in px: chrome (dense UI) and content (pages). */
 export declare const text: Deep<{"chrome":{"label":11,"meta":12,"title":13,"body":14,"figure":30},"content":{"small":13,"body":15,"lede":16,"h3":18,"h2":21,"h1-min":30,"h1":40}}>;
 /** CSS font-family stacks. */

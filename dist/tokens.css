@@ -52,6 +52,9 @@
   --space-11: 44px;
   --space-12: 48px;
   --space-16: 64px;
+  --control-height: 44px;
+  --control-height-small: 32px;
+  --control-touch: 44px;
   --text-chrome-label: 11px;
   --text-chrome-meta: 12px;
   --text-chrome-title: 13px;

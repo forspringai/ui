@@ -55,6 +55,9 @@
   --radius-input: 8px;
   --radius-panel: 10px;
   --spacing: 4px;
+  --spacing-control: 44px;
+  --spacing-control-small: 32px;
+  --spacing-control-touch: 44px;
   --text-chrome-label: 11px;
   --text-chrome-meta: 12px;
   --text-chrome-title: 13px;

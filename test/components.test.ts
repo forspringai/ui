@@ -43,3 +43,41 @@ test("every class in the demo page has a rule", () => {
   const missing = [...used].filter((c) => !demoOnly.includes(c) && !new RegExp(`\\.${c}\\b`).test(css + gsi));
   expect(missing).toEqual([]);
 });
+
+// D-14: every margin, padding, gap and inset is a space token, 0 or auto. The audit checks the
+// rendered page; this checks the rules a page may not happen to show.
+test("spacing comes from the 4px scale: no px literal in a margin, padding, gap or inset", () => {
+  const props = /^\s*(margin|padding|gap|row-gap|column-gap|inset|top|right|bottom|left)(-[a-z-]+)?:\s*([^;]+);/gm;
+  const off: string[] = [];
+  for (const m of code.matchAll(props)) {
+    // A negative space step (-4px) is on the grid; the skip link's -9999px parks it off screen.
+    for (const px of m[3]!.matchAll(/(-?\d+(?:\.\d+)?)px/g)) {
+      const v = Number(px[1]);
+      if (v !== -9999 && v % 4 !== 0) off.push(`${m[1]}${m[2] ?? ""}: ${m[3]}`);
+    }
+  }
+  expect(off).toEqual([]);
+});
+
+test("inputs, selects and buttons take their height from the control tokens", () => {
+  const rule = (sel: string) => {
+    const i = code.indexOf(`${sel} {`);
+    expect(i, sel).toBeGreaterThan(-1);
+    return code.slice(i, code.indexOf("}", i));
+  };
+  expect(rule("  button")).toContain("min-height: var(--control-height);");
+  expect(rule("  .button")).toContain("min-height: var(--control-height);");
+  expect(rule("  input,\n  select,\n  textarea")).toContain("min-height: var(--control-height);");
+  expect(rule("  :is(button, .button).small")).toContain("min-height: var(--control-height-small);");
+  expect(rule("  :is(input, select).small")).toContain("min-height: var(--control-height-small);");
+  expect(code).toContain("min-height: var(--control-touch);");
+});
+
+test("the select draws its chevron without an image request", () => {
+  const i = code.indexOf("  select {");
+  const select = code.slice(i, code.indexOf("}", i));
+  expect(select).toContain("appearance: none;");
+  expect(select).toContain("padding-inline-end: var(--space-8);");
+  expect(select).toMatch(/linear-gradient\([^;]*var\(--muted-foreground\)/);
+  expect(code).not.toMatch(/url\(/);
+});

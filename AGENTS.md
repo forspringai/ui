@@ -17,7 +17,7 @@ tokens/            the one source: W3C DTCG 2025.10 JSON
   chart.json       chart-1..8, categorical
   role.light.json  semantic roles, light theme (aliases into the files above)
   role.dark.json   the same roles, dark theme
-  geometry.json    radii, the 4px space scale, the two type ladders, font families
+  geometry.json    radii, the 4px space scale, control heights (D-14), the two type ladders, font families
 fonts/             Archivo, Archivo Condensed, Space Mono (and Roboto Medium for Google's button),
                    woff2, Latin subset, with their OFL licences (account D-17)
 css/
@@ -65,7 +65,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.4.0"
+"@forspring/ui": "github:forspringai/ui#v0.5.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -86,6 +86,15 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
   (`palette.*`) never leaves the package; no output names `--paper` or `--blue`.
 - **Geometry is fixed.** Radii 3/6/8/10, spacing on 4px, the two type ladders, nothing under 11px.
   Products choose values, never geometry (Canonify's seam). A new size is a token here first.
+- **Every margin, padding, gap and inset in components.css is a `--space-*` token, 0 or auto**
+  (D-14; test/components.test.ts greps for px). The kept exceptions are not spacing: 1px borders
+  and hairlines, 2 to 3px outlines and edge rules, the marks' own sizes (6, 10, 11px, the
+  checkbox's 18px) and the optical nudges done with `transform`. Don't add a px spacing; if a
+  design needs a step the scale lacks, it is a token and a decision first.
+- **Controls share one box per size** (D-14): inputs, selects and buttons take `min-height` from
+  `--control-height` / `--control-height-small` / `--control-touch`, and their line-height is what
+  the height leaves after padding and borders (`--_control-line`), so a row shares a baseline. A
+  new control takes the same tokens; never size one with its own padding.
 - **Only the accent varies per product.** A new accent needs a hub decision and must pass the
   contrast test in both themes (at least 4.5:1 on the page, and its label on it).
 - **Status colours mean status.** success, warning and danger are never a chart series or a brand
@@ -107,8 +116,8 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 - Run the contrast and chart tests after any colour change; don't lower a test threshold to make
   a colour pass.
 - **The audit is the standard made executable.** After a component or token change, `pnpm demo`
-  and `pnpm audit http://127.0.0.1:4319/dist/demo/ --allow-spacing 2,6,9,10,14,18,22` must exit 0
-  (test/audit.test.ts runs the same). Don't loosen a rule, add an allowlist value or demote a
+  and `pnpm audit http://127.0.0.1:4319/dist/demo/` must exit 0 with no `--allow-spacing`, for
+  every product (`?product=<key>` with `--product <key>`; test/audit.test.ts runs all five). Don't loosen a rule, add an allowlist value or demote a
   severity to make a page pass; fix the page, or record the change as a decision (D-8).
 - **A session given to the audit stays a secret** (D-10): `--cookie-env` reads it from the
   environment only, sends it to the audited origins only, and everything the CLI prints passes the

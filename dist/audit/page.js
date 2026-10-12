@@ -58,7 +58,10 @@ export function collect() {
         const layers = [];
         for (let n = el; n; n = n.parentElement) {
             const s = getComputedStyle(n);
-            if (s.backgroundImage !== "none")
+            // A select's own background image is its chevron, drawn in the padding beside the text and
+            // never under it (components.css, D-14), so its text is measured on its background colour.
+            const chevron = n === el && n instanceof HTMLSelectElement && /^(linear-gradient\([^]*\)(, )?)+$/.test(s.backgroundImage);
+            if (s.backgroundImage !== "none" && !chevron)
                 return { bg: null, imageOn: selector(n) };
             const c = parse(s.backgroundColor);
             if (c[3] > 0) {

@@ -151,6 +151,12 @@ export const space = Object.freeze({
   "16": 64
 });
 
+export const control = Object.freeze({
+  "height": 44,
+  "height-small": 32,
+  "touch": 44
+});
+
 export const text = Object.freeze({
   "chrome": {
     "label": 11,

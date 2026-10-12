@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.4.0
+pnpm add github:forspringai/ui#v0.5.0
 ```
 
 ## Server-rendered pages (plain CSS, no script)
@@ -49,6 +49,31 @@ return new Response(String(page), { headers: { "content-type": "text/html; chars
 
 `pnpm demo` serves the demo page with every component (http://127.0.0.1:4319/dist/demo/), with
 switches for the product and the theme.
+
+### Controls: one height, one line (0.5.0, D-14)
+
+Inputs, selects and buttons share a height per size, so a row of them lines up on one baseline:
+`--control-height` (44px) by default, `--control-height-small` (32px) with `class="small"` and for
+every control in the bar, and `--control-touch` (44px) for all of them under 560px. Tailwind gets
+the same as `h-control`, `h-control-small` and `min-h-control-touch`; code gets `control`.
+
+The select draws its own chevron (`appearance: none` and two CSS gradients, no image, so a strict
+`img-src 'self'` CSP is enough), in `--muted-foreground`, with room reserved for it at the end.
+Keyboard, the phone's picker and the option list stay native.
+
+```ts
+shell({ ..., controls: html`<select aria-label="Organisation">…</select>`, body });   // a select in the bar
+html`<form class="toolbar"><input type="search" aria-label="Søg">${button({ label: "Søg" })}</form>`;
+```
+
+**Upgrading from 0.4.x.** Every spacing in the component layer is now on the 4px scale, so drop
+`--allow-spacing` from your `ui-audit` command; a value it still finds is your own CSS. Remove
+overrides that resized controls to line them up (a `padding-block` on a select in the bar, say):
+the package does it now, and a smaller padding than the package's moves the text off centre.
+`.menu` rules now match `nav.menu` only, so a product's own `details.menu` is no longer a grid.
+Expect small shifts: inputs are 44px (were 46), the switch's track 40 by 24 (was 38 by 22), list
+rows 16/20 padding (were 14/18), paragraphs 16px apart (were 14) and h1 and h2 12px above what
+follows (were 10 and 14).
 
 ### A console's menu, crumbs and signals (D-13)
 
@@ -106,8 +131,8 @@ pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/settings \
 ```
 
 Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script files), `--product
-<key>` to accept only that product's accent, `--allow-spacing 2,6,9,10,14,18,22` while a page still
-carries the account's off-grid values (the component layer does today, D-5 and D-8),
+<key>` to accept only that product's accent, `--allow-spacing 6,10` while a page's own CSS still
+carries off-grid values (the component layer has none since 0.5.0, D-14; don't pass it otherwise),
 `--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error), and
 `--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is

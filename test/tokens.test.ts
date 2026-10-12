@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { type Group, TokenSet, flatten, isGroup } from "../src/dtcg.ts";
-import { model } from "../src/emit.ts";
+import { build, model } from "../src/emit.ts";
 
 const dir = join(import.meta.dirname, "..", "tokens");
 const files = readdirSync(dir).filter((f) => f.endsWith(".json")).sort();
@@ -52,6 +52,25 @@ test("geometry is the fixed ladder", () => {
   expect(m.radius).toEqual({ button: 3, card: 6, input: 8, panel: 10 });
   for (const v of Object.values(m.space)) expect(v % 4).toBe(0);
   for (const ladder of Object.values(m.text)) for (const v of Object.values(ladder)) expect(v).toBeGreaterThanOrEqual(11);
+});
+
+test("control heights are steps of the space scale, and every output carries them (D-14)", () => {
+  const m = model(dir);
+  expect(m.control).toEqual({ height: 44, "height-small": 32, touch: 44 });
+  for (const v of Object.values(m.control)) expect(Object.values(m.space)).toContain(v);
+  // The default box is a 1px border, 12px padding and an 18px line; the small one 4px and 22px.
+  expect(m.control.height).toBe(2 + 2 * m.space["3"]! + 18);
+  expect(m.control["height-small"]).toBe(2 + 2 * m.space["1"]! + 22);
+  // Primary controls on a phone (hub ui-standard §3).
+  expect(m.control.touch).toBeGreaterThanOrEqual(44);
+  const out = build(dir);
+  expect(out["tokens.css"]).toContain("--control-height: 44px;");
+  expect(out["tokens.css"]).toContain("--control-height-small: 32px;");
+  expect(out["tokens.css"]).toContain("--control-touch: 44px;");
+  expect(out["theme.css"]).toContain("--spacing-control: 44px;");
+  expect(out["theme.css"]).toContain("--spacing-control-small: 32px;");
+  expect(out["tokens.js"]).toMatch(/export const control = Object\.freeze\(\{\s*"height": 44,/);
+  expect(out["tokens.d.ts"]).toContain('export declare const control: Deep<{"height":44,"height-small":32,"touch":44}>;');
 });
 
 describe("the reader refuses what is not DTCG", () => {
