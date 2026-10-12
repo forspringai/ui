@@ -2,7 +2,7 @@
 // dist/demo/index.html and pnpm demo serves it. The product and theme switches at the top are the
 // only script, and only here: products set data-product and data-theme on the server.
 
-import { button, card, field, googleButton, html, list, notice, orDivider, raw, shell, state, switchButton, table, tag } from "../src/html.ts";
+import { button, card, crumbs, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag } from "../src/html.ts";
 
 const PRODUCTS = [
   ["forspring", "Forspring"],
@@ -78,7 +78,7 @@ const wideTable = table({
 });
 
 const body = html`${controls}
-<p class="kicker">Komponenter</p>
+${crumbs("Placering", [{ label: "Forside", href: "#" }, { label: "Komponenter", href: "#" }])}
 <h1>Din Forspring-konto</h1>
 <p class="lede">Logget ind som <b>mette@eksempel.dk</b>. Alt på siden er tegnet af @forspring/ui uden script.</p>
 
@@ -87,6 +87,13 @@ ${notice({ text: "Vi sender en mail, når eksporten er klar." })}
 ${notice({ tone: "success", text: "Du har taget imod invitationen." })}
 ${notice({ tone: "warning", title: "Din prøveperiode udløber om 3 dage", text: "Vælg en plan for at beholde dine sider." })}
 ${notice({ tone: "error", text: "Det lykkedes ikke. Hent siden igen og prøv en gang til." })}
+</section>
+
+<section><h2>Signaler</h2>
+<p>Tilstanden for noget, der overvåges: et mærke i form og farve, altid med ordet.</p>
+<div class="demo-row">${signal("Oppe", "ok")}${signal("Forsinket", "warn")}${signal("Nede", "down")}${signal("Sat på pause", "off")}</div>
+${notice({ signal: "down", title: "2 tjek er nede", text: html`<a href="#">Månedlig fakturakørsel</a>, <a href="#">Natlig backup</a>` })}
+${notice({ signal: "ok", title: "Alt kører", text: "Alle 14 tjek har meldt sig til tiden." })}
 </section>
 
 <section><h2>Knapper og mærker</h2>
@@ -152,6 +159,34 @@ export function demoPage(): string {
         items: PRODUCTS.map(([key, name]) => ({ label: name, href: `?product=${key}`, current: key === "forspring" })),
       },
       user: { email: "mette@eksempel.dk", signOut },
+      menu: {
+        label: "Hovedmenu",
+        toggle: "Menu",
+        context: {
+          label: "Organisation",
+          name: "Bager Hansen ApS",
+          items: [
+            { label: "Bager Hansen ApS", href: "#", current: true },
+            { label: "Østerbro Cykler", href: "#" },
+          ],
+        },
+        groups: [
+          {
+            items: [
+              { label: "Komponenter", href: "#", current: true },
+              { label: "Overblik", href: "#", badge: { text: "2", signal: "down", label: "nede" } },
+              { label: "Advarsler", href: "#" },
+            ],
+          },
+          {
+            label: "Projekter",
+            items: [
+              { label: "Webshop", href: "#", badge: { text: "2", signal: "down", label: "nede" } },
+              { label: "Bogføring", href: "#" },
+            ],
+          },
+        ],
+      },
       footer: [
         { label: "English", href: "#", lang: "en" },
         { label: "Privatlivspolitik", href: "https://forspring.ai/privatlivspolitik" },

@@ -61,13 +61,46 @@ export type ShellOptions = {
         email: string;
         signOut?: Content;
     };
+    /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
+    menu?: Menu;
     /** A single card in a narrow column: sign-in and refusals. */
     narrow?: boolean;
     bodyClass?: string;
     footer?: Link[];
     body: Content;
 };
-/** A whole page: doctype, head, skip link, bar, main and footer. */
+/** A monitored thing's state, as a traffic light: up, late, down, or not being judged (D-13). */
+export type Signal = "ok" | "warn" | "down" | "off";
+export type MenuItem = Link & {
+    /** true: this page. "parent": the page is under this item (a check under its project). */
+    current?: boolean | "parent" | undefined;
+    /** A short badge after the label ("2"), with a signal mark before it and words for a screen reader. */
+    badge?: {
+        text: string;
+        signal?: Signal | undefined;
+        label?: string | undefined;
+    } | undefined;
+};
+export type MenuGroup = {
+    label?: string;
+    items: MenuItem[];
+};
+export type Menu = {
+    /** The menu's accessible name: "Hovedmenu", "Main menu". */
+    label: string;
+    /** The phone's fold: "Menu". */
+    toggle: string;
+    /** What the menu is for (an organisation) and where else the person can go; a switcher when more than one. */
+    context?: {
+        label: string;
+        name: string;
+        items?: (Link & {
+            current?: boolean;
+        })[];
+    };
+    groups: MenuGroup[];
+};
+/** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export declare function shell(o: ShellOptions): Html;
 export type ButtonOptions = {
     label: Content;
@@ -108,11 +141,20 @@ export type FieldOptions = {
 export declare function field(o: FieldOptions): Html;
 export type Tone = "info" | "success" | "warning" | "error";
 /** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
+/**
+ * What just happened, in words. `signal` instead of `tone` reports a monitored state (D-13): the
+ * neutral card with the signal's colour as its edge rule and its mark before the title.
+ */
 export declare function notice(o: {
     tone?: Tone;
+    signal?: Signal;
     title?: Content;
     text: Content;
 }): Html;
+/** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
+export declare function signal(text: Content, s: Signal): Html;
+/** Where the page sits: its parents as links, before the h1. The page itself is the h1, not a crumb. */
+export declare function crumbs(label: string, items: Link[]): Html;
 export declare function tag(text: Content, tone?: "primary" | "success" | "warning" | "danger"): Html;
 export declare function card(body: Content): Html;
 export type ListItem = {

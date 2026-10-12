@@ -41,6 +41,19 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
+  // A signal mark is a non-text graphic beside its word (WCAG 1.4.11, 3:1 wherever it can sit), and
+  // must never read as a product's brand: down beside PulseSpring's magenta, ok beside DataSpring's teal (D-13).
+  describe.each(["signal-ok", "signal-warn", "signal-down", "signal-off"])("%s", (role) => {
+    for (const s of SURFACES) {
+      const r = contrast(c(role), c(s));
+      test(`mark on ${s}: ${r.toFixed(2)}:1`, () => expect(r).toBeGreaterThanOrEqual(3));
+    }
+    for (const p of m.products) {
+      const d = distance(c(role), m.product[p]!.primary[mode]);
+      test(`apart from ${p}: ${d.toFixed(1)}`, () => expect(d).toBeGreaterThanOrEqual(10));
+    }
+  });
+
   test("the focus ring is visible on the page (non-text, 3:1)", () => {
     for (const p of m.products) expect(contrast(m.product[p]!.ring[mode], c("background"))).toBeGreaterThanOrEqual(3);
   });
