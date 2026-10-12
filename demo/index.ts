@@ -29,7 +29,10 @@ const SCRIPT = `<script>
     root.dataset.product = p;
     if (t === "system") delete root.dataset.theme; else root.dataset.theme = t;
     const name = form.querySelector('input[name=product]:checked').parentElement.textContent.trim();
-    document.querySelectorAll(".brand .sub").forEach((e) => (e.textContent = p === "forspring" ? "konto" : name));
+    const sub = p === "forspring" ? "konto" : name;
+    document.querySelectorAll(".brand .sub").forEach((e) => (e.textContent = sub));
+    // The label starts with the visible words, as WCAG 2.5.3 asks (D-8).
+    document.querySelectorAll(".brand").forEach((e) => e.setAttribute("aria-label", "Forspring " + sub + ", forside"));
   };
   if (q.get("product")) form.product.value = q.get("product");
   if (q.get("theme")) form.theme.value = q.get("theme");
@@ -102,6 +105,12 @@ ${notice({ signal: "ok", title: "Alt kører", text: "Alle 14 tjek har meldt sig 
 <div class="demo-row">${tag("platform")}${tag("Denne enhed")}${tag("Ny", "primary")}${tag("Aktiv", "success")}${tag("Afventer", "warning")}${tag("Spærret", "danger")}</div>
 </section>
 
+<section><h2>Værktøjslinje</h2>
+<p>Felter, valg og knapper har samme højde i hver størrelse og står på én linje.</p>
+<form class="toolbar demo-row" method="get" action="#" role="search" aria-label="Søg i kunder"><input type="search" name="q" aria-label="Søg i kunder" placeholder="Søg i kunder"><select name="status" aria-label="Status"><option>Alle</option><option>Aktive</option><option>Spærrede</option></select>${button({ label: "Søg" })}${button({ label: "Ryd", variant: "ghost", type: "reset" })}</form>
+<div class="toolbar demo-row"><input class="small" type="search" aria-label="Filtrer fakturaer" placeholder="Filtrer"><select class="small" aria-label="Periode"><option>Denne måned</option><option>Sidste måned</option></select>${button({ label: "Eksporter", variant: "ghost", small: true, type: "button" })}<select class="small" aria-label="Valuta" disabled><option>DKK</option></select></div>
+</section>
+
 <section><h2>Lister</h2>
 ${list([
   { name: "SiteSpring", action: html`<a class="go" href="#">Åbn SiteSpring</a>` },
@@ -158,6 +167,7 @@ export function demoPage(): string {
         label: "Skift produkt",
         items: PRODUCTS.map(([key, name]) => ({ label: name, href: `?product=${key}`, current: key === "forspring" })),
       },
+      controls: html`<select aria-label="Organisation"><option>Bager Hansen ApS</option><option>Østerbro Cykler</option></select>`,
       user: { email: "mette@eksempel.dk", signOut },
       menu: {
         label: "Hovedmenu",

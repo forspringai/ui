@@ -92,6 +92,12 @@ describe("blocks", () => {
     expect(s).toContain('<main id="main" class="wrap">');
     expect(s).toContain("<title>Keys · Forspring</title>");
   });
+
+  test("the shell puts its controls in the bar, after the switcher and before the spacer", () => {
+    const s = String(shell({ lang: "en", title: "t", productLabel: "P", switcher: { label: "Switch", items: [] }, controls: html`<select aria-label="Org"><option>A</option></select>`, body: "" }));
+    expect(s).toMatch(/<\/details><select aria-label="Org"><option>A<\/option><\/select><span class="spacer"><\/span>/);
+    expect(String(shell({ lang: "en", title: "t", productLabel: "P", controls: "<b>", body: "" }))).toContain("&lt;b&gt;<span class=\"spacer\">");
+  });
 });
 
 test("the Product type lists the same products as the tokens", () => {

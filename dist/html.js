@@ -126,7 +126,7 @@ export function shell(o) {
     return html `<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · Forspring</title>${o.head}</head>
 <body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}<span class="spacer"></span>${user}</div></header>
+<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
 ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html `<main id="main" class="${cls("wrap", o.narrow && "narrow")}">${o.body}</main>`}
 ${footer}</body></html>`;
 }

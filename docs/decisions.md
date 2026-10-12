@@ -130,7 +130,7 @@ Type sizes, radii and the main spacing are tokens. A handful of the account's sm
 values sit off the 4px scale and stay as px for parity (all on a 2px grid): heading and paragraph
 margins 10 and 14, the list row padding 14/18, the tag padding 2/9, the field gap 6, the bar
 padding 10, the switch track 38 by 22. The design audit (a later tick of epic 8f4) should treat
-them as the reference, or they move to the scale in a decision of their own. Where the account
+them as the reference, or they move to the scale in a decision of their own. (They moved in D-14.) Where the account
 used a size off the ladders, the nearest step replaced it: field labels and legends 13.5 to 14,
 the wordmark 22 to 21 (18 on a phone, was 20), a card's h1 28-34 to 30.
 
@@ -239,7 +239,8 @@ missed the 22 px (the margin under a heading before a list, `.back`, a card's ph
 the 2 px before `.brand .sub`. The audit has no built-in exception for them, so the package's own
 demo is audited with `--allow-spacing 2,6,9,10,14,18,22`, and so is every product on the
 component layer until these values move to the scale, in a decision of their own. The flag names
-the debt where everyone sees it, instead of hiding it in the audit.
+the debt where everyone sees it, instead of hiding it in the audit. (Paid in D-14: the component layer has no off-grid
+spacing since 0.5.0, and the demo is audited without the flag.)
 
 What the audit does not see: hover, focus and open states (it measures the page at rest),
 pseudo-elements, SVG fills, and text positioned over something other than its DOM ancestors.
@@ -360,3 +361,68 @@ card and muted, not text's 4.5:1; that is what lets the signals be vivid where `
 deep enough to be read as text. Down is 18 from PulseSpring's magenta in both themes (`--danger`
 is 13), and every signal is at least 10 from every accent (`test/contrast.test.ts`). `--danger`,
 `--success` and `--warning` keep their jobs: an error, a destructive button, an outcome in words.
+
+## D-14 — Control geometry, the select's chevron, and every spacing on the 4px scale; 0.5.0 (2026-10-12)
+
+Asked for by Peter from SiteSpring's console header on 0.3.1: the organisation `<select>` showed
+the browser's own chevron jammed against its right border, with 12px of padding at the start and
+none at the end, so the text and the arrow read as misaligned. The cause was general: a select
+was styled as a text input and kept its native arrow, inputs were 46px tall and buttons 44px, and
+nothing tied a control's height to the others'. 0.4.0 was already tagged (D-13), so this is 0.5.0;
+an old version with new CSS would leave browsers on a year's cache (account D-20).
+
+**Control heights are tokens.** `geometry.json` gains `control`: `height` 44px, `height-small`
+32px and `touch` 44px, each an alias of a space step (`{space.11}`, `{space.8}`), so they are on
+the grid by construction. They are emitted as `--control-height`, `--control-height-small`,
+`--control-touch`, as Tailwind's `--spacing-control`, `-control-small`, `-control-touch`
+(`h-control`) and as `control` in tokens.js. Inputs, selects, textareas and buttons all take
+`min-height: var(--control-height)` and 12px of padding; small ones (`.small`) and every input or
+select in the bar take the small height and 4px. A control's line-height is what the height
+leaves after its padding and two 1px borders (`--_control-line`, 18px; 22px small), so the text of
+every control of a size sits at the same height, and a row of them (the bar, `.toolbar`, a form)
+shares one baseline whatever its alignment. min-height rather than height, so a long label still
+wraps. Under 560px every input, select and button reaches `--control-touch`; a small one takes the
+default box with its smaller type, so its text stays centred. A textarea keeps a 20px line for
+reading.
+
+**The select draws its own chevron.** `appearance: none`, and two `linear-gradient`s in 5px tiles,
+each one diagonal stroke, make a 10 by 5 caret in `--muted-foreground`, 12px from the end, with
+`padding-inline-end: 32px` reserving its room. Gradients, not a `url()` or data: SVG, because a
+console's CSP is `img-src 'self'` and an image would need `data:` allowed; the stops are a pixel
+soft each side so the strokes are antialiased. The control stays native: keyboard, the phone's
+picker, the option list in the page's color-scheme. `:dir(rtl)` moves the caret to the start; a
+list box (`multiple`, `size` over 1) has none. Disabled inputs and selects are the muted surface
+with muted text. `appearance: base-select` (a customisable picker) is left for later.
+`shell({ controls })` places controls in the bar after the switcher, and `.toolbar` lays a row of
+controls out with a text input taking the room.
+
+**The audit and the chevron.** A background image under text is "review" in the contrast rule
+(D-8), and the chevron is a background image, so every select would have become a review item.
+The audit now measures a select's text against its own background colour when the select's own
+background image is only gradients: the chevron sits in the padding, beside the text. Any other
+image, or one on an ancestor, is still a review.
+
+**Every spacing is on the scale.** D-5 kept the account's optical values (2, 6, 9, 10, 14, 18, 22)
+for parity, and D-8 made every consumer pass `--allow-spacing` for them. They move to the nearest
+step, chosen per place: h1 and h2 to 12 below (were 10 and 14), paragraphs and `.fine` to 16 (14),
+`.fine + .fine` and the field gap to 8 (6), the kicker to 12 (10), the bar's padding to 8 (10; the
+bar stays 64px), the brand's divider to 12 each side (the 8px gap and 4, then 12; were 8 and 2, then 10), the switcher's
+gap to 8 (6), the menu's item and context gaps and the badge's gap to 4 (2, 2, 6), the fieldset row
+gap and the list's row gap to 12 (10), list rows to 16/20 (14/18) and 12/16 on a phone (14), the
+skip link to 12/16 (10/14), the `h1 + list` and `.back` margins to 24 (22), the tag to 0/8 with a
+20px min-height (2/9), the switch to 4px padding and a 40 by 24 track with its thumb 4px in (6,
+38 by 22, 3), and on a phone the card and state padding to 24/20 (22/18, 24/18) and table cells to
+8/12 (10/12). `test/components.test.ts` now fails on any px literal in a margin, padding, gap or
+inset that is not a multiple of 4 (the skip link's -9999px aside), and the demo passes the audit
+with no `--allow-spacing` for all five products, at 1280 and 380px, light and dark.
+
+What stays in px, because it is not spacing: 1px borders and hairlines, the 2px focus outline and
+its 2 to 3px offsets, the 2 to 3px accent and signal edge rules, the text underline offset, the
+marks' own sizes (the 6px chevrons and tag dot, the 10 and 11px signal marks, the 18px checkbox),
+the chevrons' 1.5px strokes, and the optical nudges done with `transform`. The audit does not
+measure any of them as spacing.
+
+**`.menu` is `nav.menu`.** D-13's `.menu` rule made any element of that class a grid with a 24px
+gap; SiteSpring's own `details.menu` (its account menu in the bar) became 68px tall and its avatar
+sat off the bar's line. The rules now match `nav.menu`, which is what `shell` writes. The class is
+unchanged, so no markup changes.

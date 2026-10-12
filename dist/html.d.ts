@@ -56,6 +56,8 @@ export type ShellOptions = {
             current?: boolean;
         })[];
     };
+    /** Controls in the bar after the switcher, such as an organisation select. They take the small size, 32px (D-14). */
+    controls?: Content;
     /** The signed-in person: their address, and markup for signing out (a form with its CSRF token). */
     user?: {
         email: string;

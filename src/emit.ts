@@ -25,6 +25,8 @@ export type Model = {
   product: Record<string, Record<(typeof PRODUCT_ROLES)[number], Record<Mode, string>>>;
   radius: Record<string, number>;
   space: Record<string, number>;
+  // control heights (D-14): steps of the space scale, so a row of controls shares one height
+  control: Record<string, number>;
   text: Record<string, Record<string, number>>;
   fonts: Record<string, string>;
 };
@@ -66,6 +68,7 @@ export function model(dir: string): Model {
     product,
     radius: record("radius"),
     space: record("space"),
+    control: record("control"),
     text: Object.fromEntries(s.names("text").map((ladder) => [ladder, record(`text.${ladder}`)])),
     fonts: Object.fromEntries(s.names("font").map((n) => [n, cssFontFamily(s.fontFamily(`font.${n}`))])),
   };
@@ -85,6 +88,7 @@ function geometry(m: Model): string[] {
   return [
     ...Object.entries(m.radius).map(([k, v]) => `--radius-${k}: ${v}px;`),
     ...Object.entries(m.space).map(([k, v]) => `--space-${k}: ${v}px;`),
+    ...Object.entries(m.control).map(([k, v]) => `--control-${k}: ${v}px;`),
     ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
     ...Object.entries(m.fonts).map(([k, v]) => `--font-${k}: ${v};`),
   ];
@@ -119,6 +123,8 @@ export function themeCss(m: Model): string {
     ...m.roles.map((r) => `--color-${r}: var(--${r});`),
     ...Object.entries(m.radius).map(([k, v]) => `--radius-${k}: ${v}px;`),
     `--spacing: ${m.space["1"]}px;`,
+    // h-control, h-control-small, min-h-control-touch: the same heights as components.css.
+    ...Object.entries(m.control).map(([k, v]) => `--spacing-${["control", k.replace(/^height-?/, "")].filter(Boolean).join("-")}: ${v}px;`),
     ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
     ...Object.entries(m.fonts).map(([k, v]) => `--font-${k}: ${v};`),
   ];
@@ -157,6 +163,7 @@ function values(m: Model) {
     },
     radius: m.radius,
     space: m.space,
+    control: m.control,
     text: m.text,
     fonts: m.fonts,
   };
@@ -199,6 +206,8 @@ export declare const chart: Deep<${JSON.stringify(v.chart)}>;
 export declare const radius: Deep<${JSON.stringify(v.radius)}>;
 /** Spacing in px; the key is the multiple of 4px. */
 export declare const space: Deep<${JSON.stringify(v.space)}>;
+/** Control heights in px (D-14): height (default), height-small, touch (the phone floor). */
+export declare const control: Deep<${JSON.stringify(v.control)}>;
 /** Font sizes in px: chrome (dense UI) and content (pages). */
 export declare const text: Deep<${JSON.stringify(v.text)}>;
 /** CSS font-family stacks. */

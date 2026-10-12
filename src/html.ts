@@ -134,6 +134,8 @@ export type ShellOptions = {
   head?: Content;
   /** Other products the person can switch to; renders a details menu after the wordmark. */
   switcher?: { label: string; items: (Link & { current?: boolean })[] };
+  /** Controls in the bar after the switcher, such as an organisation select. They take the small size, 32px (D-14). */
+  controls?: Content;
   /** The signed-in person: their address, and markup for signing out (a form with its CSRF token). */
   user?: { email: string; signOut?: Content };
   /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
@@ -218,7 +220,7 @@ export function shell(o: ShellOptions): Html {
   return html`<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · Forspring</title>${o.head}</head>
 <body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}<span class="spacer"></span>${user}</div></header>
+<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
 ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html`<main id="main" class="${cls("wrap", o.narrow && "narrow")!}">${o.body}</main>`}
 ${footer}</body></html>`;
 }

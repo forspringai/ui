@@ -20,8 +20,8 @@ import * as tokens from "../dist/tokens.js";
 
 const root = join(import.meta.dirname, "..");
 const TYPES: Record<string, string> = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".woff2": "font/woff2" };
-// The component layer's own off-grid spacings, kept for parity with the account (D-5, D-8).
-const PARITY = [2, 6, 9, 10, 14, 18, 22];
+// Every product the demo can show (?product=), each audited with its own accent (--product).
+const PRODUCTS = tokens.products as readonly string[];
 
 let server: Server;
 let base: string;
@@ -79,8 +79,8 @@ const options = (urls: string[], o: Partial<AuditOptions> = {}): AuditOptions =>
 const all = (r: AuditResult) => r.pages.flatMap((p) => p.findings.map((f) => ({ ...f, width: p.width, theme: p.theme })));
 
 describe("the demo page", () => {
-  test("passes at 1280 and 380 px, light and dark, with the component layer's parity spacings", async () => {
-    const r = await audit(options([`${base}/dist/demo/`], { allowSpacing: PARITY }), browser);
+  test("passes at 1280 and 380 px, light and dark, with no --allow-spacing (D-14)", async () => {
+    const r = await audit(options([`${base}/dist/demo/`]), browser);
     expect(r.pages.map((p) => `${p.width} ${p.theme}`)).toEqual(["1280 light", "1280 dark", "380 light", "380 dark"]);
     // No warnings either: every colour on the demo is a token or a shade components.css mixes.
     expect(all(r).filter((f) => f.severity !== "review")).toEqual([]);
@@ -89,17 +89,16 @@ describe("the demo page", () => {
     expect(all(r).every((f) => f.rule === "contrast" && f.value === "background-image")).toBe(true);
   }, 120_000);
 
-  test("without --allow-spacing, the parity spacings are the only errors", async () => {
-    const r = await audit(options([`${base}/dist/demo/`], { widths: [380], themes: ["light"] }), browser);
-    const errors = all(r).filter((f) => f.severity === "error");
-    expect(errors.length).toBeGreaterThan(0);
-    expect(new Set(errors.map((f) => f.rule))).toEqual(new Set(["spacing"]));
-    expect(new Set(errors.map((f) => parseFloat(f.value)))).toEqual(new Set(PARITY));
-  }, 60_000);
+  test.each(PRODUCTS)("passes as %s, both widths and themes, with only that product's accent", async (product) => {
+    const r = await audit(options([`${base}/dist/demo/?product=${product}`], { product }), browser);
+    expect(r.pages).toHaveLength(4);
+    expect(all(r).filter((f) => f.severity !== "review")).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 120_000);
 });
 
 describe("signed-in and refusal pages", () => {
-  const one = { widths: [1280], themes: ["light" as const], allowSpacing: PARITY };
+  const one = { widths: [1280], themes: ["light" as const] };
 
   test("--cookie-env's session reaches the page and its stylesheets and fonts; without it the page is a 401", async () => {
     const ok = await audit(options([`${base}/private/dist/demo/`], { ...one, cookie: SESSION }), browser);
@@ -117,7 +116,7 @@ describe("signed-in and refusal pages", () => {
 });
 
 describe("redirects", () => {
-  const one = { widths: [1280], themes: ["light" as const], allowSpacing: PARITY };
+  const one = { widths: [1280], themes: ["light" as const] };
 
   test("a page that redirects is a page-load error, not an audit of wherever it led", async () => {
     const r = await audit(options([`${base}/redirect/dist/demo/`], { ...one, cookie: SESSION }), browser);
@@ -290,7 +289,7 @@ describe("the bin", () => {
 
   test("--cookie-env: audits a signed-in page, and the cookie is in neither output", async () => {
     const env = { ...process.env, AUDIT_COOKIE: SESSION };
-    const out = await promisify(execFile)(process.execPath, [join(root, "dist/audit/cli.js"), `${base}/private/dist/demo/`, "--cookie-env", "AUDIT_COOKIE", "--allow-spacing", PARITY.join(","), "--format", "text"], { env }).then(
+    const out = await promisify(execFile)(process.execPath, [join(root, "dist/audit/cli.js"), `${base}/private/dist/demo/`, "--cookie-env", "AUDIT_COOKIE", "--format", "text"], { env }).then(
       (r) => ({ code: 0, stdout: r.stdout, stderr: r.stderr }),
       (e: { code: number; stdout: string; stderr: string }) => e,
     );
@@ -300,7 +299,7 @@ describe("the bin", () => {
   }, 180_000);
 
   test("audits the demo from dist/ and exits 0; the fixture exits 1", async () => {
-    const ok = await run(`${base}/dist/demo/`, "--allow-spacing", PARITY.join(","));
+    const ok = await run(`${base}/dist/demo/`);
     expect(ok.code).toBe(0);
     expect(JSON.parse(ok.stdout)).toMatchObject({ ok: true });
     const bad = await run(`${base}/test/fixtures/broken.html`, "--format", "text");
