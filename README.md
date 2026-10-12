@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.3.1
+pnpm add github:forspringai/ui#v0.4.0
 ```
 
 ## Server-rendered pages (plain CSS, no script)
@@ -49,6 +49,28 @@ return new Response(String(page), { headers: { "content-type": "text/html; chars
 
 `pnpm demo` serves the demo page with every component (http://127.0.0.1:4319/dist/demo/), with
 switches for the product and the theme.
+
+### A console's menu, crumbs and signals (D-13)
+
+```ts
+shell({
+  ...,
+  menu: {
+    label: "Main menu",
+    toggle: "Menu",
+    context: { label: "Organization", name: org.name, items: orgs.map((o) => ({ label: o.name, href: `/o/${o.slug}/`, current: o.slug === org.slug })) },
+    groups: [
+      { items: [{ label: "Overview", href: "/o/ops/", current: true, badge: { text: "2", signal: "down", label: "down" } }] },
+      { label: "Projects", items: [{ label: "Hub", href: "/o/ops/projects/hub", current: "parent" }] },
+    ],
+  },
+  body: [crumbs("Breadcrumb", [{ label: "Overview", href: "/o/ops/" }]), html`<h1>Nightly backup</h1>`, signal("Down", "down")],
+});
+```
+
+A sidebar on a wide screen, folded under "Menu" on a phone, no script. `signal(word, "ok" | "warn" |
+"down" | "off")` is a monitored state as a traffic light: a shaped mark in `--signal-*` and the word.
+`notice({ signal: "down", title, text })` is the neutral card with that signal as its edge.
 
 ## Tailwind v4 and shadcn
 

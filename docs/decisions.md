@@ -318,3 +318,45 @@ That second fact made a quieter failure possible: a signed-in URL that redirects
 out, and the page it lands on (a sign-in page, say) can pass in its place. A page whose own
 navigation redirected is now a `page-load` error naming where it led; give the audit that URL. The
 account's audited URLs answer directly (200, 403) and are unaffected.
+
+## D-13 — A product menu, crumbs, and a traffic-light signal palette (2026-10-12)
+
+Asked for by Peter reviewing PulseSpring's console: its navigation was rows of links (the org's
+name, then the sections, then a breadcrumb) above every h1, and "down" read as the brand, because
+the console showed it as a small `--danger` outline tag next to magenta links and buttons.
+
+**Menu.** `shell({ menu })` gives a product's console a real menu: a sidebar beside main on a wide
+screen, and the same menu folded under "Menu" (a `details`, no script) below 800px. On top sits the
+context, the organisation the console is for, with a switcher when the person has more than one.
+Then groups of items, optionally labelled ("Projects"). An item is the page (`current: true`,
+`aria-current="page"`) or the page's parent (`current: "parent"`, `aria-current="true"`: a check
+under its project); both get the muted surface, ink, and the accent only as a 2px edge rule (D-5).
+An item can carry a badge, a count with a signal mark and words for a screen reader ("2", down).
+With a menu the frame widens from 920px to 1120px and main keeps a 760px measure. The sidebar and
+the fold are two renderings of one menu, so neither depends on `::details-content`; the hidden one
+is `display: none` and out of the accessibility tree.
+
+**Crumbs.** `crumbs(label, links)` is the page's parents, quiet (chrome meta size, mono, muted,
+no underline until hover), before the h1. The page itself is the h1, never a crumb.
+
+**Signal.** A monitored thing's state (a check up or down, a site reachable) is not a status in
+D-3's sense: it is the whole point of a monitoring screen and must read at a glance, as a traffic
+light, never as the brand. So it gets its own four colours, `--signal-ok`, `--signal-warn`,
+`--signal-down`, `--signal-off`, and its own helper, `signal(word, s)`: a mark and the word, the
+word in ink. The mark repeats the meaning in shape as well as colour, since red and green are the
+pair colour-blind people confuse most: ok a dot, warn a triangle, down a diamond, off (paused, new,
+not judged) a hollow ring. `notice({ signal })` is the neutral card with the signal as its edge
+rule and its mark before the title, for "2 checks are down".
+
+| | Light | Dark | mark on surfaces (min) | closest accent |
+|---|---|---|---|---|
+| ok | `#1E9E48` | `#3DD06A` | 3.07 / 8.54 | DataSpring teal, 15 / 17 |
+| warn | `#B87503` | `#F5B830` | 3.32 / 9.65 | SiteSpring terracotta, 12 / 19 |
+| down | `#EE0A32` | `#FF2D3F` | 3.92 / 4.67 | SiteSpring terracotta, 10.9 / 11 |
+| off | `#7D808A` | `#7C7F88` | 3.48 / 4.30 | DataSpring teal, 11 / 12 |
+
+A mark is a non-text graphic beside its word, so the floor is 3:1 (WCAG 1.4.11) on background,
+card and muted, not text's 4.5:1; that is what lets the signals be vivid where `--danger` must be
+deep enough to be read as text. Down is 18 from PulseSpring's magenta in both themes (`--danger`
+is 13), and every signal is at least 10 from every accent (`test/contrast.test.ts`). `--danger`,
+`--success` and `--warning` keep their jobs: an error, a destructive button, an outcome in words.

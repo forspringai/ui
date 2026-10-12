@@ -65,7 +65,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.3.1"
+"@forspring/ui": "github:forspringai/ui#v0.4.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

@@ -24,6 +24,10 @@
   --warning: light-dark(#7a5200, #f2c14e);
   --danger: light-dark(#9b1020, #ff3d5a);
   --destructive: light-dark(#9b1020, #ff3d5a);
+  --signal-ok: light-dark(#1e9e48, #3dd06a);
+  --signal-warn: light-dark(#b87503, #f5b830);
+  --signal-down: light-dark(#ee0a32, #ff2d3f);
+  --signal-off: light-dark(#7d808a, #7c7f88);
   --chart-1: light-dark(#6a87f0, #295fd4);
   --chart-2: light-dark(#eb681d, #a25834);
   --chart-3: light-dark(#0da26b, #3ca368);

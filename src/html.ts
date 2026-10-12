@@ -136,6 +136,8 @@ export type ShellOptions = {
   switcher?: { label: string; items: (Link & { current?: boolean })[] };
   /** The signed-in person: their address, and markup for signing out (a form with its CSRF token). */
   user?: { email: string; signOut?: Content };
+  /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
+  menu?: Menu;
   /** A single card in a narrow column: sign-in and refusals. */
   narrow?: boolean;
   bodyClass?: string;
@@ -143,7 +145,64 @@ export type ShellOptions = {
   body: Content;
 };
 
-/** A whole page: doctype, head, skip link, bar, main and footer. */
+
+/** A monitored thing's state, as a traffic light: up, late, down, or not being judged (D-13). */
+export type Signal = "ok" | "warn" | "down" | "off";
+
+export type MenuItem = Link & {
+  /** true: this page. "parent": the page is under this item (a check under its project). */
+  current?: boolean | "parent" | undefined;
+  /** A short badge after the label ("2"), with a signal mark before it and words for a screen reader. */
+  badge?: { text: string; signal?: Signal | undefined; label?: string | undefined } | undefined;
+};
+
+export type MenuGroup = { label?: string; items: MenuItem[] };
+
+export type Menu = {
+  /** The menu's accessible name: "Hovedmenu", "Main menu". */
+  label: string;
+  /** The phone's fold: "Menu". */
+  toggle: string;
+  /** What the menu is for (an organisation) and where else the person can go; a switcher when more than one. */
+  context?: { label: string; name: string; items?: (Link & { current?: boolean })[] };
+  groups: MenuGroup[];
+};
+
+const signalMark = (s: Signal): Html => html`<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
+
+function menuBody(m: Menu): Html {
+  const ctx = m.context;
+  const others = ctx?.items ?? [];
+  const context = !ctx
+    ? ""
+    : others.length > 1
+      ? html`<details class="menu-context"><summary><span class="menu-label">${ctx.label}</span><span class="menu-context-name">${ctx.name}</span></summary><ul>${others.map(
+          (i) => html`<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="true"' : "")}>${i.label}</a></li>`,
+        )}</ul></details>`
+      : html`<div class="menu-context"><span class="menu-label">${ctx.label}</span><span class="menu-context-name">${ctx.name}</span></div>`;
+  const groups = m.groups.map(
+    (g) => html`<div class="menu-group">${g.label ? html`<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
+      const badge = i.badge
+        ? html`<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html`<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
+        : "";
+      return html`<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}><span class="menu-text">${i.label}</span>${badge}</a></li>`;
+    })}</ul></div>`,
+  );
+  return html`${context}${groups}`;
+}
+
+/** The current item's label, for the phone's fold. */
+const currentLabel = (m: Menu): string | undefined => {
+  const items = m.groups.flatMap((g) => g.items);
+  return (items.find((i) => i.current === true) ?? items.find((i) => i.current === "parent"))?.label;
+};
+
+function menuFrame(m: Menu, body: Content, narrow?: boolean): Html {
+  const current = currentLabel(m);
+  return html`<div class="wrap app"><details class="menu-fold"><summary><span>${m.toggle}</span>${current ? html`<span class="menu-fold-current">${current}</span>` : ""}</summary><nav class="menu" aria-label="${m.label}">${menuBody(m)}</nav></details><nav class="menu menu-side" aria-label="${m.label}">${menuBody(m)}</nav><main id="main"${raw(attrs({ class: cls(narrow && "narrow") }))}>${body}</main></div>`;
+}
+
+/** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export function shell(o: ShellOptions): Html {
   const da = o.lang === "da";
   const switcher = o.switcher
@@ -158,9 +217,9 @@ export function shell(o: ShellOptions): Html {
   const htmlAttrs = raw(attrs({ lang: o.lang, "data-product": o.product, "data-theme": o.theme }));
   return html`<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · Forspring</title>${o.head}</head>
-<body${raw(attrs({ class: o.bodyClass }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
+<body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
 <header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}<span class="spacer"></span>${user}</div></header>
-<main id="main" class="${cls("wrap", o.narrow && "narrow")!}">${o.body}</main>
+${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html`<main id="main" class="${cls("wrap", o.narrow && "narrow")!}">${o.body}</main>`}
 ${footer}</body></html>`;
 }
 
@@ -226,11 +285,30 @@ export function field(o: FieldOptions): Html {
 export type Tone = "info" | "success" | "warning" | "error";
 
 /** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
-export function notice(o: { tone?: Tone; title?: Content; text: Content }): Html {
+/**
+ * What just happened, in words. `signal` instead of `tone` reports a monitored state (D-13): the
+ * neutral card with the signal's colour as its edge rule and its mark before the title.
+ */
+export function notice(o: { tone?: Tone; signal?: Signal; title?: Content; text: Content }): Html {
+  if (o.signal) {
+    const role = o.signal === "down" || o.signal === "warn" ? "alert" : "status";
+    const title = o.title ? html`<strong class="notice-title">${signalMark(o.signal)}${o.title}</strong>` : "";
+    return html`<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}</div>`;
+  }
   const tone = o.tone ?? "info";
   const role = tone === "error" || tone === "warning" ? "alert" : "status";
   const title = o.title ? html`<strong class="notice-title">${o.title}</strong>` : "";
   return html`<div class="${cls("notice", tone !== "info" && tone)!}" role="${role}">${title}${o.text}</div>`;
+}
+
+/** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
+export function signal(text: Content, s: Signal): Html {
+  return html`<span class="${`signal ${s}`}">${signalMark(s)}${text}</span>`;
+}
+
+/** Where the page sits: its parents as links, before the h1. The page itself is the h1, not a crumb. */
+export function crumbs(label: string, items: Link[]): Html {
+  return html`<nav class="crumbs" aria-label="${label}"><ol>${items.map((i) => html`<li><a href="${safeHref(i.href)}">${i.label}</a></li>`)}</ol></nav>`;
 }
 
 export function tag(text: Content, tone?: "primary" | "success" | "warning" | "danger"): Html {

@@ -1,0 +1,113 @@
+{
+  "signal": {
+    "$description": "Traffic-light signal colours for the state of a monitored thing (D-13): drawn as a mark beside a word, never as text and never colour alone. Each mark is a non-text graphic, at least 3:1 on background, card and muted in its theme (WCAG 1.4.11), and at least 10 apart (OKLab x100) from every accent, so down never reads as a product's brand.",
+    "ok": {
+      "$description": "Up: the monitored thing is fine. A filled dot.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.1176,
+            0.6196,
+            0.2824
+          ],
+          "hex": "#1e9e48"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.2392,
+            0.8157,
+            0.4157
+          ],
+          "hex": "#3dd06a"
+        }
+      }
+    },
+    "warn": {
+      "$description": "Late or degraded: needs a look soon. A triangle.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.7216,
+            0.4588,
+            0.0118
+          ],
+          "hex": "#b87503"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.9608,
+            0.7216,
+            0.1882
+          ],
+          "hex": "#f5b830"
+        }
+      }
+    },
+    "down": {
+      "$description": "Down: needs action now. A diamond.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.9333,
+            0.0392,
+            0.1961
+          ],
+          "hex": "#ee0a32"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            1.0,
+            0.1765,
+            0.2471
+          ],
+          "hex": "#ff2d3f"
+        }
+      }
+    },
+    "off": {
+      "$description": "Paused, new or unknown: not being judged. A hollow ring.",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.4902,
+            0.502,
+            0.5412
+          ],
+          "hex": "#7d808a"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.4863,
+            0.498,
+            0.5333
+          ],
+          "hex": "#7c7f88"
+        }
+      }
+    }
+  }
+}

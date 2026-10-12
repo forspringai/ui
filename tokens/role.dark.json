@@ -100,6 +100,22 @@
       "$value": "{status.danger.dark}",
       "$description": "shadcn alias of danger."
     },
+    "signal-ok": {
+      "$type": "color",
+      "$value": "{signal.ok.dark}"
+    },
+    "signal-warn": {
+      "$type": "color",
+      "$value": "{signal.warn.dark}"
+    },
+    "signal-down": {
+      "$type": "color",
+      "$value": "{signal.down.dark}"
+    },
+    "signal-off": {
+      "$type": "color",
+      "$value": "{signal.off.dark}"
+    },
     "chart-1": {
       "$type": "color",
       "$value": "{chart.1.dark}"

@@ -411,6 +411,274 @@
     box-shadow: inset 2px 0 0 var(--primary);
   }
 
+  /* --- Menu: a product's own sections, beside the page (D-13) -------------------------------- */
+
+  /* With a menu the frame widens so the content keeps its measure beside it. The sidebar shows on a
+     wide screen; on a narrow one the same menu folds under "Menu" (a details element, no script). */
+  .has-menu .wrap {
+    max-width: 1120px;
+  }
+
+  .app {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+    gap: var(--space-12);
+    align-items: start;
+  }
+
+  .app > main {
+    min-width: 0;
+    max-width: 760px;
+  }
+
+  .menu-side {
+    position: sticky;
+    top: 0;
+    padding-block: var(--space-11) var(--space-8);
+  }
+
+  .menu-fold {
+    display: none;
+  }
+
+  .menu {
+    display: grid;
+    gap: var(--space-6);
+    font: 400 var(--text-chrome-body)/1.3 var(--font-sans);
+  }
+
+  .menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+
+  .menu-label {
+    display: block;
+    margin: 0 0 var(--space-2);
+    padding-inline: var(--space-3);
+    font: 400 var(--text-chrome-label)/1.3 var(--font-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+
+  .menu-group a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-button);
+    color: var(--body-foreground);
+    text-decoration: none;
+  }
+
+  .menu-group a:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  /* Where the person is (the page, or the item it sits under): the muted surface, ink, and the
+     accent only as an edge rule (D-5). */
+  .menu-group a[aria-current] {
+    background: var(--muted);
+    color: var(--foreground);
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  .menu-text {
+    flex: 1;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .menu-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The context: which organisation the menu is for, and a switcher when there are others. */
+  .menu-context {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+  }
+
+  .menu-context .menu-label {
+    margin: 0;
+    padding: 0;
+  }
+
+  .menu-context-name {
+    font-weight: 600;
+    color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+
+  details.menu-context {
+    padding: 0;
+  }
+
+  details.menu-context > summary {
+    list-style: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-card);
+    cursor: pointer;
+  }
+
+  details.menu-context > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.menu-context > summary > * {
+    grid-column: 1;
+  }
+
+  details.menu-context > summary::after {
+    content: "";
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid var(--muted-foreground);
+    border-bottom: 1.5px solid var(--muted-foreground);
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  details.menu-context > summary:hover {
+    background: var(--muted);
+  }
+
+  details.menu-context > ul {
+    position: absolute;
+    z-index: 5;
+    top: calc(100% + var(--space-1));
+    left: 0;
+    right: 0;
+    padding: var(--space-1);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+  }
+
+  details.menu-context a {
+    display: flex;
+    align-items: center;
+    min-height: var(--space-8);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-button);
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  details.menu-context a:hover {
+    background: var(--muted);
+  }
+
+  details.menu-context a[aria-current="true"] {
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  /* --- Crumbs: the page's parents, quiet, before its h1 ------------------------------------- */
+
+  .crumbs ol {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-2);
+    margin: 0 0 var(--space-3);
+    padding: 0;
+    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+  }
+
+  .crumbs li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .crumbs li + li::before {
+    content: "/";
+    color: var(--input);
+  }
+
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-6);
+    color: var(--muted-foreground);
+    text-decoration: none;
+  }
+
+  .crumbs a:hover {
+    color: var(--foreground);
+    text-decoration: underline;
+  }
+
+  /* --- Signal: a monitored thing's state as a traffic light (D-13) -------------------------- */
+
+  /* The word carries the meaning; the mark repeats it in colour and in shape, so red and green are
+     told apart without colour: up a dot, late a triangle, down a diamond, not judged a hollow ring. */
+  .signal {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font: 500 var(--text-chrome-body)/1.2 var(--font-sans);
+    color: var(--foreground);
+    white-space: nowrap;
+  }
+
+  .signal-mark {
+    flex: none;
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background: var(--signal-off);
+  }
+
+  .signal-mark.ok {
+    border-radius: 999px;
+    background: var(--signal-ok);
+  }
+
+  .signal-mark.warn {
+    width: 11px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background: var(--signal-warn);
+  }
+
+  .signal-mark.down {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    background: var(--signal-down);
+  }
+
+  .signal-mark.off {
+    border-radius: 999px;
+    background: transparent;
+    border: 2px solid var(--signal-off);
+  }
+
   /* --- Footer --------------------------------------------------------------------------------- */
 
   footer {
@@ -830,6 +1098,35 @@
     color: var(--foreground);
   }
 
+  /* A monitored state: the neutral card, the signal as the edge rule and its mark before the title. */
+  .notice[class*="signal-"] {
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+  }
+
+  .notice.signal-ok {
+    border-left: 3px solid var(--signal-ok);
+  }
+
+  .notice.signal-warn {
+    border-left: 3px solid var(--signal-warn);
+  }
+
+  .notice.signal-down {
+    border-left: 3px solid var(--signal-down);
+  }
+
+  .notice.signal-off {
+    border-left: 3px solid var(--signal-off);
+  }
+
+  .notice[class*="signal-"] .notice-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
   /* --- Tag ------------------------------------------------------------------------------------ */
 
   .tag {
@@ -961,6 +1258,69 @@
     content: "";
     flex: 1;
     border-top: 1px solid var(--border);
+  }
+
+  /* Below a tablet's width the sidebar folds: one column, and the menu under "Menu" above main. */
+  @media (max-width: 800px) {
+    .app {
+      display: block;
+    }
+
+    .menu-side {
+      display: none;
+    }
+
+    .menu-fold {
+      display: block;
+      margin-top: var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      background: var(--card);
+    }
+
+    .menu-fold > summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-height: var(--space-11);
+      padding: 0 var(--space-4);
+      font: 600 var(--text-chrome-body)/1.2 var(--font-sans);
+      color: var(--foreground);
+      cursor: pointer;
+    }
+
+    .menu-fold > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu-fold > summary::after {
+      content: "";
+      margin-left: auto;
+      width: 7px;
+      height: 7px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: translateY(-2px) rotate(45deg);
+    }
+
+    .menu-fold[open] > summary::after {
+      transform: translateY(2px) rotate(225deg);
+    }
+
+    .menu-fold-current {
+      font-weight: 400;
+      color: var(--muted-foreground);
+    }
+
+    .menu-fold > .menu {
+      padding: var(--space-2) var(--space-2) var(--space-4);
+      border-top: 1px solid var(--border);
+    }
+
+    .menu-fold .menu-group a {
+      min-height: var(--space-11);
+    }
   }
 
   /* --- Phone ---------------------------------------------------------------------------------- */
