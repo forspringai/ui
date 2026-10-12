@@ -12,6 +12,11 @@ By git tag; each product pins a version and upgrades on purpose (D-2):
 pnpm add github:forspringai/ui#v0.5.0
 ```
 
+Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
+("Cannot read properties of null (reading 'edgesOut')"), with this package and others; PulseSpring hit
+it in CI and moved to Node 24.
+
+
 ## Server-rendered pages (plain CSS, no script)
 
 Load three stylesheets, in this order, and set the product on `<html>`:
