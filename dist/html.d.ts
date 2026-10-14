@@ -34,37 +34,98 @@ export type Link = {
     href: string;
     lang?: Lang;
 };
-export type ShellOptions = {
+/** The suite's one role set (hub D-96), a person's place in an organisation. */
+export type Role = "owner" | "admin" | "member" | "viewer";
+export declare const ROLES: readonly Role[];
+/** The roles as words inside a sentence or beside a name, as the account writes them. */
+export declare const ROLE_NAMES: Record<Lang, Record<Role, string>>;
+/** An organisation as the bar and the pages show it: the customer's name and your role there. */
+export type Org = {
+    slug: string;
+    name: string;
+    role: Role;
+};
+/** The bar's org switcher (D-17). */
+export type BarOrg = {
+    /** The organisation this page is in. Its role shows in the user menu's head. */
+    current: Org;
+    /** Every organisation the person has this product in, the current one too. The switcher shows only
+     *  when there is more than one; `href` overrides the link that keeps the person's place. */
+    orgs?: (Org & {
+        href?: string;
+    })[];
+    /** This page's path, so switching keeps the person's place: /o/noon/runs becomes /o/spekta/runs. */
+    path?: string;
+    /** "Manage people in <org>": the account's people page, for owners and admins. */
+    peopleHref?: string;
+};
+/** The bar's product switcher: the other products this organisation has, each opening the same org. */
+export type BarProducts = {
+    items: {
+        name: string;
+        href: string;
+        current?: boolean;
+    }[];
+    /** "All of <org> at Forspring": the account's page for the organisation. */
+    accountHref: string;
+};
+/** The user menu: an avatar button with the person, their role here, the account, language, sign out. */
+export type UserMenu = {
+    name: string;
+    email: string;
+    /** "Your Forspring account". */
+    accountHref: string;
+    /** "Agents and keys in <org>": the account's agents page, filtered to this product. */
+    agentsHref?: string;
+    /** This page in each language; the page's own language is marked. */
+    languages?: Record<Lang, string>;
+    /** The product's sign-out: a POST to `action` with `fields` as hidden inputs (its CSRF token). It ends
+     *  the product's session and sends the browser to the account's end-session (hub D-99). */
+    signOut: {
+        action: string;
+        fields?: Record<string, string>;
+    };
+};
+/** The bar alone: for shell(), and for a rich app's own frame (the React Bar renders the same). */
+export type BarOptions = {
     lang: Lang;
-    /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
-    title: string;
-    /** Sets data-product on <html>; unset means Forspring. */
+    /** Sets the brand: a product's name alone, or Forspring's mark and name (D-15). Unset means Forspring. */
     product?: Product;
-    /** An explicit theme; unset follows the system. */
-    theme?: Theme;
     /** The product's name. A product's pages show it alone as the wordmark ("SiteSpring"), with no
      *  Forspring mark or name (hub D-98: a product is its own brand, like Word with an Office account).
      *  Forspring's own pages (product unset or "forspring") keep "Forspring" plus this label ("konto"). */
     productLabel: string;
-    /** Where the wordmark leads, and its accessible name. */
+    /** Where the wordmark leads, and its accessible name. Defaults to the org's home, /o/<org>/, with an org. */
     home?: string;
     homeLabel?: string;
-    /** Stylesheets and anything else for <head>: raw(`<style>…</style>`) or <link> tags. */
-    head?: Content;
-    /** Other products the person can switch to; renders a details menu after the wordmark. */
+    /** The org switcher (D-17). */
+    org?: BarOrg;
+    /** The product switcher (D-17). */
+    products?: BarProducts;
+    /** The user menu (D-17). */
+    userMenu?: UserMenu;
+    /** @deprecated Use `products`. A details menu of links after the wordmark. */
     switcher?: {
         label: string;
         items: (Link & {
             current?: boolean;
         })[];
     };
-    /** Controls in the bar after the switcher, such as an organisation select. They take the small size, 32px (D-14). */
+    /** Controls in the bar after the switchers, such as a search. They take the small size, 32px (D-14). */
     controls?: Content;
-    /** The signed-in person: their address, and markup for signing out (a form with its CSRF token). */
+    /** @deprecated Use `userMenu`. The person's address and markup for signing out, in the bar itself. */
     user?: {
         email: string;
         signOut?: Content;
     };
+};
+export type ShellOptions = BarOptions & {
+    /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
+    title: string;
+    /** An explicit theme; unset follows the system. */
+    theme?: Theme;
+    /** Stylesheets and anything else for <head>: raw(`<style>…</style>`) or <link> tags. */
+    head?: Content;
     /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
     menu?: Menu;
     /** A single card in a narrow column: sign-in and refusals. */
@@ -73,6 +134,16 @@ export type ShellOptions = {
     footer?: Link[];
     body: Content;
 };
+/**
+ * The same page in another organisation: /o/noon/runs?x=1 becomes /o/spekta/runs?x=1, and a path
+ * outside /o/ becomes the org's home. A page that does not exist there is the product's to send home.
+ */
+export declare function orgPath(path: string, slug: string): string;
+/** Up to two letters for the avatar: the first and last names' initials, else the address's first. */
+export declare function initials(name: string, email?: string): string;
+/** The bar: wordmark, org switcher, product switcher, controls, user menu. The menus are details
+ *  elements, so they open with no script. */
+export declare function bar(o: BarOptions): Html;
 /** A monitored thing's state, as a traffic light: up, late, down, or not being judged (D-13). */
 export type Signal = "ok" | "warn" | "down" | "off";
 export type MenuItem = Link & {

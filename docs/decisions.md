@@ -475,3 +475,86 @@ exported `audit()`: `allowOrigins`, `waitFor`, `waitTimeout`, `settle`.
 
 The tests use `test/fixtures/spa.html`, a page that draws only after an API on a second port
 answers, with the session, 600 ms after load.
+
+## D-17 — One bar with org, product and user menus, the standard pages, the refusal vocabulary and React wrappers; 0.8.0 (2026-10-14)
+
+Hub D-99 (one way in, approved by Peter) makes the bar and the screens around signing in the
+package's, so no product can drift: hub tick f0t, `docs/one-way-in.md` "The bar, in every product",
+"Every screen around signing in" and "One vocabulary for refusals".
+
+**The bar.** `shell()` (and `bar()` alone, for a rich app's own frame) takes three new options:
+`org` (the org switcher), `products` (the product switcher) and `userMenu`. Each is a `details`
+element like the switcher, so it opens with no script, a keyboard reaches it with Tab and opens it
+with Enter or Space. The wordmark stays the product's name alone (D-15, hub D-98) and leads to the
+org's home, `/o/<org>/`, when `home` is unset.
+
+- **Org switcher:** the customer's name in the bar; the panel lists every org with the person's role
+  ("ejer", "administrator", "medlem", "læser", as the account writes them) and "Administrer folk i
+  <org>" to the account's people page. Hidden with one org; the org then shows only in the user
+  menu's head. Each link keeps the person's place: `orgPath("/o/noon/runs", "spekta")` is
+  `/o/spekta/runs` (a query or hash kept, a path outside `/o/` the org's home); a page that does not
+  exist there is the product's to send home. `href` per org overrides it.
+- **Product switcher:** "Produkter"; the panel is "<org> har", the org's products with the current one
+  marked "her", and "Alt for <org> hos Forspring" to the account's org page.
+- **User menu:** an avatar with the person's initials (`initials()`), its accessible name the
+  initials then the name and "din konto" (WCAG 2.5.3: the visible text first). The panel: name,
+  address, "<role> i <org>", "Din Forspring-konto", "Agenter og nøgler i <org>", Dansk / English (this
+  page in each language, the current one marked and `lang`/`hreflang` set), and "Log ud af Forspring"
+  as a small, wide ghost button in a POST form to the product's sign-out with its hidden fields
+  (the CSRF token). Sign-out signs out of Forspring (hub D-99 item 3); the product does the redirect.
+- `switcher` and `user` still work and are marked deprecated; a product moves to `products` and
+  `userMenu` when it adopts the account's org pages. With the bar's org switcher, a product drops its
+  menu's `context`: the hub's rule is that org and people are not repeated in the menu.
+
+**The bar's words are the package's.** D-6 kept the helpers free of copy apart from the skip link
+and the switch's words. The bar and the standard pages are the exception, in Danish and English:
+the point of D-99 is that every product says "Log ud af Forspring" and "Organisationen findes ikke,
+eller du er ikke med i den" the same way, and a catalog per product is how they drifted.
+
+**Phone.** At 560px and below every summary is 44px (D-5's touch floor), the avatar 44 by 44, and a
+panel's links 44px tall. The panels open full width under the bar (the menus become `position:
+static` and the panel is placed against `.bar-inner`, now `position: relative`), so none runs off a
+380px screen. At 380 the bar wraps to a second row when it must, and the org's name ends in an
+ellipsis past 11rem (16rem on a wide screen); the panel shows it whole.
+Panels take `--popover`, the switcher's shadow and radius; the current item has the accent only as
+an edge rule (D-5); `.switcher a[aria-current]` replaces `[aria-current="page"]` for that.
+
+**The refusal vocabulary** is `@forspring/ui/refusals`, with no markup and no dependency, so a CLI or
+an MCP server imports it alone: `REFUSALS[reason]` gives `status` (HTTP), `exit` (suite-standards
+§6) and `da`/`en` `{ title, text, fix }`; `REFUSAL_REASONS` lists the eight in the hub's order and
+`isRefusal()` checks a string. The statuses: `not_signed_in` 401, `org_required` 400,
+`not_a_member` 404 (the same as an org that does not exist, so names cannot be probed; its words
+say "does not exist, or you are not in it" and the page never shows the org's name),
+`product_off`, `org_suspended`, `role_too_low` and `org_mismatch` 403, `account_unavailable` 503.
+Exit codes 4, 2, 3, 4, 4, 4, 4 and 1.
+
+**The standard pages** are `@forspring/ui/pages`: `chooseOrgPage`, `noOrgPage`, `refusedPage` and
+`accountUnavailablePage` return `{ status, title, narrow: true, body }`, to spread into `shell()`
+and answer with `status`. Choose an organisation lists each org with the role and when it was last
+used (a `Date` is written in the page's language, Copenhagen time), the one this browser used last
+(`lastHere`, the product's own cookie, never server state) first, tagged "Sidst brugt her" and the
+primary action. No organisation yet says who you are signed in as and who to ask. A refusal is one
+card: the reason as a kicker (so an agent or support reads the stable code), the title, the text,
+what is specific (the org, the role needed, the credential's org, your orgs, up to three people
+who can fix it as mailto links), the fix, the one action that fixes it (sign in, billing, try
+again) and the exact command for an agent. The account not answering is 503 with "Nothing is lost;
+try again in a minute", never a guess. Classes: `.std-page` plus `.choose-org`, `.no-org` or
+`.refused` and `data-reason`, `.std-label`, `.std-people`; `code` is now Space Mono.
+
+**React wrappers** are `@forspring/ui/react`: `Bar`, `ChooseOrg`, `NoOrg`, `Refused`,
+`AccountUnavailable`, and `fromHtml()`. Each renders the helper's outer element with its
+attributes as props and its inner HTML through `dangerouslySetInnerHTML`, so the markup is the
+helpers' own, byte for byte (`test/bar.test.ts` compares `renderToStaticMarkup` with the helper for
+every page and reason), and escaping is the helpers'. Rewriting the markup as JSX would have been
+a second copy to keep in step, which is what this package exists to prevent. The menus need no
+handlers; their links are plain links, so switching org or product is a full navigation, which it
+is anyway (another org's data, another product's origin). React is an optional peer dependency
+(`>=18`); no JSX, so the file needs no build step of its own. A rich app sets the HTTP status of a
+refusal on its server, since the wrapper only draws.
+
+**Build.** `src/html.ts`, `refusals.ts`, `pages.ts` and `react.ts` compile together to `dist/`, with
+`rewriteRelativeImportExtensions` so the sources keep their `.ts` imports for Node and the output
+says `.js`. The demo shows the new bar (with `?open=org-switcher|product-switcher|user-menu` to open
+a panel for a screenshot or the audit), and every standard page as its own page in DataSpring, in
+Danish and English, under `dist/demo/pages/`; all twenty pass the audit at 1280 and 380, light and
+dark, with no findings.

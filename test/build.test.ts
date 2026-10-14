@@ -20,10 +20,10 @@ describe.each(Object.keys(files))("dist/%s", (name) => {
   });
 });
 
-test("dist/html.js and html.d.ts match a fresh compile of src/html.ts", () => {
+test("dist/html, refusals, pages and react (.js, .d.ts) match a fresh compile of src/", () => {
   const out = mkdtempSync(join(tmpdir(), "forspring-ui-html-"));
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json"), "--outDir", out]);
-  for (const f of ["html.js", "html.d.ts"]) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
+  for (const f of ["html", "refusals", "pages", "react"].flatMap((n) => [`${n}.js`, `${n}.d.ts`])) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
 });
 
 test("dist/audit/ matches a fresh compile of src/audit/", () => {

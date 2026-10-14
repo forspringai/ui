@@ -1,6 +1,6 @@
 {
   "name": "@forspring/ui",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "Forspring suite UI: design tokens, fonts, a server-rendered component layer and the design audit (hub D-90)",
   "private": true,
   "type": "module",
@@ -26,6 +26,18 @@
       "types": "./dist/html.d.ts",
       "default": "./dist/html.js"
     },
+    "./pages": {
+      "types": "./dist/pages.d.ts",
+      "default": "./dist/pages.js"
+    },
+    "./refusals": {
+      "types": "./dist/refusals.d.ts",
+      "default": "./dist/refusals.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
     "./tokens.css": "./dist/tokens.css",
     "./theme.css": "./dist/theme.css",
     "./fonts.css": "./dist/fonts.css",
@@ -48,7 +60,11 @@
   },
   "devDependencies": {
     "@types/node": "24.19.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
     "playwright": "1.64.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "typescript": "7.0.2",
     "vitest": "5.0.3"
   },
@@ -56,10 +72,14 @@
     "axe-core": "4.14.0"
   },
   "peerDependencies": {
-    "playwright": ">=1.50"
+    "playwright": ">=1.50",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "playwright": {
+      "optional": true
+    },
+    "react": {
       "optional": true
     }
   },

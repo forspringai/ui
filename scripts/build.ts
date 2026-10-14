@@ -15,12 +15,12 @@ try {
     mkdirSync(dirname(join(root, "dist", name)), { recursive: true });
     writeFileSync(join(root, "dist", name), text);
   }
-  // html.js and html.d.ts, so a product imports the helpers with no TypeScript loader (Node will not
+  // html, refusals, pages and react (.js and .d.ts), so a product imports the helpers with no TypeScript loader (Node will not
   // strip types inside node_modules).
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json")], { stdio: "inherit" });
   // The design audit's bin, ui-audit, for the same reason.
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json")], { stdio: "inherit" });
-  console.log(`dist/: ${[...Object.keys(files), "html.js", "html.d.ts", "audit/"].join(", ")}`);
+  console.log(`dist/: ${[...Object.keys(files), "html, refusals, pages, react (.js, .d.ts)", "audit/"].join(", ")}`);
 } catch (e) {
   if (!(e instanceof TokenProblems)) throw e;
   console.error(e.message);

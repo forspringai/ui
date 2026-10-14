@@ -110,6 +110,14 @@ describe("the demo page", () => {
     expect(all(r).filter((f) => f.severity !== "review")).toEqual([]);
     expect(r.ok).toBe(true);
   }, 120_000);
+
+  // The standard pages around signing in (D-17), in DataSpring's bar with its org, products and person.
+  test("the standard pages pass: choose an org, and a refusal with who can fix it", async () => {
+    const r = await audit(options([`${base}/dist/demo/pages/choose-org.da.html`, `${base}/dist/demo/pages/refused-product_off.en.html`], { product: "dataspring" }), browser);
+    expect(r.pages).toHaveLength(8);
+    expect(all(r)).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 120_000);
 });
 
 describe("signed-in and refusal pages", () => {

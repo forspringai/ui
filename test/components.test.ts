@@ -5,7 +5,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "vitest";
-import { demoPage } from "../demo/index.ts";
+import { demoPage, standardPages } from "../demo/index.ts";
 
 const root = join(import.meta.dirname, "..");
 const css = readFileSync(join(root, "css/components.css"), "utf8");
@@ -33,13 +33,14 @@ test("both layers are declared in order, and every rule sits in one", () => {
   expect(outside.trim()).toBe("");
 });
 
-test("every class in the demo page has a rule", () => {
-  const html = demoPage();
+test("every class in the demo page and the standard pages has a rule", () => {
+  const html = demoPage() + Object.values(standardPages()).join("");
   const used = new Set([...html.matchAll(/class="([^"]+)"/g)].flatMap((m) => m[1]!.split(/\s+/)));
   const gsi = readFileSync(join(root, "css/google-button.css"), "utf8");
   // The demo's own layout, the mark's parts (styled as .brand .mark .fill), and data-state's "empty",
-  // which is the plain state and only names the kind for a product's own rules.
-  const demoOnly = ["demo-controls", "demo-row", "demo-grid", "mark", "fill", "coil", "empty"];
+  // which is the plain state and only names the kind for a product's own rules; likewise the bar menus'
+  // and standard pages' kinds (D-17), hooks for a product's own rules.
+  const demoOnly = ["demo-controls", "demo-row", "demo-grid", "mark", "fill", "coil", "empty", "org-switcher", "product-switcher", "choose-org", "no-org", "refused"];
   const missing = [...used].filter((c) => !demoOnly.includes(c) && !new RegExp(`\\.${c}\\b`).test(css + gsi));
   expect(missing).toEqual([]);
 });

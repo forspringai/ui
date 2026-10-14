@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.7.0
+pnpm add github:forspringai/ui#v0.8.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -101,6 +101,85 @@ shell({
 A sidebar on a wide screen, folded under "Menu" on a phone, no script. `signal(word, "ok" | "warn" |
 "down" | "off")` is a monitored state as a traffic light: a shaped mark in `--signal-*` and the word.
 `notice({ signal: "down", title, text })` is the neutral card with that signal as its edge.
+
+### The bar, the standard pages and refusals (0.8.0, D-17, hub D-99)
+
+Every product's bar is the package's: the product's name, the org switcher, the product switcher and
+the user menu, all `details` menus with no script.
+
+```ts
+import { shell, type BarOptions } from "@forspring/ui/html";
+import { refusedPage, chooseOrgPage } from "@forspring/ui/pages";
+
+const bar: BarOptions = {
+  lang: "da", product: "dataspring", productLabel: "DataSpring",            // the wordmark leads to /o/<org>/
+  org: {
+    current: { slug: "noon", name: "Noon", role: "admin" },
+    orgs: myOrgs,                         // [{ slug, name, role }]; the switcher shows with two or more
+    path: url.pathname,                   // switching keeps the place: /o/noon/runs -> /o/spekta/runs
+    peopleHref: "https://account.forspring.ai/o/noon/people",
+  },
+  products: { items: [{ name: "DataSpring", href: "/o/noon/", current: true }, { name: "SiteSpring", href: "https://…/o/noon/" }], accountHref: "https://account.forspring.ai/o/noon/" },
+  userMenu: {
+    name: "Peter Engelbrecht", email: "peter@…",
+    accountHref: "https://account.forspring.ai/",
+    agentsHref: "https://account.forspring.ai/o/noon/agents?product=dataspring",
+    languages: { da: "?lang=da", en: "?lang=en" },
+    signOut: { action: "/signout", fields: { csrf } },   // "Log ud af Forspring": ends every session
+  },
+};
+
+return new Response(String(shell({ ...bar, title: "Kørsler", body })), { headers });
+
+const page = refusedPage({ lang: "da", reason: "product_off", org: "Noon", people: admins });
+return new Response(String(shell({ ...bar, ...page })), { status: page.status, headers });
+```
+
+Roles are the account's four, `owner`, `admin`, `member`, `viewer`, written as "ejer",
+"administrator", "medlem", "læser" (`ROLE_NAMES`). With the org switcher in the bar, drop your menu's
+`context`. `switcher` and `user` still work and are deprecated.
+
+The pages (`@forspring/ui/pages`) each return `{ status, title, narrow, body }`:
+
+| Helper | When | Status |
+|---|---|---|
+| `chooseOrgPage({ lang, orgs, product, lastHere })` | Signed in, several orgs, none in the URL | 200 |
+| `noOrgPage({ lang, product, email, ask, accountHref })` | Signed in, in no org with this product | 200 |
+| `refusedPage({ lang, reason, ... })` | Any refusal, with what fixes it | per reason |
+| `accountUnavailablePage({ lang })` | The account did not answer | 503 |
+
+The refusal vocabulary (`@forspring/ui/refusals`, no markup, for CLIs and MCP servers too):
+
+```ts
+import { REFUSALS, REFUSAL_REASONS, type Refusal } from "@forspring/ui/refusals";
+REFUSALS.product_off;   // { status: 403, exit: 4, da: { title, text, fix }, en: { title, text, fix } }
+```
+
+| Reason | HTTP | Exit | Details `refusedPage` shows |
+|---|---|---|---|
+| `not_signed_in` | 401 | 4 | `signInHref`, `command` |
+| `org_required` | 400 | 2 | `orgs` |
+| `not_a_member` | 404 | 3 | `orgs`, `people` (never the org's name) |
+| `product_off` | 403 | 4 | `org`, `people` (up to three admins) |
+| `org_suspended` | 403 | 4 | `org`, `people` (owners), `billingHref` |
+| `role_too_low` | 403 | 4 | `org`, `roleNeeded`, `people` |
+| `org_mismatch` | 403 | 4 | `org`, `credentialOrg` |
+| `account_unavailable` | 503 | 1 | `retryHref` |
+
+**React** (rich apps; `react` is an optional peer dependency, nothing else is added):
+
+```tsx
+import { Bar, Refused } from "@forspring/ui/react";
+<Bar {...bar} />
+<Refused lang="da" reason="role_too_low" roleNeeded="admin" />
+```
+
+`Bar`, `ChooseOrg`, `NoOrg`, `Refused` and `AccountUnavailable` render exactly the helpers' markup,
+so they need `components.css` like any page (or `theme.css` plus `components.css`). Set the refusal's
+HTTP status on your server.
+
+The demo shows the bar (`?open=org-switcher`, `product-switcher` or `user-menu` opens a menu) and every
+standard page in DataSpring under `dist/demo/pages/<name>.<da|en>.html`.
 
 ## Tailwind v4 and shadcn
 

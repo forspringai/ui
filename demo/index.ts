@@ -1,8 +1,12 @@
 // The demo page: every component, drawn with src/html.ts, in Danish. pnpm build writes it to
 // dist/demo/index.html and pnpm demo serves it. The product and theme switches at the top are the
-// only script, and only here: products set data-product and data-theme on the server.
+// only script, and only here: products set data-product and data-theme on the server. The standard
+// pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
+// dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { button, card, crumbs, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag } from "../src/html.ts";
+import { button, card, crumbs, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type Lang, type Org } from "../src/html.ts";
+import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
+import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
 
 const PRODUCTS = [
   ["forspring", "Forspring"],
@@ -20,7 +24,7 @@ const controls = html`<form class="demo-controls card" aria-label="Demovalg">
 <fieldset><legend>Tema</legend>${radios("theme", [["system", "Som systemet"], ["light", "Lyst"], ["dark", "Mørkt"]], "system")}</fieldset>
 </form>`;
 
-// Reads ?product= and ?theme= too, so a screenshot can ask for a state by URL.
+// Reads ?product=, ?theme= and ?open= too, so a screenshot can ask for a state by URL.
 const SCRIPT = `<script>
 (() => {
   const root = document.documentElement, form = document.querySelector(".demo-controls"), q = new URLSearchParams(location.search);
@@ -29,13 +33,19 @@ const SCRIPT = `<script>
     root.dataset.product = p;
     if (t === "system") delete root.dataset.theme; else root.dataset.theme = t;
     const name = form.querySelector('input[name=product]:checked').parentElement.textContent.trim();
-    const sub = p === "forspring" ? "konto" : name;
-    document.querySelectorAll(".brand .sub").forEach((e) => (e.textContent = sub));
-    // The label starts with the visible words, as WCAG 2.5.3 asks (D-8).
-    document.querySelectorAll(".brand").forEach((e) => e.setAttribute("aria-label", "Forspring " + sub + ", forside"));
+    // A product's bar carries its own name alone (D-15); Forspring's own keeps the mark and "konto".
+    document.querySelectorAll(".brand").forEach((e) => {
+      e.dataset.own ??= e.innerHTML;
+      e.innerHTML = p === "forspring" ? e.dataset.own : "";
+      if (p !== "forspring") e.append(Object.assign(document.createElement("span"), { className: "word", textContent: name }));
+      // The label starts with the visible words, as WCAG 2.5.3 asks (D-8).
+      e.setAttribute("aria-label", (p === "forspring" ? "Forspring konto" : name) + ", forside");
+    });
   };
   if (q.get("product")) form.product.value = q.get("product");
   if (q.get("theme")) form.theme.value = q.get("theme");
+  // ?open=org-switcher (or product-switcher, user-menu) opens a bar menu, so the audit measures its panel.
+  if (q.get("open")) document.querySelector("details." + CSS.escape(q.get("open")))?.setAttribute("open", "");
   form.addEventListener("change", apply);
   apply();
 })();
@@ -49,7 +59,28 @@ const head = raw(`<link rel="stylesheet" href="../tokens.css"><link rel="stylesh
 .demo-grid > * { margin: 0; }
 </style>`);
 
-const signOut = html`<form class="inline" method="post" action="#"><button class="ghost small" type="submit">Log ud</button></form>`;
+// The standard pages (D-17), each a page of its own in DataSpring, as a product shows them.
+const PAGES: [string, string][] = [
+  ["choose-org", "Vælg en organisation"],
+  ["no-org", "Ingen organisation endnu"],
+  ...REFUSAL_REASONS.map((r): [string, string] => [`refused-${r}`, `Afvist: ${r}`]),
+];
+
+const ORGS: Org[] = [
+  { slug: "bager-hansen", name: "Bager Hansen ApS", role: "admin" },
+  { slug: "osterbro-cykler", name: "Østerbro Cykler", role: "owner" },
+  { slug: "aero-kaffe", name: "Ærø Kaffebrænderi", role: "viewer" },
+];
+
+// The person's user menu; `da` and `en` are this page in each language.
+const METTE = (_lang: Lang, da: string, en: string) => ({
+  name: "Mette Kjær",
+  email: "mette@eksempel.dk",
+  accountHref: "#",
+  agentsHref: "#",
+  languages: { da, en },
+  signOut: { action: "#", fields: { csrf: "demo" } },
+});
 
 const people = [
   ["Mette Kjær", "mette@eksempel.dk", "Administrator", true, false, 1240],
@@ -146,6 +177,11 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 </div>
 </section>
 
+<section><h2>Sider omkring log ind</h2>
+<p>Standardsiderne, som hvert produkt viser med de samme ord (her i DataSpring). Hver er en side for sig.</p>
+${list(PAGES.map(([name, title]) => ({ name: title, meta: html`<span lang="en">${name}</span>`, action: html`<span class="actions"><a class="go" href="${`pages/${name}.da.html`}">Dansk</a> <a class="go" href="${`pages/${name}.en.html`}" lang="en" hreflang="en">English</a></span>` })))}
+</section>
+
 <section><h2>Log ind</h2>
 <div style="max-width: 480px">${card(html`<h1>Log ind på Forspring</h1><p class="lede">Én konto til SiteSpring, DataSpring og Spring.</p>
 <form method="post" action="#">${googleButton("Fortsæt med Google")}</form>
@@ -163,23 +199,12 @@ export function demoPage(): string {
       productLabel: "konto",
       homeLabel: "Forspring konto, forside",
       head,
-      switcher: {
-        label: "Skift produkt",
-        items: PRODUCTS.map(([key, name]) => ({ label: name, href: `?product=${key}`, current: key === "forspring" })),
-      },
-      controls: html`<select aria-label="Organisation"><option>Bager Hansen ApS</option><option>Østerbro Cykler</option></select>`,
-      user: { email: "mette@eksempel.dk", signOut },
+      org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/komponenter", peopleHref: "#" },
+      products: { items: PRODUCTS.filter(([key]) => key !== "forspring").map(([key, name]) => ({ name, href: `?product=${key}` })), accountHref: "#" },
+      userMenu: METTE("da", "index.html", "index.html"),
       menu: {
         label: "Hovedmenu",
         toggle: "Menu",
-        context: {
-          label: "Organisation",
-          name: "Bager Hansen ApS",
-          items: [
-            { label: "Bager Hansen ApS", href: "#", current: true },
-            { label: "Østerbro Cykler", href: "#" },
-          ],
-        },
         groups: [
           {
             items: [
@@ -206,4 +231,57 @@ export function demoPage(): string {
       body,
     }),
   );
+}
+
+
+const ADMINS = [
+  { name: "Jonas Holm", email: "jonas@eksempel.dk" },
+  { name: "Aisha Rahman", email: "aisha@eksempel.dk" },
+];
+
+function standard(name: string, lang: Lang): StandardPage {
+  const orgs = ORGS.map((o) => ({ ...o, href: `/o/${o.slug}/` }));
+  if (name === "choose-org")
+    return chooseOrgPage({ lang, product: "DataSpring", lastHere: "osterbro-cykler", orgs: orgs.map((o, i) => ({ ...o, lastUsed: new Date(Date.UTC(2026, 9, 12 - i * 3, 9, 30)) })) });
+  if (name === "no-org") return noOrgPage({ lang, product: "DataSpring", email: "mette@eksempel.dk", ask: ADMINS, accountHref: "#" });
+  const reason = name.slice("refused-".length) as Refusal;
+  return refusedPage({
+    lang,
+    reason,
+    org: ORGS[0]!.name,
+    orgs,
+    people: reason === "org_suspended" ? [{ name: "Mette Kjær", email: "mette@eksempel.dk" }] : reason === "not_signed_in" || reason === "org_required" || reason === "org_mismatch" || reason === "account_unavailable" ? undefined : ADMINS,
+    signInHref: "#",
+    billingHref: "#",
+    roleNeeded: "admin",
+    credentialOrg: ORGS[1]!.name,
+    command: reason === "not_signed_in" ? "dataspring auth login" : reason === "org_required" ? "dataspring datacore status --org bager-hansen" : undefined,
+  });
+}
+
+/** dist/demo/pages/<name>.<lang>.html: every standard page, in DataSpring's bar. */
+export function standardPages(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [name] of PAGES)
+    for (const lang of ["da", "en"] as const) {
+      const p = standard(name, lang);
+      // The bar as it is on that page: an org once one is known; none on choose-org, no-org and not_signed_in.
+      const known = !["choose-org", "no-org", "refused-not_signed_in", "refused-org_required", "refused-not_a_member", "refused-account_unavailable"].includes(name);
+      const signedIn = name !== "refused-not_signed_in" && name !== "refused-account_unavailable";
+      out[`pages/${name}.${lang}.html`] = String(
+        shell({
+          lang,
+          product: "dataspring",
+          productLabel: "DataSpring",
+          homeLabel: lang === "da" ? "DataSpring, forside" : "DataSpring, home",
+          head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
+          org: known ? { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/datacore/runs", peopleHref: "#" } : undefined,
+          products: known ? { items: [{ name: "DataSpring", href: "/o/bager-hansen/", current: true }, { name: "SiteSpring", href: "#" }, { name: "PulseSpring", href: "#" }], accountHref: "#" } : undefined,
+          userMenu: signedIn ? METTE(lang, `${name}.da.html`, `${name}.en.html`) : undefined,
+          footer: [lang === "da" ? { label: "English", href: `${name}.en.html`, lang: "en" } : { label: "Dansk", href: `${name}.da.html`, lang: "da" }, { label: lang === "da" ? "Alle komponenter" : "All components", href: "../index.html" }],
+          ...p,
+        }),
+      ) + "\n";
+    }
+  return out;
 }

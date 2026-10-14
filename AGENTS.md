@@ -26,12 +26,15 @@ css/
 src/dtcg.ts        reads and validates DTCG: groups, inherited $type, aliases, 2025.10 value shapes
 src/emit.ts        writes the token outputs
 src/assets.ts      writes fonts.css, the component CSS and the demo page
-src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6)
+src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6), the bar (D-17)
+src/refusals.ts    the refusal vocabulary, Danish and English, no markup (D-17)
+src/pages.ts       the standard pages: choose an org, no org, refused, account unavailable (D-17)
+src/react.ts       React wrappers drawing the helpers' own markup (D-17)
 src/color.ts       WCAG contrast and OKLab distance (normal and colour-blind vision)
 src/audit/         the design audit, ui-audit (D-8 to D-10): cli.ts (bin), args.ts (flags, refusals,
                    the cookie redactor), audit.ts (rules, Playwright runs), page.ts
                    (measurements inside Chromium)
-demo/index.ts      the demo page, drawn with src/html.ts
+demo/index.ts      the demo page and the standard pages, drawn with src/html.ts and src/pages.ts
 demo/account-home.html  parity fixture: the account's home markup on this package's CSS
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/
 scripts/demo.ts    pnpm demo: serves the repo at http://127.0.0.1:4319/dist/demo/
@@ -41,9 +44,9 @@ dist/              committed build output (D-2)
   tokens.js/.d.ts  typed values for code, charts and MCP Apps
   fonts.css        @font-face rules pointing at ../fonts/
   components.css, google-button.css
-  html.js/.d.ts    the helpers, compiled, so a product needs no TypeScript loader
+  html, refusals, pages, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
   audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
-  demo/index.html  every component, every product, light and dark
+  demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the audit (demo passes, test/fixtures/broken.html fails)
 ```
@@ -65,7 +68,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.7.0"
+"@forspring/ui": "github:forspringai/ui#v0.8.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

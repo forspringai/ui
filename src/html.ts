@@ -117,29 +117,87 @@ export const mark = (): Html => raw(MARK_SVG);
 
 export type Link = { label: string; href: string; lang?: Lang };
 
-export type ShellOptions = {
+/** The suite's one role set (hub D-96), a person's place in an organisation. */
+export type Role = "owner" | "admin" | "member" | "viewer";
+export const ROLES: readonly Role[] = ["owner", "admin", "member", "viewer"];
+
+/** The roles as words inside a sentence or beside a name, as the account writes them. */
+export const ROLE_NAMES: Record<Lang, Record<Role, string>> = {
+  da: { owner: "ejer", admin: "administrator", member: "medlem", viewer: "læser" },
+  en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
+};
+
+/** An organisation as the bar and the pages show it: the customer's name and your role there. */
+export type Org = { slug: string; name: string; role: Role };
+
+/** The bar's org switcher (D-17). */
+export type BarOrg = {
+  /** The organisation this page is in. Its role shows in the user menu's head. */
+  current: Org;
+  /** Every organisation the person has this product in, the current one too. The switcher shows only
+   *  when there is more than one; `href` overrides the link that keeps the person's place. */
+  orgs?: (Org & { href?: string })[];
+  /** This page's path, so switching keeps the person's place: /o/noon/runs becomes /o/spekta/runs. */
+  path?: string;
+  /** "Manage people in <org>": the account's people page, for owners and admins. */
+  peopleHref?: string;
+};
+
+/** The bar's product switcher: the other products this organisation has, each opening the same org. */
+export type BarProducts = {
+  items: { name: string; href: string; current?: boolean }[];
+  /** "All of <org> at Forspring": the account's page for the organisation. */
+  accountHref: string;
+};
+
+/** The user menu: an avatar button with the person, their role here, the account, language, sign out. */
+export type UserMenu = {
+  name: string;
+  email: string;
+  /** "Your Forspring account". */
+  accountHref: string;
+  /** "Agents and keys in <org>": the account's agents page, filtered to this product. */
+  agentsHref?: string;
+  /** This page in each language; the page's own language is marked. */
+  languages?: Record<Lang, string>;
+  /** The product's sign-out: a POST to `action` with `fields` as hidden inputs (its CSRF token). It ends
+   *  the product's session and sends the browser to the account's end-session (hub D-99). */
+  signOut: { action: string; fields?: Record<string, string> };
+};
+
+/** The bar alone: for shell(), and for a rich app's own frame (the React Bar renders the same). */
+export type BarOptions = {
   lang: Lang;
-  /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
-  title: string;
-  /** Sets data-product on <html>; unset means Forspring. */
+  /** Sets the brand: a product's name alone, or Forspring's mark and name (D-15). Unset means Forspring. */
   product?: Product;
-  /** An explicit theme; unset follows the system. */
-  theme?: Theme;
   /** The product's name. A product's pages show it alone as the wordmark ("SiteSpring"), with no
    *  Forspring mark or name (hub D-98: a product is its own brand, like Word with an Office account).
    *  Forspring's own pages (product unset or "forspring") keep "Forspring" plus this label ("konto"). */
   productLabel: string;
-  /** Where the wordmark leads, and its accessible name. */
+  /** Where the wordmark leads, and its accessible name. Defaults to the org's home, /o/<org>/, with an org. */
   home?: string;
   homeLabel?: string;
+  /** The org switcher (D-17). */
+  org?: BarOrg;
+  /** The product switcher (D-17). */
+  products?: BarProducts;
+  /** The user menu (D-17). */
+  userMenu?: UserMenu;
+  /** @deprecated Use `products`. A details menu of links after the wordmark. */
+  switcher?: { label: string; items: (Link & { current?: boolean })[] };
+  /** Controls in the bar after the switchers, such as a search. They take the small size, 32px (D-14). */
+  controls?: Content;
+  /** @deprecated Use `userMenu`. The person's address and markup for signing out, in the bar itself. */
+  user?: { email: string; signOut?: Content };
+};
+
+export type ShellOptions = BarOptions & {
+  /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
+  title: string;
+  /** An explicit theme; unset follows the system. */
+  theme?: Theme;
   /** Stylesheets and anything else for <head>: raw(`<style>…</style>`) or <link> tags. */
   head?: Content;
-  /** Other products the person can switch to; renders a details menu after the wordmark. */
-  switcher?: { label: string; items: (Link & { current?: boolean })[] };
-  /** Controls in the bar after the switcher, such as an organisation select. They take the small size, 32px (D-14). */
-  controls?: Content;
-  /** The signed-in person: their address, and markup for signing out (a form with its CSRF token). */
-  user?: { email: string; signOut?: Content };
   /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
   menu?: Menu;
   /** A single card in a narrow column: sign-in and refusals. */
@@ -149,6 +207,110 @@ export type ShellOptions = {
   body: Content;
 };
 
+// The bar's words are the suite's, not a product's: every product's bar says the same (D-17).
+const BAR = {
+  da: {
+    orgs: "Dine organisationer",
+    switchOrg: "skift organisation",
+    people: (o: string) => `Administrer folk i ${o}`,
+    products: "Produkter",
+    has: (o: string) => `${o} har`,
+    here: "her",
+    allOf: (o: string) => `Alt for ${o} hos Forspring`,
+    menu: "din konto",
+    account: "Din Forspring-konto",
+    agents: (o?: string) => (o ? `Agenter og nøgler i ${o}` : "Agenter og nøgler"),
+    roleIn: (r: string, o: string) => `${r} i ${o}`,
+    language: "Sprog",
+    signOut: "Log ud af Forspring",
+  },
+  en: {
+    orgs: "Your organizations",
+    switchOrg: "switch organization",
+    people: (o: string) => `Manage people in ${o}`,
+    products: "Products",
+    has: (o: string) => `${o} has`,
+    here: "here",
+    allOf: (o: string) => `All of ${o} at Forspring`,
+    menu: "your account",
+    account: "Your Forspring account",
+    agents: (o?: string) => (o ? `Agents and keys in ${o}` : "Agents and keys"),
+    roleIn: (r: string, o: string) => `${r} in ${o}`,
+    language: "Language",
+    signOut: "Sign out of Forspring",
+  },
+};
+
+const LANG_NAMES: Record<Lang, string> = { da: "Dansk", en: "English" };
+
+/**
+ * The same page in another organisation: /o/noon/runs?x=1 becomes /o/spekta/runs?x=1, and a path
+ * outside /o/ becomes the org's home. A page that does not exist there is the product's to send home.
+ */
+export function orgPath(path: string, slug: string): string {
+  const m = /^\/o\/[^/?#]+(.*)$/.exec(path);
+  const rest = m ? m[1]! : "";
+  return `/o/${encodeURIComponent(slug)}${rest === "" || /^[?#]/.test(rest) ? `/${rest}` : rest}`;
+}
+
+/** Up to two letters for the avatar: the first and last names' initials, else the address's first. */
+export function initials(name: string, email = ""): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  const first = (w: string | undefined) => (w ? Array.from(w)[0]! : "");
+  const letters = words.length > 1 ? first(words[0]) + first(words[words.length - 1]) : first(words[0]) || first(email);
+  return letters.toLocaleUpperCase() || "?";
+}
+
+const current = (on: boolean | undefined, value = "true") => raw(on ? ` aria-current="${value}"` : "");
+
+function orgSwitcher(o: BarOrg, t: (typeof BAR)[Lang], lang: Lang): Html {
+  const orgs = o.orgs ?? [];
+  if (orgs.length < 2) return html``;
+  const items = orgs.map(
+    (g) =>
+      html`<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ROLE_NAMES[lang][g.role]}</span></a></li>`,
+  );
+  const foot = o.peopleHref ? html`<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
+  return html`<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
+}
+
+function productSwitcher(p: BarProducts, t: (typeof BAR)[Lang], org: Org | undefined): Html {
+  const items = p.items.map(
+    (i) =>
+      html`<li><a href="${safeHref(i.href)}"${current(i.current)}><span class="bar-item-name">${i.name}</span>${i.current ? html`<span class="bar-item-meta">${t.here}</span>` : ""}</a></li>`,
+  );
+  return html`<details class="switcher bar-menu product-switcher"><summary>${t.products}</summary><div class="bar-panel"><p class="bar-panel-label">${org ? t.has(org.name) : t.products}</p><ul>${items}</ul><p class="bar-panel-foot"><a href="${safeHref(p.accountHref)}">${org ? t.allOf(org.name) : t.account}</a></p></div></details>`;
+}
+
+function userMenu(u: UserMenu, t: (typeof BAR)[Lang], lang: Lang, org: Org | undefined): Html {
+  const role = org ? html`<span class="user-role">${t.roleIn(ROLE_NAMES[lang][org.role], org.name)}</span>` : "";
+  const agents = u.agentsHref ? html`<li><a href="${safeHref(u.agentsHref)}">${t.agents(org?.name)}</a></li>` : "";
+  const langs = u.languages
+    ? html`<p class="user-lang"><span class="visually-hidden">${t.language}: </span>${(["da", "en"] as const).map(
+        (l) => html`<a href="${safeHref(u.languages![l])}" lang="${l}" hreflang="${l}"${current(l === lang)}>${LANG_NAMES[l]}</a>`,
+      )}</p>`
+    : "";
+  const fields = Object.entries(u.signOut.fields ?? {}).map(([name, value]) => html`<input type="hidden" name="${name}" value="${value}">`);
+  return html`<details class="switcher bar-menu user-menu"><summary><span class="avatar">${initials(u.name, u.email)}</span><span class="visually-hidden">: ${u.name}, ${t.menu}</span></summary><div class="bar-panel"><p class="user-head"><span class="user-name">${u.name}</span><span class="user-email">${u.email}</span>${role}</p><ul><li><a href="${safeHref(u.accountHref)}">${t.account}</a></li>${agents}</ul>${langs}<form class="user-signout" method="post" action="${safeHref(u.signOut.action)}">${fields}${button({ label: t.signOut, variant: "ghost", small: true, wide: true })}</form></div></details>`;
+}
+
+/** The bar: wordmark, org switcher, product switcher, controls, user menu. The menus are details
+ *  elements, so they open with no script. */
+export function bar(o: BarOptions): Html {
+  const t = BAR[o.lang];
+  // Forspring's own pages (the account, forspring.ai) carry the Forspring mark; a product's carry only its name (D-98).
+  const own = o.product === undefined || o.product === "forspring";
+  const org = o.org?.current;
+  const legacy = o.switcher
+    ? html`<details class="switcher"><summary>${o.switcher.label}</summary><ul>${o.switcher.items.map(
+        (i) => html`<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}</a></li>`,
+      )}</ul></details>`
+    : "";
+  const user = o.user ? html`<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
+  const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
+  const brand = html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${own ? html`${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>`;
+  return html`<header class="bar"><div class="wrap bar-inner">${brand}${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
+}
 
 /** A monitored thing's state, as a traffic light: up, late, down, or not being judged (D-13). */
 export type Signal = "ok" | "warn" | "down" | "off";
@@ -209,14 +371,7 @@ function menuFrame(m: Menu, body: Content, narrow?: boolean): Html {
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export function shell(o: ShellOptions): Html {
   const da = o.lang === "da";
-  // Forspring's own pages (the account, forspring.ai) carry the Forspring mark; a product's carry only its name (D-98).
   const own = o.product === undefined || o.product === "forspring";
-  const switcher = o.switcher
-    ? html`<details class="switcher"><summary>${o.switcher.label}</summary><ul>${o.switcher.items.map(
-        (i) => html`<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="page"' : "")}>${i.label}</a></li>`,
-      )}</ul></details>`
-    : "";
-  const user = o.user ? html`<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
   const footer = o.footer?.length
     ? html`<footer><div class="wrap foot">${o.footer.map((l) => html`<a href="${safeHref(l.href)}"${raw(l.lang ? attrs({ lang: l.lang, hreflang: l.lang }) : "")}>${l.label}</a>`)}</div></footer>`
     : "";
@@ -224,7 +379,7 @@ export function shell(o: ShellOptions): Html {
   return html`<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · ${own ? "Forspring" : o.productLabel}</title>${o.head}</head>
 <body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${own ? html`${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
+${bar(o)}
 ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html`<main id="main" class="${cls("wrap", o.narrow && "narrow")!}">${o.body}</main>`}
 ${footer}</body></html>`;
 }

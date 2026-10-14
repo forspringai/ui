@@ -86,6 +86,99 @@ export const googleFontFace = (base) => face(GOOGLE_FACE, base);
 // forspring.ai's mark (its favicon.svg), inline so it takes the product's accent.
 const MARK_SVG = `<svg class="mark" viewBox="-184 -160 368 368" aria-hidden="true" focusable="false"><g class="fill" fill-rule="evenodd"><path d="M -146.98 63.23 A 160 160 0 1 1 146.98 63.23 A 346 346 0 0 1 -146.98 63.23 Z M -89 -44 a 28 28 0 1 0 56 0 a 28 28 0 1 0 -56 0 M 33 -44 a 28 28 0 1 0 56 0 a 28 28 0 1 0 -56 0"/><path d="M -146.98 63.23 A 346 346 0 0 0 146.98 63.23 A 160 160 0 0 1 -146.98 63.23 Z" transform="translate(0 48)"/></g><path class="coil" d="M 0.0 89.0 C 5.3 89.0 21.3 89.5 32.0 89.1 C 42.7 88.6 58.7 86.4 64.0 86.1 C 69.3 85.9 69.3 86.4 64.0 87.7 C 58.7 88.9 42.7 92.2 32.0 93.7 C 21.3 95.2 10.7 96.2 0.0 96.8 C -10.7 97.3 -21.3 97.3 -32.0 96.8 C -42.7 96.3 -58.7 94.1 -64.0 93.9 C -69.3 93.6 -69.3 94.2 -64.0 95.4 C -58.7 96.7 -42.7 100.0 -32.0 101.5 C -21.3 103.0 -10.7 104.0 -0.0 104.5 C 10.7 105.0 21.3 105.0 32.0 104.6 C 42.7 104.1 58.7 101.9 64.0 101.6 C 69.3 101.4 69.3 101.9 64.0 103.2 C 58.7 104.4 42.7 107.7 32.0 109.2 C 21.3 110.7 10.7 111.7 0.0 112.2 C -10.7 112.8 -21.3 112.8 -32.0 112.3 C -42.7 111.8 -58.7 109.6 -64.0 109.4 C -69.3 109.1 -69.3 109.7 -64.0 110.9 C -58.7 112.2 -42.7 115.5 -32.0 117.0 C -21.3 118.5 -10.7 119.5 -0.0 120.0 C 10.7 120.5 21.3 120.5 32.0 120.1 C 42.7 119.6 58.7 117.4 64.0 117.1 C 69.3 116.9 69.3 117.4 64.0 118.7 C 58.7 119.9 42.7 123.2 32.0 124.7 C 21.3 126.2 10.7 127.2 0.0 127.8 C -10.7 128.3 -21.3 128.3 -32.0 127.8 C -42.7 127.3 -58.7 125.1 -64.0 124.9 C -69.3 124.6 -69.3 125.2 -64.0 126.4 C -58.7 127.7 -42.7 131.0 -32.0 132.5 C -21.3 134.0 -10.7 135.0 -0.0 135.5 C 10.7 136.0 21.3 136.0 32.0 135.6 C 42.7 135.1 58.7 132.9 64.0 132.6 C 69.3 132.4 69.3 132.9 64.0 134.2 C 58.7 135.4 42.7 138.7 32.0 140.2 C 21.3 141.7 10.7 142.7 -0.0 143.2 C -10.7 143.8 -21.3 143.8 -32.0 143.3 C -42.7 142.8 -58.7 140.6 -64.0 140.4 C -69.3 140.1 -69.3 140.7 -64.0 141.9 C -58.7 143.2 -42.7 146.5 -32.0 148.0 C -21.3 149.5 -5.3 150.5 -0.0 151.0" fill="none" stroke-width="5" stroke-linecap="round"/></svg>`;
 export const mark = () => raw(MARK_SVG);
+export const ROLES = ["owner", "admin", "member", "viewer"];
+/** The roles as words inside a sentence or beside a name, as the account writes them. */
+export const ROLE_NAMES = {
+    da: { owner: "ejer", admin: "administrator", member: "medlem", viewer: "læser" },
+    en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
+};
+// The bar's words are the suite's, not a product's: every product's bar says the same (D-17).
+const BAR = {
+    da: {
+        orgs: "Dine organisationer",
+        switchOrg: "skift organisation",
+        people: (o) => `Administrer folk i ${o}`,
+        products: "Produkter",
+        has: (o) => `${o} har`,
+        here: "her",
+        allOf: (o) => `Alt for ${o} hos Forspring`,
+        menu: "din konto",
+        account: "Din Forspring-konto",
+        agents: (o) => (o ? `Agenter og nøgler i ${o}` : "Agenter og nøgler"),
+        roleIn: (r, o) => `${r} i ${o}`,
+        language: "Sprog",
+        signOut: "Log ud af Forspring",
+    },
+    en: {
+        orgs: "Your organizations",
+        switchOrg: "switch organization",
+        people: (o) => `Manage people in ${o}`,
+        products: "Products",
+        has: (o) => `${o} has`,
+        here: "here",
+        allOf: (o) => `All of ${o} at Forspring`,
+        menu: "your account",
+        account: "Your Forspring account",
+        agents: (o) => (o ? `Agents and keys in ${o}` : "Agents and keys"),
+        roleIn: (r, o) => `${r} in ${o}`,
+        language: "Language",
+        signOut: "Sign out of Forspring",
+    },
+};
+const LANG_NAMES = { da: "Dansk", en: "English" };
+/**
+ * The same page in another organisation: /o/noon/runs?x=1 becomes /o/spekta/runs?x=1, and a path
+ * outside /o/ becomes the org's home. A page that does not exist there is the product's to send home.
+ */
+export function orgPath(path, slug) {
+    const m = /^\/o\/[^/?#]+(.*)$/.exec(path);
+    const rest = m ? m[1] : "";
+    return `/o/${encodeURIComponent(slug)}${rest === "" || /^[?#]/.test(rest) ? `/${rest}` : rest}`;
+}
+/** Up to two letters for the avatar: the first and last names' initials, else the address's first. */
+export function initials(name, email = "") {
+    const words = name.trim().split(/\s+/).filter(Boolean);
+    const first = (w) => (w ? Array.from(w)[0] : "");
+    const letters = words.length > 1 ? first(words[0]) + first(words[words.length - 1]) : first(words[0]) || first(email);
+    return letters.toLocaleUpperCase() || "?";
+}
+const current = (on, value = "true") => raw(on ? ` aria-current="${value}"` : "");
+function orgSwitcher(o, t, lang) {
+    const orgs = o.orgs ?? [];
+    if (orgs.length < 2)
+        return html ``;
+    const items = orgs.map((g) => html `<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ROLE_NAMES[lang][g.role]}</span></a></li>`);
+    const foot = o.peopleHref ? html `<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
+    return html `<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
+}
+function productSwitcher(p, t, org) {
+    const items = p.items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current)}><span class="bar-item-name">${i.name}</span>${i.current ? html `<span class="bar-item-meta">${t.here}</span>` : ""}</a></li>`);
+    return html `<details class="switcher bar-menu product-switcher"><summary>${t.products}</summary><div class="bar-panel"><p class="bar-panel-label">${org ? t.has(org.name) : t.products}</p><ul>${items}</ul><p class="bar-panel-foot"><a href="${safeHref(p.accountHref)}">${org ? t.allOf(org.name) : t.account}</a></p></div></details>`;
+}
+function userMenu(u, t, lang, org) {
+    const role = org ? html `<span class="user-role">${t.roleIn(ROLE_NAMES[lang][org.role], org.name)}</span>` : "";
+    const agents = u.agentsHref ? html `<li><a href="${safeHref(u.agentsHref)}">${t.agents(org?.name)}</a></li>` : "";
+    const langs = u.languages
+        ? html `<p class="user-lang"><span class="visually-hidden">${t.language}: </span>${["da", "en"].map((l) => html `<a href="${safeHref(u.languages[l])}" lang="${l}" hreflang="${l}"${current(l === lang)}>${LANG_NAMES[l]}</a>`)}</p>`
+        : "";
+    const fields = Object.entries(u.signOut.fields ?? {}).map(([name, value]) => html `<input type="hidden" name="${name}" value="${value}">`);
+    return html `<details class="switcher bar-menu user-menu"><summary><span class="avatar">${initials(u.name, u.email)}</span><span class="visually-hidden">: ${u.name}, ${t.menu}</span></summary><div class="bar-panel"><p class="user-head"><span class="user-name">${u.name}</span><span class="user-email">${u.email}</span>${role}</p><ul><li><a href="${safeHref(u.accountHref)}">${t.account}</a></li>${agents}</ul>${langs}<form class="user-signout" method="post" action="${safeHref(u.signOut.action)}">${fields}${button({ label: t.signOut, variant: "ghost", small: true, wide: true })}</form></div></details>`;
+}
+/** The bar: wordmark, org switcher, product switcher, controls, user menu. The menus are details
+ *  elements, so they open with no script. */
+export function bar(o) {
+    const t = BAR[o.lang];
+    // Forspring's own pages (the account, forspring.ai) carry the Forspring mark; a product's carry only its name (D-98).
+    const own = o.product === undefined || o.product === "forspring";
+    const org = o.org?.current;
+    const legacy = o.switcher
+        ? html `<details class="switcher"><summary>${o.switcher.label}</summary><ul>${o.switcher.items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}</a></li>`)}</ul></details>`
+        : "";
+    const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
+    const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
+    const brand = html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${own ? html `${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
+    return html `<header class="bar"><div class="wrap bar-inner">${brand}${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
+}
 const signalMark = (s) => html `<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
 function menuBody(m) {
     const ctx = m.context;
@@ -115,12 +208,7 @@ function menuFrame(m, body, narrow) {
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export function shell(o) {
     const da = o.lang === "da";
-    // Forspring's own pages (the account, forspring.ai) carry the Forspring mark; a product's carry only its name (D-98).
     const own = o.product === undefined || o.product === "forspring";
-    const switcher = o.switcher
-        ? html `<details class="switcher"><summary>${o.switcher.label}</summary><ul>${o.switcher.items.map((i) => html `<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="page"' : "")}>${i.label}</a></li>`)}</ul></details>`
-        : "";
-    const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
     const footer = o.footer?.length
         ? html `<footer><div class="wrap foot">${o.footer.map((l) => html `<a href="${safeHref(l.href)}"${raw(l.lang ? attrs({ lang: l.lang, hreflang: l.lang }) : "")}>${l.label}</a>`)}</div></footer>`
         : "";
@@ -128,7 +216,7 @@ export function shell(o) {
     return html `<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · ${own ? "Forspring" : o.productLabel}</title>${o.head}</head>
 <body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${own ? html `${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
+${bar(o)}
 ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html `<main id="main" class="${cls("wrap", o.narrow && "narrow")}">${o.body}</main>`}
 ${footer}</body></html>`;
 }
