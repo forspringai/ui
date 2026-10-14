@@ -9,7 +9,7 @@ TypeScript; self-hosted fonts; and a small server-rendered component layer with 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.5.0
+pnpm add github:forspringai/ui#v0.7.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -191,7 +191,32 @@ AUDIT_COOKIE="__Host-forspring.session_token=$token" \
 ```
 
 Use a local, throwaway session only; never a production one.
-From code: `import { audit } from "@forspring/ui/audit"` with a Playwright `Browser` of your own.
+
+**Single-page apps.** The audit measures each page once it has settled: after the load event, no
+request open and no network or DOM change for 300 ms, for at most 10 s (a page still changing then
+is measured anyway, with a `page-load` review note). A static page costs 300 ms; a React app with
+lazy routes is measured after it has drawn. Three flags help an app that needs more (D-16):
+
+- `--wait-for <selector>`: wait until that element is visible before measuring. If it is not
+  visible within `--wait-timeout <ms>` (default 30000), the page is a `page-load` error naming the
+  selector and the page.
+- `--settle <ms>`: wait that much longer after the page has settled (default 0), for a page that
+  draws on a timer with nothing in flight.
+- `--allow-origin <origin>`, repeatable: an origin the page may call, such as its API on another
+  port. Its requests go through and are not `third-party` findings, its scripts count towards
+  `--budget-js`, and `--cookie-env`'s cookie is sent to it as well as to the page's own origin.
+
+```
+AUDIT_COOKIE="session=$token" pnpm exec ui-audit http://127.0.0.1:5173/keys \
+  --allow-origin http://127.0.0.1:8787 --cookie-env AUDIT_COOKIE --wait-for "main h1" \
+  --budget-js 300kb --product dataspring --format text
+```
+
+The API must answer the page's cross-origin calls itself (CORS), as it does in the browser.
+From code: `import { audit } from "@forspring/ui/audit"` with a Playwright `Browser` of your own. The
+same options are `AuditOptions` fields: `cookie`, `allowOrigins`, `waitFor`, `waitTimeout`, `settle`
+(and `budgetJs`, `product`, `allowSpacing`, `allowStatus`, `widths`, `themes`). Launch the browser
+with `--host-resolver-rules` resolving only the audited and allowed hosts, as `cli.ts` does.
 
 Products: `forspring`, `sitespring`, `dataspring`, `appspring`, `pulsespring`.
 See [AGENTS.md](AGENTS.md) for the rules and [docs/decisions.md](docs/decisions.md) for why.

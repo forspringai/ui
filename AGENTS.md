@@ -65,7 +65,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.5.0"
+"@forspring/ui": "github:forspringai/ui#v0.7.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -123,7 +123,7 @@ Node 22.18 or later (the build runs TypeScript directly). The audit tests need C
   environment only, sends it to the audited origins only, and everything the CLI prints passes the
   redactor. A new output path must go through it too, and a test must show the value absent.
 - **The audit never fetches off-origin.** It answers every off-origin request itself and resolves
-  only the audited hosts; tests must stay offline the same way. Redirect hops bypass the route
+  only the audited hosts, apart from origins the run names with `--allow-origin` (D-16); tests must stay offline the same way. Redirect hops bypass the route
   (D-12): they are recorded, never trusted to be answered. Something on the dev host probes
   new localhost ports, so a test server never counts its requests.
 - **page.ts runs inside Chromium.** `collect()` is sent as source text: it must not call anything

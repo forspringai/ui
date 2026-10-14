@@ -15,8 +15,17 @@ Audits each page at 1280 and 380 px wide, in light and dark, against @forspring/
   --allow-status <list>   HTTP statuses a page may answer with and still be audited (e.g. 403,503
                           for refusal pages); any other status of 400 or over is an error
   --cookie-env <NAME>     send the Cookie header value in environment variable NAME to the audited
-                          origins only, for signed-in pages; never given on the command line, and
-                          redacted from the output
+                          origins (and each --allow-origin) only, for signed-in pages; never given
+                          on the command line, and redacted from the output
+  --allow-origin <origin> an origin the page may call, such as its API on another port
+                          (http://127.0.0.1:8788); repeatable. Its requests are not third-party
+                          findings and get the --cookie-env cookie
+  --wait-for <selector>   after load, wait until this element is visible before measuring (for a
+                          single-page app); a page-load error if it is not
+  --wait-timeout <ms>     how long --wait-for waits (default 30000)
+  --settle <ms>           wait this much longer once the page is quiet (default 0). Every page is
+                          measured once its network is idle and its DOM has not changed for 300 ms
+                          (at most 10 s after load)
   --format json|text      json is the default (also --json); text for a person reading a build
   --help
 
@@ -40,6 +49,7 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
 
   const urls: string[] = [];
   const flags = new Map<string, string>();
+  const allowOriginArgs: string[] = [];
   let help = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
@@ -48,10 +58,11 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
     else if (a.startsWith("--")) {
       const eq = a.indexOf("=");
       const name = a.slice(2, eq === -1 ? undefined : eq);
-      if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "format"].includes(name)) return usage(`unknown option --${name}`);
+      if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "allow-origin", "wait-for", "wait-timeout", "settle", "format"].includes(name)) return usage(`unknown option --${name}`);
       const value = eq === -1 ? argv[++i] : a.slice(eq + 1);
       if (value === undefined || value.startsWith("--")) return usage(`--${name} needs a value`);
-      flags.set(name, value);
+      if (name === "allow-origin") allowOriginArgs.push(value);
+      else flags.set(name, value);
     } else urls.push(a);
   }
   if (flags.has("format")) {
@@ -107,7 +118,34 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
     if (/[\r\n]/.test(cookie)) return invalid("invalid_cookie", `environment variable ${name} holds a line break; a Cookie header value is one line`);
   }
 
-  return { opts: { urls, budgetJs, product, allowSpacing, allowStatus, cookie, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
+  // An origin, not a URL: a path would suggest only part of the host is allowed, which it is not.
+  const allowOrigins: string[] = [];
+  for (const o of allowOriginArgs) {
+    let u: URL;
+    try {
+      u = new URL(o);
+    } catch {
+      return invalid("invalid_origin", `--allow-origin takes an origin such as http://127.0.0.1:8788, not ${o}`);
+    }
+    if (!/^https?:$/.test(u.protocol) || u.pathname !== "/" || u.search || u.hash || u.username || u.password)
+      return invalid("invalid_origin", `--allow-origin takes an http(s) origin with no path, such as http://127.0.0.1:8788, not ${o}`);
+    if (!allowOrigins.includes(u.origin)) allowOrigins.push(u.origin);
+  }
+
+  const ms = (name: string, min: number): number | undefined | Parsed => {
+    if (!flags.has(name)) return undefined;
+    const v = flags.get(name)!;
+    if (!/^\d+$/.test(v) || Number(v) < min) return invalid(`invalid_${name.replace("-", "_")}`, `--${name} takes a whole number of milliseconds${min ? ` from ${min}` : ""}, such as 2000, not ${v}`);
+    return Number(v);
+  };
+  const waitTimeout = ms("wait-timeout", 1);
+  if (typeof waitTimeout === "object") return waitTimeout;
+  const settle = ms("settle", 0);
+  if (typeof settle === "object") return settle;
+  const waitFor = flags.get("wait-for");
+  if (waitFor !== undefined && !waitFor.trim()) return invalid("invalid_wait_for", "--wait-for takes a CSS selector, such as main h1");
+
+  return { opts: { urls, budgetJs, product, allowSpacing, allowStatus, cookie, allowOrigins, waitFor, waitTimeout, settle, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
 }
 
 /**

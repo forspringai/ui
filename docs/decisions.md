@@ -435,3 +435,43 @@ with no Forspring mark or name, and titles end in " · <product>". Forspring's o
 or `forspring`: the account, forspring.ai) keep the mark, "Forspring" and the small label ("konto").
 "Sign in with Forspring" and the account stay Forspring-branded, since the account is the shared one.
 Products upgrade to 0.6.0; nothing else changes.
+
+## D-16 — The audit waits for single-page apps, and can allow an API origin; 0.7.0 (2026-10-14)
+
+Asked for by DataSpring, whose console is a React single-page app with lazy routes and its API on
+another local port. The audit measured each page at the load event, when such an app has drawn
+nothing, and every call to the API was a `third-party` error answered empty, so the app never drew
+at all.
+
+**Every page waits until it has settled.** After load, the audit waits until no request is open
+and neither the network nor the DOM (a MutationObserver over the document) has changed for 300 ms,
+for at most 10 s; then it measures. A static page is quiet at once and costs 300 ms per run (four
+runs per URL). A page still changing at 10 s (a poll, a ticking clock) is measured anyway with a
+`page-load` review finding, so the run stays bounded and a half-drawn page is visible in the output
+without failing it. This is the default rather than a flag, so an app works with no flags, and
+Playwright's own `networkidle` (500 ms, network only) was not used because an app draws after its
+last response.
+
+**`--wait-for <selector>`** waits for that element to be visible (Playwright's `visible` state)
+before the settle step. Not visible within `--wait-timeout <ms>` (default 30000, the same as the
+page load's) is a `page-load` error whose selector is the selector and whose value names it and the
+page, and the page is not measured, since measuring a sign-in screen or an error state in its place
+would pass the wrong page (D-12's reasoning). **`--settle <ms>`** (default 0) is a fixed wait after
+the settle step, for a page that draws on a timer with nothing in flight before it.
+
+**`--allow-origin <origin>`** (repeatable, an http(s) origin with no path) lets the page's requests
+to that origin through: they are not `third-party` findings, the CLI lets the host resolve, a
+WebSocket to it stays open, and its scripts count towards `--budget-js` (they are the product's
+code). Everything else off-origin is still answered by the audit and never fetched.
+
+**The cookie goes to the allowed origins too**, rather than through a separate `--cookie-origin`.
+`--cookie-env`'s value is an extra header on the browser context (D-10), so it is on every request
+the audit lets through; an allowed origin gets the same cookie as the page. That is the simpler
+choice and fits the case: a local app and its local API share one session. A run that must not send
+the session to an origin does not allow that origin. The API answers the page's CORS itself, as in
+a browser; with the header injected below the page, a plain `fetch` with no credentials carries it
+(checked with Playwright 1.64 and Chromium, test/audit.test.ts). The same options are fields on the
+exported `audit()`: `allowOrigins`, `waitFor`, `waitTimeout`, `settle`.
+
+The tests use `test/fixtures/spa.html`, a page that draws only after an API on a second port
+answers, with the session, 600 ms after load.

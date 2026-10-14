@@ -41,6 +41,17 @@ export type AuditOptions = {
      * else, so signed-in pages can be audited (D-10). The CLI reads it from an environment variable.
      */
     cookie?: string;
+    /**
+     * Other origins the page may call (a single-page app's API on another port, say): their requests
+     * go through and are not third-party findings, and they get the same cookie (D-16).
+     */
+    allowOrigins?: string[];
+    /** A CSS selector to wait for, visible, after the load event and before measuring (D-16). */
+    waitFor?: string;
+    /** How long to wait for waitFor, in ms. 30000 by default. */
+    waitTimeout?: number;
+    /** A fixed wait in ms after the page has settled, for a page that draws on a timer (D-16). 0 by default. */
+    settle?: number;
     widths: number[];
     themes: Theme[];
 };

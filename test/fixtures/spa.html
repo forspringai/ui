@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A single-page app</title>
+<!-- A stand-in for a React app with lazy routes (D-16): the load event finds an empty shell, and the
+     page draws only after its API, on another origin, answers. test/audit.test.ts drives it:
+     ?api=<origin>  call <origin>/api/me (with the session, it answers after a delay) and draw #ready
+     ?late=<ms>     instead, draw #ready after a timer, with no request or DOM change before it
+     ?busy=1        instead, change the DOM every 50 ms forever
+     ?tiny=1        draw a 10px paragraph with #ready, so a test can see the drawn page was measured -->
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/components.css">
+<style>.tiny { font-size: 10px; }</style>
+</head>
+<body>
+<main id="main" class="wrap"></main>
+<script>
+const q = new URLSearchParams(location.search);
+const main = document.getElementById("main");
+const ready = (name) => {
+  main.innerHTML = `<h1 id="ready">Hello, ${name}</h1><p>Drawn after load.</p>` + (q.has("tiny") ? `<p class="tiny">Ten pixels is under the floor.</p>` : "");
+};
+if (q.has("api")) {
+  fetch(q.get("api") + "/api/me")
+    .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+    .then((me) => ready(me.name), () => (main.innerHTML = "<h1>Signed out</h1>"));
+} else if (q.has("late")) {
+  setTimeout(() => ready("later"), Number(q.get("late")));
+} else if (q.has("busy")) {
+  main.innerHTML = "<h1>Counting</h1><p>0</p>";
+  let n = 0;
+  setInterval(() => (main.querySelector("p").textContent = String(++n)), 50);
+}
+</script>
+</body>
+</html>

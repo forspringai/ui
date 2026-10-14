@@ -41,4 +41,10 @@ export declare function findings(obs: Observations, sc: Scale, width: number): F
 export declare function dedupe(list: Finding[]): Finding[];
 /** --format text: one line per page, one per finding. */
 export declare function formatText(result: AuditResult): string;
+/** A page is settled when no request is open and neither the network nor the DOM has changed for this long (D-16). */
+export declare const SETTLE_QUIET = 300;
+/** The most the audit waits for a page to settle after load before measuring it anyway. */
+export declare const SETTLE_MAX = 10000;
+/** How long --wait-for waits by default. */
+export declare const WAIT_TIMEOUT = 30000;
 export declare function audit(opts: AuditOptions, browser: Browser): Promise<AuditResult>;

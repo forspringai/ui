@@ -25,6 +25,9 @@ const PRODUCTS = tokens.products as readonly string[];
 
 let server: Server;
 let base: string;
+// The single-page app's API, on a port of its own (D-16).
+let apiServer: Server;
+let api: string;
 let browser: Browser;
 
 // A session only this run knows: /private/... answers 401 without it, so a pass proves the audit
@@ -65,6 +68,17 @@ beforeAll(async () => {
   });
   await new Promise<void>((ok) => server.listen(0, "127.0.0.1", ok));
   base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+  // Answers /api/me after 600 ms, like an API a page waits on, and only with the session.
+  apiServer = createServer((req, res) => {
+    const cors = { "access-control-allow-origin": base, "access-control-allow-credentials": "true" };
+    if (new URL(req.url ?? "/", "http://x").pathname !== "/api/me") return void res.writeHead(404, cors).end();
+    setTimeout(() => {
+      if (req.headers.cookie !== SESSION) return void res.writeHead(401, cors).end();
+      res.writeHead(200, { ...cors, "content-type": "application/json" }).end(JSON.stringify({ name: "DataSpring" }));
+    }, 600);
+  });
+  await new Promise<void>((ok) => apiServer.listen(0, "127.0.0.1", ok));
+  api = `http://127.0.0.1:${(apiServer.address() as AddressInfo).port}`;
   // Every other host fails to resolve, so a request the audit failed to intercept would fail loudly
   // instead of fetching from the internet.
   browser = await chromium.launch({ args: ["--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1"] });
@@ -73,6 +87,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await browser?.close();
   await new Promise((ok) => server?.close(ok));
+  await new Promise((ok) => apiServer?.close(ok));
 });
 
 const options = (urls: string[], o: Partial<AuditOptions> = {}): AuditOptions => ({ urls, budgetJs: 0, allowSpacing: [], widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES, ...o });
@@ -128,6 +143,57 @@ describe("redirects", () => {
     const hop = all(r).filter((f) => f.rule === "third-party");
     expect(hop.map((f) => [f.severity, f.value])).toEqual([["error", "http://127.0.0.1:1/hop.png"]]);
     expect(hop[0]!.note).toContain("redirect");
+  }, 60_000);
+});
+
+describe("single-page apps (D-16)", () => {
+  const one = { widths: [1280], themes: ["light" as const] };
+  const spa = (q: string) => `${base}/test/fixtures/spa.html?${q}`;
+  const errors = (r: AuditResult) => all(r).filter((f) => f.severity !== "review");
+
+  test("by default the audit waits for the API call and the drawing it leads to, not just the load event", async () => {
+    const r = await audit(options([spa(`api=${api}&tiny=1`)], { ...one, cookie: SESSION, allowOrigins: [api] }), browser);
+    // The 10px paragraph is drawn only after the API answered, 600 ms after load.
+    expect(errors(r).map((f) => [f.rule, f.selector])).toEqual([["text-min", "main#main > p.tiny"]]);
+  }, 60_000);
+
+  test("--wait-for and --allow-origin: the drawn page passes, and its API is not a third party", async () => {
+    const r = await audit(options([spa(`api=${api}`)], { ...one, cookie: SESSION, allowOrigins: [api + "/"], waitFor: "#ready" }), browser);
+    expect(errors(r)).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 60_000);
+
+  test("without --allow-origin the API call is a third-party error, answered by the audit", async () => {
+    const r = await audit(options([spa(`api=${api}`)], { ...one, cookie: SESSION }), browser);
+    expect(errors(r).map((f) => [f.rule, f.value])).toEqual([["third-party", `${api}/api/me`]]);
+  }, 60_000);
+
+  test("the cookie reaches the allowed origin: without it the API refuses and --wait-for fails, naming the selector and page", async () => {
+    const r = await audit(options([spa(`api=${api}`)], { ...one, allowOrigins: [api], waitFor: "#ready", waitTimeout: 2000 }), browser);
+    expect(errors(r).map((f) => [f.rule, f.selector, f.value])).toEqual([["page-load", "#ready", `#ready not visible on ${spa(`api=${api}`)} after 2000 ms`]]);
+    const bad = await audit(options([spa("late=0")], { ...one, waitFor: "!!" }), browser);
+    expect(errors(bad).map((f) => [f.rule, f.selector])).toEqual([["page-load", "!!"]]);
+  }, 60_000);
+
+  test("--settle waits for a page that draws on a timer, with nothing in flight before it", async () => {
+    const quick = await audit(options([spa("late=1200&tiny=1")], one), browser);
+    expect(errors(quick)).toEqual([]);
+    const settled = await audit(options([spa("late=1200&tiny=1")], { ...one, settle: 1500 }), browser);
+    expect(errors(settled).map((f) => [f.rule, f.selector])).toEqual([["text-min", "main#main > p.tiny"]]);
+  }, 60_000);
+
+  test("a page that never goes quiet is measured after 10 s, with a review note", async () => {
+    const start = Date.now();
+    const r = await audit(options([spa("busy=1")], one), browser);
+    expect(Date.now() - start).toBeLessThan(15_000);
+    expect(r.ok).toBe(true);
+    expect(all(r).filter((f) => f.rule === "page-load").map((f) => [f.severity, f.value])).toEqual([["review", "still changing 10 s after load"]]);
+  }, 60_000);
+
+  test("a static page settles quickly", async () => {
+    const start = Date.now();
+    await audit(options([`${base}/dist/demo/`], one), browser);
+    expect(Date.now() - start).toBeLessThan(5_000);
   }, 60_000);
 });
 
@@ -252,6 +318,17 @@ describe("arguments", () => {
     expect(p("http://x/", "--allow-status", "403, 503")).toMatchObject({ opts: { allowStatus: [403, 503] } });
   });
 
+  test("single-page app flags (D-16)", () => {
+    const r = p("http://x/", "--allow-origin", "http://127.0.0.1:8788/", "--allow-origin=https://api.example.com", "--wait-for", "main h1", "--wait-timeout", "5000", "--settle", "250");
+    expect(r).toMatchObject({ opts: { allowOrigins: ["http://127.0.0.1:8788", "https://api.example.com"], waitFor: "main h1", waitTimeout: 5000, settle: 250 } });
+    expect(p("http://x/")).toMatchObject({ opts: { allowOrigins: [], waitFor: undefined, waitTimeout: undefined, settle: undefined } });
+    expect(p("http://x/", "--allow-origin", "http://127.0.0.1:8788/api")).toMatchObject({ exit: 2, refusal: { reason: "invalid_origin" } });
+    expect(p("http://x/", "--allow-origin", "127.0.0.1:8788")).toMatchObject({ exit: 2, refusal: { reason: "invalid_origin" } });
+    expect(p("http://x/", "--settle", "1s")).toMatchObject({ exit: 2, refusal: { reason: "invalid_settle" } });
+    expect(p("http://x/", "--wait-timeout", "0")).toMatchObject({ exit: 2, refusal: { reason: "invalid_wait_timeout" } });
+    expect(p("http://x/", "--wait-for", " ")).toMatchObject({ exit: 2, refusal: { reason: "invalid_wait_for" } });
+  });
+
   test("--cookie-env reads the cookie from the environment and never repeats it", () => {
     const env = { AUDIT_COOKIE: "sid=s3cr3t-value" };
     expect(parseArgs(["http://x/", "--cookie-env", "AUDIT_COOKIE"], tokens.products, env)).toMatchObject({ opts: { cookie: "sid=s3cr3t-value" } });
@@ -294,6 +371,18 @@ describe("the bin", () => {
       (e: { code: number; stdout: string; stderr: string }) => e,
     );
     expect(out.stdout).toMatch(/private\/dist\/demo\/ {2}1280px light {2}ok/);
+    expect(out.code).toBe(0);
+    expect(out.stdout + out.stderr).not.toContain(SESSION.split(";")[0]!.split("=")[1]!);
+  }, 180_000);
+
+  test("a single-page app with its API on another port: --allow-origin, --cookie-env and --wait-for", async () => {
+    const env = { ...process.env, AUDIT_COOKIE: SESSION };
+    const url = `${base}/test/fixtures/spa.html?api=${api}`;
+    const out = await promisify(execFile)(process.execPath, [join(root, "dist/audit/cli.js"), url, "--allow-origin", api, "--cookie-env", "AUDIT_COOKIE", "--wait-for", "#ready", "--format", "text"], { env }).then(
+      (r) => ({ code: 0, stdout: r.stdout, stderr: r.stderr }),
+      (e: { code: number; stdout: string; stderr: string }) => e,
+    );
+    expect(out.stdout).toContain("ok: no errors");
     expect(out.code).toBe(0);
     expect(out.stdout + out.stderr).not.toContain(SESSION.split(";")[0]!.split("=")[1]!);
   }, 180_000);

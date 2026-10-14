@@ -33,9 +33,9 @@ async function main(): Promise<number> {
   }
   let browser;
   try {
-    // Only the audited hosts resolve. The audit already answers off-origin requests itself; this
+    // Only the audited hosts (and --allow-origin's) resolve. The audit already answers off-origin requests itself; this
     // also stops Chromium's own DNS prefetch and preconnect from reaching a third party.
-    const hosts = [...new Set(parsed.opts.urls.map((u) => new URL(u).hostname))];
+    const hosts = [...new Set([...parsed.opts.urls, ...(parsed.opts.allowOrigins ?? [])].map((u) => new URL(u).hostname))];
     browser = await chromium.launch({ args: [`--host-resolver-rules=MAP * ~NOTFOUND, ${hosts.map((h) => `EXCLUDE ${h}`).join(", ")}`] });
   } catch (e) {
     const r: Refusal = { ok: false, reason: "browser_missing", note: `run pnpm exec playwright install chromium (in CI: --with-deps). ${(e as Error).message.split("\n")[0]}` };

@@ -8,7 +8,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
-import type { Browser, BrowserContext } from "playwright";
+import type { Browser, BrowserContext, Page, Request } from "playwright";
 import { collect, type Observations, type Rgba } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
 
@@ -273,8 +273,39 @@ function axeSource(): string {
 
 const kb = (n: number) => `${(n / 1024).toFixed(1)} KB`;
 
+/** A page is settled when no request is open and neither the network nor the DOM has changed for this long (D-16). */
+export const SETTLE_QUIET = 300;
+/** The most the audit waits for a page to settle after load before measuring it anyway. */
+export const SETTLE_MAX = 10_000;
+/** How long --wait-for waits by default. */
+export const WAIT_TIMEOUT = 30_000;
+
+/**
+ * Waits for the page to go quiet: a single-page app draws after load, from lazy chunks and API
+ * calls, so the load event alone measures an empty shell. A static page is quiet at once and costs
+ * SETTLE_QUIET. Returns false when the page was still busy at SETTLE_MAX (a poll, an animation).
+ */
+async function settled(page: Page, open: Set<Request>, lastNet: () => number): Promise<boolean> {
+  // The observer only notes the time of the last change; it is the audit's, set after load.
+  await page.evaluate(() => {
+    const w = window as unknown as { __forspringAuditQuiet: number };
+    w.__forspringAuditQuiet = performance.now();
+    new MutationObserver(() => (w.__forspringAuditQuiet = performance.now())).observe(document, { subtree: true, childList: true, attributes: true, characterData: true });
+  });
+  const start = Date.now();
+  for (;;) {
+    const domQuiet = await page.evaluate(() => performance.now() - (window as unknown as { __forspringAuditQuiet: number }).__forspringAuditQuiet);
+    if (open.size === 0 && Date.now() - lastNet() >= SETTLE_QUIET && domQuiet >= SETTLE_QUIET) return true;
+    if (Date.now() - start >= SETTLE_MAX) return false;
+    await page.waitForTimeout(50);
+  }
+}
+
 async function auditPage(browser: Browser, url: string, width: number, theme: Theme, sc: Scale, opts: AuditOptions, axe: string): Promise<PageResult> {
   const origin = new URL(url).origin;
+  // The page's own origin and the ones the run allows (its API on another port): requests to these
+  // go through, and are not third-party (D-16).
+  const own = new Set([origin, ...(opts.allowOrigins ?? []).map((o) => new URL(o).origin)]);
   // bypassCSP lets the audit inject axe into a page whose strict CSP (as it should be) forbids it.
   const context: BrowserContext = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, bypassCSP: true, serviceWorkers: "block" });
   const found: Finding[] = [];
@@ -287,7 +318,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     await context.route("**/*", (route) => {
       const req = route.request();
       const u = new URL(req.url());
-      if (/^https?:$/.test(u.protocol) && u.origin !== origin) {
+      if (/^https?:$/.test(u.protocol) && !own.has(u.origin)) {
         offOrigin.set(req.url(), { type: req.resourceType(), fetched: false });
         return route.fulfill({ status: 204, body: "" });
       }
@@ -297,13 +328,20 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       // The session goes as a header on the context's requests rather than a cookie in the jar: no
       // Domain, Secure or __Host- rules to get right over local http, and nothing a page's script
       // can read. (route.continue cannot set Cookie; Chromium drops it.) It reaches the audited
-      // origin only: every other HTTP request is answered above without leaving the browser, and a
-      // WebSocket to anywhere else is closed unopened (D-10).
+      // origin and the allowed ones only: every other HTTP request is answered above without leaving
+      // the browser, and a WebSocket to anywhere else is closed unopened (D-10, D-16).
       await context.setExtraHTTPHeaders({ cookie: opts.cookie });
-      const host = new URL(url).host;
-      await context.routeWebSocket((u) => u.host !== host, (ws) => ws.close());
+      const hosts = new Set([...own].map((o) => new URL(o).host));
+      await context.routeWebSocket((u) => !hosts.has(u.host), (ws) => ws.close());
     }
     const page = await context.newPage();
+    // Open requests and the time of the last network event, for settled().
+    const open = new Set<Request>();
+    let lastNet = Date.now();
+    page.on("request", (req) => (open.add(req), (lastNet = Date.now())));
+    const done = (req: Request) => (open.delete(req), (lastNet = Date.now()));
+    page.on("requestfinished", done);
+    page.on("requestfailed", done);
     // Playwright routes only the first URL of a redirect chain, so a same-origin URL that redirects
     // off-origin is followed by Chromium itself, past the route above (checked with Playwright 1.64,
     // 2026-10-10). Hosts are not resolved (cli.ts), but an IP literal needs no resolving. The hop
@@ -311,10 +349,10 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     page.on("request", (req) => {
       if (!req.redirectedFrom()) return;
       const u = new URL(req.url());
-      if (/^https?:$/.test(u.protocol) && u.origin !== origin) offOrigin.set(req.url(), { type: req.resourceType(), fetched: true });
+      if (/^https?:$/.test(u.protocol) && !own.has(u.origin)) offOrigin.set(req.url(), { type: req.resourceType(), fetched: true });
     });
     page.on("response", (res) => {
-      if (res.request().resourceType() !== "script" || new URL(res.url()).origin !== origin) return;
+      if (res.request().resourceType() !== "script" || !own.has(new URL(res.url()).origin)) return;
       scripts.push(
         (async () => {
           try {
@@ -349,6 +387,21 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
       found.push({ rule: "page-load", severity: "error", selector: "document", value: `redirected to ${res.url()}`, expected: "the page itself, not a redirect", note: "audit the URL the redirect leads to; a redirect drops the --cookie-env session" });
       return { url, width, theme, findings: found };
     }
+    // A single-page app draws after load: wait for the element the run names, then for the page to
+    // go quiet, then for any fixed --settle (D-16).
+    if (opts.waitFor) {
+      const timeout = opts.waitTimeout ?? WAIT_TIMEOUT;
+      try {
+        await page.waitForSelector(opts.waitFor, { state: "visible", timeout });
+      } catch (e) {
+        const timedOut = (e as Error).name === "TimeoutError";
+        found.push({ rule: "page-load", severity: "error", selector: opts.waitFor, value: timedOut ? `${opts.waitFor} not visible on ${url} after ${timeout} ms` : `${opts.waitFor} on ${url}: ${(e as Error).message.split("\n")[0]}`, expected: "the --wait-for element, visible", note: timedOut ? "check the selector, and that the page draws it (its API answered, it is signed in)" : "--wait-for takes a CSS selector" });
+        return { url, width, theme, findings: found };
+      }
+    }
+    if (!(await settled(page, open, () => lastNet)))
+      found.push({ rule: "page-load", severity: "review", selector: "document", value: `still changing ${SETTLE_MAX / 1000} s after load`, expected: `no requests or DOM changes for ${SETTLE_QUIET} ms`, note: "measured anyway; give --wait-for the element that shows the page is drawn" });
+    if (opts.settle) await page.waitForTimeout(opts.settle);
     await page.evaluate(() => document.fonts.ready.then(() => undefined));
 
     const obs = await page.evaluate(collect);
@@ -364,7 +417,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     for (const v of violations)
       for (const target of v.targets) found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
 
-    for (const [u, { type, fetched }] of offOrigin) found.push({ rule: "third-party", severity: "error", selector: type, value: u, expected: `same origin as the page (${origin})`, note: `no fonts, analytics or CDN requests (ui-standard §3); ${fetched ? "reached through a same-origin redirect, which the browser followed" : "the audit answered it empty"}` });
+    for (const [u, { type, fetched }] of offOrigin) found.push({ rule: "third-party", severity: "error", selector: type, value: u, expected: `same origin as the page (${origin})${own.size > 1 ? ` or ${[...own].filter((o) => o !== origin).join(", ")} (--allow-origin)` : ""}`, note: `no fonts, analytics or CDN requests (ui-standard §3); ${fetched ? "reached through a same-origin redirect, which the browser followed" : "the audit answered it empty"}` });
 
     const bytes = (await Promise.all(scripts)).reduce((a, b) => a + b, 0);
     if (bytes > opts.budgetJs)
