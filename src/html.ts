@@ -119,13 +119,15 @@ export type Link = { label: string; href: string; lang?: Lang };
 
 export type ShellOptions = {
   lang: Lang;
-  /** The page's own title; " · Forspring" is added. */
+  /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
   title: string;
   /** Sets data-product on <html>; unset means Forspring. */
   product?: Product;
   /** An explicit theme; unset follows the system. */
   theme?: Theme;
-  /** The product's name after the wordmark: "konto", "SiteSpring". */
+  /** The product's name. A product's pages show it alone as the wordmark ("SiteSpring"), with no
+   *  Forspring mark or name (hub D-98: a product is its own brand, like Word with an Office account).
+   *  Forspring's own pages (product unset or "forspring") keep "Forspring" plus this label ("konto"). */
   productLabel: string;
   /** Where the wordmark leads, and its accessible name. */
   home?: string;
@@ -207,6 +209,8 @@ function menuFrame(m: Menu, body: Content, narrow?: boolean): Html {
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export function shell(o: ShellOptions): Html {
   const da = o.lang === "da";
+  // Forspring's own pages (the account, forspring.ai) carry the Forspring mark; a product's carry only its name (D-98).
+  const own = o.product === undefined || o.product === "forspring";
   const switcher = o.switcher
     ? html`<details class="switcher"><summary>${o.switcher.label}</summary><ul>${o.switcher.items.map(
         (i) => html`<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="page"' : "")}>${i.label}</a></li>`,
@@ -218,9 +222,9 @@ export function shell(o: ShellOptions): Html {
     : "";
   const htmlAttrs = raw(attrs({ lang: o.lang, "data-product": o.product, "data-theme": o.theme }));
   return html`<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${o.title} · Forspring</title>${o.head}</head>
+<title>${o.title} · ${own ? "Forspring" : o.productLabel}</title>${o.head}</head>
 <body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? `Forspring ${o.productLabel}`}">${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span></a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
+<header class="bar"><div class="wrap bar-inner"><a class="brand" href="${safeHref(o.home ?? "/")}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${own ? html`${mark()}<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>${switcher}${o.controls}<span class="spacer"></span>${user}</div></header>
 ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html`<main id="main" class="${cls("wrap", o.narrow && "narrow")!}">${o.body}</main>`}
 ${footer}</body></html>`;
 }

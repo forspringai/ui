@@ -36,13 +36,15 @@ export type Link = {
 };
 export type ShellOptions = {
     lang: Lang;
-    /** The page's own title; " · Forspring" is added. */
+    /** The page's own title; " · <product name>" is added (" · Forspring" on Forspring's own pages). */
     title: string;
     /** Sets data-product on <html>; unset means Forspring. */
     product?: Product;
     /** An explicit theme; unset follows the system. */
     theme?: Theme;
-    /** The product's name after the wordmark: "konto", "SiteSpring". */
+    /** The product's name. A product's pages show it alone as the wordmark ("SiteSpring"), with no
+     *  Forspring mark or name (hub D-98: a product is its own brand, like Word with an Office account).
+     *  Forspring's own pages (product unset or "forspring") keep "Forspring" plus this label ("konto"). */
     productLabel: string;
     /** Where the wordmark leads, and its accessible name. */
     home?: string;

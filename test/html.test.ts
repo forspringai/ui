@@ -90,7 +90,18 @@ describe("blocks", () => {
     expect(s).toContain('<html lang="en" data-product="dataspring" data-theme="dark">');
     expect(s).toContain('<a class="skip" href="#main">Skip to content</a>');
     expect(s).toContain('<main id="main" class="wrap">');
-    expect(s).toContain("<title>Keys · Forspring</title>");
+    expect(s).toContain("<title>Keys · DataSpring</title>");
+  });
+
+  test("a product's bar carries only its own name; Forspring's own pages keep the Forspring mark (D-98)", () => {
+    const p = String(shell({ lang: "en", title: "t", product: "sitespring", productLabel: "SiteSpring", body: "" }));
+    expect(p).toContain('aria-label="SiteSpring"><span class="word">SiteSpring</span></a>');
+    expect(p).not.toContain("Forspring");
+    expect(p).not.toContain('class="mark"');
+    const own = String(shell({ lang: "da", title: "Forside", productLabel: "konto", body: "" }));
+    expect(own).toContain('<span class="word">Forspring</span> <span class="sub">konto</span>');
+    expect(own).toContain('class="mark"');
+    expect(own).toContain("<title>Forside · Forspring</title>");
   });
 
   test("the shell puts its controls in the bar, after the switcher and before the spacer", () => {

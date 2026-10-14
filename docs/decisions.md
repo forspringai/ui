@@ -426,3 +426,12 @@ measure any of them as spacing.
 gap; SiteSpring's own `details.menu` (its account menu in the bar) became 68px tall and its avatar
 sat off the bar's line. The rules now match `nav.menu`, which is what `shell` writes. The class is
 unchanged, so no markup changes.
+
+## D-15 — A product's bar carries only its own name; 0.6.0 (2026-10-14)
+
+Hub D-98 (Peter): a product is its own brand, like Word signed in with an Office account. `shell()`
+with a `product` other than `forspring` shows the product's name alone as the wordmark ("SiteSpring"),
+with no Forspring mark or name, and titles end in " · <product>". Forspring's own pages (product unset
+or `forspring`: the account, forspring.ai) keep the mark, "Forspring" and the small label ("konto").
+"Sign in with Forspring" and the account stay Forspring-branded, since the account is the shared one.
+Products upgrade to 0.6.0; nothing else changes.
