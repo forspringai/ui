@@ -4,6 +4,7 @@
   color-scheme: light dark;
   --background: light-dark(#fcfcfa, #111215);
   --foreground: light-dark(#14151a, #ededea);
+  --mark: light-dark(#14151a, #ededea);
   --body-foreground: light-dark(#3c3e46, #c8c9ce);
   --card: light-dark(#ffffff, #17181c);
   --card-foreground: light-dark(#14151a, #ededea);
@@ -86,28 +87,40 @@
   --primary: light-dark(#2244ff, #6b83ff);
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#2244ff, #6b83ff);
+  --mark: light-dark(#14151a, #ededea);
+}
+
+[data-product="spring"] {
+  --primary: light-dark(#2244ff, #6b83ff);
+  --primary-foreground: light-dark(#ffffff, #111215);
+  --ring: light-dark(#2244ff, #6b83ff);
+  --mark: light-dark(#2244ff, #6b83ff);
 }
 
 [data-product="sitespring"] {
   --primary: light-dark(#b8442a, #e0714f);
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#b8442a, #e0714f);
+  --mark: light-dark(#b8442a, #e0714f);
 }
 
 [data-product="dataspring"] {
   --primary: light-dark(#0b7c82, #2ba7ad);
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#0b7c82, #2ba7ad);
+  --mark: light-dark(#0b7c82, #2ba7ad);
 }
 
 [data-product="appspring"] {
   --primary: light-dark(#7b3f8c, #b57cc6);
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#7b3f8c, #b57cc6);
+  --mark: light-dark(#7b3f8c, #b57cc6);
 }
 
 [data-product="pulsespring"] {
   --primary: light-dark(#a3237a, #e06dba);
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#a3237a, #e06dba);
+  --mark: light-dark(#a3237a, #e06dba);
 }

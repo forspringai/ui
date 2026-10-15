@@ -43,8 +43,8 @@ const opts: BarOptions = {
 describe("the bar", () => {
   const out = String(bar(opts));
 
-  test("the wordmark is the product alone and leads to the org's home (D-98)", () => {
-    expect(out).toMatch(/^<header class="bar"><div class="wrap bar-inner"><a class="brand" href="\/o\/noon\/" aria-label="DataSpring"><span class="word">DataSpring<\/span><\/a>/);
+  test("the lockup is the product's doll and its name alone, and leads to the org's home (D-98, D-18)", () => {
+    expect(out).toMatch(/^<header class="bar"><div class="wrap bar-inner"><a class="brand" href="\/o\/noon\/" aria-label="DataSpring"><svg class="mark" viewBox="-184 -160 368 368" aria-hidden="true" focusable="false">.*?<\/svg><span class="word">DataSpring<\/span><\/a>/);
     expect(out).not.toContain("Forspring</span>");
   });
 

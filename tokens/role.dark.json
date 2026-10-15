@@ -9,6 +9,11 @@
       "$type": "color",
       "$value": "{palette.dark.ink}"
     },
+    "mark": {
+      "$type": "color",
+      "$value": "{palette.dark.ink}",
+      "$description": "The doll's colour on Forspring's own pages: ink, paper on dark (hub D-101). A product's [data-product] sets its accent here instead. Not a shadcn role."
+    },
     "body-foreground": {
       "$type": "color",
       "$value": "{palette.dark.body}",

@@ -93,11 +93,11 @@ describe("blocks", () => {
     expect(s).toContain("<title>Keys · DataSpring</title>");
   });
 
-  test("a product's bar carries only its own name; Forspring's own pages keep the Forspring mark (D-98)", () => {
+  test("a product's bar carries its own doll and name, no Forspring; Forspring's own pages the doll, Forspring and the label (D-18)", () => {
     const p = String(shell({ lang: "en", title: "t", product: "sitespring", productLabel: "SiteSpring", body: "" }));
-    expect(p).toContain('aria-label="SiteSpring"><span class="word">SiteSpring</span></a>');
+    expect(p).toMatch(/aria-label="SiteSpring"><svg class="mark" [^>]*>.*<\/svg><span class="word">SiteSpring<\/span><\/a>/);
     expect(p).not.toContain("Forspring");
-    expect(p).not.toContain('class="mark"');
+    expect(p).not.toContain("forspring");
     const own = String(shell({ lang: "da", title: "Forside", productLabel: "konto", body: "" }));
     expect(own).toContain('<span class="word">Forspring</span> <span class="sub">konto</span>');
     expect(own).toContain('class="mark"');
@@ -112,7 +112,7 @@ describe("blocks", () => {
 });
 
 test("the Product type lists the same products as the tokens", () => {
-  const all: Record<Product, true> = { forspring: true, sitespring: true, dataspring: true, appspring: true, pulsespring: true };
+  const all: Record<Product, true> = { forspring: true, spring: true, sitespring: true, dataspring: true, appspring: true, pulsespring: true };
   expect(Object.keys(all).sort()).toEqual([...tokens.products].sort());
 });
 

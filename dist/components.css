@@ -374,12 +374,14 @@
     flex: none;
   }
 
+  /* The doll's colour is --mark: the product's accent, ink on Forspring's own pages (hub D-101).
+     The wordmark beside it stays ink in every product. */
   .brand .mark .fill {
-    fill: var(--primary);
+    fill: var(--mark);
   }
 
   .brand .mark .coil {
-    stroke: var(--primary);
+    stroke: var(--mark);
   }
 
   .brand .word {

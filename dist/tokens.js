@@ -2,6 +2,7 @@
 
 export const products = Object.freeze([
   "forspring",
+  "spring",
   "sitespring",
   "dataspring",
   "appspring",
@@ -10,6 +11,37 @@ export const products = Object.freeze([
 
 export const accents = Object.freeze({
   "forspring": {
+    "light": "#2244ff",
+    "dark": "#6b83ff"
+  },
+  "spring": {
+    "light": "#2244ff",
+    "dark": "#6b83ff"
+  },
+  "sitespring": {
+    "light": "#b8442a",
+    "dark": "#e0714f"
+  },
+  "dataspring": {
+    "light": "#0b7c82",
+    "dark": "#2ba7ad"
+  },
+  "appspring": {
+    "light": "#7b3f8c",
+    "dark": "#b57cc6"
+  },
+  "pulsespring": {
+    "light": "#a3237a",
+    "dark": "#e06dba"
+  }
+});
+
+export const marks = Object.freeze({
+  "forspring": {
+    "light": "#14151a",
+    "dark": "#ededea"
+  },
+  "spring": {
     "light": "#2244ff",
     "dark": "#6b83ff"
   },
@@ -35,6 +67,7 @@ export const roles = Object.freeze({
   "light": {
     "background": "#fcfcfa",
     "foreground": "#14151a",
+    "mark": "#14151a",
     "body-foreground": "#3c3e46",
     "card": "#ffffff",
     "card-foreground": "#14151a",
@@ -71,6 +104,7 @@ export const roles = Object.freeze({
   "dark": {
     "background": "#111215",
     "foreground": "#ededea",
+    "mark": "#ededea",
     "body-foreground": "#c8c9ce",
     "card": "#17181c",
     "card-foreground": "#ededea",
@@ -186,5 +220,5 @@ export const fonts = Object.freeze({
 export function themeFor(product, mode) {
   const accent = accents[product];
   if (!accent) throw new Error(`unknown product: ${product}`);
-  return { ...roles[mode], primary: accent[mode], ring: accent[mode] };
+  return { ...roles[mode], primary: accent[mode], ring: accent[mode], mark: marks[product][mode] };
 }

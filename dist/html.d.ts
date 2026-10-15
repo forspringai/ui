@@ -15,8 +15,12 @@ export declare const raw: (s: string) => Html;
 export declare function html(strings: TemplateStringsArray, ...values: Content[]): Html;
 export declare function safeHref(href: string): string;
 export type Lang = "da" | "en";
-/** The suite's products (hub D-90); the same list as tokens.js's products, checked by a test. */
-export type Product = "forspring" | "sitespring" | "dataspring" | "appspring" | "pulsespring";
+/** The suite's products (hub D-90, D-101); the same list as tokens.js's products, checked by a test. */
+export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "appspring" | "pulsespring";
+/** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
+export declare const PRODUCT_NAMES: Record<Product, string>;
+/** This package's version, the same as package.json's (a test checks), for the default brand path. */
+export declare const VERSION = "0.9.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -28,7 +32,27 @@ export declare function fontFaces(base: string, opts?: {
 }): string;
 /** Roboto Medium alone, for the Google button (google-button.css carries it). */
 export declare const googleFontFace: (base: string) => string;
+export declare const MARK_VIEWBOX = "-184 -160 368 368";
 export declare const mark: () => Html;
+/** The doll's paths alone, classes fill and coil, for the brand files. */
+export declare const MARK_PATHS: string;
+/** The page's icons, each a URL. shell() writes them from `brandBase` unless `favicon` names them. */
+export type Favicon = {
+    svg: string;
+    png32?: string;
+    png16?: string;
+    appleTouch?: string;
+};
+/** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
+ *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.9.0/brand/";
+/** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
+export declare function faviconFor(product: Product, base?: string): Favicon;
+/**
+ * The <link> tags for a favicon. The PNGs carry sizes and come first, so a browser that reads SVG
+ * icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
+ */
+export declare function faviconLinks(f: Favicon): Html;
 export type Link = {
     label: string;
     href: string;
@@ -89,11 +113,12 @@ export type UserMenu = {
 /** The bar alone: for shell(), and for a rich app's own frame (the React Bar renders the same). */
 export type BarOptions = {
     lang: Lang;
-    /** Sets the brand: a product's name alone, or Forspring's mark and name (D-15). Unset means Forspring. */
+    /** Sets the brand: the product's doll and name, or Forspring's ink doll and name (D-18). Unset means Forspring. */
     product?: Product;
-    /** The product's name. A product's pages show it alone as the wordmark ("SiteSpring"), with no
-     *  Forspring mark or name (hub D-98: a product is its own brand, like Word with an Office account).
-     *  Forspring's own pages (product unset or "forspring") keep "Forspring" plus this label ("konto"). */
+    /** The product's name. A product's pages show its doll in its accent and this name as the wordmark
+     *  ("SiteSpring"), with no Forspring mark or name (hub D-98, D-101: a product is its own brand,
+     *  like Word with an Office account). Forspring's own pages (product unset or "forspring") show the
+     *  ink doll, "Forspring" and this label ("konto"). */
     productLabel: string;
     /** Where the wordmark leads, and its accessible name. Defaults to the org's home, /o/<org>/, with an org. */
     home?: string;
@@ -124,6 +149,11 @@ export type ShellOptions = BarOptions & {
     title: string;
     /** An explicit theme; unset follows the system. */
     theme?: Theme;
+    /** The URL where the package's dist/brand/ is served, ending in "/"; shell() links the product's
+     *  favicon from there (hub D-101). Default DEFAULT_BRAND_BASE, /assets/ui/<version>/brand/. */
+    brandBase?: string;
+    /** The favicon's files, when they are not the package's under brandBase; false leaves the links out. */
+    favicon?: Favicon | false;
     /** Stylesheets and anything else for <head>: raw(`<style>…</style>`) or <link> tags. */
     head?: Content;
     /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */

@@ -10,6 +10,7 @@ import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
 
 const PRODUCTS = [
   ["forspring", "Forspring"],
+  ["spring", "Spring"],
   ["sitespring", "SiteSpring"],
   ["dataspring", "DataSpring"],
   ["appspring", "AppSpring"],
@@ -33,13 +34,20 @@ const SCRIPT = `<script>
     root.dataset.product = p;
     if (t === "system") delete root.dataset.theme; else root.dataset.theme = t;
     const name = form.querySelector('input[name=product]:checked').parentElement.textContent.trim();
-    // A product's bar carries its own name alone (D-15); Forspring's own keeps the mark and "konto".
+    // Every bar has the doll and a wordmark (D-18): a product's doll in its accent and its name alone,
+    // Forspring's ink doll, "Forspring" and "konto". The doll's colour follows data-product (--mark).
     document.querySelectorAll(".brand").forEach((e) => {
       e.dataset.own ??= e.innerHTML;
-      e.innerHTML = p === "forspring" ? e.dataset.own : "";
-      if (p !== "forspring") e.append(Object.assign(document.createElement("span"), { className: "word", textContent: name }));
+      e.innerHTML = e.dataset.own;
+      if (p !== "forspring") e.replaceChildren(e.querySelector(".mark"), Object.assign(document.createElement("span"), { className: "word", textContent: name }));
       // The label starts with the visible words, as WCAG 2.5.3 asks (D-8).
       e.setAttribute("aria-label", (p === "forspring" ? "Forspring konto" : name) + ", forside");
+    });
+    // The tab's icon is the product's doll too (D-18).
+    document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach((l) => {
+      const parts = l.getAttribute("href").split("/");
+      parts[parts.length - 2] = p;
+      l.href = parts.join("/");
     });
   };
   if (q.get("product")) form.product.value = q.get("product");
@@ -198,6 +206,7 @@ export function demoPage(): string {
       title: "Komponenter",
       productLabel: "konto",
       homeLabel: "Forspring konto, forside",
+      brandBase: "../brand/",
       head,
       org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/komponenter", peopleHref: "#" },
       products: { items: PRODUCTS.filter(([key]) => key !== "forspring").map(([key, name]) => ({ name, href: `?product=${key}` })), accountHref: "#" },
@@ -274,6 +283,7 @@ export function standardPages(): Record<string, string> {
           product: "dataspring",
           productLabel: "DataSpring",
           homeLabel: lang === "da" ? "DataSpring, forside" : "DataSpring, home",
+          brandBase: "../../brand/",
           head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
           org: known ? { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/datacore/runs", peopleHref: "#" } : undefined,
           products: known ? { items: [{ name: "DataSpring", href: "/o/bager-hansen/", current: true }, { name: "SiteSpring", href: "#" }, { name: "PulseSpring", href: "#" }], accountHref: "#" } : undefined,

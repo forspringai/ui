@@ -558,3 +558,49 @@ says `.js`. The demo shows the new bar (with `?open=org-switcher|product-switche
 a panel for a screenshot or the audit), and every standard page as its own page in DataSpring, in
 Danish and English, under `dist/demo/pages/`; all twenty pass the audit at 1280 and 380, light and
 dark, with no findings.
+
+## D-18 — Marks and wordmarks: the doll in every bar, brand files per product, favicons from shell(); 0.9.0 (2026-10-15)
+
+Hub D-101 (Peter, wordmark option A, all ink). Amends D-15: a product's bar now has a mark, its own.
+
+**The bar.** Every bar is the doll plus the wordmark. A product's: its doll in its accent and its name
+in ink, still no Forspring mark or word (hub D-98). Forspring's own pages (`product` unset or
+`"forspring"`): the doll in ink (paper on dark), "Forspring" and the small label. The wordmark is
+unchanged, Archivo Condensed 900 in `--foreground` at the existing sizes. The React `Bar` is `bar()`'s
+markup (D-17), so it follows with no change of its own.
+
+**The doll's colour is a role, `--mark`**, rather than `--primary`: Forspring's buttons and links
+stay blue while its doll is ink. `role.mark` is ink in both role files and becomes the accent in
+every product's `[data-product]` block, except `forspring`, which keeps ink; `marks` in tokens.js and
+`themeFor(...).mark` carry it. A test holds every doll at 3:1 on the page and the card (WCAG 1.4.11).
+
+**`spring` is a product** in `Product`, the tokens and `PRODUCT_NAMES`, its accent an alias of
+Forspring's blue (`#2244FF` / `#6B83FF`), so the suite has one blue. The audit and the demo run six
+products. The older forspring.ai blue is gone from the repository (a test greps for it).
+
+**Brand files are generated** from the tokens by `pnpm build` into `dist/brand/<product>/` (what
+products serve; exported as `@forspring/ui/brand/*`) and the same into `brand/<product>/` for people:
+`mark.svg` and `favicon.svg` (cropped to the doll, so 16 px is all doll), each with its dark variant in
+a `prefers-color-scheme` rule; `logo.svg`, the lockup with the wordmark as outlined paths and the clear
+space as its margin; and PNGs rendered from them in Chromium (favicon 16 and 32, apple-touch 180 and
+icon-512 on paper, logo 1200 × 300 transparent). The PNGs make Chromium a build dependency, as it
+already was for the tests; it renders the SVGs exactly as browsers will, which no pure JS rasteriser
+we could add would promise. The SVGs are part of the dist snapshot (D-2); the PNGs are checked for
+their sizes and their pixels' token colours instead, since a renderer update may shift an
+anti-aliased edge.
+
+**The wordmark outlines** are `brand/wordmarks.json`, written by `scripts/wordmarks.py` with
+fontTools and HarfBuzz from our own `archivo-condensed.woff2` at wght 900, kerned, with the bar's
+-0.01em tracking. Python, run by hand when a name changes, because instancing a variable font
+correctly is what those two tools do; the build itself stays Node and reads the JSON. The old
+`forspring-*` files are removed; nothing referenced them, and `brand/forspring/` replaces them.
+
+**Favicons.** `shell()` writes the PNG icons (with `sizes`, first), the SVG icon and the
+apple-touch icon for `product` (Forspring when unset) from `brandBase`, default
+`/assets/ui/<version>/brand/` (`DEFAULT_BRAND_BASE`), the versioned path products already copy the
+package's files to (account D-20). `favicon` names other files, or `false` leaves them out.
+`faviconFor()` and `faviconLinks()` give the same tags to a page not drawn by `shell()`. `VERSION` in
+html.ts carries the version for that path; a test holds it to package.json's.
+
+The rules (one mark, colour only in the mark, ink wordmark, the lockup, clear space a quarter of the
+doll's height, the smallest doll 16 px) are in `brand/README.md`.

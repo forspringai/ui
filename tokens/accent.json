@@ -1,8 +1,8 @@
 {
   "accent": {
-    "$description": "One accent per product (hub D-90), the only value that varies between products. Each is at least 4.5:1 on the page in its theme.",
+    "$description": "One accent per product (hub D-90), the only value that varies between products, and the colour of its doll (hub D-101). Each is at least 4.5:1 on the page in its theme.",
     "forspring": {
-      "$description": "Forspring, the account and Spring. Dark replaces the account's #4D68FF, which is 4.23:1 on the dark ground.",
+      "$description": "Forspring and the account: buttons, links and focus. Its doll is ink, not this blue (hub D-101, role.mark). Dark replaces the account's #4D68FF, which is 4.23:1 on the dark ground.",
       "light": {
         "$type": "color",
         "$value": {
@@ -26,6 +26,17 @@
           ],
           "hex": "#6b83ff"
         }
+      }
+    },
+    "spring": {
+      "$description": "Spring (BrainSpring is part of it): Forspring's blue, one blue for the suite (hub D-101), and its doll is blue, as its Slack avatar.",
+      "light": {
+        "$type": "color",
+        "$value": "{accent.forspring.light}"
+      },
+      "dark": {
+        "$type": "color",
+        "$value": "{accent.forspring.dark}"
       }
     },
     "sitespring": {

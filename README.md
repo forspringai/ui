@@ -2,14 +2,15 @@
 
 The Forspring suite's UI package: forspring.ai's family look with one accent per product. Design
 tokens built from W3C DTCG 2025.10 JSON into CSS custom properties, a Tailwind v4 theme and
-TypeScript; self-hosted fonts; and a small server-rendered component layer with typed HTML helpers.
+TypeScript; self-hosted fonts; every product's mark, logo and favicons (`brand/`); and a small
+server-rendered component layer with typed HTML helpers.
 
 ## Install
 
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.8.0
+pnpm add github:forspringai/ui#v0.9.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -181,6 +182,38 @@ HTTP status on your server.
 The demo shows the bar (`?open=org-switcher`, `product-switcher` or `user-menu` opens a menu) and every
 standard page in DataSpring under `dist/demo/pages/<name>.<da|en>.html`.
 
+### Marks, wordmarks and favicons (0.9.0, D-18, hub D-101)
+
+Every bar shows the doll and a wordmark. A product's: its doll in its accent and its name in ink
+("SiteSpring"), no Forspring mark or word. Forspring's own pages (`product` unset or `"forspring"`):
+the ink doll (paper on dark), "Forspring" and the small label ("konto"). Nothing to do in the markup;
+the doll's colour is the new `--mark` role, set by `data-product`. `spring` is a product key now
+(Forspring's blue, `#2244FF` / `#6B83FF`). The rules and the files are in [brand/README.md](brand/README.md).
+
+`pnpm build` generates, for each of `forspring`, `spring`, `sitespring`, `dataspring`, `appspring` and
+`pulsespring`, into `dist/brand/<product>/` (and `brand/<product>/`): `mark.svg`, `favicon.svg` (both
+with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touch-icon-180.png`,
+`icon-512.png`, `logo.svg` (wordmark outlined, no font needed) and `logo-1200x300.png`.
+
+**Wiring the favicon in a product:**
+
+1. Upgrade to `v0.9.0`.
+2. Serve your product's folder of the package's `dist/brand/` at `/assets/ui/<version>/brand/`, beside
+   the CSS and fonts you already copy there (account D-20), for example in the build step:
+   `mkdir -p public/assets/ui/0.9.0/brand && cp -r node_modules/@forspring/ui/dist/brand/sitespring public/assets/ui/0.9.0/brand/`.
+   Cache it like the rest of that path (a year, immutable): the version in the path changes with
+   every release.
+3. With `shell()` there is nothing else: it links `<link rel="icon" type="image/svg+xml">`, the two
+   PNG sizes and `apple-touch-icon` for `product` from `/assets/ui/<version>/brand/` (the exported
+   `DEFAULT_BRAND_BASE`). Served elsewhere: `shell({ …, brandBase: "/static/brand/" })` (the URL of the
+   folder holding `<product>/`, ending in `/`). Your own files: `favicon: { svg, png32, png16, appleTouch }`.
+   None: `favicon: false`.
+4. Without `shell()` (your own layout, a React app's `index.html`): put
+   `faviconLinks(faviconFor("sitespring", "/assets/ui/0.9.0/brand/"))` in `<head>`, or write the four
+   tags by hand. A bundler can take the files from `@forspring/ui/brand/<product>/<file>`.
+5. Optional: answer `/favicon.ico` with `favicon-32.png`, for clients that ask for it before reading
+   the page. The CSP needs only `img-src 'self'`.
+
 ## Tailwind v4 and shadcn
 
 ```css
@@ -194,6 +227,7 @@ standard page in DataSpring under `dist/demo/pages/<name>.<da|en>.html`.
 ```ts
 import { themeFor, chart } from "@forspring/ui";
 themeFor("dataspring", "dark").primary; // "#2ba7ad"
+themeFor("forspring", "light").mark;    // "#14151a", the doll's colour (marks has every product's)
 ```
 
 ## Run the audit in CI

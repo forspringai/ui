@@ -54,15 +54,21 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
+  // The doll is a non-text graphic (WCAG 1.4.11): 3:1 on the page and the card, in every product.
+  test("every product's doll is visible on the page (non-text, 3:1)", () => {
+    for (const p of m.products) for (const s of ["background", "card"]) expect(contrast(m.product[p]!.mark[mode], c(s)), p).toBeGreaterThanOrEqual(3);
+  });
+
   test("the focus ring is visible on the page (non-text, 3:1)", () => {
     for (const p of m.products) expect(contrast(m.product[p]!.ring[mode], c("background"))).toBeGreaterThanOrEqual(3);
   });
 });
 
-test("the D-90 accents, exactly", () => {
+test("the D-90 accents, exactly, and Spring on Forspring's blue (hub D-101)", () => {
   const got = Object.fromEntries(m.products.map((p) => [p, m.product[p]!.primary]));
   expect(got).toEqual({
     forspring: { light: "#2244ff", dark: "#6b83ff" },
+    spring: { light: "#2244ff", dark: "#6b83ff" },
     sitespring: { light: "#b8442a", dark: "#e0714f" },
     dataspring: { light: "#0b7c82", dark: "#2ba7ad" },
     appspring: { light: "#7b3f8c", dark: "#b57cc6" },
