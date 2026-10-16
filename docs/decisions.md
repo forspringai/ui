@@ -604,3 +604,64 @@ html.ts carries the version for that path; a test holds it to package.json's.
 
 The rules (one mark, colour only in the mark, ink wordmark, the lockup, clear space a quarter of the
 doll's height, the smallest doll 16 px) are in `brand/README.md`.
+
+## D-19 — Connect an agent: one panel, interactive sign-in first, keys folded; 0.10.0 (2026-10-16)
+
+Hub D-102 (Peter: the main way to authenticate MCP and the CLI is interactive, headless CLI included;
+predefined keys stay supported but are secondary) and hub tick 6h0. The audit behind it,
+`docs/agent-connect-plan.md` in the hub, found SiteSpring's console the one surface still leading with
+a pasted key, DataSpring with no panel and PulseSpring with no MCP setup anywhere. Three products and
+the account's Agents page writing the same four tabs would drift the way they already had, so the
+panel is the package's, with its words, as the bar's are (D-17).
+
+**The API** is `@forspring/ui/connect`: `connectPanel({ lang, product, org: { slug, name }, mcpUrl,
+cliName?, multiOrg?, installUrl?, keysHref?, createKey?, open?, headingLevel?, id? })` returns `Html`,
+a `section.connect`. `connectServerName()` is the client name rule from the plan (`<cli>`, or
+`<cli>-<org>` for a person with several orgs, so connections to two orgs sit side by side), and
+`cursorInstallUrl()` Cursor's documented deeplink with `{"url": …}` as base64 JSON. The React
+`ConnectAgent` is `fromHtml(connectPanel(props))`, the same markup byte for byte, as D-17's wrappers.
+
+**The copy is the hub's, word for word**, in Danish and English; a test checks every sentence. Claude's
+own interface words (Customize → Connectors, Authenticate, Connect) stay English inside the Danish,
+because Claude has no Danish interface and a person must find the same words on screen; they carry
+`lang="en"`. The `{org}` of the sentences is the org's name; `--org` takes its slug.
+
+**No key in the default tabs.** Claude Code is `claude mcp add --transport http --scope user <name>
+<url>` with no `--header`, Claude.ai the three connector steps, other clients the URL, the CLI
+`curl … | sh` and `<cli> auth login`. A test holds the four tabs free of `Bearer`, `Authorization`,
+`API_KEY`, `<nøgle>`/`<key>`, `--header` and `?org=` (the one URL form strict OAuth discovery
+refuses, RFC 9728 and Claude.ai's exact `resource` match). Keys are under a `details` "Automatisering
+og CI", closed, drawn only when the product passes `keysHref` (its keys page now, the account's
+`/o/<org>/agents?product=<p>` after tez) or `createKey` (its own POST form, CSRF fields hidden). The
+link reads "Se og tilbagekald alle agenter i {org}", the plan's words for that page.
+
+**Tabs with no script.** Radio buttons, visually hidden, with their labels as the tabs, in a fieldset
+with a hidden legend; CSS shows the checked client's panel with `.connect-tabs:has(input[value=…]:checked)`.
+Radios rather than an ARIA tablist because a tablist needs script for its keys; a radio group already
+gives Tab into the group and arrows across it, and a screen reader says "1 of 4". Rather than `details`
+per client because four disclosures read as an accordion and allow none or all open; the person picks
+one client. Each panel keeps a heading (hidden when the tabs work); the tabs' rules sit in `@supports
+selector(:has(*))`, so in a browser without `:has()` every panel shows under its heading and the tab
+row is gone, and nothing is lost. The chosen tab has the accent only as its edge rule (D-5), drawn as an inset shadow so the row
+needs no negative margin (D-14). On a phone the labels are 44 px and all four fit one row at 380.
+
+**Copy buttons are progressive enhancement.** Each command or URL is a `pre` with wrapping (a phone sees
+the whole command, and no scrolled region needs a tab stop) and `user-select: all` on its `code`, so
+with no script one click selects it. The buttons are in the markup but `display: none` until
+`CONNECT_SCRIPT` has set `data-forspring-copy` on `<html>`, which it does only with the async clipboard
+in a secure context: no button that cannot work. The script is a string the product places itself
+(`connectScript(nonce)` writes it as an inline tag with the CSP nonce, stripped to base64 characters),
+listens on the document so React panels drawn later work, and announces "Kopieret" in the panel's
+status region. Buttons are "Kopiér" with a hidden "kommandoen" or "adressen", the visible word first
+(WCAG 2.5.3). The audit's script budget counts files only, so the inline script costs a product nothing
+against `--budget-js 0`.
+
+**Not here yet:** an "Add to Claude" button (hub D-100 item 4 waits for a confirmed URL scheme), the
+"Forbindelser og nøgler" list (the product's or, after tez, the account's), and the path form
+`/mcp/o/<org>` (the product passes whichever URL it serves). The Claude Code steps were checked against
+Claude Code's documentation, not run; the hub's plan asks for one clean-machine run before a product
+ships them.
+
+The demo shows the panel on the components page (`?tab=claude-ai|other|cli`, `?open=connect-ci`) and
+on pages of its own in SiteSpring, `dist/demo/pages/connect.da.html` and `.en.html`, which
+test/audit.test.ts audits at 1280 and 380, light and dark, with no findings.

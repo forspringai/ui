@@ -10,7 +10,7 @@ server-rendered component layer with typed HTML helpers.
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.9.0
+pnpm add github:forspringai/ui#v0.10.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -213,6 +213,55 @@ with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touc
    tags by hand. A bundler can take the files from `@forspring/ui/brand/<product>/<file>`.
 5. Optional: answer `/favicon.ico` with `favicon-32.png`, for clients that ask for it before reading
    the page. The CSP needs only `img-src 'self'`.
+
+### Connect an agent (0.10.0, D-19, hub D-102)
+
+The one "Connect an agent" panel for every product's console (and later the account's Agents page):
+Claude Code, Claude.ai, other MCP clients and the CLI as tabs, each signing in interactively, and keys
+only in a folded "Automatisering og CI" section. The words are the hub's (`docs/agent-connect-plan.md`
+section 2), Danish and English, in the package.
+
+```ts
+import { connectPanel, connectScript } from "@forspring/ui/connect";
+
+const panel = connectPanel({
+  lang: "da",
+  product: "sitespring",                       // the name comes from PRODUCT_NAMES; productName overrides
+  org: { slug: org.slug, name: org.name },     // slug for --org, name for the words
+  mcpUrl: "https://mcp.sitespring.app/mcp",    // bare /mcp now, /mcp/o/<org> once served; never ?org=
+  multiOrg: myOrgs.length > 1,                 // the server's name becomes sitespring-<org>
+  keysHref: `/o/${org.slug}/keys`,             // after tez: the account's /o/<org>/agents?product=sitespring
+  createKey: { action: `/o/${org.slug}/keys`, fields: { csrf } },   // optional: your own form, field "name"
+});
+const page = shell({ ...bar, title: "Agenter", body: [panel, connectScript(nonce)] });
+```
+
+| Option | |
+|---|---|
+| `lang`, `product`, `org`, `mcpUrl` | required |
+| `cliName` | the CLI's command and the stem of `<CLI>_ORG` and `<CLI>_API_KEY`; default the product key |
+| `multiOrg` | the MCP server's name is `<cli>-<org slug>` rather than `<cli>` |
+| `installUrl` | default `https://<cli>.app/install.sh` |
+| `keysHref`, `createKey` | the folded "Automation and CI" section; with neither it is left out |
+| `open` | the tab open at first: `claude-code` (default), `claude-ai`, `other`, `cli` |
+| `headingLevel` | `1` when the panel is the page (title h1, clients h2); default `2` |
+| `id` | prefix for ids and the radio group, when a page has two panels; default `connect` |
+
+- **No script needed.** The tabs are radio buttons (arrow keys move between them) and CSS shows the
+  chosen panel with `:has()`; a browser without `:has()` shows every panel under its heading.
+  Commands are wrapped, selectable text (one click selects a whole command).
+- **Copy buttons are progressive enhancement.** They stay hidden until `CONNECT_SCRIPT` has run (in a
+  secure context with the async clipboard). `connectScript(nonce)` writes it as an inline
+  `<script nonce>`; a page whose CSP allows no inline script can serve `CONNECT_SCRIPT` as a file of its
+  own, or leave it out. It listens on the document, so once per page is enough, panels drawn later too.
+- **The default tabs never show a key**, a key placeholder, `--header` or `?org=`; a test holds it.
+- "Tilføj til Cursor" is Cursor's install deeplink, built from the server's name and URL
+  (`cursorInstallUrl()`). There is no "Add to Claude" button until a URL scheme is confirmed (hub D-100).
+
+React: `import { ConnectAgent } from "@forspring/ui/react"; <ConnectAgent {...sameOptions} />` renders
+the same markup. Add `connectScript()`'s script to your `index.html` (or bundle `CONNECT_SCRIPT`) for
+copy buttons. The demo shows it on the components page (`?tab=cli`, `&open=connect-ci`) and on its own
+in SiteSpring under `dist/demo/pages/connect.<da|en>.html`.
 
 ## Tailwind v4 and shadcn
 

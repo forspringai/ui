@@ -5,6 +5,7 @@
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
 import { button, card, crumbs, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type Lang, type Org } from "../src/html.ts";
+import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
 
@@ -54,6 +55,8 @@ const SCRIPT = `<script>
   if (q.get("theme")) form.theme.value = q.get("theme");
   // ?open=org-switcher (or product-switcher, user-menu) opens a bar menu, so the audit measures its panel.
   if (q.get("open")) document.querySelector("details." + CSS.escape(q.get("open")))?.setAttribute("open", "");
+  // ?tab=claude-ai (or other, cli) picks a tab in the connect panel (D-19).
+  if (q.get("tab")) { const r = document.getElementById("connect-" + q.get("tab")); if (r) r.checked = true; }
   form.addEventListener("change", apply);
   apply();
 })();
@@ -88,6 +91,18 @@ const METTE = (_lang: Lang, da: string, en: string) => ({
   agentsHref: "#",
   languages: { da, en },
   signOut: { action: "#", fields: { csrf: "demo" } },
+});
+
+// Connect an agent (D-19, hub D-102): SiteSpring for Bager Hansen, a person with several orgs, before
+// tez: the bare MCP URL, the product's own key form and keys page.
+const CONNECT = (lang: Lang): ConnectPanelOptions => ({
+  lang,
+  product: "sitespring",
+  org: { slug: ORGS[0]!.slug, name: ORGS[0]!.name },
+  mcpUrl: "https://mcp.sitespring.app/mcp",
+  multiOrg: true,
+  keysHref: "#",
+  createKey: { action: "#", fields: { csrf: "demo" } },
 });
 
 const people = [
@@ -185,6 +200,9 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 </div>
 </section>
 
+${connectPanel(CONNECT("da"))}
+<p class="fine">Panelet som side for sig i SiteSpring: <a href="pages/connect.da.html">dansk</a>, <a href="pages/connect.en.html" lang="en" hreflang="en">English</a>.</p>
+
 <section><h2>Sider omkring log ind</h2>
 <p>Standardsiderne, som hvert produkt viser med de samme ord (her i DataSpring). Hver er en side for sig.</p>
 ${list(PAGES.map(([name, title]) => ({ name: title, meta: html`<span lang="en">${name}</span>`, action: html`<span class="actions"><a class="go" href="${`pages/${name}.da.html`}">Dansk</a> <a class="go" href="${`pages/${name}.en.html`}" lang="en" hreflang="en">English</a></span>` })))}
@@ -197,6 +215,7 @@ ${orDivider("eller")}
 <form class="form" method="post" action="#">${field({ label: "Mail", name: "signin-email", type: "email", autocomplete: "email" })}${button({ label: "Send mig et link", wide: true })}</form>
 <p class="fine">Ved at logge ind accepterer du <a href="#">vilkårene</a>.</p>`)}</div>
 </section>
+${connectScript()}
 ${raw(SCRIPT)}`;
 
 export function demoPage(): string {
@@ -268,6 +287,29 @@ function standard(name: string, lang: Lang): StandardPage {
   });
 }
 
+/** dist/demo/pages/connect.<lang>.html: the connect panel on a page of its own, in SiteSpring's bar. */
+function connectPages(out: Record<string, string>) {
+  for (const lang of ["da", "en"] as const) {
+    const da = lang === "da";
+    out[`pages/connect.${lang}.html`] = String(
+      shell({
+        lang,
+        product: "sitespring",
+        productLabel: "SiteSpring",
+        homeLabel: da ? "SiteSpring, forside" : "SiteSpring, home",
+        title: da ? "Forbind en agent" : "Connect an agent",
+        brandBase: "../../brand/",
+        head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
+        org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/agents", peopleHref: "#" },
+        products: { items: [{ name: "SiteSpring", href: "/o/bager-hansen/", current: true }, { name: "DataSpring", href: "#" }, { name: "PulseSpring", href: "#" }], accountHref: "#" },
+        userMenu: METTE(lang, "connect.da.html", "connect.en.html"),
+        footer: [da ? { label: "English", href: "connect.en.html", lang: "en" } : { label: "Dansk", href: "connect.da.html", lang: "da" }, { label: da ? "Alle komponenter" : "All components", href: "../index.html" }],
+        body: html`${connectPanel({ ...CONNECT(lang), headingLevel: 1 })}${connectScript()}`,
+      }),
+    ) + "\n";
+  }
+}
+
 /** dist/demo/pages/<name>.<lang>.html: every standard page, in DataSpring's bar. */
 export function standardPages(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -293,5 +335,6 @@ export function standardPages(): Record<string, string> {
         }),
       ) + "\n";
     }
+  connectPages(out);
   return out;
 }

@@ -1553,6 +1553,210 @@
     border-top: 1px solid var(--border);
   }
 
+  /* --- Connect an agent: tabs per client, folded keys (D-19, hub D-102) -------------------- */
+
+  /* The tabs are radio buttons and labels; with :has() only the chosen client's panel shows. A
+     browser without :has() shows every panel under its heading, and no tab row. */
+  .connect-choose {
+    display: none;
+  }
+
+  .connect-panel > :is(h2, h3) {
+    margin-top: var(--space-6);
+  }
+
+  .connect-panel > :last-child,
+  .connect-ci-body > :last-child,
+  .connect-steps > li > :last-child {
+    margin-bottom: 0;
+  }
+
+  @supports selector(:has(*)) {
+    .connect-choose {
+      display: flex;
+      gap: 0 var(--space-1);
+      margin-bottom: var(--space-5);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .connect-choose label {
+      display: inline-flex;
+      align-items: center;
+      min-height: var(--control-height-small);
+      padding: var(--space-1) var(--space-3);
+      font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+      color: var(--muted-foreground);
+      cursor: pointer;
+    }
+
+    .connect-choose label:hover {
+      color: var(--foreground);
+    }
+
+    /* The chosen tab: ink words and the accent as its edge rule only (D-5). */
+    .connect-choose input:checked + label {
+      color: var(--foreground);
+      box-shadow: inset 0 -2px 0 var(--primary);
+    }
+
+    .connect-choose input:focus-visible + label {
+      outline: 2px solid var(--ring);
+      outline-offset: -2px;
+      border-radius: var(--radius-button);
+    }
+
+    .connect-panel {
+      display: none;
+    }
+
+    .connect-panel > :is(h2, h3) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    .connect-tabs:has(input[value="claude-code"]:checked) > .connect-claude-code,
+    .connect-tabs:has(input[value="claude-ai"]:checked) > .connect-claude-ai,
+    .connect-tabs:has(input[value="other"]:checked) > .connect-other,
+    .connect-tabs:has(input[value="cli"]:checked) > .connect-cli {
+      display: block;
+    }
+  }
+
+  .connect-lede {
+    color: var(--muted-foreground);
+  }
+
+  .connect-who {
+    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+
+  /* A command or address: selectable whole with one click, wrapped rather than scrolled, so a
+     phone shows all of it and copying gives the one line. */
+  .connect-code {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    margin: 0 0 var(--space-4);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    background: var(--muted);
+  }
+
+  .connect-code pre {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    padding-block: var(--space-1);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    color: var(--foreground);
+  }
+
+  .connect-code code {
+    font-size: var(--text-content-small);
+    line-height: 1.85;
+    user-select: all;
+  }
+
+  /* The copy button shows only once the script has found a clipboard (CONNECT_SCRIPT). */
+  .connect-copy {
+    display: none;
+    flex: none;
+  }
+
+  [data-forspring-copy] :is(button, .button).connect-copy {
+    display: inline-flex;
+  }
+
+  .connect-copy .copy-done,
+  .connect-copy[data-copied] .copy-label {
+    display: none;
+  }
+
+  .connect-copy[data-copied] .copy-done {
+    display: inline;
+  }
+
+  .connect-steps {
+    margin: 0 0 var(--space-4);
+    padding-inline-start: var(--space-6);
+  }
+
+  .connect-steps > li + li {
+    margin-top: var(--space-2);
+  }
+
+  .connect-steps > li > p {
+    margin-bottom: var(--space-2);
+  }
+
+  details.connect-ci {
+    margin-top: var(--space-6);
+    border-top: 1px solid var(--border);
+  }
+
+  details.connect-ci > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    color: var(--foreground);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  details.connect-ci > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.connect-ci > summary::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-1px) rotate(-45deg);
+    transition: transform 0.15s;
+  }
+
+  details.connect-ci[open] > summary::before {
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  .connect-ci-body {
+    padding-bottom: var(--space-2);
+  }
+
+  .connect-key {
+    margin: 0 0 var(--space-4);
+  }
+
+  .connect-key > label {
+    display: block;
+    margin-bottom: var(--space-2);
+    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+  }
+
+  .connect-key .toolbar > input {
+    flex: 1 1 12rem;
+  }
+
+  .connect-env code {
+    color: var(--foreground);
+  }
+
+  /* A long org name must wrap the link, not widen a phone's page. */
+  .connect-ci-body .go {
+    white-space: normal;
+  }
+
   /* Below a tablet's width the sidebar folds: one column, and the menu under "Menu" above main. */
   @media (max-width: 800px) {
     .app {
@@ -1686,6 +1890,20 @@
 
     .phone-hide {
       display: none;
+    }
+
+    /* All four tabs on one row at 380px. */
+    .connect-choose {
+      gap: 0;
+    }
+
+    .connect-choose label {
+      min-height: var(--control-touch);
+      padding-inline: var(--space-2);
+    }
+
+    .connect-ci-body .go {
+      max-width: 100%;
     }
 
     .phone-only {

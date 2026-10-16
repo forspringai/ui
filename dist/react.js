@@ -8,6 +8,7 @@
 // needs no React build step of its own.
 import { createElement } from "react";
 import { bar } from "./html.js";
+import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]);
@@ -33,3 +34,7 @@ export const NoOrg = (props) => fromHtml(noOrgPage(props).body);
 export const Refused = (props) => fromHtml(refusedPage(props).body);
 /** The account not answering (accountUnavailablePage). */
 export const AccountUnavailable = (props) => fromHtml(accountUnavailablePage(props).body);
+/** Connect an agent (connectPanel in @forspring/ui/connect, D-19). The tabs need no handlers; for the
+ *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
+ *  so it works for panels React draws after it has run. */
+export const ConnectAgent = (props) => fromHtml(connectPanel(props));

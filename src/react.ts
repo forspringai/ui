@@ -9,6 +9,7 @@
 
 import { createElement, type ReactElement } from "react";
 import { bar, type BarOptions, type Html } from "./html.ts";
+import { connectPanel, type ConnectPanelOptions } from "./connect.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 
 const UNESCAPE: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
@@ -38,3 +39,8 @@ export const Refused = (props: RefusedOptions): ReactElement => fromHtml(refused
 
 /** The account not answering (accountUnavailablePage). */
 export const AccountUnavailable = (props: { lang: RefusedOptions["lang"]; retryHref?: string; command?: string }): ReactElement => fromHtml(accountUnavailablePage(props).body);
+
+/** Connect an agent (connectPanel in @forspring/ui/connect, D-19). The tabs need no handlers; for the
+ *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
+ *  so it works for panels React draws after it has run. */
+export const ConnectAgent = (props: ConnectPanelOptions): ReactElement => fromHtml(connectPanel(props));

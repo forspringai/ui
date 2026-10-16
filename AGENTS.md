@@ -31,6 +31,7 @@ src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6),
 src/brand.ts       the brand SVGs from the tokens and brand/wordmarks.json (D-18, hub D-101)
 src/refusals.ts    the refusal vocabulary, Danish and English, no markup (D-17)
 src/pages.ts       the standard pages: choose an org, no org, refused, account unavailable (D-17)
+src/connect.ts     "Connect an agent": tabs per client, folded keys, the copy script (D-19, hub D-102)
 src/react.ts       React wrappers drawing the helpers' own markup (D-17)
 src/color.ts       WCAG contrast and OKLab distance (normal and colour-blind vision)
 src/audit/         the design audit, ui-audit (D-8 to D-10): cli.ts (bin), args.ts (flags, refusals,
@@ -49,7 +50,7 @@ dist/              committed build output (D-2)
   tokens.js/.d.ts  typed values for code, charts and MCP Apps
   fonts.css        @font-face rules pointing at ../fonts/
   components.css, google-button.css
-  html, refusals, pages, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
+  html, refusals, pages, connect, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
   audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
   brand/<product>/ mark, favicon and logo SVGs and their PNGs, what products serve (D-18)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
@@ -75,7 +76,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.8.0"
+"@forspring/ui": "github:forspringai/ui#v0.10.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -143,6 +144,10 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
   new localhost ports, so a test server never counts its requests.
 - **page.ts runs inside Chromium.** `collect()` is sent as source text: it must not call anything
   outside its own body, and it measures only; verdicts and token values live in audit.ts.
+- **Connecting an agent is interactive first** (D-19, hub D-102). The connect panel's default tabs
+  never show a key, a key placeholder, `--header` or `?org=`; keys live only in the folded
+  "Automatisering og CI" section. Its words are the hub's `docs/agent-connect-plan.md` section 2;
+  change them there first. The copy buttons stay progressive enhancement: the panel works with no script.
 - Copy and comments: plain words, no em dashes. Comments explain why.
 - **A release bumps `package.json`'s version and `VERSION` in src/html.ts (a test checks they agree;
   the default favicon path carries it), and the tag is `v<that version>`.** Products serve

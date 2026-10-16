@@ -118,6 +118,14 @@ describe("the demo page", () => {
     expect(all(r)).toEqual([]);
     expect(r.ok).toBe(true);
   }, 120_000);
+
+  // Connect an agent (D-19), in SiteSpring's bar, with the copy buttons' script run.
+  test("the connect panel passes, in Danish and English", async () => {
+    const r = await audit(options([`${base}/dist/demo/pages/connect.da.html`, `${base}/dist/demo/pages/connect.en.html`], { product: "sitespring" }), browser);
+    expect(r.pages).toHaveLength(8);
+    expect(all(r)).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 120_000);
 });
 
 describe("signed-in and refusal pages", () => {
