@@ -1755,6 +1755,78 @@
     white-space: normal;
   }
 
+  /* --- Dialog and the destructive-action confirm: a native <dialog> (D-23) ------------------ */
+
+  /* The card's surface at the panel radius, centred by the browser's own modal rules (auto margins,
+     the top layer). No entry animation: a dialog that fades in only delays the choice, so there is
+     nothing for prefers-reduced-motion to turn off. */
+  .dialog {
+    width: 32rem;
+    max-width: calc(100% - 2 * var(--space-4));
+    padding: var(--space-7);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-panel);
+    background: var(--card);
+    color: var(--card-foreground);
+    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+  }
+
+  /* The page behind dims towards ink in light and towards the ground in dark, as --_shadow does, so
+     the dialog stands out in both themes. ::backdrop inherits from the dialog in current browsers;
+     an older one that does not resolves no roles and shows no dim, and the dialog still works. */
+  .dialog::backdrop {
+    background: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 45%, transparent);
+  }
+
+  .dialog-title {
+    margin-bottom: var(--space-4);
+  }
+
+  /* On the no-script fallback page the confirm sits in place, the title the page's h1. */
+  .dialog-page {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .dialog-page h1 {
+    font-size: var(--text-content-h1-min);
+  }
+
+  .dialog-body > :last-child {
+    margin-bottom: 0;
+  }
+
+  .dialog-body .field {
+    margin-top: var(--space-5);
+  }
+
+  .dialog-losses {
+    margin: 0 0 var(--space-4);
+    padding-inline-start: var(--space-6);
+  }
+
+  /* The footer: the safe action first, the other after it. They are ordinary buttons, so they share
+     one box (D-14) and wrap to two rows on a narrow screen rather than shrink. */
+  .dialog-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+  }
+
+  /* Until the typed name matches the pattern, the destructive button looks unavailable, in words
+     that keep their contrast rather than faded ones. It stays a live button, so pressing it makes the
+     browser say what is missing. A browser without :has() shows it in danger throughout. */
+  .dialog-form:has(:invalid) .dialog-actions :is(button, .button).danger {
+    color: var(--muted-foreground);
+    border-color: var(--border);
+    background: transparent;
+    cursor: not-allowed;
+  }
+
   /* Below a tablet's width the sidebar folds: one column, and the menu under "Menu" above main. */
   @media (max-width: 800px) {
     .app {
@@ -1922,6 +1994,15 @@
 
     .data-state {
       padding: var(--space-6) var(--space-5);
+    }
+
+    /* A phone's dialog keeps the card's narrower padding, and its buttons share the row's width. */
+    .dialog {
+      padding: var(--space-5);
+    }
+
+    .dialog-actions > * {
+      flex: 1 1 auto;
     }
 
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */

@@ -226,7 +226,9 @@ What exists, in this package:
 
 - **Server-rendered helpers** in `@forspring/ui/html`: `shell()` (the bar with org, product and user
   menus, the menu and favicons), `button`, `field`, `notice`, `signal`, `crumbs`, `tag`, `card`, `list`,
-  `table`, `switchButton`, `state` (empty states) and `googleButton`; the standard pages in
+  `table`, `switchButton`, `state` (empty states), `googleButton`, and `dialog` with the
+  destructive-action confirm `confirmDestructive` (ui D-23: says what is lost, asks for the name, the
+  safe action first and in focus); the standard pages in
   `@forspring/ui/pages`; the refusal words in `@forspring/ui/refusals`; the "Connect an agent" panel in
   `@forspring/ui/connect`; React wrappers in `@forspring/ui/react` that draw the same markup.
 - **The CSS layer** `css/components.css`, on the roles only.
@@ -238,7 +240,6 @@ Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); none of t
 
 | Pattern | Hub tick |
 |---|---|
-| Dialog and the destructive-action confirm | ah0 |
 | Agent approval: what an agent wants to do, the diff, approve or refuse, "why did it do that" | sm9 |
 | A table at scale: sorting, filtering, pagination | tiu |
 | Toast, tooltip and an icon set | vt2 |

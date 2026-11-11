@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { button, card, crumbs, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type Lang, type Org } from "../src/html.ts";
+import { button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -55,6 +55,8 @@ const SCRIPT = `<script>
   if (q.get("theme")) form.theme.value = q.get("theme");
   // ?open=org-switcher (or product-switcher, user-menu) opens a bar menu, so the audit measures its panel.
   if (q.get("open")) document.querySelector("details." + CSS.escape(q.get("open")))?.setAttribute("open", "");
+  // ?open=delete-site opens that dialog as a modal (D-23), for a screenshot or the audit.
+  if (q.get("open")) { const d = document.getElementById(q.get("open")); if (d instanceof HTMLDialogElement) d.showModal(); }
   // ?tab=claude-ai (or other, cli) picks a tab in the connect panel (D-19).
   if (q.get("tab")) { const r = document.getElementById("connect-" + q.get("tab")); if (r) r.checked = true; }
   form.addEventListener("change", apply);
@@ -104,6 +106,37 @@ const CONNECT = (lang: Lang): ConnectPanelOptions => ({
   keysHref: "#",
   createKey: { action: "#", fields: { csrf: "demo" } },
 });
+
+// The destructive confirm (D-23), SiteSpring's case from the brand review: deleting a site. The
+// fallback page, for a browser with no script, is dist/demo/pages/delete-site.<lang>.html.
+const DELETE_SITE = (lang: Lang): ConfirmDestructiveOptions & { title: string } =>
+  lang === "da"
+    ? {
+        lang,
+        id: "delete-site",
+        title: "Slet banegaarden.dk?",
+        losses: ["181 sider", "4 formularer", "62 omdirigeringer"],
+        text: "Domænet holder op med at svare med det samme.",
+        irreversible: true,
+        confirmName: "banegaarden.dk",
+        action: "#",
+        fields: { csrf: "demo" },
+        keepLabel: "Behold hjemmesiden",
+        confirmLabel: "Slet hjemmesiden",
+      }
+    : {
+        lang,
+        id: "delete-site",
+        title: "Delete banegaarden.dk?",
+        losses: ["181 pages", "4 forms", "62 redirects"],
+        text: "The domain stops answering at once.",
+        irreversible: true,
+        confirmName: "banegaarden.dk",
+        action: "#",
+        fields: { csrf: "demo" },
+        keepLabel: "Keep site",
+        confirmLabel: "Delete site",
+      };
 
 const people = [
   ["Mette Kjær", "mette@eksempel.dk", "Administrator", true, false, 1240],
@@ -200,6 +233,12 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 </div>
 </section>
 
+<section><h2>Dialog og bekræftelse før sletning</h2>
+<p>Noget, der ikke kan fortrydes, sker aldrig med ét klik. Dialogen siger, hvad der går tabt, beder om navnet og har det sikre valg først. Uden script fører knappen til <a href="pages/delete-site.da.html">en side med det samme spørgsmål</a>.</p>
+<div class="demo-row">${button({ label: "Udgiv ændringer", type: "button" })}${dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" })}</div>
+${confirmDestructive(DELETE_SITE("da"))}
+</section>
+
 ${connectPanel(CONNECT("da"))}
 <p class="fine">Panelet som side for sig i SiteSpring: <a href="pages/connect.da.html">dansk</a>, <a href="pages/connect.en.html" lang="en" hreflang="en">English</a>.</p>
 
@@ -216,6 +255,7 @@ ${orDivider("eller")}
 <p class="fine">Ved at logge ind accepterer du <a href="#">vilkårene</a>.</p>`)}</div>
 </section>
 ${connectScript()}
+${dialogScript()}
 ${raw(SCRIPT)}`;
 
 export function demoPage(): string {
@@ -310,6 +350,32 @@ function connectPages(out: Record<string, string>) {
   }
 }
 
+/** dist/demo/pages/delete-site.<lang>.html: the confirm as the page a trigger's link leads to with
+ *  no script (D-23), in SiteSpring's bar. Keep leads back to the components page. */
+function confirmPages(out: Record<string, string>) {
+  for (const lang of ["da", "en"] as const) {
+    const da = lang === "da";
+    const o = DELETE_SITE(lang);
+    out[`pages/delete-site.${lang}.html`] = String(
+      shell({
+        lang,
+        product: "sitespring",
+        productLabel: "SiteSpring",
+        homeLabel: da ? "SiteSpring, forside" : "SiteSpring, home",
+        title: o.title,
+        narrow: true,
+        brandBase: "../../brand/",
+        head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
+        org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/sites/banegaarden.dk/delete", peopleHref: "#" },
+        products: { items: [{ name: "SiteSpring", href: "/o/bager-hansen/", current: true }, { name: "DataSpring", href: "#" }, { name: "PulseSpring", href: "#" }], accountHref: "#" },
+        userMenu: METTE(lang, "delete-site.da.html", "delete-site.en.html"),
+        footer: [da ? { label: "English", href: "delete-site.en.html", lang: "en" } : { label: "Dansk", href: "delete-site.da.html", lang: "da" }, { label: da ? "Alle komponenter" : "All components", href: "../index.html" }],
+        body: confirmDestructive({ ...o, page: { keepHref: "../index.html" } }),
+      }),
+    ) + "\n";
+  }
+}
+
 /** dist/demo/pages/<name>.<lang>.html: every standard page, in DataSpring's bar. */
 export function standardPages(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -336,5 +402,6 @@ export function standardPages(): Record<string, string> {
       ) + "\n";
     }
   connectPages(out);
+  confirmPages(out);
   return out;
 }

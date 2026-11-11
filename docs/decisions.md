@@ -717,3 +717,61 @@ templates are `brand/templates/` (email, a 16:9 deck, 1200 × 630 and 1080 × 10
 files on the token values, and test/templates.test.ts holds them to the tokens and to no third-party
 requests. The design audit's scale still knows the chrome and content ladders only; teaching it the
 marketing ladder (and the marketing h1's range) is its own change.
+
+## D-23 — A native dialog, and the destructive-action confirm; 0.12.0 (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick ah0): "No dialog; delete is one
+click beside publish." In SiteSpring, "Delete site" sat next to "Publish changes" with only a notice
+under it. `@forspring/ui/html` now has `dialog()`, `dialogTrigger()`, `dialogScript()` /
+`DIALOG_SCRIPT`, `confirmDestructive()` and `regexEscape()`; `@forspring/ui/react` has `Dialog` and
+`ConfirmDestructive`. `field()` takes `pattern`, `title`, `autocapitalize`, `autocorrect` and
+`spellcheck`.
+
+**A native `<dialog>`, opened with `showModal()`.** The browser does the hard parts: the rest of the
+page is inert (no focus trap of our own to get wrong), focus goes to the `autofocus` element, Escape
+closes, and the dialog sits in the top layer above the bar's menus. A `form method="dialog"` closes it
+with no request. What the package adds is small: the close button is first in the footer and carries
+`autofocus`, so the safe action has focus on open; the script returns focus to the trigger on close
+(browsers do this too, but Safari not after a mouse click on a link, which never takes focus) and
+resets the dialog's forms. A backdrop click does not close it: a destructive choice is left by a button
+or Escape, never a stray click. No entry animation, so prefers-reduced-motion has nothing to stop. A
+hand-built ARIA dialog would have needed all of this in script, and every product's copy of it.
+
+**Progressive enhancement.** Opening a modal needs script, so the trigger is a link (`dialogTrigger({
+dialog, href })`) to a server-rendered confirm page, and `DIALOG_SCRIPT` turns the click into
+`showModal()` (it leaves a modified click, a new tab, to the link). The same helper draws that page
+with `page: { keepHref }`: a section with the title as the page's h1, Keep a link back, the same POST
+form. The script is a string the product places itself, as `CONNECT_SCRIPT` is (D-19); it listens on
+the document, so dialogs React draws later open too.
+
+**The typed name is checked by `pattern` and `required`, with no script.** The input's `pattern` is the
+exact name, escaped for a regular expression, and the browser blocks the submit until the value
+matches. Browsers compile `pattern` with the v flag, where an unneeded escape (`\-`) is a syntax error
+and the browser then ignores the whole pattern, so `regexEscape()` escapes exactly the syntax
+characters and `/`, and a test compiles the result as a browser does. Autocapitalize, autocorrect and
+spellcheck are off, so a phone does not turn "banegaarden.dk" into "Banegaarden.dk". Until the name
+matches, `.dialog-form:has(:invalid)` draws the destructive button in muted words on a hairline rather
+than in danger; it stays a live button, so pressing it makes the browser say what is missing, and its
+words keep their contrast (a faded button would fail the audit, which cannot know it is unavailable).
+Disabling it outright would need script to enable it again.
+
+**The server checks again.** A pattern is the browser's; a request can come from anywhere. The
+product's handler compares the submitted name (field `confirm` by default) with the thing's name, and
+the CSRF token, before it deletes anything. The helper's doc comment and the README say so.
+
+**The confirm's words are the package's,** as the bar's are (D-17): "Behold" / "Keep", "Det fjerner A,
+B og C." / "This removes A, B and C.", "Det kan ikke fortrydes." / "It can't be undone.", and the
+field's label names what to type, "Skriv banegaarden.dk for at bekræfte" / "Type banegaarden.dk to
+confirm", rather than the review's "Type the site name to confirm", because the helper serves more than
+sites and the person should see the exact string. The title, the losses, `keepLabel` and
+`confirmLabel` are the product's ("Behold hjemmesiden", "Slet hjemmesiden"). The dialog is an
+`alertdialog` described by its body, so a screen reader reads what is lost with the title. Losses up to
+four are a sentence; more are a list.
+
+**Look.** `.dialog` is the card's surface at the panel radius with the popovers' shadow, 32rem wide,
+`--space-7` of padding (`--space-5` on a phone), the backdrop the foreground (light) or the ground
+(dark) at 45%. The footer is a wrapping row of ordinary buttons, so they share one box (D-14); the
+destructive one is `button()`'s existing danger variant. The demo shows SiteSpring's case beside
+"Udgiv ændringer", with `?open=delete-site` to open it for a screenshot or the audit, and the fallback
+page as `dist/demo/pages/delete-site.<da|en>.html`; both pass the audit for SiteSpring and Forspring at
+1280 and 380, light and dark, open and closed.

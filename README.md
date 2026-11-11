@@ -14,7 +14,7 @@ What Forspring and each product is, in words, lives in the hub's
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.11.0
+pnpm add github:forspringai/ui#v0.12.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -266,6 +266,57 @@ React: `import { ConnectAgent } from "@forspring/ui/react"; <ConnectAgent {...sa
 the same markup. Add `connectScript()`'s script to your `index.html` (or bundle `CONNECT_SCRIPT`) for
 copy buttons. The demo shows it on the components page (`?tab=cli`, `&open=connect-ci`) and on its own
 in SiteSpring under `dist/demo/pages/connect.<da|en>.html`.
+
+### Dialog and the destructive-action confirm (D-23)
+
+`dialog()` is a native `<dialog>`: a title (h2, `aria-labelledby`), a body, and a footer with the
+close button first. `confirmDestructive()` is built on it for anything that cannot be undone: it
+says what is lost, can ask for the thing's name, and puts the safe action first and in focus.
+
+```ts
+import { button, confirmDestructive, dialogScript, dialogTrigger } from "@forspring/ui/html";
+
+const confirm = confirmDestructive({
+  lang: "da",
+  id: "delete-site",
+  title: `Slet ${site.domain}?`,
+  losses: ["181 sider", "4 formularer", "62 omdirigeringer"],   // up to four are one sentence, more a list
+  text: "Domænet holder op med at svare med det samme.",
+  irreversible: true,                                          // "Det kan ikke fortrydes."
+  confirmName: site.domain,                                    // the field's pattern and required
+  action: `/o/${org.slug}/sites/${site.id}/delete`,
+  fields: { csrf },                                            // hidden inputs, as createKey's
+  keepLabel: "Behold hjemmesiden",
+  confirmLabel: "Slet hjemmesiden",
+});
+const body = [
+  button({ label: "Udgiv ændringer" }),
+  dialogTrigger({ dialog: "delete-site", href: `/o/${org.slug}/sites/${site.id}/delete`, label: "Slet hjemmesiden", variant: "danger" }),
+  confirm,
+  dialogScript(nonce),
+];
+```
+
+- **With script,** `dialogScript(nonce)` (or `DIALOG_SCRIPT` as a file) turns a click on
+  `[data-dialog-open="<id>"]` into `showModal()`. The browser makes the page inert, focuses the Keep
+  button, and closes on Escape; Keep closes it through a `form method="dialog"`. The script puts focus
+  back on the trigger and clears the typed name. A click on the backdrop does not close it.
+- **Without script** the trigger is a link to `href`: answer it with the same confirm as a page,
+  `confirmDestructive({ ...same, page: { keepHref } })`, in `shell({ narrow: true })`. Keep is then a
+  link back, and the form posts the same way.
+- **The name check needs no script:** the input is `required` with `pattern` set to the exact name
+  (escaped for the browser's regular expressions with `regexEscape()`), so the browser holds the
+  submit until it matches, and the destructive button looks unavailable until then. **The server must
+  check the name again**, and the CSRF token, before it deletes anything.
+- The words ("Behold", "Det fjerner …", "Skriv <navn> for at bekræfte") are the package's, in Danish
+  and English; `keepLabel`, `confirmLabel` and `nameLabel` are the product's.
+- `dialog({ id, title, body, close, actions, form, alert, page })` is the general one: `form` wraps the
+  body and the actions in one POST form, `alert` makes it an alertdialog described by its body.
+
+React: `<ConfirmDestructive {...sameOptions} />` and `<Dialog ... />` from `@forspring/ui/react`
+draw the same markup; the trigger is a plain `<a className="button danger" data-dialog-open="…">`.
+The demo shows SiteSpring's case beside "Udgiv ændringer" (`?open=delete-site` opens it), and the
+fallback page under `dist/demo/pages/delete-site.<da|en>.html`.
 
 ## Tailwind v4 and shadcn
 
