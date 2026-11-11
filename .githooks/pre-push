@@ -28,7 +28,7 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   fi
   if [ -z "$base" ]; then
     browser=1
-  elif git diff --name-only "$base" "$local_sha" 2>/dev/null |
+  elif git diff --name-only "$base" "$local_sha" 2>/dev/null | grep -v '\.md$' |
     grep -qE '^(tokens/|css/|src/|demo/|brand/|dist/|fonts/|test/(audit\.test\.ts|visual)|scripts/(build|assets|brand-png)\.ts|package\.json|pnpm-lock\.yaml)'; then
     browser=1
   fi
