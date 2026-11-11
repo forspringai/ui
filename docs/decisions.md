@@ -849,7 +849,7 @@ box (D-14), and on a phone they share the row's width with the draft link on its
 "Agentgodkendelse" section shows the brand review's payment-reminders case waiting, with its trail, one
 already approved, and a channel's setup before and after.
 
-## D-25 — A table at scale: search, filters, the stated order and paging (2026-11-11)
+## D-25 — A table at scale: search, filters, the stated order and paging; 0.14.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick tiu): "The table helper lists
 every row. The pattern adds search, a filter, a sort order and paging." The review's mock-up is
