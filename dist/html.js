@@ -66,7 +66,7 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.12.0";
+export const VERSION = "0.13.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -476,6 +476,157 @@ export function confirmDestructive(o) {
         alert: true,
         page: o.page ? { closeHref: o.page.keepHref } : undefined,
     });
+}
+const AGENT = {
+    da: {
+        waiting: "Venter på godkendelse",
+        askedBy: "Anmodet af",
+        via: (who, agent) => html `${who} via ${agent}`,
+        expires: "Udløber",
+        why: "Hvorfor",
+        follows: "Følger",
+        changes: "Hvad ændres",
+        nothing: "Intet ændres.",
+        more: (k) => `+${k} flere`,
+        effects: "Hvad det gør",
+        approve: "Godkend",
+        edit: "Ret først",
+        reject: "Afvis",
+        draft: "Se udkastet",
+        outcome: { approved: "Godkendt", rejected: "Afvist", expired: "Udløbet" },
+        by: "af",
+        field: "Felt",
+        before: "Før",
+        after: "Efter",
+        none: "Ingen",
+        added: "Tilføjet:",
+        removed: "Fjernet:",
+        explain: (agent) => `Hvorfor ${agent} gjorde det`,
+        basedOn: "Ud fra",
+    },
+    en: {
+        waiting: "Waiting for approval",
+        askedBy: "Asked by",
+        via: (who, agent) => html `${who} via ${agent}`,
+        expires: "Expires",
+        why: "Why",
+        follows: "Follows",
+        changes: "What changes",
+        nothing: "Nothing changes.",
+        more: (k) => `+${k} more`,
+        effects: "What it does",
+        approve: "Approve",
+        edit: "Edit first",
+        reject: "Reject",
+        draft: "See the draft",
+        outcome: { approved: "Approved", rejected: "Rejected", expired: "Expired" },
+        by: "by",
+        field: "Field",
+        before: "Before",
+        after: "After",
+        none: "None",
+        added: "Added:",
+        removed: "Removed:",
+        explain: (agent) => `Why ${agent} did this`,
+        basedOn: "Based on",
+    },
+};
+const LOCALE = { da: "da-DK", en: "en-GB" };
+function when(w, lang, time = "full") {
+    if (typeof w === "string")
+        return html `${w}`;
+    const at = w instanceof Date ? w : w.at;
+    const label = w instanceof Date ? new Intl.DateTimeFormat(LOCALE[lang], { ...(time === "full" ? { dateStyle: "medium" } : {}), timeStyle: "short", timeZone: "Europe/Copenhagen" }).format(at) : w.label;
+    return html `<time datetime="${at.toISOString()}">${label}</time>`;
+}
+const hidden = (fields = {}) => Object.entries(fields).map(([name, value]) => html `<input type="hidden" name="${name}" value="${value}">`);
+/** "A, B og C", with the page's word for and. */
+const joinAnd = (items, and) => html `${items.map((l, i) => html `${i === 0 ? "" : i === items.length - 1 ? ` ${and} ` : ", "}${l}`)}`;
+const followsLinks = (links, t, lang) => links.length ? html `<span class="agent-follows">${t.follows} ${joinAnd(links.map((l) => html `<a href="${safeHref(l.href)}">${l.label}</a>`), lang === "da" ? "og" : "and")}</span>` : "";
+const OUTCOME_SIGNAL = { approved: "ok", rejected: "off", expired: "warn" };
+/**
+ * An agent's request for approval, as a section a person can decide on: who asks and for whom, what
+ * it wants to do, why (and the rule it follows), what changes, what approving does, when it lapses,
+ * and the decision as POST forms. The facts are a description list, one row per fact, in the order
+ * and words of Spring's Slack card, so the web and the channel say the same thing.
+ *
+ * Approve and reject post to the product, which checks the CSRF token, that the person may decide,
+ * and that nobody decided first, before it acts: a page can be old, and a request can come from
+ * anywhere. Once decided, every copy draws `outcome` in place of the buttons.
+ */
+export function approval(o) {
+    const t = AGENT[o.lang];
+    const titleId = `${o.id}-title`;
+    const h = o.headingLevel ?? 2;
+    const fact = (label, value) => html `<div><dt>${label}</dt><dd>${value}</dd></div>`;
+    const show = Math.max(0, o.changes.show ?? 3);
+    const drawn = o.changes.items.slice(0, show);
+    const more = Math.max(0, (o.changes.total ?? o.changes.items.length) - drawn.length);
+    const item = (c) => (Array.isArray(c) ? html `<span class="approval-item-name">${c[0]}</span>${c.slice(1).map((p) => html ` · ${p}`)}` : c);
+    const moreText = t.more(more);
+    const changes = drawn.length || more
+        ? html `<ul class="approval-changes">${drawn.map((c) => html `<li>${item(c)}</li>`)}${more ? html `<li class="approval-more">${o.changes.moreHref ? html `<a href="${safeHref(o.changes.moreHref)}">${moreText}</a>` : moreText}</li>` : ""}</ul>`
+        : html `<p>${t.nothing}</p>`;
+    const effects = o.effects?.length
+        ? html `<ul class="approval-effects">${o.effects.map((e) => html `<li${raw(attrs({ class: e.tone }))}>${e.tone ? html `<strong>${e.text}</strong>` : e.text}</li>`)}</ul>`
+        : "";
+    const facts = html `<dl class="approval-facts">${fact(t.askedBy, o.onBehalfOf ? t.via(html `${o.onBehalfOf}`, o.agent) : o.agent)}${o.expires && !o.outcome ? fact(t.expires, when(o.expires, o.lang)) : ""}${o.why ? fact(t.why, html `${o.why.text}${o.why.links?.length ? " " : ""}${followsLinks(o.why.links ?? [], t, o.lang)}`) : ""}${fact(t.changes, changes)}${effects ? fact(t.effects, effects) : ""}</dl>`;
+    // The buttons name the request for a screen reader through the title, so three "Godkend" on one
+    // page are told apart.
+    const described = raw(` aria-describedby="${esc(titleId)}"`);
+    const actions = o.outcome
+        ? outcomeLine(o.outcome, t, o.lang)
+        : html `<div class="approval-actions"><form method="post" action="${safeHref(o.approve.action)}">${hidden(o.approve.fields)}<button type="submit"${described}>${o.approve.label ?? t.approve}</button></form>${o.edit ? html `<a class="button ghost" href="${safeHref(o.edit.href)}"${described}>${o.edit.label ?? t.edit}</a>` : ""}${o.reject ? html `<form method="post" action="${safeHref(o.reject.action)}">${hidden(o.reject.fields)}<button type="submit" class="ghost"${described}>${o.reject.label ?? t.reject}</button></form>` : ""}${o.draftHref ? html `<a class="go" href="${safeHref(o.draftHref)}">${t.draft}</a>` : ""}</div>`;
+    const kicker = html `<p class="approval-kicker"><span class="approval-agent">${o.agent}</span>${o.outcome ? "" : html ` · ${t.waiting}`}</p>`;
+    const title = raw(`<h${h} class="approval-title" id="${esc(titleId)}">${render(o.title)}</h${h}>`);
+    return html `<section class="approval" id="${o.id}" aria-labelledby="${titleId}">${kicker}${title}${o.summary ? html `<p class="approval-summary">${o.summary}</p>` : ""}${facts}${o.explain}${actions}</section>`;
+}
+function outcomeLine(out, t, lang) {
+    const by = out.by && out.status !== "expired" ? html ` ${t.by} ${out.by}` : "";
+    const at = out.at ? html `${by ? " ·" : ""} ${when(out.at, lang)}` : "";
+    // One span for the words: the signal is a flex row, and loose text and <time> would each be an
+    // item with the row's gap between them.
+    return html `<div class="approval-outcome"><p>${signal(html `<span>${t.outcome[out.status]}${by}${at}</span>`, OUTCOME_SIGNAL[out.status])}</p>${out.note ? html `<p>${out.note}</p>` : ""}</div>`;
+}
+/**
+ * A change to fields or text, as the caller computed it: no diffing here, so the server decides what
+ * changed and the page only shows it. Fields are a table with "Før" and "Efter" as its columns; lines
+ * carry a sign (+, −) and, for a screen reader, the words "Tilføjet:" and "Fjernet:", so added and
+ * removed are never told apart by colour alone. Pass only what differs, as Spring's channel card
+ * does: a whole text twice makes the reader find the change by eye.
+ */
+export function diff(o) {
+    const t = AGENT[o.lang];
+    const label = o.label ?? t.changes;
+    const value = (v) => (v === undefined || v === null || v === false || v === "" ? html `<span class="diff-none">${t.none}</span>` : v);
+    const fields = o.fields?.length
+        ? table({ label, columns: [{ label: t.field }, { label: t.before }, { label: t.after }], rows: o.fields.map((f) => [html `<span class="diff-field">${f.label}</span>`, value(f.before), value(f.after)]) })
+        : "";
+    const line = (l) => {
+        if (l.kind === "same")
+            return html `<li class="diff-line"><span class="diff-sign" aria-hidden="true"></span><span class="diff-text">${l.text}</span></li>`;
+        const added = l.kind === "added";
+        const tagName = added ? "ins" : "del";
+        return html `<li class="${`diff-line ${l.kind}`}"><span class="diff-sign" aria-hidden="true">${added ? "+" : "−"}</span>${raw(`<${tagName} class="diff-text">`)}<span class="visually-hidden">${added ? t.added : t.removed} </span>${l.text}${raw(`</${tagName}>`)}</li>`;
+    };
+    const lines = o.lines?.length ? html `<ul class="diff-lines">${o.lines.map(line)}</ul>` : "";
+    return html `<figure class="diff">${o.label ? html `<figcaption class="diff-label">${o.label}</figcaption>` : ""}${fields}${lines}</figure>`;
+}
+/**
+ * "Hvorfor Spring gjorde det": the trail of steps behind something an agent did or asks to do, as an
+ * ordered list in a details element, closed so it costs the page one line until someone asks. A
+ * Date on a step is written as a time of day: a trail is minutes long.
+ */
+export function explain(o) {
+    const t = AGENT[o.lang];
+    const step = (s) => {
+        const used = s.used ? html `${t.basedOn} ${s.used.href ? html `<a href="${safeHref(s.used.href)}">${s.used.label}</a>` : s.used.label}` : "";
+        const at = s.at ? when(s.at, o.lang, "time") : "";
+        const meta = used || at ? html `<span class="explain-meta">${used}${used && at ? " · " : ""}${at}</span>` : "";
+        return html `<li><span class="explain-text">${s.text}</span>${meta}</li>`;
+    };
+    const follows = o.follows?.length ? html `<p class="explain-follows">${followsLinks(o.follows, t, o.lang)}</p>` : "";
+    return html `<details class="explain"><summary>${t.explain(o.agent)}</summary><div class="explain-body"><ol class="explain-steps">${o.steps.map(step)}</ol>${follows}</div></details>`;
 }
 /** The divider between two ways in: "eller". */
 export const orDivider = (text) => html `<p class="or"><span>${text}</span></p>`;

@@ -1827,6 +1827,324 @@
     cursor: not-allowed;
   }
 
+  /* --- Agent approval, diff and "why it did that" (D-24) ------------------------------------- */
+
+  /* A request is a card: who asks on the kicker line, what it wants as the heading, then the facts
+     as label and value rows in the order of Spring's Slack card, and the decision at the foot. */
+  .approval {
+    margin: var(--space-6) 0 0;
+    padding: var(--space-7);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    color: var(--card-foreground);
+  }
+
+  .approval-kicker {
+    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+    margin: 0 0 var(--space-2);
+  }
+
+  .approval-agent {
+    color: var(--foreground);
+  }
+
+  .approval-title {
+    font: 800 var(--text-content-h3)/1.25 var(--font-display);
+    letter-spacing: -0.01em;
+    margin: 0 0 var(--space-2);
+  }
+
+  .approval-summary {
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+
+  /* Label beside value on a wide screen, the labels in one column so the values line up; one under
+     the other on a phone. */
+  .approval-facts {
+    display: grid;
+    grid-template-columns: minmax(7rem, max-content) minmax(0, 1fr);
+    gap: var(--space-4) var(--space-6);
+    align-items: baseline;
+    margin: var(--space-6) 0 0;
+  }
+
+  .approval-facts > div {
+    display: contents;
+  }
+
+  .approval-facts dt {
+    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+  }
+
+  .approval-facts dd {
+    margin: 0;
+    color: var(--foreground);
+  }
+
+  .approval-facts dd > p {
+    margin: 0;
+  }
+
+  .agent-follows {
+    color: var(--muted-foreground);
+  }
+
+  /* The items it changes: a ruled list, numbers in even figures, "+11 more" quiet at the foot. */
+  .approval-changes {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .approval-changes > li {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .approval-changes > li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .approval-item-name {
+    font-weight: 600;
+  }
+
+  .approval-more {
+    font-size: var(--text-content-small);
+    color: var(--muted-foreground);
+  }
+
+  .approval-more a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-6);
+  }
+
+  /* Each effect has a mark before it: a dot for a plain fact; a warning's triangle and a danger's
+     diamond in the status colour, beside words in bold that say it, so the colour only repeats them. */
+  .approval-effects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .approval-effects > li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .approval-effects > li::before {
+    content: "";
+    flex: none;
+    width: 10px;
+    height: 10px;
+  }
+
+  .approval-effects > li:not(.warning, .danger)::before {
+    border-radius: 999px;
+    background: var(--muted-foreground);
+    transform: scale(0.5);
+  }
+
+  .approval-effects > li.warning::before {
+    width: 11px;
+    clip-path: polygon(50% 0, 100% 100%, 0 100%);
+    background: var(--warning);
+  }
+
+  .approval-effects > li.danger::before {
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    background: var(--danger);
+  }
+
+  /* The decision: ordinary buttons in one row, so they share one box (D-14), and the draft link
+     after them. */
+  .approval-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+  }
+
+  .approval-actions > form {
+    display: flex;
+    margin: 0;
+  }
+
+  .approval-actions > .go {
+    margin-inline-start: var(--space-3);
+  }
+
+  /* Decided: the outcome in place of the buttons, under a rule, wrapping on a phone. */
+  .approval-outcome {
+    margin-top: var(--space-6);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .approval-outcome > p {
+    margin: 0;
+  }
+
+  .approval-outcome > p + p {
+    margin-top: var(--space-2);
+    color: var(--muted-foreground);
+  }
+
+  .approval-outcome .signal {
+    white-space: normal;
+  }
+
+  .approval .explain {
+    margin-top: var(--space-5);
+  }
+
+  /* A diff: a table of field, before and after, or lines with a sign and a tint. The tint is the
+     status colour at a wash, the sign and the hidden word carry it. */
+  .diff {
+    margin: 0 0 var(--space-6);
+  }
+
+  .diff-label {
+    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    color: var(--foreground);
+    margin-bottom: var(--space-2);
+  }
+
+  .diff > .table-wrap + .diff-lines {
+    margin-top: var(--space-3);
+  }
+
+  .diff-field {
+    font-weight: 600;
+    color: var(--foreground);
+  }
+
+  .diff-none {
+    color: var(--muted-foreground);
+  }
+
+  .diff-lines {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+    overflow: hidden;
+  }
+
+  .diff-line {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-1) var(--space-4);
+    color: var(--foreground);
+  }
+
+  .diff-line.added {
+    background: color-mix(in srgb, var(--success) 9%, var(--card));
+  }
+
+  .diff-line.removed {
+    background: color-mix(in srgb, var(--danger) 9%, var(--card));
+  }
+
+  .diff-sign {
+    flex: none;
+    width: var(--space-3);
+    font-family: var(--font-mono);
+    color: var(--muted-foreground);
+  }
+
+  .diff-line.added .diff-sign {
+    color: var(--success);
+  }
+
+  .diff-line.removed .diff-sign {
+    color: var(--danger);
+  }
+
+  .diff-text {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    text-decoration: none;
+  }
+
+  /* "Why it did that": a fold, closed, its summary a full control's height to tap. */
+  details.explain {
+    border-top: 1px solid var(--border);
+  }
+
+  details.explain > summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-height);
+    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    color: var(--foreground);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  details.explain > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details.explain > summary::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-1px) rotate(-45deg);
+    transition: transform 0.15s;
+  }
+
+  details.explain[open] > summary::before {
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  .explain-body {
+    padding-bottom: var(--space-2);
+  }
+
+  .explain-steps {
+    margin: 0;
+    padding-inline-start: var(--space-6);
+  }
+
+  .explain-steps > li + li {
+    margin-top: var(--space-2);
+  }
+
+  .explain-text {
+    display: block;
+    color: var(--foreground);
+  }
+
+  .explain-meta {
+    display: block;
+    font-size: var(--text-content-small);
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .explain-follows {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-content-small);
+  }
+
   /* Below a tablet's width the sidebar folds: one column, and the menu under "Menu" above main. */
   @media (max-width: 800px) {
     .app {
@@ -2003,6 +2321,39 @@
 
     .dialog-actions > * {
       flex: 1 1 auto;
+    }
+
+    /* A phone's approval: the card's narrower padding, each label over its value, and the buttons
+       sharing the row's width, the draft link on a line of its own. */
+    .approval {
+      padding: var(--space-6) var(--space-5);
+    }
+
+    .approval-facts {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+    }
+
+    .approval-facts > div {
+      display: block;
+    }
+
+    .approval-facts dt {
+      margin-bottom: var(--space-1);
+    }
+
+    .approval-actions > :is(form, .button) {
+      flex: 1 1 auto;
+    }
+
+    .approval-actions > form > button {
+      flex: 1 1 auto;
+    }
+
+    .approval-actions > .go {
+      flex-basis: 100%;
+      margin-inline-start: 0;
     }
 
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */

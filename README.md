@@ -14,7 +14,7 @@ What Forspring and each product is, in words, lives in the hub's
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.12.0
+pnpm add github:forspringai/ui#v0.13.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -317,6 +317,56 @@ React: `<ConfirmDestructive {...sameOptions} />` and `<Dialog ... />` from `@for
 draw the same markup; the trigger is a plain `<a className="button danger" data-dialog-open="…">`.
 The demo shows SiteSpring's case beside "Udgiv ændringer" (`?open=delete-site` opens it), and the
 fallback page under `dist/demo/pages/delete-site.<da|en>.html`.
+
+### Agent approval, diff and "why it did that" (D-24)
+
+When an agent wants to do something a person must allow, `approval()` draws the request: who asks and
+for whom, what it wants to do, why and the rule it follows, what changes, what approving does, when it
+lapses, and the decision as POST forms. Its words are Spring's Slack card's ("Asked by Maria via
+Spring", "Why", "Expires", "What it does", "Approved by"), so a page and a channel say the same thing.
+
+```ts
+import { approval, diff, explain } from "@forspring/ui/html";
+
+approval({
+  lang: "da",
+  id: `request-${r.id}`,
+  agent: "Spring",
+  onBehalfOf: "Maria (Økonomi)",                         // "Anmodet af: Maria (Økonomi) via Spring"
+  title: "Spring vil sende 14 betalingspåmindelser",     // the section's heading (headingLevel: 2 or 3)
+  summary: "Spring har gjort påmindelser klar til de forfaldne fakturaer og venter på godkendelse.",
+  expires: r.expiresAt,                                  // a Date, in Copenhagen's time; or words
+  why: { text: "Fakturaerne er mindst 14 dage forfaldne.", links: [{ label: "skillen Rykker for forfaldne fakturaer, trin 3", href }] },
+  changes: { items: r.items.map((i) => [`${i.customer} #${i.number}`, `${i.days} dage`, i.amount]), total: r.count, moreHref },
+  effects: [{ text: "Sender 14 mails fra finance@" }, { text: "Kan ikke fortrydes", tone: "warning" }],
+  approve: { label: "Godkend og send", action: `/requests/${r.id}/approve`, fields: { csrf } },
+  edit: { href: `/requests/${r.id}/edit` },              // "Ret først"
+  reject: { action: `/requests/${r.id}/reject`, fields: { csrf } },
+  draftHref: `/requests/${r.id}/draft`,                  // "Se udkastet"
+  explain: explain({ lang: "da", agent: "Spring", steps, follows }),
+  outcome: r.decided ? { status: "approved", by: r.decidedBy, at: r.decidedAt, note: "Påmindelserne er sendt." } : undefined,
+});
+```
+
+- **Changes:** an item is one value or an array of parts written with " · " between them. The first
+  `show` (3) are drawn, then "+11 flere" (the `total` less those drawn), linked to `moreHref`, so pass
+  only the first few of a long list. No items: "Intet ændres."
+- **Effects:** short facts; `tone: "warning"` or `"danger"` adds a triangle or diamond and bold words.
+- **The decision is the server's.** Approve and reject are plain POST forms with your hidden fields.
+  Check the CSRF token, that the person may decide, and that nobody decided first. Then draw every
+  copy of the request with `outcome` ("Godkendt af Mette Kjær · 4. nov. 2026, 10.41", "Afvist",
+  "Udløbet"), which replaces the buttons and the expiry, so nobody approves something already rejected.
+- **`diff({ lang, label, fields, lines })`** shows a change the caller computed: `fields` as a table of
+  field, "Før" and "Efter" (a missing value is "Ingen"); `lines` with `kind: "same" | "added" |
+  "removed"`, each added or removed line with a + or − and the hidden words "Tilføjet:" / "Fjernet:".
+  Pass only what differs.
+- **`explain({ lang, agent, steps, follows })`** is "Hvorfor Spring gjorde det" / "Why Spring did
+  this": a closed `details` with the steps as an ordered list, each `{ text, used?: { label, href? },
+  at? }` ("Ud fra e-conomic: åbne fakturaer · 09.02"), and the rule or skill it followed.
+
+React: `<Approval />`, `<Diff />` and `<Explain />` from `@forspring/ui/react` draw the same markup.
+The demo's "Agentgodkendelse" section shows a waiting request with its trail, one already approved,
+and a channel's setup before and after.
 
 ## Tailwind v4 and shadcn
 
