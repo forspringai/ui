@@ -215,7 +215,8 @@ Where this section and the letter disagree, the letter wins.
   [docs/brand/vision.md](https://github.com/forspringai/forspring/blob/main/docs/brand/vision.md#words)
   for what to say and what to avoid (product names, retired names, "AI colleague" for Spring only).
 
-A fuller voice guide, `brand/voice.md`, is coming with hub tick szi.
+The full voice and messaging guide, with the message, copy rules, before-and-after examples and Danish, is
+[voice.md](voice.md).
 
 ## 8. Components and patterns
 
