@@ -7,11 +7,13 @@
 // React is an optional peer dependency; nothing else is imported at run time. No JSX, so this file
 // needs no React build step of its own.
 import { createElement } from "react";
-import { approval, bar, confirmDestructive, dialog, diff, explain } from "./html.js";
+import { approval, bar, confirmDestructive, dialog, diff, explain, pagination, table } from "./html.js";
 import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]);
+// React names a few attributes in camelCase and warns on the HTML spelling; the bytes it writes are the same.
+const PROP = { class: "className", tabindex: "tabIndex" };
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
 export function fromHtml(h, key) {
     const m = /^<([a-z][a-z0-9-]*)((?:\s[a-z][a-z0-9-]*="[^"]*")*)>([\s\S]*)<\/\1>$/.exec(String(h));
@@ -21,7 +23,7 @@ export function fromHtml(h, key) {
     if (key !== undefined)
         props.key = key;
     for (const a of m[2].matchAll(/\s([a-z][a-z0-9-]*)="([^"]*)"/g))
-        props[a[1] === "class" ? "className" : a[1]] = unescape(a[2]);
+        props[PROP[a[1]] ?? a[1]] = unescape(a[2]);
     return createElement(m[1], props);
 }
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
@@ -52,3 +54,9 @@ export const Approval = (props) => fromHtml(approval(props));
 export const Diff = (props) => fromHtml(diff(props));
 /** "Why Spring did this": the agent's steps in a closed details element (explain()). */
 export const Explain = (props) => fromHtml(explain(props));
+/** A table in its scrolling frame, with search, filters, the stated order and paging when given
+ *  `controls` (table() in @forspring/ui/html, D-25). The search is a GET form and the rest are links,
+ *  so it needs no handlers: the URL is the state, and the server draws the page asked for. */
+export const Table = (props) => fromHtml(table(props));
+/** "1–6 af 248" with Previous and Next as links (pagination()). */
+export const Pagination = (props) => fromHtml(pagination(props));

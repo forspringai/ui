@@ -28,7 +28,7 @@ src/emit.ts        writes the token outputs
 src/assets.ts      writes fonts.css, the component CSS and the demo page
 src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6), the bar (D-17), the
                    doll and the favicon links (D-18), the dialog and the destructive confirm (D-23),
-                   agent approval, diff and explain (D-24)
+                   agent approval, diff and explain (D-24), the table at scale and pagination (D-25)
 src/brand.ts       the brand SVGs from the tokens and brand/wordmarks.json (D-18, hub D-101)
 src/refusals.ts    the refusal vocabulary, Danish and English, no markup (D-17)
 src/pages.ts       the standard pages: choose an org, no org, refused, account unavailable (D-17)

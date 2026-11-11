@@ -368,6 +368,60 @@ React: `<Approval />`, `<Diff />` and `<Explain />` from `@forspring/ui/react` d
 The demo's "Agentgodkendelse" section shows a waiting request with its trail, one already approved,
 and a channel's setup before and after.
 
+### A table at scale: search, filters, the order and paging (D-25)
+
+`table()` takes an optional `controls` part that makes it a long list a person can work with: a
+search box and filter chips above, the order the rows are in and Previous and Next below. The search
+is a GET form and everything else is a link, so it works with no script and the URL is the state: the
+server reads the query string, searches, filters, sorts and slices, and draws that page. Without
+`controls`, `table()` draws exactly what it always did.
+
+```ts
+import { pageOf, signal, state, table } from "@forspring/ui/html";
+
+const q = url.searchParams;
+const page = pageOf(total, Number(q.get("side") ?? 1), 25);      // { page, from, to, total, pages, prev?, next? }
+const link = (p: Record<string, string>) => `?${new URLSearchParams({ filter, sort, ...p })}`;
+
+table({
+  id: "checks",
+  label: "Tjek",
+  columns: [
+    { label: "Tjek" },
+    { label: "Tilstand", sort: { href: link({ sort: "state" }), dir: sort === "state" ? "desc" : undefined } },  // aria-sort and an arrow
+    { label: "Oppetid 30 d", num: true, sort: { href: link({ sort: "uptime" }) } },
+    { label: "Svartid", num: true },
+  ],
+  rows: rows.map((c) => [c.name, signal(c.word, c.signal), c.uptime, c.response]),
+  controls: {
+    lang: "da",
+    search: { placeholder: `Søg i ${total} tjek`, value: q.get("q") ?? "" },  // name "q"; the label is hidden when the placeholder says it
+    filters: [
+      { label: "Kræver opmærksomhed", count: attention, href: link({ filter: "attention" }), current: filter === "attention" },
+      { label: "Alle", count: all, href: link({ filter: "all" }), current: filter === "all" },
+    ],
+    sort: { label: "værst først" },                    // said in the footer: "1–25 af 248, værst først"
+    keep: { filter, sort },                            // hidden inputs, so a search keeps them (and starts on page 1)
+    paging: { ...page, prevHref: page.prev ? link({ side: String(page.prev) }) : undefined, nextHref: page.next ? link({ side: String(page.next) }) : undefined },
+    empty: state({ kind: "empty", title: `Ingen tjek matcher “${q.get("q")}”`, text: `Der er ${all} tjek i alt.` }),
+  },
+});
+```
+
+- **`pagination({ lang, from, to, total, prevHref, nextHref, label, order })`** stands alone too:
+  "1–6 af 248" / "1–6 of 248" in a `nav`, numbers in the page's language (1.248 in Danish, 1,248 in
+  English), Previous and Next ("Forrige", "Næste") as links with `rel`. At an end the word stays as a
+  span with `aria-disabled`. Pass its result as `paging` to put it under a table.
+- **`pageOf(total, page, size)`** is the arithmetic, so the query and the links agree: page 0 is the
+  first, a page past the end the last, and no rows one empty page (`0 af 0`).
+- **Sorting is the server's.** A sortable header is a link to the page in that order; give the one in
+  force `dir: "asc" | "desc"` and it carries `aria-sort` and an arrow. With no `sort.label`, the
+  footer says "sorteret efter Tilstand, faldende".
+- The controls take the small box (D-14), 44px on a phone, where the search takes its own row.
+
+React: `<Table {...sameOptions} />` and `<Pagination />` from `@forspring/ui/react` draw the same
+markup. The demo's "Tabel med mange rækker" section is the brand review's PulseSpring checks.
+
 ## Tailwind v4 and shadcn
 
 ```css

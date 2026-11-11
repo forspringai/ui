@@ -965,7 +965,8 @@
   /* --- Text ----------------------------------------------------------------------------------- */
 
   h1 + .list,
-  h1 + .table-wrap {
+  h1 + .table-wrap,
+  h1 + .data-table {
     margin-top: var(--space-6);
   }
 
@@ -1275,6 +1276,154 @@
     padding: var(--space-3) var(--space-4);
     font-weight: 600;
     color: var(--foreground);
+  }
+
+  /* A header that sorts is a link; the one in force says its order with an arrow beside the word,
+     and aria-sort says it to a screen reader, so the order is never shown by colour alone. */
+  .sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: var(--space-6);
+    color: inherit;
+    text-decoration-color: var(--input);
+  }
+
+  .sort:hover {
+    color: var(--foreground);
+    text-decoration-color: currentColor;
+  }
+
+  th[aria-sort] {
+    color: var(--foreground);
+  }
+
+  .sort-dir {
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+
+  /* --- A table at scale: search, filters, the order and paging (D-25) ------------------------ */
+
+  /* A column, not a grid: a grid item would grow to the table's width and the frame would stop
+     scrolling. */
+  .data-table {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  /* The search and the chips share one row and wrap under each other when it is narrow. They take
+     the small box (D-14), as controls in the bar do, so the chips and the field share a line. */
+  .table-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .table-search {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex: 1 1 16rem;
+    margin: 0;
+  }
+
+  .table-search > input {
+    flex: 1 1 auto;
+    width: auto;
+  }
+
+  .table-search > label:not(.visually-hidden) {
+    font: 600 var(--text-chrome-body)/1.2 var(--font-sans);
+    color: var(--foreground);
+    white-space: nowrap;
+  }
+
+  .table-filters ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* A filter is a link drawn as a pill in the small control's box. The one in force is filled with
+     the ink, a change of shape and weight rather than of hue, and carries aria-current. */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--control-height-small);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--input);
+    border-radius: 999px;
+    background: var(--card);
+    font: 500 var(--text-chrome-body)/var(--_control-line-small) var(--font-sans);
+    color: var(--foreground);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .chip:hover {
+    border-color: var(--foreground);
+    color: var(--foreground);
+  }
+
+  .chip[aria-current="true"] {
+    background: var(--foreground);
+    border-color: var(--foreground);
+    color: var(--background);
+  }
+
+  .chip-count {
+    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-foreground);
+  }
+
+  .chip[aria-current="true"] .chip-count {
+    color: inherit;
+  }
+
+  /* The footer: the range and the order on the left, Previous and Next on the right. */
+  .table-foot,
+  .pagination {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .table-foot > .pagination {
+    flex: 1 1 auto;
+  }
+
+  .table-order,
+  .pagination-range {
+    margin: 0;
+    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The order after the range stays one phrase when the footer wraps on a phone. */
+  .pagination-order {
+    white-space: nowrap;
+  }
+
+  /* The order is the product's words, written to follow a range ("værst først"); alone it starts a
+     sentence. */
+  .table-order::first-letter {
+    text-transform: uppercase;
+  }
+
+  .pagination-steps {
+    display: inline-flex;
+    gap: var(--space-2);
   }
 
   td .email {
@@ -2280,6 +2429,11 @@
       display: none;
     }
 
+    /* The search takes a row of its own on a phone, the chips wrap under it. */
+    .table-search {
+      flex-basis: 100%;
+    }
+
     /* All four tabs on one row at 380px. */
     .connect-choose {
       gap: 0;
@@ -2359,6 +2513,7 @@
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */
     :is(button, .button):not(.switch, .gsi),
     :is(input, select):not([type="checkbox"], [type="radio"]),
+    .chip,
     .bar-inner :is(select, input:not([type="checkbox"], [type="radio"])),
     .switcher > summary {
       min-height: var(--control-touch);
@@ -2367,6 +2522,7 @@
     /* At the touch floor a small control takes the default box, keeping its smaller type, so its
        text stays in the middle. */
     :is(button, .button, input, select).small,
+    .chip,
     .bar-inner :is(select, input:not([type="checkbox"], [type="radio"])) {
       padding-block: var(--space-3);
       line-height: calc(var(--control-touch) - 2 * var(--space-3) - 2px);

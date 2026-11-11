@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -235,6 +235,42 @@ const wideTable = table({
   ],
 });
 
+// A table at scale (D-25), the brand review's PulseSpring "Checks": 248 checks, page 1 of six rows,
+// worst first. Every control is a link or the GET form, so the demo's hrefs stand in for the
+// product's URLs with the state in the query string.
+const CHECKS = [
+  ["Natlig backup", "down", "Nede", "97,21 %", "Intet svar"],
+  ["Månedlig fakturakørsel", "warn", "Forsinket", "99,40 %", "4,8 s"],
+  ["Webshop: forside", "ok", "Oppe", "100,00 %", "212 ms"],
+  ["Betalings-API", "ok", "Oppe", "99,98 %", "148 ms"],
+  ["Lagersynk med e-conomic", "ok", "Oppe", "99,95 %", "1,2 s"],
+  ["Nyhedsbrev, udsendelse", "ok", "Oppe", "99,90 %", "640 ms"],
+] as const;
+const checksPage = pageOf(248, 1, 6);
+
+const checksTable = table({
+  id: "checks",
+  label: "Tjek",
+  columns: [
+    { label: "Tjek" },
+    { label: "Tilstand", sort: { href: "#tjek", dir: "desc" } },
+    { label: "Oppetid 30 d", num: true, sort: { href: "#tjek" } },
+    { label: "Svartid", num: true, phoneHide: true, sort: { href: "#tjek" } },
+  ],
+  rows: CHECKS.map(([name, s, word, uptime, response]) => [html`<a href="#tjek">${name}</a>`, signal(word, s), uptime, response]),
+  controls: {
+    lang: "da",
+    search: { placeholder: "Søg i 248 tjek" },
+    filters: [
+      { label: "Kræver opmærksomhed", count: 2, href: "#tjek" },
+      { label: "Alle", count: 248, href: "#tjek", current: true },
+    ],
+    sort: { label: "værst først" },
+    keep: { sort: "worst" },
+    paging: { ...checksPage, nextHref: checksPage.next ? "#tjek" : undefined },
+  },
+});
+
 const body = html`${controls}
 ${crumbs("Placering", [{ label: "Forside", href: "#" }, { label: "Komponenter", href: "#" }])}
 <h1>Din Forspring-konto</h1>
@@ -279,6 +315,11 @@ ${list([
 ${peopleTable}
 <p class="fine">På en telefon flytter rollen ind under navnet, og ordene Til og Fra forsvinder.</p>
 <div style="margin-top: var(--space-6)">${wideTable}</div>
+</section>
+
+<section id="tjek"><h2>Tabel med mange rækker</h2>
+<p>En lang liste får søgning, filtre, en rækkefølge, der står skrevet, og sider. Det hele er links og en GET-formular, så det virker uden script, og adressen husker, hvor man er.</p>
+${checksTable}
 </section>
 
 <section><h2>Formular</h2>

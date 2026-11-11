@@ -320,13 +320,105 @@ export function card(body) {
 export function list(items) {
     return html `<ul class="list">${items.map((i) => html `<li><span class="grow"><span class="name">${i.name}</span>${i.meta ? html `<br><span class="meta">${i.meta}</span>` : ""}</span>${i.action}</li>`)}</ul>`;
 }
+const TABLE = {
+    da: {
+        search: "Søg",
+        of: "af",
+        prev: "Forrige",
+        next: "Næste",
+        pages: (t) => (t ? `Sider i ${t}` : "Sider"),
+        filters: (t) => `Filtre for ${t}`,
+        sortedBy: (c, d) => html `sorteret efter ${c}, ${d === "asc" ? "stigende" : "faldende"}`,
+    },
+    en: {
+        search: "Search",
+        of: "of",
+        prev: "Previous",
+        next: "Next",
+        pages: (t) => (t ? `Pages of ${t}` : "Pages"),
+        filters: (t) => `Filters for ${t}`,
+        sortedBy: (c, d) => html `sorted by ${c}, ${d === "asc" ? "ascending" : "descending"}`,
+    },
+};
+/** A count in the page's language: Danish writes 1.248, English 1,248. */
+const count = (n, lang) => new Intl.NumberFormat(LOCALE[lang]).format(n);
+/**
+ * The paging arithmetic, so a product's query and its links agree: page `page` (1-based) of `total`
+ * rows, `size` to a page. A page before the first is the first and one past the end is the last, so
+ * an old link or a hand-typed ?page=999 still shows rows; no rows is one empty page.
+ */
+export function pageOf(total, page, size) {
+    const n = Math.max(0, Math.floor(Number.isFinite(total) ? total : 0));
+    const per = Math.max(1, Math.floor(Number.isFinite(size) ? size : 1));
+    const pages = Math.max(1, Math.ceil(n / per));
+    const p = Math.min(pages, Math.max(1, Math.floor(Number.isFinite(page) ? page : 1)));
+    const out = { page: p, from: n ? (p - 1) * per + 1 : 0, to: Math.min(n, p * per), total: n, pages };
+    if (p > 1)
+        out.prev = p - 1;
+    if (p < pages)
+        out.next = p + 1;
+    return out;
+}
+/**
+ * "1–6 af 248" and Previous and Next as links, in a labelled nav. At an end the word stays where it
+ * was, as a span marked aria-disabled, so the row does not shift and a screen reader hears that there
+ * is no next page rather than finding nothing. The links carry rel prev and next.
+ */
+export function pagination(o) {
+    const t = TABLE[o.lang];
+    const range = o.total > 0 && o.to >= o.from ? `${count(o.from, o.lang)}–${count(o.to, o.lang)} ${t.of} ${count(o.total, o.lang)}` : `0 ${t.of} 0`;
+    const step = (href, label, rel) => href === undefined ? html `<span class="button ghost small" aria-disabled="true">${label}</span>` : html `<a class="button ghost small" href="${safeHref(href)}" rel="${rel}">${label}</a>`;
+    const order = o.order ? html `<span class="pagination-order">, ${o.order}</span>` : "";
+    return html `<nav class="pagination" aria-label="${o.label ?? t.pages()}"><p class="pagination-range">${range}${order}</p><span class="pagination-steps">${step(o.prevHref, t.prev, "prev")}${step(o.nextHref, t.next, "next")}</span></nav>`;
+}
+const isHtml = (c) => typeof c === "object" && c !== null && c[BRAND] === true;
+const ARIA_SORT = { asc: "ascending", desc: "descending" };
 /**
  * A table in a scrolling frame. The frame is a labelled region a keyboard can reach (tabindex 0),
  * so a table wider than a phone is scrolled, never clipped.
+ *
+ * With `controls` (D-25) it is a list at scale: a search form and filter chips above, the order and
+ * the paging below. All of it is a GET form and links, so it works with no script and the URL holds
+ * the state; the server searches, filters, sorts and slices, and draws the page it was asked for.
  */
 export function table(o) {
     const c = (col) => cls(col?.num && "num", col?.phoneHide && "phone-hide");
-    return html `<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html `<caption>${o.caption}</caption>` : ""}<thead><tr>${o.columns.map((col) => html `<th scope="col"${raw(attrs({ class: c(col) }))}>${col.label}</th>`)}</tr></thead><tbody>${o.rows.map((r) => html `<tr>${r.map((cell, i) => html `<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`)}</tbody></table></div>`;
+    const head = (col) => {
+        if (!col.sort)
+            return html `<th scope="col"${raw(attrs({ class: c(col) }))}>${col.label}</th>`;
+        const dir = col.sort.dir;
+        // The arrow says the order to the eye; aria-sort says it to a screen reader, so it is hidden.
+        const arrow = dir ? html `<span class="sort-dir" aria-hidden="true">${dir === "asc" ? "↑" : "↓"}</span>` : "";
+        return html `<th scope="col"${raw(attrs({ class: c(col), "aria-sort": dir ? ARIA_SORT[dir] : undefined }))}><a class="sort" href="${safeHref(col.sort.href)}">${col.label}${arrow}</a></th>`;
+    };
+    const frame = html `<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html `<caption>${o.caption}</caption>` : ""}<thead><tr>${o.columns.map(head)}</tr></thead><tbody>${o.rows.map((r) => html `<tr>${r.map((cell, i) => html `<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`)}</tbody></table></div>`;
+    const k = o.controls;
+    if (!k)
+        return frame;
+    const t = TABLE[k.lang];
+    let search = "";
+    if (k.search) {
+        const s = k.search;
+        const id = `${o.id ?? "table"}-search`;
+        const label = s.label ?? s.placeholder ?? t.search;
+        const hide = s.placeholder !== undefined && label === s.placeholder;
+        search = html `<form class="table-search" method="get"${raw(attrs({ action: s.action === undefined ? undefined : safeHref(s.action) }))} role="search" aria-label="${label}">${hidden(k.keep)}<label${raw(attrs({ class: hide ? "visually-hidden" : undefined }))} for="${id}">${label}</label><input${raw(attrs({ class: "small", type: "search", id, name: s.name ?? "q", value: s.value, placeholder: s.placeholder }))}>${button({ label: t.search, variant: "ghost", small: true })}</form>`;
+    }
+    const filters = k.filters?.length
+        ? html `<nav class="table-filters" aria-label="${t.filters(o.label)}"><ul>${k.filters.map((f) => html `<li><a class="chip" href="${safeHref(f.href)}"${current(f.current)}>${f.label}${f.count === undefined ? "" : html ` <span class="chip-count">${count(f.count, k.lang)}</span>`}</a></li>`)}</ul></nav>`
+        : "";
+    const top = search || filters ? html `<div class="table-controls">${search}${filters}</div>` : "";
+    const sorted = o.columns.find((col) => col.sort?.dir);
+    const order = k.sort?.label ?? (sorted ? t.sortedBy(sorted.label, sorted.sort.dir) : undefined);
+    let foot = "";
+    if (k.paging && isHtml(k.paging))
+        foot = html `<div class="table-foot">${order ? html `<p class="table-order">${order}</p>` : ""}${k.paging}</div>`;
+    else if (k.paging)
+        foot = html `<div class="table-foot">${pagination({ ...k.paging, label: k.paging.label ?? t.pages(o.label), lang: k.lang, order })}</div>`;
+    else if (order)
+        foot = html `<div class="table-foot"><p class="table-order">${order}</p></div>`;
+    const body = o.rows.length === 0 && k.empty ? k.empty : frame;
+    return html `<div class="data-table">${top}${body}${foot}</div>`;
 }
 /** A submit button[role=switch]; the server flips it and redraws the page (no script). */
 export function switchButton(o) {

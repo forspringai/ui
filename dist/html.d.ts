@@ -279,21 +279,114 @@ export type ListItem = {
 };
 /** The account's list: a name, an optional meta line under it, and an action at the end. */
 export declare function list(items: ListItem[]): Html;
+/** A header that sorts: a link to the page in that order, and the order it is in now, if any. */
+export type ColumnSort = {
+    href: string;
+    dir?: "asc" | "desc" | undefined;
+};
 export type Column = {
     label: Content;
     num?: boolean;
     phoneHide?: boolean;
+    sort?: ColumnSort | undefined;
+};
+/** One page of a list: rows `from` to `to` (1-based, inclusive; 0 and 0 when there are none) of
+ *  `total`, how many pages there are, and the pages before and after this one when they exist. It
+ *  spreads into pagination()'s options. */
+export type Page = {
+    page: number;
+    from: number;
+    to: number;
+    total: number;
+    pages: number;
+    prev?: number;
+    next?: number;
 };
 /**
- * A table in a scrolling frame. The frame is a labelled region a keyboard can reach (tabindex 0),
- * so a table wider than a phone is scrolled, never clipped.
+ * The paging arithmetic, so a product's query and its links agree: page `page` (1-based) of `total`
+ * rows, `size` to a page. A page before the first is the first and one past the end is the last, so
+ * an old link or a hand-typed ?page=999 still shows rows; no rows is one empty page.
  */
-export declare function table(o: {
+export declare function pageOf(total: number, page: number, size: number): Page;
+export type PaginationOptions = {
+    lang: Lang;
+    /** The rows shown, 1-based and inclusive, of `total` (pageOf() gives all three). The words are
+     *  "1–6 af 248" with an en dash, the range sign in both languages. */
+    from: number;
+    to: number;
+    total: number;
+    /** The previous and next pages. Unset at an end: the word stays, marked unavailable. */
+    prevHref?: string | undefined;
+    nextHref?: string | undefined;
+    /** The nav's accessible name. Default "Sider" / "Pages"; name the list when a page has two. */
+    label?: string | undefined;
+    /** The order the rows are in, after the range: "1–6 af 248, værst først". */
+    order?: Content;
+};
+/**
+ * "1–6 af 248" and Previous and Next as links, in a labelled nav. At an end the word stays where it
+ * was, as a span marked aria-disabled, so the row does not shift and a screen reader hears that there
+ * is no next page rather than finding nothing. The links carry rel prev and next.
+ */
+export declare function pagination(o: PaginationOptions): Html;
+export type TableSearch = {
+    /** The query parameter. Default "q". */
+    name?: string;
+    /** What the person searched for, back in the box. */
+    value?: string;
+    /** "Søg i 248 tjek". */
+    placeholder?: string;
+    /** The field's label. Default the placeholder, else "Søg"; when it says what the placeholder says
+     *  it is visually hidden, since the placeholder already shows it. */
+    label?: string;
+    /** Where the form goes. Default this page (no action attribute), so the query string is the state. */
+    action?: string;
+};
+/** A filter: a link to the page with that filter, its count, and whether it is the one in force. */
+export type TableFilter = {
+    label: Content;
+    count?: number;
+    href: string;
+    current?: boolean;
+};
+export type TableControls = {
+    lang: Lang;
+    /** A GET form above the table. It replaces the query string, so `keep` carries the rest. */
+    search?: TableSearch;
+    /** Links styled as chips beside the search; the current one is aria-current. */
+    filters?: TableFilter[];
+    /** The order the rows are in, said in the footer: "værst først". Without it, a column whose sort
+     *  has a `dir` is said instead ("sorteret efter Oppetid, faldende"). */
+    sort?: {
+        label: Content;
+    };
+    /** The footer's range and Previous and Next: options for pagination(), or its result. */
+    paging?: Omit<PaginationOptions, "lang" | "order"> | Html;
+    /** The other query parameters in force (the filter, the sort), as hidden inputs in the search
+     *  form, so a search keeps them. Leave the page out: a new search starts on page 1. */
+    keep?: Record<string, string>;
+    /** Drawn in place of the table when there are no rows: a state() saying nothing matches, and which. */
+    empty?: Content;
+};
+export type TableOptions = {
     label: string;
     caption?: Content;
     columns: Column[];
     rows: Content[][];
-}): Html;
+    /** Prefix for the search field's id, unique on the page. Default "table". */
+    id?: string;
+    /** Search, filters, the stated order and paging around the table (D-25). */
+    controls?: TableControls;
+};
+/**
+ * A table in a scrolling frame. The frame is a labelled region a keyboard can reach (tabindex 0),
+ * so a table wider than a phone is scrolled, never clipped.
+ *
+ * With `controls` (D-25) it is a list at scale: a search form and filter chips above, the order and
+ * the paging below. All of it is a GET form and links, so it works with no script and the URL holds
+ * the state; the server searches, filters, sorts and slices, and draws the page it was asked for.
+ */
+export declare function table(o: TableOptions): Html;
 export type SwitchOptions = {
     checked: boolean;
     /** The accessible name: what the switch turns on ("SiteSpring for Mette"). */

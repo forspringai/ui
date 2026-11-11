@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html } from "./html.ts";
+import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type PaginationOptions, type TableOptions } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -36,3 +36,9 @@ export declare const Approval: (props: ApprovalOptions) => ReactElement;
 export declare const Diff: (props: DiffOptions) => ReactElement;
 /** "Why Spring did this": the agent's steps in a closed details element (explain()). */
 export declare const Explain: (props: ExplainOptions) => ReactElement;
+/** A table in its scrolling frame, with search, filters, the stated order and paging when given
+ *  `controls` (table() in @forspring/ui/html, D-25). The search is a GET form and the rest are links,
+ *  so it needs no handlers: the URL is the state, and the server draws the page asked for. */
+export declare const Table: (props: TableOptions) => ReactElement;
+/** "1–6 af 248" with Previous and Next as links (pagination()). */
+export declare const Pagination: (props: PaginationOptions) => ReactElement;

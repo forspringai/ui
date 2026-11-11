@@ -560,17 +560,200 @@ export function list(items: ListItem[]): Html {
   )}</ul>`;
 }
 
-export type Column = { label: Content; num?: boolean; phoneHide?: boolean };
+/** A header that sorts: a link to the page in that order, and the order it is in now, if any. */
+export type ColumnSort = { href: string; dir?: "asc" | "desc" | undefined };
+
+export type Column = { label: Content; num?: boolean; phoneHide?: boolean; sort?: ColumnSort | undefined };
+
+// --- A table at scale: search, filters, the stated order and paging (D-25) ----------------------
+
+// The package's words, as the bar's and the confirm's are (D-17, D-23), so every product's table
+// says "1–6 af 248" and "Forrige" the same way.
+type TableText = {
+  search: string;
+  of: string;
+  prev: string;
+  next: string;
+  pages: (table?: string) => string;
+  filters: (table: string) => string;
+  sortedBy: (column: Content, dir: "asc" | "desc") => Html;
+};
+
+const TABLE: Record<Lang, TableText> = {
+  da: {
+    search: "Søg",
+    of: "af",
+    prev: "Forrige",
+    next: "Næste",
+    pages: (t) => (t ? `Sider i ${t}` : "Sider"),
+    filters: (t) => `Filtre for ${t}`,
+    sortedBy: (c, d) => html`sorteret efter ${c}, ${d === "asc" ? "stigende" : "faldende"}`,
+  },
+  en: {
+    search: "Search",
+    of: "of",
+    prev: "Previous",
+    next: "Next",
+    pages: (t) => (t ? `Pages of ${t}` : "Pages"),
+    filters: (t) => `Filters for ${t}`,
+    sortedBy: (c, d) => html`sorted by ${c}, ${d === "asc" ? "ascending" : "descending"}`,
+  },
+};
+
+/** A count in the page's language: Danish writes 1.248, English 1,248. */
+const count = (n: number, lang: Lang) => new Intl.NumberFormat(LOCALE[lang]).format(n);
+
+/** One page of a list: rows `from` to `to` (1-based, inclusive; 0 and 0 when there are none) of
+ *  `total`, how many pages there are, and the pages before and after this one when they exist. It
+ *  spreads into pagination()'s options. */
+export type Page = { page: number; from: number; to: number; total: number; pages: number; prev?: number; next?: number };
+
+/**
+ * The paging arithmetic, so a product's query and its links agree: page `page` (1-based) of `total`
+ * rows, `size` to a page. A page before the first is the first and one past the end is the last, so
+ * an old link or a hand-typed ?page=999 still shows rows; no rows is one empty page.
+ */
+export function pageOf(total: number, page: number, size: number): Page {
+  const n = Math.max(0, Math.floor(Number.isFinite(total) ? total : 0));
+  const per = Math.max(1, Math.floor(Number.isFinite(size) ? size : 1));
+  const pages = Math.max(1, Math.ceil(n / per));
+  const p = Math.min(pages, Math.max(1, Math.floor(Number.isFinite(page) ? page : 1)));
+  const out: Page = { page: p, from: n ? (p - 1) * per + 1 : 0, to: Math.min(n, p * per), total: n, pages };
+  if (p > 1) out.prev = p - 1;
+  if (p < pages) out.next = p + 1;
+  return out;
+}
+
+export type PaginationOptions = {
+  lang: Lang;
+  /** The rows shown, 1-based and inclusive, of `total` (pageOf() gives all three). The words are
+   *  "1–6 af 248" with an en dash, the range sign in both languages. */
+  from: number;
+  to: number;
+  total: number;
+  /** The previous and next pages. Unset at an end: the word stays, marked unavailable. */
+  prevHref?: string | undefined;
+  nextHref?: string | undefined;
+  /** The nav's accessible name. Default "Sider" / "Pages"; name the list when a page has two. */
+  label?: string | undefined;
+  /** The order the rows are in, after the range: "1–6 af 248, værst først". */
+  order?: Content;
+};
+
+/**
+ * "1–6 af 248" and Previous and Next as links, in a labelled nav. At an end the word stays where it
+ * was, as a span marked aria-disabled, so the row does not shift and a screen reader hears that there
+ * is no next page rather than finding nothing. The links carry rel prev and next.
+ */
+export function pagination(o: PaginationOptions): Html {
+  const t = TABLE[o.lang];
+  const range = o.total > 0 && o.to >= o.from ? `${count(o.from, o.lang)}–${count(o.to, o.lang)} ${t.of} ${count(o.total, o.lang)}` : `0 ${t.of} 0`;
+  const step = (href: string | undefined, label: string, rel: string) =>
+    href === undefined ? html`<span class="button ghost small" aria-disabled="true">${label}</span>` : html`<a class="button ghost small" href="${safeHref(href)}" rel="${rel}">${label}</a>`;
+  const order = o.order ? html`<span class="pagination-order">, ${o.order}</span>` : "";
+  return html`<nav class="pagination" aria-label="${o.label ?? t.pages()}"><p class="pagination-range">${range}${order}</p><span class="pagination-steps">${step(o.prevHref, t.prev, "prev")}${step(o.nextHref, t.next, "next")}</span></nav>`;
+}
+
+export type TableSearch = {
+  /** The query parameter. Default "q". */
+  name?: string;
+  /** What the person searched for, back in the box. */
+  value?: string;
+  /** "Søg i 248 tjek". */
+  placeholder?: string;
+  /** The field's label. Default the placeholder, else "Søg"; when it says what the placeholder says
+   *  it is visually hidden, since the placeholder already shows it. */
+  label?: string;
+  /** Where the form goes. Default this page (no action attribute), so the query string is the state. */
+  action?: string;
+};
+
+/** A filter: a link to the page with that filter, its count, and whether it is the one in force. */
+export type TableFilter = { label: Content; count?: number; href: string; current?: boolean };
+
+export type TableControls = {
+  lang: Lang;
+  /** A GET form above the table. It replaces the query string, so `keep` carries the rest. */
+  search?: TableSearch;
+  /** Links styled as chips beside the search; the current one is aria-current. */
+  filters?: TableFilter[];
+  /** The order the rows are in, said in the footer: "værst først". Without it, a column whose sort
+   *  has a `dir` is said instead ("sorteret efter Oppetid, faldende"). */
+  sort?: { label: Content };
+  /** The footer's range and Previous and Next: options for pagination(), or its result. */
+  paging?: Omit<PaginationOptions, "lang" | "order"> | Html;
+  /** The other query parameters in force (the filter, the sort), as hidden inputs in the search
+   *  form, so a search keeps them. Leave the page out: a new search starts on page 1. */
+  keep?: Record<string, string>;
+  /** Drawn in place of the table when there are no rows: a state() saying nothing matches, and which. */
+  empty?: Content;
+};
+
+export type TableOptions = {
+  label: string;
+  caption?: Content;
+  columns: Column[];
+  rows: Content[][];
+  /** Prefix for the search field's id, unique on the page. Default "table". */
+  id?: string;
+  /** Search, filters, the stated order and paging around the table (D-25). */
+  controls?: TableControls;
+};
+
+const isHtml = (c: unknown): c is Html => typeof c === "object" && c !== null && (c as Html)[BRAND] === true;
+
+const ARIA_SORT = { asc: "ascending", desc: "descending" } as const;
 
 /**
  * A table in a scrolling frame. The frame is a labelled region a keyboard can reach (tabindex 0),
  * so a table wider than a phone is scrolled, never clipped.
+ *
+ * With `controls` (D-25) it is a list at scale: a search form and filter chips above, the order and
+ * the paging below. All of it is a GET form and links, so it works with no script and the URL holds
+ * the state; the server searches, filters, sorts and slices, and draws the page it was asked for.
  */
-export function table(o: { label: string; caption?: Content; columns: Column[]; rows: Content[][] }): Html {
+export function table(o: TableOptions): Html {
   const c = (col: Column | undefined) => cls(col?.num && "num", col?.phoneHide && "phone-hide");
-  return html`<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html`<caption>${o.caption}</caption>` : ""}<thead><tr>${o.columns.map(
-    (col) => html`<th scope="col"${raw(attrs({ class: c(col) }))}>${col.label}</th>`,
-  )}</tr></thead><tbody>${o.rows.map((r) => html`<tr>${r.map((cell, i) => html`<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`)}</tbody></table></div>`;
+  const head = (col: Column) => {
+    if (!col.sort) return html`<th scope="col"${raw(attrs({ class: c(col) }))}>${col.label}</th>`;
+    const dir = col.sort.dir;
+    // The arrow says the order to the eye; aria-sort says it to a screen reader, so it is hidden.
+    const arrow = dir ? html`<span class="sort-dir" aria-hidden="true">${dir === "asc" ? "↑" : "↓"}</span>` : "";
+    return html`<th scope="col"${raw(attrs({ class: c(col), "aria-sort": dir ? ARIA_SORT[dir] : undefined }))}><a class="sort" href="${safeHref(col.sort.href)}">${col.label}${arrow}</a></th>`;
+  };
+  const frame = html`<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html`<caption>${o.caption}</caption>` : ""}<thead><tr>${o.columns.map(head)}</tr></thead><tbody>${o.rows.map(
+    (r) => html`<tr>${r.map((cell, i) => html`<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`,
+  )}</tbody></table></div>`;
+  const k = o.controls;
+  if (!k) return frame;
+
+  const t = TABLE[k.lang];
+  let search: Html | "" = "";
+  if (k.search) {
+    const s = k.search;
+    const id = `${o.id ?? "table"}-search`;
+    const label = s.label ?? s.placeholder ?? t.search;
+    const hide = s.placeholder !== undefined && label === s.placeholder;
+    search = html`<form class="table-search" method="get"${raw(attrs({ action: s.action === undefined ? undefined : safeHref(s.action) }))} role="search" aria-label="${label}">${hidden(k.keep)}<label${raw(attrs({ class: hide ? "visually-hidden" : undefined }))} for="${id}">${label}</label><input${raw(
+      attrs({ class: "small", type: "search", id, name: s.name ?? "q", value: s.value, placeholder: s.placeholder }),
+    )}>${button({ label: t.search, variant: "ghost", small: true })}</form>`;
+  }
+  const filters = k.filters?.length
+    ? html`<nav class="table-filters" aria-label="${t.filters(o.label)}"><ul>${k.filters.map(
+        (f) => html`<li><a class="chip" href="${safeHref(f.href)}"${current(f.current)}>${f.label}${f.count === undefined ? "" : html` <span class="chip-count">${count(f.count, k.lang)}</span>`}</a></li>`,
+      )}</ul></nav>`
+    : "";
+  const top = search || filters ? html`<div class="table-controls">${search}${filters}</div>` : "";
+
+  const sorted = o.columns.find((col) => col.sort?.dir);
+  const order: Content = k.sort?.label ?? (sorted ? t.sortedBy(sorted.label, sorted.sort!.dir!) : undefined);
+  let foot: Html | "" = "";
+  if (k.paging && isHtml(k.paging)) foot = html`<div class="table-foot">${order ? html`<p class="table-order">${order}</p>` : ""}${k.paging}</div>`;
+  else if (k.paging) foot = html`<div class="table-foot">${pagination({ ...k.paging, label: k.paging.label ?? t.pages(o.label), lang: k.lang, order })}</div>`;
+  else if (order) foot = html`<div class="table-foot"><p class="table-order">${order}</p></div>`;
+
+  const body = o.rows.length === 0 && k.empty ? k.empty : frame;
+  return html`<div class="data-table">${top}${body}${foot}</div>`;
 }
 
 export type SwitchOptions = {

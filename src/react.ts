@@ -8,12 +8,15 @@
 // needs no React build step of its own.
 
 import { createElement, type ReactElement } from "react";
-import { approval, bar, confirmDestructive, dialog, diff, explain, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html } from "./html.ts";
+import { approval, bar, confirmDestructive, dialog, diff, explain, pagination, table, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type PaginationOptions, type TableOptions } from "./html.ts";
 import { connectPanel, type ConnectPanelOptions } from "./connect.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 
 const UNESCAPE: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s: string) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]!);
+
+// React names a few attributes in camelCase and warns on the HTML spelling; the bytes it writes are the same.
+const PROP: Record<string, string> = { class: "className", tabindex: "tabIndex" };
 
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
 export function fromHtml(h: Html, key?: string): ReactElement {
@@ -21,7 +24,7 @@ export function fromHtml(h: Html, key?: string): ReactElement {
   if (!m) throw new Error("fromHtml: expected a single element");
   const props: Record<string, unknown> = { dangerouslySetInnerHTML: { __html: m[3]! } };
   if (key !== undefined) props.key = key;
-  for (const a of m[2]!.matchAll(/\s([a-z][a-z0-9-]*)="([^"]*)"/g)) props[a[1] === "class" ? "className" : a[1]!] = unescape(a[2]!);
+  for (const a of m[2]!.matchAll(/\s([a-z][a-z0-9-]*)="([^"]*)"/g)) props[PROP[a[1]!] ?? a[1]!] = unescape(a[2]!);
   return createElement(m[1]!, props);
 }
 
@@ -63,3 +66,11 @@ export const Diff = (props: DiffOptions): ReactElement => fromHtml(diff(props));
 
 /** "Why Spring did this": the agent's steps in a closed details element (explain()). */
 export const Explain = (props: ExplainOptions): ReactElement => fromHtml(explain(props));
+
+/** A table in its scrolling frame, with search, filters, the stated order and paging when given
+ *  `controls` (table() in @forspring/ui/html, D-25). The search is a GET form and the rest are links,
+ *  so it needs no handlers: the URL is the state, and the server draws the page asked for. */
+export const Table = (props: TableOptions): ReactElement => fromHtml(table(props));
+
+/** "1–6 af 248" with Previous and Next as links (pagination()). */
+export const Pagination = (props: PaginationOptions): ReactElement => fromHtml(pagination(props));
