@@ -14,7 +14,7 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, marketingLadder } from "../src/audit/audit.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
 
@@ -269,10 +269,33 @@ describe("the broken fixture", () => {
   });
 });
 
+// A marketing page on text.marketing (D-22): on scale only when the run asks for that ladder (D-29).
+describe("the marketing ladder", () => {
+  const url = () => `${base}/test/fixtures/marketing.html`;
+
+  test("a page on the marketing ladder passes with --marketing, fluid steps between their tokens", async () => {
+    const r = await audit(options([url()], { marketing: true, product: "sitespring" }), browser);
+    expect(r.pages).toHaveLength(4);
+    expect(all(r)).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 120_000);
+
+  test("without it, the same page fails on every marketing size off the other two ladders", async () => {
+    const r = await audit(options([url()], { product: "sitespring" }), browser);
+    expect(r.ok).toBe(false);
+    const sizes = all(r).filter((f) => f.rule === "font-size");
+    expect(sizes.every((f) => f.severity === "error")).toBe(true);
+    // At 1280: the hero at 5vw is 64 px, the h2 at 2.6vw 33.28 px; at 380 they sit at their minimums.
+    const at = (width: number) => [...new Set(sizes.filter((f) => f.width === width).map((f) => `${f.selector} ${f.value}`))].sort();
+    expect(at(1280)).toEqual(["main#main > h1.hero 64px", "main#main > h2.section 33.28px", "main#main > h3.feature 24px", "main#main > p.lede 20px"]);
+    expect(at(380)).toEqual(["main#main > h1.hero 48px", "main#main > h3.feature 24px", "main#main > p.lede 20px"]);
+  }, 120_000);
+});
+
 describe("rules on measurements", () => {
   const sc = { sizes: [11, 12, 13, 14, 15, 16, 18, 21, 30, 40], h1: [30, 40] as [number, number], radii: [0, 3, 6, 8, 10], palette: [[252, 252, 250]] as [number, number, number][], allowSpacing: [6] };
   const box = (o: object) => ({ selector: "div", gsi: false, radii: ["0px", "0px", "0px", "0px"], spacing: [], colours: [], ...o });
-  const run = (o: object) => findings({ texts: [], boxes: [], smallTargets: [], primaries: [], fonts: [], ...o }, sc, 1280);
+  const run = (o: object, scale: Parameters<typeof findings>[1] = sc) => findings({ texts: [], boxes: [], smallTargets: [], primaries: [], fonts: [], ...o }, scale, 1280);
 
   test("radius: pills, 50% and the four tokens pass; anything else fails", () => {
     expect(run({ boxes: [box({ radii: ["999px", "50%", "3px", "10px 6px"] })] })).toEqual([]);
@@ -290,6 +313,18 @@ describe("rules on measurements", () => {
     expect(run({ texts: [text({ size: 34.5 })] }).map((f) => f.rule)).toEqual(["font-size"]);
     expect(run({ texts: [text({ gsi: true, family: "Roboto GSI", size: 14 })] })).toEqual([]);
     expect(run({ texts: [text({ family: "Roboto" })] }).map((f) => f.note)).toEqual(["Roboto belongs inside Google's button (.gsi) only"]);
+  });
+
+  test("type: the marketing ladder is on scale only when asked for, its fluid steps as ranges (D-29)", () => {
+    const text = (o: object) => ({ selector: "p", size: 15, weight: 400, family: "Archivo", h1: false, gsi: false, disabled: false, fg: [20, 21, 26, 1], bg: [252, 252, 250], ...o });
+    const ladder = marketingLadder(tokens.text.marketing);
+    expect(ladder.ranges).toEqual([[30, 36], [48, 72]]);
+    const marketing = { ...sc, sizes: [...new Set([...sc.sizes, ...ladder.sizes])].sort((x, y) => x - y), ranges: ladder.ranges, marketing: true };
+    const texts = [20, 24, 33.28, 60].map((size) => text({ size }));
+    expect(run({ texts }, marketing)).toEqual([]);
+    expect(run({ texts }).map((f) => f.value)).toEqual(["20px", "24px", "33.28px", "60px"]);
+    // Between the ranges is still off scale.
+    expect(run({ texts: [text({ size: 42 })] }, marketing).map((f) => f.expected)).toEqual(["11, 12, 13, 14, 15, 16, 18, 20, 21, 24, 30, 36, 40, 48, 72 px, 30 to 36 px, 48 to 72 px"]);
   });
 
   test("contrast: large text needs 3:1, alpha is composited, disabled text is exempt", () => {
@@ -332,6 +367,12 @@ describe("arguments", () => {
     expect(p("http://x/", "--allow-status", "200")).toMatchObject({ exit: 2, refusal: { reason: "invalid_status" } });
     expect(p("http://x/", "--allow-status", "403,5o3")).toMatchObject({ exit: 2, refusal: { reason: "invalid_status" } });
     expect(p("http://x/", "--allow-status", "403, 503")).toMatchObject({ opts: { allowStatus: [403, 503] } });
+  });
+
+  test("--marketing is a switch, off unless given (D-29)", () => {
+    expect(p("http://x/")).toMatchObject({ opts: { marketing: false } });
+    expect(p("http://x/", "--marketing", "--product", "sitespring")).toMatchObject({ opts: { marketing: true, product: "sitespring" } });
+    expect(p("http://x/", "--marketing=yes")).toMatchObject({ exit: 64, refusal: { reason: "usage" } });
   });
 
   test("single-page app flags (D-16)", () => {

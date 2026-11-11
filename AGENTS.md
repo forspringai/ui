@@ -60,7 +60,7 @@ dist/              committed build output (D-2)
   html, refusals, pages, connect, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
   icons/           lucide.js/.d.ts, imported by html.js, and the icons' LICENSE
   audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
-  brand/<product>/ mark, favicon and logo SVGs and their PNGs, what products serve (D-18)
+  brand/<product>/ mark, favicon and logo SVGs, their PNGs and site.webmanifest, what products serve (D-18, D-28)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
@@ -84,7 +84,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.16.0"
+"@forspring/ui": "github:forspringai/ui#v0.17.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

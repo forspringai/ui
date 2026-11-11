@@ -14,7 +14,7 @@ What Forspring and each product is, in words, lives in the hub's
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.16.0
+pnpm add github:forspringai/ui#v0.17.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -198,6 +198,7 @@ the doll's colour is the new `--mark` role, set by `data-product`. `spring` is a
 `pulsespring`, into `dist/brand/<product>/` (and `brand/<product>/`): `mark.svg`, `favicon.svg` (both
 with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touch-icon-180.png`,
 `icon-512.png`, `logo.svg` (wordmark outlined, no font needed) and `logo-1200x300.png`.
+And `site.webmanifest` (D-28): the name and the two app icons, linked by `shell()` and `faviconLinks()`; serve it as `application/manifest+json`.
 
 **Wiring the favicon in a product:**
 
@@ -216,7 +217,7 @@ with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touc
    `faviconLinks(faviconFor("sitespring", "/assets/ui/0.9.0/brand/"))` in `<head>`, or write the four
    tags by hand. A bundler can take the files from `@forspring/ui/brand/<product>/<file>`.
 5. Optional: answer `/favicon.ico` with `favicon-32.png`, for clients that ask for it before reading
-   the page. The CSP needs only `img-src 'self'`.
+   the page. The CSP needs only `img-src 'self'` and `manifest-src 'self'`.
 
 ### Connect an agent (0.10.0, D-19, hub D-102)
 
@@ -545,7 +546,9 @@ pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/settings \
 Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script files), `--product
 <key>` to accept only that product's accent, `--allow-spacing 6,10` while a page's own CSS still
 carries off-grid values (the component layer has none since 0.5.0, D-14; don't pass it otherwise),
-`--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error), and
+`--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error),
+`--marketing` for a marketing page, which accepts the marketing type ladder as well (eyebrow 13, lede
+20, h3 24, h2 anywhere from 30 to 36, h1 from 48 to 72, D-29; never pass it for a console), and
 `--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
 offline apart from the pages themselves. The one way past that is a redirect from the audited

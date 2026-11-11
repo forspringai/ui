@@ -1078,3 +1078,56 @@ for exact values; no pie past three parts, never 3D), the slots in fixed order w
 series, direct labels over legends, bars from zero, unit and source on every chart, the dark slots on
 dark surfaces, and a text summary or table beside every chart with series told apart by more than
 colour. The 3:1 rule is test/chart.test.ts's, unchanged.
+
+## D-28 — A web manifest per product, in the brand files; 0.17.0 (2026-11-11)
+
+Hub tick 5nx. The package generates every product's favicons and app icons (hub D-101 item 6, D-18)
+but no web manifest, so AppSpring's shell wrote its own, naming the icons and colours by hand. The
+build now writes `site.webmanifest` into `dist/brand/<product>/` and `brand/<product>/` beside the
+icons it names, from `PRODUCT_NAMES` and the tokens, so a product drops its own copy. No version bump
+in this change; the next release carries it.
+
+- **`name` and `short_name`** are the product's name ("AppSpring"); every name is short enough for a
+  home screen, so the two are the same.
+- **`icons`**: `icon-512.png` (512x512, purpose `any`) and `apple-touch-icon-180.png` (180x180). The
+  paths are relative to the manifest, which a browser resolves against the manifest's own URL, so the
+  folder works under `/assets/ui/<version>/brand/<product>/` or wherever a product serves it.
+- **`background_color`** is paper (light), the ground the app icons are rendered on.
+- **`display` is `browser`**, not `standalone`. The consoles are pages opened in a tab, signed in
+  through the account and moving between products by link; an installed shortcut in a standalone
+  window would lose the address bar and the back button. Nothing in the repo asks for an app window,
+  and Chromium offers no install prompt for a `browser` manifest, which is what a console wants.
+- **No `theme_color`.** Browsers paint their own chrome with it. The family's chrome is paper, never
+  the accent alone (brand/README.md), and a manifest has one value with no dark variant, so any colour
+  set here would be wrong in one of the two themes. No test or browser behaviour here needs it.
+
+`faviconFor()` names the manifest too (`manifest`), and `faviconLinks()`, so `shell()`, writes
+`<link rel="manifest" href=".../site.webmanifest">` after the icons; a `favicon` a product names itself
+gets the link only when it gives `manifest`. Products serve the file as `application/manifest+json`,
+and a strict CSP needs `manifest-src 'self'` beside `img-src 'self'` (README).
+
+## D-29 — The audit knows the marketing ladder, when the run asks; 0.17.0 (2026-11-11)
+
+Hub tick pg3. D-22 added `text.marketing` (eyebrow 13, lede 20, h3 24, h2 30 to 36, h1 48 to 72) and
+left the audit for later: its `font-size` rule knew the chrome and content ladders only, so a marketing
+page built on the tokens failed on its lede, its h3 and its hero. Consoles must keep the strict check,
+where a 48 px heading is a mistake, not a hero. No version bump in this change; the next release
+carries it.
+
+**The opt-in is a flag, `--marketing`** (`marketing: true` in `AuditOptions`), and only a flag. A page
+attribute such as `data-ui-scale="marketing"` was the other choice; it was left out because it would
+let any page loosen its own audit, a console included, with nothing in the CI configuration to show
+it. The audit is the standard made executable (D-8): what a run accepts is stated where the run is,
+beside `--allow-spacing` and `--allow-status`. A product with both kinds of page runs the audit twice,
+once over its marketing URLs with the flag and once over the rest without.
+
+**With the flag**, the marketing steps join the scale, and each fluid step is a range: a step with a
+`-min` token (D-22's shape) accepts any measured px from the `-min` value to the plain one, because a
+page clamps between them on the viewport's width and the audit measures the computed size. The ranges
+apply to any element, not only h1 and h2, because marketing markup puts the hero size on whatever
+element carries the headline; content's own h1 range stays on h1 only, as before. A size between the
+ranges (42 px, say) still fails. **Without it** nothing changes: the same scale, the same note.
+
+test/fixtures/marketing.html uses every marketing step, the fluid ones at 5vw and 2.6vw so the measured
+size sits between the tokens at 1280; test/audit.test.ts holds that it passes with `--marketing` at
+both widths and themes and fails without it, naming each off-scale size.

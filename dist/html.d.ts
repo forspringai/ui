@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.16.0";
+export declare const VERSION = "0.17.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -49,21 +49,22 @@ export declare const MARK_PATHS: string;
 export declare function icon(name: IconName, o?: {
     label?: string;
 }): Html;
-/** The page's icons, each a URL. shell() writes them from `brandBase` unless `favicon` names them. */
+/** The page's icons, each a URL, and the web manifest (D-28). shell() writes them from `brandBase` unless `favicon` names them. */
 export type Favicon = {
     svg: string;
     png32?: string;
     png16?: string;
     appleTouch?: string;
+    manifest?: string;
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.16.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.17.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
- * The <link> tags for a favicon. The PNGs carry sizes and come first, so a browser that reads SVG
- * icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
+ * The <link> tags for a favicon and the web manifest. The PNGs carry sizes and come first, so a
+ * browser that reads SVG icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
  */
 export declare function faviconLinks(f: Favicon): Html;
 export type Link = {

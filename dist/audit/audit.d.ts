@@ -23,18 +23,30 @@ type Tokens = {
     text: {
         chrome: Record<string, number>;
         content: Record<string, number>;
+        marketing?: Record<string, number>;
     };
 };
 export declare function loadTokens(root?: string): Promise<Tokens>;
 type Scale = {
     sizes: number[];
     h1: [number, number];
+    /** Fluid steps any text may sit inside, min to max: the marketing ladder's, under --marketing (D-29). */
+    ranges?: [number, number][];
+    marketing?: boolean;
     radii: number[];
     palette: [number, number, number][];
     allowSpacing: number[];
 };
 /** The colours a page may use: every token value, and the shades components.css mixes from roles. */
 export declare function palette(browser: Browser, tokens: Tokens, root: string, product?: string): Promise<[number, number, number][]>;
+/**
+ * The marketing ladder's sizes and fluid ranges (D-29). A fluid step is two tokens, `<step>-min` and
+ * `<step>` (D-22), and a page clamps between them, so the audit measures any px in that range.
+ */
+export declare function marketingLadder(marketing: Record<string, number>): {
+    sizes: number[];
+    ranges: [number, number][];
+};
 export declare function scale(browser: Browser, opts: AuditOptions, root?: string): Promise<Scale>;
 export declare const ratio: (a: readonly number[], b: readonly number[]) => number;
 export declare function findings(obs: Observations, sc: Scale, width: number): Finding[];

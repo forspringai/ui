@@ -51,6 +51,11 @@ export type AuditOptions = {
   budgetJs: number;
   /** Restricts the accent colours the palette rule accepts to this product's. */
   product?: string;
+  /**
+   * Accept the marketing ladder (text.marketing, D-22) as well as chrome and content, its fluid steps
+   * anywhere between their two values (D-29). Off by default: consoles keep the two ladders.
+   */
+  marketing?: boolean;
   /** Off-grid spacings (px) accepted for products migrating onto the 4px grid (D-8). */
   allowSpacing: number[];
   /** HTTP statuses (400 and over) a page may answer with and still be audited: a refusal page (D-10). */
