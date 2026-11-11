@@ -173,7 +173,7 @@ for word.
   language per page (hub `docs/ui-standard.md`). Internal docs and operator screens may be English.
 - **Product names stay as written** in Danish copy: Spring, BrainSpring, DataSpring, SiteSpring, AppSpring,
   PulseSpring. They join a Danish compound with a hyphen, as the chrome writes "Din Forspring-konto".
-- **Addressing: a proposal for Peter to confirm.** No hub decision sets it. Proposed: marketing and sales copy
+- **Addressing (decided by Peter, 2026-11-11, hub D-118).** Marketing and sales copy
   addresses the company as **"I/jer"** (vision.md's "jeres Slack"); product UI addresses the person in front of
   it as **"du"**, as `@forspring/ui` already does ("Du er ikke logget ind") and with "hos jer" where it means
   the company ("Bed den, der står for ... hos jer, om at invitere dig."). Never "De".
