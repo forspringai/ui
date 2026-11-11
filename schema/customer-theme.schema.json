@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:forspring:ui:customer-theme",
+  "title": "A customer's theme",
+  "description": "A customer's brand on their own surfaces in AppSpring (hub D-103 item 4, D-117; ui D-34): accent, surface tint and logo, values only, never geometry. The shape only: @forspring/ui's validateTheme() also checks contrast, distance from the status and signal colours and the logo's URL, and refuses the Guideline level until it ships.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["level"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "This file's path, for an editor: node_modules/@forspring/ui/schema/customer-theme.schema.json."
+    },
+    "$description": {
+      "type": "string"
+    },
+    "level": {
+      "enum": ["default", "brand", "guideline"],
+      "description": "default: Forspring's look. brand: accent, tint and logo. guideline: brand plus an approved font and a radius and a density preset (hub D-117; not available yet)."
+    },
+    "brand": {
+      "$ref": "#/$defs/brand"
+    },
+    "guideline": {
+      "$ref": "#/$defs/guideline"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "level": { "const": "default" } } },
+      "then": { "not": { "anyOf": [{ "required": ["brand"] }, { "required": ["guideline"] }] } }
+    },
+    {
+      "if": { "properties": { "level": { "const": "brand" } } },
+      "then": { "required": ["brand"], "not": { "required": ["guideline"] } }
+    },
+    {
+      "if": { "properties": { "level": { "const": "guideline" } } },
+      "then": { "required": ["brand"] }
+    }
+  ],
+  "$defs": {
+    "color": {
+      "description": "#rrggbb, or a DTCG 2025.10 srgb colour value, opaque.",
+      "oneOf": [
+        { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["colorSpace", "components"],
+          "properties": {
+            "colorSpace": { "const": "srgb" },
+            "components": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": { "type": "number", "minimum": 0, "maximum": 1 }
+            },
+            "alpha": { "const": 1 },
+            "hex": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+          }
+        }
+      ]
+    },
+    "pair": {
+      "description": "A colour per theme. Without dark, validateTheme() derives one and checks it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["light"],
+      "properties": {
+        "light": { "$ref": "#/$defs/color" },
+        "dark": { "$ref": "#/$defs/color" }
+      }
+    },
+    "source": {
+      "description": "An https: URL, a data:image/ URL or a relative path in the app's bundle.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048
+    },
+    "brand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["accent"],
+      "properties": {
+        "accent": {
+          "$ref": "#/$defs/pair",
+          "description": "Buttons, links, focus and the doll: at least 4.5:1 on background, card and muted, its label 4.5:1 on it, at least 10 (OKLab x100) from every status and signal colour."
+        },
+        "tint": {
+          "$ref": "#/$defs/pair",
+          "description": "The page and soft surface: every text role at least 4.5:1 on it, every signal mark 3:1."
+        },
+        "logo": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["light", "alt"],
+          "properties": {
+            "light": { "$ref": "#/$defs/source" },
+            "dark": { "$ref": "#/$defs/source" },
+            "alt": { "type": "string", "pattern": "\\S", "description": "What a screen reader says for the logo." }
+          }
+        }
+      }
+    },
+    "guideline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "font": { "type": "string", "minLength": 1, "description": "One of the approved fonts (none yet)." },
+        "radius": { "enum": ["family", "square", "round"] },
+        "density": { "enum": ["family", "compact", "comfortable"] }
+      }
+    }
+  }
+}

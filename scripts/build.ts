@@ -7,7 +7,7 @@ import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { assets } from "../src/assets.ts";
-import { TokenProblems, build, model } from "../src/emit.ts";
+import { TokenProblems, build, familyTs, model } from "../src/emit.ts";
 import { renderPngs } from "./brand-png.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -25,12 +25,15 @@ try {
     rmSync(join(root, "brand", p), { recursive: true, force: true });
     cpSync(join(root, "dist", "brand", p), join(root, "brand", p), { recursive: true });
   }
-  // html, refusals, pages, connect and react (.js and .d.ts), so a product imports the helpers with no TypeScript loader (Node will not
+  // src/family.ts, the role values src/theme.ts checks a customer's theme against (ui D-34): a source
+  // file, written before the compile below picks it up.
+  writeFileSync(join(root, "src", "family.ts"), familyTs(model(join(root, "tokens"))));
+  // html, refusals, pages, connect, react and theme (.js and .d.ts), so a product imports the helpers with no TypeScript loader (Node will not
   // strip types inside node_modules).
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json")], { stdio: "inherit" });
   // The design audit's bin, ui-audit, for the same reason.
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json")], { stdio: "inherit" });
-  console.log(`dist/: ${[...Object.keys(files), "html, icons/lucide, refusals, pages, connect, react (.js, .d.ts)", "audit/", "brand/<product>/ (3 SVG, 5 PNG, site.webmanifest)"].filter((n) => !n.startsWith("brand/") || n.includes("<")).join(", ")}`);
+  console.log(`dist/: ${[...Object.keys(files), "html, icons/lucide, refusals, pages, connect, react, theme, family, color (.js, .d.ts)", "audit/", "brand/<product>/ (3 SVG, 5 PNG, site.webmanifest)"].filter((n) => !n.startsWith("brand/") || n.includes("<")).join(", ")}`);
 } catch (e) {
   if (!(e instanceof TokenProblems)) throw e;
   console.error(e.message);

@@ -321,3 +321,23 @@ export function build(dir: string): Record<string, string> {
     "tokens.d.ts": tokensDts(m),
   };
 }
+
+// src/family.ts: the role values and product accents as a TypeScript module, for src/theme.ts.
+// theme.ts runs in a Worker or a compiler, where the tokens cannot be read from disk, so the build
+// writes the values it needs beside it; test/build.test.ts fails when the file is stale.
+export function familyTs(m: Model): string {
+  const union = (xs: string[]) => xs.map((x) => JSON.stringify(x)).join(" | ");
+  const roles = { light: roleColors(m, "light"), dark: roleColors(m, "dark") };
+  return `// ${HEADER}
+
+export type Role = ${union(m.roles)};
+export type Product = ${union(m.products)};
+type Pair = { readonly light: string; readonly dark: string };
+
+/** Every role's value per theme, #rrggbb; primary, ring and mark are Forspring's. */
+export const ROLES: { readonly light: Readonly<Record<Role, string>>; readonly dark: Readonly<Record<Role, string>> } = ${JSON.stringify(roles, null, 2)};
+
+/** Each product's own roles (primary, primary-foreground, ring, mark) per theme. */
+export const PRODUCTS: Readonly<Record<Product, Readonly<Record<"primary" | "primary-foreground" | "ring" | "mark", Pair>>>> = ${JSON.stringify(m.product, null, 2)};
+`;
+}

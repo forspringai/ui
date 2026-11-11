@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 import { assets } from "../src/assets.ts";
-import { build } from "../src/emit.ts";
+import { build, familyTs, model } from "../src/emit.ts";
 import * as tokens from "../dist/tokens.js";
 
 const root = join(import.meta.dirname, "..");
@@ -20,10 +20,14 @@ describe.each(Object.keys(files))("dist/%s", (name) => {
   });
 });
 
-test("dist/html, icons/lucide, refusals, pages, connect and react (.js, .d.ts) match a fresh compile of src/", () => {
+test("src/family.ts, the values @forspring/ui/theme checks against, matches the tokens (D-34)", async () => {
+  await expect(familyTs(model(join(root, "tokens")))).toMatchFileSnapshot(join(root, "src", "family.ts"));
+});
+
+test("dist/html, icons/lucide, refusals, pages, connect, react, theme, family and color (.js, .d.ts) match a fresh compile of src/", () => {
   const out = mkdtempSync(join(tmpdir(), "forspring-ui-html-"));
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json"), "--outDir", out]);
-  for (const f of ["html", "icons/lucide", "refusals", "pages", "connect", "react"].flatMap((n) => [`${n}.js`, `${n}.d.ts`])) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
+  for (const f of ["html", "icons/lucide", "refusals", "pages", "connect", "react", "theme", "family", "color"].flatMap((n) => [`${n}.js`, `${n}.d.ts`])) expect(readFileSync(join(out, f), "utf8")).toBe(readFileSync(join(root, "dist", f), "utf8"));
 });
 
 test("dist/audit/ matches a fresh compile of src/audit/", () => {

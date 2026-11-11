@@ -1325,3 +1325,74 @@ without the flag and fails with it on all nine edits (test/audit.test.ts).
 drop the radius remapping and the role mapping theme.css already gives, run the audit with
 `--rich-app`. AppSpring's legacy web app is frozen; its successor adopts the preset when it builds
 on shadcn. No version bump in this change; the next release carries it.
+
+## D-34 — A customer's theme as a checked file: validateTheme() and customerTheme() (2026-11-11)
+
+Hub tick fh6, from Peter's brand review and hub D-117; the format agreed with lead-canonify in hub
+tick 25i. AppSpring's customers wear their own brand on their own surfaces (hub D-103 item 4), and
+AppSpring's kernel decided in its question 8 (appspring `docs/design/kernel/pages.md`) that the
+customer theme is accent, surface tint and logo, "through ui's `customerTheme(brand)` ... values,
+never geometry". It was planned here and never shipped; AppSpring's renderer (appspring n3z) and its
+compile check (zcr) wait for it.
+
+1. **The file.** A small DTCG-shaped JSON in the app's bundle: `level` (`default`, `brand`,
+   `guideline`), `brand` (`accent` and `tint` as `{ light, dark? }`, `logo` as
+   `{ light, dark?, alt }`) and `guideline` (`font`, `radius`, `density`). A colour is `#rrggbb` or a
+   DTCG 2025.10 `srgb` value, opaque. `schema/customer-theme.schema.json` (JSON Schema 2020-12,
+   exported) states the shape; test/theme.test.ts reads it with a small interpreter and holds it to
+   what `validateTheme()` calls off-schema, file by file.
+2. **`validateTheme(file, { product? })`** returns `{ ok, errors, warnings }`, each
+   `{ path, code, message, fix? }`, with stable codes (README, "A customer's theme"). The rules are
+   test/contrast.test.ts's, applied to the theme: the accent 4.5:1 on background, card and muted in
+   both themes (on the tinted surfaces when there is a tint), its label 4.5:1 on it, and at least 10
+   (OKLab x100) from success, warning, danger and every signal colour; every text role 4.5:1 and every
+   signal mark 3:1 on the tinted page and soft surface. A colour refusal names a `fix`: the nearest
+   colour at the same hue that passes every rule there, searched over OKLab lightness (0.002 steps)
+   and chroma (down to grey), least OKLab distance wins. D-20 did this by hand for DataSpring's teal.
+   A missing dark value is derived the same way from the light one (the nearest passing in dark) and
+   reported as a warning with the value, never refused. `product` adds a warning when the accent is
+   within 10 of that product's own, so a customer's views could read as the product's chrome; a
+   warning because the customer's brand is theirs.
+3. **The tint is the soft surface**, and the page is the same hue moved by the family's own step from
+   soft to page (lighter in light, darker in dark). The family's grounds are built that way, paper a
+   faint warm and soft the stronger one. Setting the page to the tint with a darker soft step under
+   it, as AppSpring's legacy code did, fails the 3:1 mark rule for almost every tint: the family's
+   signal-ok mark is only 3.07:1 on its own soft grey. shadcn's `secondary` and `accent` are the soft
+   grey under other names and follow it.
+4. **`customerTheme(file, { selector?, product? })`** throws `ThemeRefused` (naming each code and
+   path) on an invalid file, and otherwise returns `{ level, roles, css, logo }`: every role per
+   theme with the customer's values in place, and CSS on role names only (`--primary`,
+   `--primary-foreground`, `--ring`, `--mark`, `--background`, `--muted`, `--secondary`, `--accent`)
+   under the caller's selector, with `light-dark()` pairs. The component layer's three accent shades
+   (`--_link`, `--_hover`, `--_shadow`) are declared again under the selector, because a custom
+   property resolves its `var()`s where it is declared; a test holds them equal to
+   css/components.css. No geometry, no font, no raw palette name. The Default level writes no CSS.
+5. **The Guideline level is in the schema and refused** with `theme.guideline.unavailable` (hub
+   D-117: later, after AppSpring's Brand level). Its types, the empty approved-font list and the
+   radius and density presets are data in src/theme.ts behind `GUIDELINE_AVAILABLE = false`. The
+   preset values there are a draft for that decision, not approved, and nothing applies them. Each
+   approved font's files and metrics ship here when the list fills (hub tick 25i).
+6. **The entry** is `@forspring/ui/theme` (dist/theme.js and .d.ts, compiled with the helpers, with
+   dist/color.js and dist/family.js). It reads no files, so it runs in a Worker, a browser or a
+   compiler: the role values it checks against are src/family.ts, written by `pnpm build` from the
+   tokens like dist/, and test/build.test.ts fails when it is stale.
+
+**From AppSpring's legacy files** (appspring `apps/web/src/theme/derive-org-tokens.ts` and
+`packages/core/src/brand-safe.ts`, frozen and unchanged):
+
+- Moved: deriving a dark surface from the light tint (its hue at the family's dark lightness, chroma
+  capped at 0.05 so it stays a surface: `MAX_SURFACE_CHROMA`); the label picked from two poles by
+  contrast (`emailAccentForeground`, the ssc bug class); the logo allowlist (`safeLogoUrl`: `https:`
+  and `data:image/`).
+- Changed: the poles are the family's label and its ink, not `#FFFFFF` and `#000000`. The dark tint
+  sits at the family's dark soft lightness, not the legacy 0.18/0.22/0.26 terminal ladder. The
+  derived dark text colours (`deriveAAForeground`) are gone: the theme keeps the family's text roles
+  and refuses a tint they cannot read on, rather than inventing new inks. Colours are `#rrggbb` or
+  DTCG only, not `rgb()`, `hsl()` or named colours (`safeCssColor`): a checked file is compared
+  exactly, and a hex is injection-safe by its pattern. Logos also take a relative path in the bundle
+  (no `..`, no `//`), and `data:image/` is limited to png, jpeg, gif, webp, avif and svg+xml.
+- Not moved: the card and border mixes (`deriveOrgLightPalette`: the card stays the family's white,
+  borders the family's lines), the font allowlist (`SAFE_FONT_FAMILIES`, seven legacy families: the
+  platform font is Archivo, appspring question 7, and fonts wait for the Guideline level), the colour
+  mode setting (`safeColorMode`: the person's or the system's choice, not the customer's), and the
+  plum default accent (`CANONIFY_DEFAULT_ACCENT`: the Default level is the product's own accent).
