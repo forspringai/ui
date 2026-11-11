@@ -10,13 +10,18 @@ import { MODES, model } from "../src/emit.ts";
 const m = model(join(import.meta.dirname, "..", "tokens"));
 const SURFACES = ["background", "card", "muted"] as const;
 const AA = 4.5;
+// Accent pairs known to clash, waiting for Peter's choice (hub queue brand-2, tick 857): AppSpring's
+// plum and PulseSpring's magenta are 8.8 apart in light and 7.7 in dark. Remove the entry with the fix.
+const PENDING = new Set(["appspring/pulsespring"]);
 
 describe.each(MODES)("%s theme", (mode) => {
   const c = (role: string) => m.colors[role]![mode];
 
+  // Every surface the accent can sit on, the soft grey (muted) included: until 0.10.1 only the page
+  // and the card were tested, and DataSpring's teal was 4.39:1 on soft (brand review 2026-11-11, D-20).
   describe.each(m.products)("%s accent", (p) => {
     const accent = m.product[p]!.primary[mode];
-    for (const s of ["background", "card"]) {
+    for (const s of SURFACES) {
       const r = contrast(accent, c(s));
       test(`on ${s}: ${r.toFixed(2)}:1`, () => expect(r).toBeGreaterThanOrEqual(AA));
     }
@@ -41,6 +46,24 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
+  // Two products must never look alike: every pair of distinct accents at least 10 apart (OKLab x100),
+  // the same bar as status against accent (D-20). Spring and Forspring share one blue on purpose (hub
+  // D-101), so equal values are one accent, not a pair.
+  describe("every pair of product accents apart", () => {
+    const accents = [...new Map(m.products.map((p) => [m.product[p]!.primary[mode], p])).entries()];
+    for (let i = 0; i < accents.length; i++) {
+      for (let j = i + 1; j < accents.length; j++) {
+        const [[a, p], [b, q]] = [accents[i]!, accents[j]!];
+        const d = distance(a, b);
+        const pending = PENDING.has(`${p}/${q}`) || PENDING.has(`${q}/${p}`);
+        // A pending pair must still be too close: once Peter's choice lands, this fails until the
+        // entry is removed, so the exception cannot outlive the clash.
+        if (pending) test(`${p} / ${q}: ${d.toFixed(1)} (pending hub queue brand-2)`, () => expect(d).toBeLessThan(10));
+        else test(`${p} / ${q}: ${d.toFixed(1)}`, () => expect(d).toBeGreaterThanOrEqual(10));
+      }
+    }
+  });
+
   // A signal mark is a non-text graphic beside its word (WCAG 1.4.11, 3:1 wherever it can sit), and
   // must never read as a product's brand: down beside PulseSpring's magenta, ok beside DataSpring's teal (D-13).
   describe.each(["signal-ok", "signal-warn", "signal-down", "signal-off"])("%s", (role) => {
@@ -54,9 +77,9 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
-  // The doll is a non-text graphic (WCAG 1.4.11): 3:1 on the page and the card, in every product.
-  test("every product's doll is visible on the page (non-text, 3:1)", () => {
-    for (const p of m.products) for (const s of ["background", "card"]) expect(contrast(m.product[p]!.mark[mode], c(s)), p).toBeGreaterThanOrEqual(3);
+  // The doll is a non-text graphic (WCAG 1.4.11): 3:1 on every surface, in every product.
+  test("every product's doll is visible on every surface (non-text, 3:1)", () => {
+    for (const p of m.products) for (const s of SURFACES) expect(contrast(m.product[p]!.mark[mode], c(s)), p).toBeGreaterThanOrEqual(3);
   });
 
   test("the focus ring is visible on the page (non-text, 3:1)", () => {
@@ -70,7 +93,7 @@ test("the D-90 accents, exactly, and Spring on Forspring's blue (hub D-101)", ()
     forspring: { light: "#2244ff", dark: "#6b83ff" },
     spring: { light: "#2244ff", dark: "#6b83ff" },
     sitespring: { light: "#b8442a", dark: "#e0714f" },
-    dataspring: { light: "#0b7c82", dark: "#2ba7ad" },
+    dataspring: { light: "#0b7a7f", dark: "#2ba7ad" },
     appspring: { light: "#7b3f8c", dark: "#b57cc6" },
     pulsespring: { light: "#a3237a", dark: "#e06dba" },
   });

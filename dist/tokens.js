@@ -23,7 +23,7 @@ export const accents = Object.freeze({
     "dark": "#e0714f"
   },
   "dataspring": {
-    "light": "#0b7c82",
+    "light": "#0b7a7f",
     "dark": "#2ba7ad"
   },
   "appspring": {
@@ -50,7 +50,7 @@ export const marks = Object.freeze({
     "dark": "#e0714f"
   },
   "dataspring": {
-    "light": "#0b7c82",
+    "light": "#0b7a7f",
     "dark": "#2ba7ad"
   },
   "appspring": {
