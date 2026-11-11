@@ -1132,7 +1132,7 @@ test/fixtures/marketing.html uses every marketing step, the fluid ones at 5vw an
 size sits between the tokens at 1280; test/audit.test.ts holds that it passes with `--marketing` at
 both widths and themes and fails without it, naming each off-scale size.
 
-## D-30 — The helpers do what docs/usage.md says: an error summary, required words, the ref (2026-11-11)
+## D-30 — The helpers do what docs/usage.md says: an error summary, required words, the ref; 0.18.0 (2026-11-11)
 
 Hub tick qs6. Writing docs/usage.md (hub tick tdg) found the helpers short of the guidance in five
 places: `button()` takes `disabled` and the demo drew a disabled "Ikke nu" (against D-23); there was no
