@@ -1079,7 +1079,7 @@ series, direct labels over legends, bars from zero, unit and source on every cha
 dark surfaces, and a text summary or table beside every chart with series told apart by more than
 colour. The 3:1 rule is test/chart.test.ts's, unchanged.
 
-## D-28 — A web manifest per product, in the brand files (2026-11-11)
+## D-28 — A web manifest per product, in the brand files; 0.17.0 (2026-11-11)
 
 Hub tick 5nx. The package generates every product's favicons and app icons (hub D-101 item 6, D-18)
 but no web manifest, so AppSpring's shell wrote its own, naming the icons and colours by hand. The
@@ -1106,7 +1106,7 @@ in this change; the next release carries it.
 gets the link only when it gives `manifest`. Products serve the file as `application/manifest+json`,
 and a strict CSP needs `manifest-src 'self'` beside `img-src 'self'` (README).
 
-## D-29 — The audit knows the marketing ladder, when the run asks (2026-11-11)
+## D-29 — The audit knows the marketing ladder, when the run asks; 0.17.0 (2026-11-11)
 
 Hub tick pg3. D-22 added `text.marketing` (eyebrow 13, lede 20, h3 24, h2 30 to 36, h1 48 to 72) and
 left the audit for later: its `font-size` rule knew the chrome and content ladders only, so a marketing
