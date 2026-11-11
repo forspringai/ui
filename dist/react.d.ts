@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
+import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -17,6 +17,7 @@ export declare const AccountUnavailable: (props: {
     lang: RefusedOptions["lang"];
     retryHref?: string;
     command?: string;
+    ref?: string;
 }) => ReactElement;
 /** Connect an agent (connectPanel in @forspring/ui/connect, D-19). The tabs need no handlers; for the
  *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
@@ -60,3 +61,6 @@ export declare const Icon: (props: {
     name: IconName;
     label?: string;
 }) => ReactElement;
+/** A failed submit's summary (errorSummary, D-30): it takes focus when it mounts. Nothing when there
+ *  are no errors. */
+export declare const ErrorSummary: (props: ErrorSummaryOptions) => ReactElement | null;

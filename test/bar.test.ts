@@ -160,6 +160,16 @@ describe("the standard pages", () => {
     expect(String(refusedPage({ lang: "en", reason: "not_a_member", org: "Secret Co" }).body)).not.toContain("Secret Co");
   });
 
+  test("a ref is shown last, escaped, in the page's language (D-30)", () => {
+    const da = String(accountUnavailablePage({ lang: "da", ref: "4bf92f35" }).body);
+    expect(da).toMatch(/<p class="error-ref">Fejlkode: <code>4bf92f35<\/code><br>Nævn den, hvis du skriver til os\.<\/p><\/div>$/);
+    expect(String(refusedPage({ lang: "en", reason: "account_unavailable", ref: "4bf92f35" }).body)).toContain('<p class="error-ref">Reference: <code>4bf92f35</code><br>Quote it if you contact us.</p>');
+    const bad = String(refusedPage({ lang: "en", reason: "account_unavailable", ref: evil }).body);
+    expect(bad).not.toContain("<script>");
+    expect(bad).toContain("<code>&lt;script&gt;");
+    expect(String(refusedPage({ lang: "en", reason: "product_off" }).body)).not.toContain("error-ref");
+  });
+
   test("account unavailable: 503 with a retry", () => {
     const p = accountUnavailablePage({ lang: "en" });
     expect(p.status).toBe(503);
@@ -218,5 +228,7 @@ describe("the React wrappers render the same markup", () => {
     same(createElement(NoOrg, { lang: "en", accountHref: "/" }), noOrgPage({ lang: "en", accountHref: "/" }).body);
     for (const reason of REFUSAL_REASONS) same(createElement(Refused, { lang: "en", reason, org: evil }), refusedPage({ lang: "en", reason, org: evil }).body);
     same(createElement(AccountUnavailable, { lang: "da" }), accountUnavailablePage({ lang: "da" }).body);
+    same(createElement(AccountUnavailable, { lang: "en", ref: evil }), accountUnavailablePage({ lang: "en", ref: evil }).body);
+    same(createElement(Refused, { lang: "da", reason: "account_unavailable", ref: "4bf92f35" }), refusedPage({ lang: "da", reason: "account_unavailable", ref: "4bf92f35" }).body);
   });
 });

@@ -9,7 +9,7 @@
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 
 import { REFUSALS, type Refusal } from "./refusals.ts";
-import { button, html, list, ROLE_NAMES, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
+import { button, errorRef, html, list, ROLE_NAMES, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
 
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = { status: number; title: string; narrow: true; body: Html };
@@ -162,6 +162,10 @@ export type RefusedOptions = {
   retryHref?: string;
   /** The exact command that fixes it, for an agent reading the page ("dataspring auth login"). */
   command?: string;
+  /** account_unavailable, or any refusal that hid a platform or upstream error: the request's short
+   *  ref (hub D-88), shown last as "Fejlkode" / "Reference" for support (D-30). A plain refusal needs
+   *  none; its reason, the kicker, is the stable code. */
+  ref?: string;
 };
 
 /** A refusal, by its reason: what happened, what it means, and the fix (D-17, hub D-99). */
@@ -192,10 +196,11 @@ export function refusedPage(o: RefusedOptions): StandardPage {
           : "";
   if (action) parts.push(html`<div class="actions">${action}</div>`);
   if (o.command) parts.push(html`<p class="fine">${t.agent} <code>${o.command}</code></p>`);
+  if (o.ref) parts.push(errorRef({ lang: o.lang, ref: o.ref }));
   return page(r.status, words.title, "refused", html`<p class="kicker">${o.reason}</p><h1>${words.title}</h1>${parts}`, o.reason);
 }
 
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */
-export function accountUnavailablePage(o: { lang: Lang; retryHref?: string; command?: string }): StandardPage {
+export function accountUnavailablePage(o: { lang: Lang; retryHref?: string; command?: string; ref?: string }): StandardPage {
   return refusedPage({ ...o, reason: "account_unavailable" });
 }

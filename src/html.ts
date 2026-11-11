@@ -469,6 +469,9 @@ export type ButtonOptions = {
   value?: string;
   /** The accessible name, when the visible label alone is ambiguous ("Log ud" on which device). */
   ariaLabel?: string;
+  /** Kept for the account's markup (D-5), but don't use it: a disabled button cannot be focused, says
+   *  nothing about why, and needs script to come back (D-23). Keep the button live and let the submit
+   *  say what is missing, or leave it out and say why in words (docs/usage.md section 3). */
   disabled?: boolean;
   /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
    *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
@@ -494,7 +497,16 @@ export type FieldOptions = {
   value?: string;
   hint?: Content;
   error?: Content;
+  /** Sets `required` and says "påkrævet" / "required" in the label, quiet but in its accessible name
+   *  (D-30). Mark whichever is rarer in a form, the required fields or the optional ones, never both. */
   required?: boolean;
+  /** Says "valgfri" / "optional" in the label, in a form that marks its optional fields (D-30). */
+  optional?: boolean;
+  /** false: `required` sets the attribute and writes no word, in a form that marks its optional fields
+   *  instead or says once above it that every field is required. */
+  requiredWord?: boolean;
+  /** The page's language, for the required or optional word; Danish by default. */
+  lang?: Lang;
   autocomplete?: string;
   placeholder?: string;
   /** input (default), textarea, or select with options. */
@@ -538,27 +550,80 @@ export function field(o: FieldOptions): Html {
       : o.control === "select"
         ? html`<select${raw(attrs(common))}>${(o.options ?? []).map((op) => html`<option${raw(attrs({ value: op.value, selected: op.selected }))}>${op.label}</option>`)}</select>`
         : html`<input${raw(attrs({ ...common, type: o.type ?? "text", value: o.value, placeholder: o.placeholder, pattern: o.pattern, title: o.title }))}>`;
-  const label = html`<label for="${id}">${o.label}</label>`;
+  const word = o.required ? (o.requiredWord === false ? undefined : FORM[o.lang ?? "da"].required) : o.optional ? FORM[o.lang ?? "da"].optional : undefined;
+  const label = html`<label for="${id}">${o.label}${word ? html` <span class="field-mark">(${word})</span>` : ""}</label>`;
   return html`<div class="field">${o.help ? html`<div class="field-head">${label}${o.help}</div>` : label}${control}${o.hint ? html`<p class="hint" id="${hintId!}">${o.hint}</p>` : ""}${o.error ? html`<p class="field-error" id="${errorId!}">${o.error}</p>` : ""}</div>`;
 }
 
 export type Tone = "info" | "success" | "warning" | "error";
 
-/** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
+/** The words the form and error helpers add (D-30), Danish and English, the package's like the bar's. */
+const FORM: Record<Lang, { required: string; optional: string; summary: string; ref: string; refHint: string }> = {
+  da: { required: "påkrævet", optional: "valgfri", summary: "Ret disse felter", ref: "Fejlkode", refHint: "Nævn den, hvis du skriver til os." },
+  en: { required: "required", optional: "optional", summary: "Fix these fields", ref: "Reference", refHint: "Quote it if you contact us." },
+};
+
 /**
- * What just happened, in words. `signal` instead of `tone` reports a monitored state (D-13): the
- * neutral card with the signal's colour as its edge rule and its mark before the title.
+ * A platform error's short `ref` (hub D-88: the first characters of the request's traceparent), in
+ * monospace and selected whole by one click, with the hint to quote it to support (D-30). notice(),
+ * state() and refusedPage() draw it from their `ref`; call it alone for an error drawn without them.
  */
-export function notice(o: { tone?: Tone; signal?: Signal; title?: Content; text: Content }): Html {
+export function errorRef(o: { lang: Lang; ref: string }): Html {
+  const t = FORM[o.lang];
+  return html`<p class="error-ref">${t.ref}: <code>${o.ref}</code><br>${t.refHint}</p>`;
+}
+
+export type NoticeOptions = {
+  tone?: Tone;
+  signal?: Signal;
+  title?: Content;
+  text: Content;
+  /** A platform error's short ref (hub D-88), shown under the text with errorRef(). */
+  ref?: string;
+  /** The page's language, for the ref's words; Danish by default. */
+  lang?: Lang;
+};
+
+/**
+ * What is true about this page, in words: errors and warnings are alerts, the rest polite status
+ * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
+ * signal's colour as its edge rule and its mark before the title.
+ */
+export function notice(o: NoticeOptions): Html {
+  const ref = o.ref ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : "";
   if (o.signal) {
     const role = o.signal === "down" || o.signal === "warn" ? "alert" : "status";
     const title = o.title ? html`<strong class="notice-title">${signalMark(o.signal)}${o.title}</strong>` : "";
-    return html`<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}</div>`;
+    return html`<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}${ref}</div>`;
   }
   const tone = o.tone ?? "info";
   const role = tone === "error" || tone === "warning" ? "alert" : "status";
   const title = o.title ? html`<strong class="notice-title">${o.title}</strong>` : "";
-  return html`<div class="${cls("notice", tone !== "info" && tone)!}" role="${role}">${title}${o.text}</div>`;
+  return html`<div class="${cls("notice", tone !== "info" && tone)!}" role="${role}">${title}${o.text}${ref}</div>`;
+}
+
+/** One error in a form, for errorSummary(): the field's id (its link target) and what to do. */
+export type FormError = { field: string; message: Content };
+
+export type ErrorSummaryOptions = {
+  lang: Lang;
+  errors: FormError[];
+  /** The heading; "Ret disse felter" / "Fix these fields" by default. */
+  title?: Content;
+  /** The summary's own id, for a page that moves focus to it; "error-summary" by default. */
+  id?: string;
+};
+
+/**
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
+ * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
+ * Nothing when there are no errors.
+ */
+export function errorSummary(o: ErrorSummaryOptions): Html {
+  if (!o.errors.length) return html``;
+  const id = o.id ?? "error-summary";
+  return html`<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html`<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div>`;
 }
 
 /** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
@@ -806,6 +871,10 @@ export type StateOptions = {
   title: Content;
   text?: Content;
   action?: Content;
+  /** failed: a platform error's short ref (hub D-88), shown with errorRef() before the action. */
+  ref?: string;
+  /** The page's language, for the ref's words; Danish by default. */
+  lang?: Lang;
 };
 
 /**
@@ -817,7 +886,7 @@ export function state(o: StateOptions): Html {
     return html`<div class="data-state loading" role="status" aria-live="polite"><span class="visually-hidden">${o.title}</span><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>`;
   }
   const role = o.kind === "failed" ? raw(' role="alert"') : "";
-  return html`<div class="data-state ${o.kind}"${role}><p class="data-state-title">${o.title}</p>${o.text ? html`<p class="data-state-text">${o.text}</p>` : ""}${o.action ? html`<div class="data-state-actions">${o.action}</div>` : ""}</div>`;
+  return html`<div class="data-state ${o.kind}"${role}><p class="data-state-title">${o.title}</p>${o.text ? html`<p class="data-state-text">${o.text}</p>` : ""}${o.ref && o.kind === "failed" ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : ""}${o.action ? html`<div class="data-state-actions">${o.action}</div>` : ""}</div>`;
 }
 
 // --- Dialog and the destructive-action confirm (D-23) ----------------------------------------------
@@ -1002,7 +1071,9 @@ export function confirmDestructive(o: ConfirmDestructiveOptions): Html {
         label: o.nameLabel ?? t.typeName(name),
         name: o.confirmField ?? "confirm",
         id: `${o.id}-name`,
+        // The label already says what to type; a "required" beside it would only repeat it.
         required: true,
+        requiredWord: false,
         pattern: regexEscape(name),
         title: t.exactly(name),
         autocomplete: "off",

@@ -1,7 +1,10 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import * as tokens from "../dist/tokens.js";
 import type { Product } from "../src/html.ts";
-import { button, crumbs, esc, field, html, list, notice, raw, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
+import { button, confirmDestructive, crumbs, errorRef, errorSummary, esc, field, html, list, notice, raw, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
+import { ErrorSummary } from "../src/react.ts";
 
 const evil = `<script>alert("x")</script>&'`;
 const escaped = "&lt;script&gt;alert(&quot;x&quot;)&lt;/script&gt;&amp;&#39;";
@@ -165,5 +168,75 @@ describe("menu, crumbs and signals (D-13)", () => {
     const evilMenu: Menu = { label: evil, toggle: evil, context: { label: evil, name: evil }, groups: [{ label: evil, items: [{ label: evil, href: "/", current: true, badge: { text: evil, label: evil } }] }] };
     const out = String(shell({ lang: "en", title: "t", productLabel: "P", menu: evilMenu, body: "" })) + String(signal(evil, "ok")) + String(crumbs(evil, [{ label: evil, href: "/" }]));
     expect(out).not.toContain("<script>");
+  });
+});
+
+describe("forms and errors match the usage guidance (D-30)", () => {
+  const ERRORS = [
+    { field: "email", message: "Mail: skriv en hel mailadresse" },
+    { field: "role", message: "Rolle: vælg en rolle" },
+  ];
+
+  test("the error summary: an alert that takes focus, a heading, a link to each field", () => {
+    const h = String(errorSummary({ lang: "da", errors: ERRORS }));
+    expect(h).toMatch(/^<div class="notice error error-summary" id="error-summary" role="alert" tabindex="-1" autofocus="" aria-labelledby="error-summary-title">/);
+    expect(h).toContain('<h2 class="notice-title" id="error-summary-title">Ret disse felter</h2>');
+    expect(h).toContain('<ul class="error-summary-list"><li><a href="#email">Mail: skriv en hel mailadresse</a></li><li><a href="#role">Rolle: vælg en rolle</a></li></ul>');
+    expect(h.match(/autofocus/g)).toHaveLength(1);
+  });
+
+  test("the error summary in English, with its own title and id", () => {
+    expect(String(errorSummary({ lang: "en", errors: ERRORS }))).toContain(">Fix these fields</h2>");
+    const own = String(errorSummary({ lang: "en", errors: ERRORS, title: "Check the invitation", id: "invite-errors" }));
+    expect(own).toContain('id="invite-errors"');
+    expect(own).toContain('aria-labelledby="invite-errors-title"><h2 class="notice-title" id="invite-errors-title">Check the invitation</h2>');
+  });
+
+  test("no errors, no summary", () => {
+    expect(String(errorSummary({ lang: "da", errors: [] }))).toBe("");
+  });
+
+  test("the error summary escapes the field, the message, the title and the id", () => {
+    const h = String(errorSummary({ lang: "en", errors: [{ field: evil, message: evil }], title: evil, id: evil }));
+    expect(h).not.toContain("<script>");
+    expect(h).not.toMatch(/="[^"]*"[^ >\/]/);
+    expect(h).toContain(`<a href="#${escaped}">${escaped}</a>`);
+  });
+
+  test("required and optional are words in the label, so in the accessible name", () => {
+    const req = String(field({ label: "Mail", name: "email", required: true }));
+    expect(req).toContain('<label for="email">Mail <span class="field-mark">(påkrævet)</span></label>');
+    expect(req).toContain(' required ');
+    expect(String(field({ label: "Mail", name: "email", required: true, lang: "en" }))).toContain('<label for="email">Mail <span class="field-mark">(required)</span></label>');
+    const opt = String(field({ label: "Besked", name: "note", control: "textarea", optional: true }));
+    expect(opt).toContain('<label for="note">Besked <span class="field-mark">(valgfri)</span></label>');
+    expect(opt).not.toContain("required");
+    expect(String(field({ label: "Note", name: "note", optional: true, lang: "en" }))).toContain("Note <span class=\"field-mark\">(optional)</span></label>");
+  });
+
+  test("neither, or required with requiredWord: false, writes no word; the confirm's name field has none", () => {
+    expect(String(field({ label: "Navn", name: "name" }))).toContain('<label for="name">Navn</label>');
+    const quiet = String(field({ label: "Navn", name: "name", required: true, requiredWord: false }));
+    expect(quiet).toContain('<label for="name">Navn</label>');
+    expect(quiet).toContain(" required ");
+    const confirm = String(confirmDestructive({ lang: "en", id: "d", title: "Delete x?", action: "/d", confirmName: "x", confirmLabel: "Delete" }));
+    expect(confirm).toContain('<label for="d-name">Type <b>x</b> to confirm</label>');
+  });
+
+  test("a notice and a failed state show the ref, escaped, with the hint to quote it", () => {
+    expect(String(notice({ tone: "error", text: "Noget gik galt.", ref: "4bf92f35" }))).toBe(
+      '<div class="notice error" role="alert">Noget gik galt.<p class="error-ref">Fejlkode: <code>4bf92f35</code><br>Nævn den, hvis du skriver til os.</p></div>',
+    );
+    expect(String(notice({ tone: "error", text: "x", ref: "4bf92f35", lang: "en" }))).toContain('<p class="error-ref">Reference: <code>4bf92f35</code><br>Quote it if you contact us.</p>');
+    expect(String(notice({ tone: "error", text: "x", ref: evil }))).toContain(`<code>${escaped}</code>`);
+    expect(String(notice({ tone: "error", text: "x", ref: evil }))).not.toContain("<script>");
+    expect(String(state({ kind: "failed", title: "t", ref: "abc", lang: "en", action: "A" }))).toContain('<p class="error-ref">Reference: <code>abc</code><br>Quote it if you contact us.</p><div class="data-state-actions">A</div>');
+    expect(String(errorRef({ lang: "da", ref: evil }))).not.toContain("<script>");
+  });
+
+  test("the React ErrorSummary draws the same markup, and nothing with no errors", () => {
+    for (const lang of ["da", "en"] as const) expect(renderToStaticMarkup(createElement(ErrorSummary, { lang, errors: ERRORS }))).toBe(String(errorSummary({ lang, errors: ERRORS })));
+    expect(renderToStaticMarkup(createElement(ErrorSummary, { lang: "en", errors: [{ field: evil, message: evil }], title: evil }))).toBe(String(errorSummary({ lang: "en", errors: [{ field: evil, message: evil }], title: evil })));
+    expect(renderToStaticMarkup(createElement(ErrorSummary, { lang: "da", errors: [] }))).toBe("");
   });
 });

@@ -54,7 +54,8 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   that looks like a button) and leave it out for a form's submit.
 - Easy to get wrong: a button's label is a verb that says what happens ("Gem ændringer", "Send
   invitation"), never "OK", "Submit" or "Klik her" (voice §6). An icon-only button needs `ariaLabel`.
-  Don't pass `disabled`; see section 3.
+  Don't pass `disabled`: it stays only so the account's markup keeps working (D-5); section 3 has
+  what to do instead.
 - **`dialogTrigger()`** opens a `dialog()` with script and is a link to the same confirm as a page
   without it. Use it only to open a dialog; a plain action is a `button()`.
 - **`switchButton()`** turns one thing on or off at once, a POST the server answers by redrawing the
@@ -64,7 +65,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 ### Inputs
 
 - **`field()`** is every labelled input, select and textarea: the label, the control, the `hint` and
-  the `error`, wired for a screen reader. Never write a bare `<input>` in a form. Section 3 has the rules.
+  the `error`, wired for a screen reader, and "påkrævet" or "valgfri" in the label from `required` or
+  `optional` (pass the page's `lang`). Never write a bare `<input>` in a form. Section 3 has the rules.
+- **`errorSummary()`** is the summary at the top of a form that failed: a heading and one link per
+  error to its field, taking focus. Only on the page that answers a failed submit; section 3.
 - **`tooltip()`** is a short explanation for the curious, beside a label or a value (`field()`'s
   `help`). It never holds the only copy of something a person needs to act: what a field needs is its
   `hint`, always shown; what a button does is its label; what went wrong is a notice (D-26). If you
@@ -77,14 +81,17 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 
 | Helper | Says | Stays | Use for |
 |---|---|---|---|
-| `notice()` | Something about this page | While it is true | A form's errors, a trial running out, "2 tjek er nede" |
+| `notice()` | Something about this page | While it is true | A trial running out, "2 tjek er nede", a platform error with its `ref` |
 | `toast()` | What the last request did | Until dismissed (success, info: 8 s with script) | "Ændringerne er gemt." after a POST and its 303 |
 | `refusedPage()` | Why the whole request was refused | It is the page | Not signed in, not a member, role too low, product off |
 | `state()` | What a block holds: nothing, loading, or failed | In place of the data | An empty list, a read that failed |
 
 - **`notice()`** tones are `info`, `success`, `warning` and `error`. Warnings and errors are alerts,
   read out at once, so use them for what needs attention, not for decoration. A notice is never the
-  report of a save; that is a toast.
+  report of a save; that is a toast, and a form's errors are `errorSummary()`, the error notice made
+  for them. A platform error passes its `ref` (section 4).
+- **`errorRef()`** is the ref line alone ("Fejlkode: 4bf92f35", and to quote it to support), for an
+  error drawn without `notice()`, `state()` or `refusedPage()`, which take `ref` and draw it themselves.
 - **`toast()`** reports the result of the request the page is answering, drawn at the start of `main`.
   Its tones are `success`, `warning`, `danger` and `info` (not notice's `error`): a form's errors are
   never a toast. Several at once go in **`toastRegion()`**. Add **`toastScript()`** (or serve
@@ -182,9 +189,13 @@ A form is server-rendered, posts, and the server decides. The browser's checks a
   (D-25).
 - **Help text goes under the field,** as `hint`, always shown: the format, the limit, what happens
   with the value. A `tooltip()` beside the label is only for background (section 2).
-- **Required is said in words,** in the label: "Navn (skal udfyldes)" / "Name (required)", and
-  `required: true` on the field. Never an asterisk alone. When every field is required, say it once
-  above the form ("Alle felter skal udfyldes") and mark nothing.
+- **Required or optional is said in words,** in the label, by `field()`: `required: true` writes
+  "Navn (påkrævet)" / "Name (required)" and sets the attribute; `optional: true` writes "Besked
+  (valgfri)" / "Message (optional)". Pass the page's `lang`. Mark whichever is rarer in the form, and
+  only that: where most fields are required, mark the optional ones and give the required ones
+  `required: true, requiredWord: false`, so the browser and a screen reader still know. Never an
+  asterisk alone. When every field is required, say it once above the form ("Alle felter skal
+  udfyldes") and mark nothing (`requiredWord: false`).
 - **Validate on submit,** not on every keystroke and not on leaving a field: a person half-way
   through an address is not wrong yet. The browser's own checks (`required`, `type="email"`,
   `pattern`) may stop a submit; the server checks everything again, every time.
@@ -192,9 +203,10 @@ A form is server-rendered, posts, and the server decides. The browser's checks a
   again:
   - each field's error beside it, through `field({ error })`, which sets `aria-invalid` and reads
     the error with the field;
-  - a summary at the top of the form, `notice({ tone: "error", title, text })` with one link per error
-    to the field's id ("Mail: skriv en hel mailadresse"), wrapped in an element with `tabindex="-1"`
-    and `autofocus`, so focus moves to it and a screen reader reads it first;
+  - a summary at the top of the form, `errorSummary({ lang, errors })`, with one error per field as
+    `{ field: <the field's id>, message }` ("Mail: skriv en hel mailadresse"). It links each to its
+    field, and has `tabindex="-1"` and `autofocus`, so focus moves to it and a screen reader reads it
+    first (in React, `ErrorSummary` focuses it when it mounts);
   - the page's title starting "Fejl: " / "Error: ", so the tab and a screen reader say it too.
 - **Keep what the person typed.** Pass every `value` back, and `selected` on a select's option. Never
   send back a password, a key or a card number; ask for those again and say so in the error.
@@ -205,9 +217,10 @@ A form is server-rendered, posts, and the server decides. The browser's checks a
   back. A form with two primary buttons has two jobs; split it. (In a destructive confirm the safe
   action comes first instead, D-23.)
 - **No disabled buttons.** A disabled button cannot be focused, says nothing about why, and would need
-  script to enable again (D-23). Keep it live and let the submit explain what is missing, as the
-  destructive confirm does; or, when the person may not do it at all, leave the button out and say why
-  in words ("Kun administratorer kan invitere folk.").
+  script to enable again (D-23). `button()` still takes `disabled`, for the account's old markup (D-5);
+  don't pass it. Keep the button live and let the submit explain what is missing, as the destructive
+  confirm does; or, when the person may not do it at all, leave the button out and say why in words
+  ("Kun administratorer kan invitere folk.").
 - **Words from the catalogs:** labels, hints and errors come from the product's typed catalog in Danish
   and English; an error says what to do, without blame ("Skriv en hel mailadresse, fx navn@firma.dk.",
   not "Ugyldig mail" or "Du har skrevet forkert").
@@ -223,18 +236,21 @@ tilbage hertil." (voice §6).
 |---|---|---|
 | The whole request is refused (sign-in, org, role, product off, suspended) | `refusedPage()` with its reason | The reason's |
 | The account does not answer | `accountUnavailablePage()` | 503 |
-| A field or the form is wrong | `field({ error })` and the summary `notice()` (section 3) | 4xx |
+| A field or the form is wrong | `field({ error })` and `errorSummary()` (section 3) | 4xx |
 | Something on this page needs attention while it lasts | `notice()` | 200 |
 | The last action failed elsewhere (a send, a sync) | `toast({ tone: "danger" })` after the 303 | 200 |
 | One block's data could not be read | `state({ kind: "failed" })`, the rest of the page as usual | 200 |
-| The product's own server failed | a page with a `notice({ tone: "error" })` and the `ref` | 500 |
+| The product's own server failed | a page with `notice({ tone: "error", ref })` | 500 |
 
 - **Never blame the person.** Say what is needed, not what they did wrong. A refusal names who can fix
   it (the admins, the owners) and how.
 - **A platform error shows its `ref`.** Hub D-88: an error classified `platform` or `upstream` carries
-  the short `ref`, the first characters of the request's `traceparent`. Show it in the text,
-  `<code>`, with what to do: "Noget gik galt hos os. Prøv igen om lidt, eller skriv til os og nævn
-  ref 4bf92f35." A refusal needs none; its reason (the page's kicker) is the stable code.
+  the short `ref`, the first characters of the request's `traceparent`. Pass it as `ref` to
+  `notice()`, `state({ kind: "failed" })` or `refusedPage()` (`accountUnavailablePage()` too: the
+  account not answering is upstream); they draw "Fejlkode: 4bf92f35" / "Reference: 4bf92f35" in
+  monospace, selected whole by one click, and ask the person to quote it if they write to us. Elsewhere,
+  `errorRef()`. Your own text still says what to do ("Noget gik galt hos os. Prøv igen om lidt."). A
+  refusal needs none; its reason (the page's kicker) is the stable code.
 - **Never an error with no way forward.** Every one ends in an action: try again (a link to the same
   page), fix the field, sign in, ask the named person, or the exact command for an agent
   (`refusedPage({ command })`).
@@ -252,7 +268,7 @@ tilbage hertil." (voice §6).
   htmx or React, show nothing for quick work (under about a second) and `state({ kind: "loading" })`,
   the skeleton, only when it lasts. No spinners: the package has none, and a skeleton keeps the page
   from jumping.
-- **Failed:** `state({ kind: "failed" })` with "Prøv igen" as a link to the page, and the `ref` when it
+- **Failed:** `state({ kind: "failed" })` with "Prøv igen" as a link to the page, and `ref` when it
   is a platform error. Never an empty state for a read that failed.
 - **Long lists:** a table with `controls` (search, filters, the stated order, `pagination()`) once the
   rows pass about one screen; the server slices with `pageOf()`.
@@ -282,7 +298,8 @@ tilbage hertil." (voice §6).
 
 - [ ] It uses the smallest surface that works (section 1), and works with script off.
 - [ ] One primary button per view; danger only where something is lost; no `disabled` buttons.
-- [ ] Every field has a visible label, its help as `hint`, required said in words.
+- [ ] Every field has a visible label, its help as `hint`, required or optional said in words by
+      `field()`, whichever is rarer.
 - [ ] A failed submit keeps the values, shows each error beside its field and a linked summary that
       takes focus; a successful one is POST, 303 and a toast.
 - [ ] Every error says what happened, what it means and what to do, blames nobody, and shows the `ref`
