@@ -91,9 +91,8 @@ React wrappers in `@forspring/ui/react`, or the same classes on shadcn's `data-s
   assessor visit"); the other verbs are ghost buttons, and verbs of one model group share a menu. A
   destructive verb comes last, in the menu, in danger text. A verb the reader may not run is not drawn; where
   they would look for it, the reason is said in words ("Only the claims team can close a case."), never a
-  disabled button (D-30). AppSpring's pages today draw a refused action as a greyed button with a tip
-  (kernel pages.md); which way wins is Peter's call (queue canonify-47), and this file keeps the rule above
-  until he answers.
+  disabled button (D-30). Decided 2026-11-11 (canonify-47): AppSpring's pages give the reason as this plain
+  line too, in place of the greyed button with a tip they drew before.
 
 ### 2.3 Boards
 
