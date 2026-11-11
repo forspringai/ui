@@ -136,7 +136,7 @@
     }
   },
   "text": {
-    "$description": "Two ladders, as Canonify's DESIGN-SURFACE has: a dense one for UI chrome and a reading one for page content. Hierarchy comes from weight on these steps, not from colour. Nothing under 11px.",
+    "$description": "Three ladders: a dense one for UI chrome and a reading one for page content, as Canonify's DESIGN-SURFACE has, and a display one for marketing pages (D-22). Hierarchy comes from weight on these steps, not from colour. Nothing under 11px.",
     "chrome": {
       "$description": "Dense UI: table heads, tags, meta, controls, data blocks (Canonify's ViewSpec ladder).",
       "label": {
@@ -232,6 +232,65 @@
           "value": 40,
           "unit": "px"
         }
+      }
+    },
+    "marketing": {
+      "$description": "Landing pages, share images, decks and email headings (D-22, hub tick xl9): display sizes above content's h1. Running text on a marketing page stays on content's body.",
+      "eyebrow": {
+        "$type": "dimension",
+        "$value": {
+          "value": 13,
+          "unit": "px"
+        },
+        "$description": "The short Space Mono label above a section heading."
+      },
+      "lede": {
+        "$type": "dimension",
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        },
+        "$description": "The sentence or two under a hero or section heading."
+      },
+      "h3": {
+        "$type": "dimension",
+        "$value": {
+          "value": 24,
+          "unit": "px"
+        },
+        "$description": "Card and feature headings, the number's label on a figures row."
+      },
+      "h2-min": {
+        "$type": "dimension",
+        "$value": {
+          "value": 30,
+          "unit": "px"
+        },
+        "$description": "Section headings on a phone."
+      },
+      "h2": {
+        "$type": "dimension",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        },
+        "$description": "Section headings."
+      },
+      "h1-min": {
+        "$type": "dimension",
+        "$value": {
+          "value": 48,
+          "unit": "px"
+        },
+        "$description": "The hero headline on a phone."
+      },
+      "h1": {
+        "$type": "dimension",
+        "$value": {
+          "value": 72,
+          "unit": "px"
+        },
+        "$description": "The hero headline, once per page; the figures on a numbers row."
       }
     }
   },

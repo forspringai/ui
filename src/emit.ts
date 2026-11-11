@@ -214,7 +214,7 @@ export declare const radius: Deep<${JSON.stringify(v.radius)}>;
 export declare const space: Deep<${JSON.stringify(v.space)}>;
 /** Control heights in px (D-14): height (default), height-small, touch (the phone floor). */
 export declare const control: Deep<${JSON.stringify(v.control)}>;
-/** Font sizes in px: chrome (dense UI) and content (pages). */
+/** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<${JSON.stringify(v.text)}>;
 /** CSS font-family stacks. */
 export declare const fonts: Deep<${JSON.stringify(v.fonts)}>;

@@ -73,6 +73,23 @@ test("control heights are steps of the space scale, and every output carries the
   expect(out["tokens.d.ts"]).toContain('export declare const control: Deep<{"height":44,"height-small":32,"touch":44}>;');
 });
 
+test("three ladders; marketing's display steps sit above content's h1 and reach every output (D-22)", () => {
+  const m = model(dir);
+  expect(Object.keys(m.text)).toEqual(["chrome", "content", "marketing"]);
+  expect(m.text.marketing).toEqual({ eyebrow: 13, lede: 20, h3: 24, "h2-min": 30, h2: 36, "h1-min": 48, h1: 72 });
+  // A display ladder: the phone's hero is already larger than content's widest h1.
+  expect(m.text.marketing!["h1-min"]).toBeGreaterThan(m.text.content!.h1!);
+  // Each step says what it is for, so a page picks a step by use, not by size.
+  const marketing = (read("geometry.json").text as Group).marketing as Group;
+  for (const [k, v] of Object.entries(marketing)) if (!k.startsWith("$")) expect((v as Group).$description, k).toBeTruthy();
+  const out = build(dir);
+  for (const [k, v] of Object.entries(m.text.marketing!)) {
+    expect(out["tokens.css"]).toContain(`--text-marketing-${k}: ${v}px;`);
+    expect(out["theme.css"]).toContain(`--text-marketing-${k}: ${v}px;`);
+  }
+  expect(out["tokens.d.ts"]).toContain('"marketing":{"eyebrow":13,');
+});
+
 describe("the reader refuses what is not DTCG", () => {
   const color = (hex: string) => ({ $type: "color", $value: { colorSpace: "srgb", components: [1, 1, 1], hex } });
   const problems = (...trees: Group[]) => new TokenSet(trees).problems;

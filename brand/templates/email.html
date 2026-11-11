@@ -1,0 +1,90 @@
+<!doctype html>
+<!--
+  Forspring email shell: one heading, a short body, one button (brand/marketing.md section 6; how to fill it:
+  brand/templates/README.md).
+
+  Placeholders, in double braces; the sender fills every one:
+    {{subject}}          the subject line, also the document title
+    {{preheader}}        the line a client shows after the subject, about 90 characters
+    {{logo_url}}         an absolute URL to the product's logo-1200x300.png (dist/brand/<product>/), served by
+                         the product; an email can't use a relative path
+    {{product_name}}     the product's name as written (SiteSpring, DataSpring, ...), the logo's alt text
+    {{org_name}}         the customer's organisation
+    {{accent}}           the product's light accent, #rrggbb, from tokens/accent.json
+    {{button_url}}       where the button leads
+    {{company_name}}     the sending company's name
+    {{company_address}}  its postal address
+    {{unsubscribe_url}}  the unsubscribe link; leave the line out of a receipt
+
+  Layout: tables and inline styles, because several clients drop or rewrite <style>. The <style> below only
+  keeps the light theme (the logo PNG is light only, so a dark rewrite would hide the ink wordmark) and
+  narrows the padding on a phone.
+  Colours are the light tokens: muted #f1f1ec, card #ffffff, border #e4e5e1, foreground #14151a,
+  body-foreground #3c3e46, muted-foreground #5b5e68, primary-foreground #ffffff.
+  Sizes: heading text.marketing.h3 (24), body text.content.body (15), footer text.chrome.meta (12).
+  Archivo first, then the system fonts: most clients won't load a web font.
+-->
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>{{subject}}</title>
+<style>
+  :root { color-scheme: light only; }
+  /* 632 is the 600 px shell plus the 16 px on each side of it. */
+  @media (max-width: 632px) {
+    .shell { width: 100% !important; }
+    .pad { padding-left: 24px !important; padding-right: 24px !important; }
+  }
+</style>
+</head>
+<body style="margin: 0; padding: 0; background: #f1f1ec;">
+<div style="display: none; max-height: 0; overflow: hidden;">{{preheader}}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #f1f1ec;">
+  <tr>
+    <td align="center" style="padding: 32px 16px;">
+      <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px; background: #ffffff; border: 1px solid #e4e5e1; border-radius: 6px;">
+        <tr>
+          <td class="pad" style="padding: 32px 40px 8px 40px;">
+            <img src="{{logo_url}}" width="240" height="60" alt="{{product_name}}" style="display: block; width: 240px; height: 60px; border: 0;">
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 16px 40px 0 40px; font-family: 'Archivo Condensed', 'Arial Narrow', Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 24px; line-height: 28px; font-weight: 800; color: #14151a;">
+            <h1 style="margin: 0; font: inherit; color: #14151a;">Velkommen til {{product_name}}</h1>
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 16px 40px 0 40px; font-family: Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 24px; color: #3c3e46;">
+            <p style="margin: 0 0 16px 0;">Vi har sat {{product_name}} op til {{org_name}}. Log ind med din Forspring-konto, så kan du gå i gang.</p>
+            <p style="margin: 0;">Skriv til os, hvis noget ikke virker.</p>
+          </td>
+        </tr>
+        <tr>
+          <td class="pad" style="padding: 32px 40px 40px 40px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td bgcolor="{{accent}}" style="background: {{accent}}; border-radius: 3px;">
+                  <a href="{{button_url}}" style="display: inline-block; padding: 12px 24px; font-family: Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; line-height: 20px; font-weight: 600; color: #ffffff; text-decoration: none;">Log ind</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      <table role="presentation" class="shell" width="600" cellpadding="0" cellspacing="0" border="0" style="width: 600px; max-width: 600px;">
+        <tr>
+          <td class="pad" style="padding: 24px 40px 0 40px; font-family: Archivo, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 12px; line-height: 18px; color: #5b5e68;">
+            <p style="margin: 0 0 4px 0;">En del af Forspring.</p>
+            <p style="margin: 0 0 4px 0;">{{company_name}}, {{company_address}}</p>
+            <p style="margin: 0;"><a href="{{unsubscribe_url}}" style="color: #5b5e68; text-decoration: underline;">Afmeld disse mails</a></p>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
