@@ -684,3 +684,13 @@ DataSpring's teal was 4.39:1.
 3. **DataSpring's light teal is `#0b7a7f`** (was `#0b7c82`), the smallest darkening that passes on
    soft (4.52:1). The two are 0.7 apart, under any visible difference. Hub D-90's table is amended to
    match.
+
+## D-21 — AppSpring is violet; the pending pair is cleared; 0.10.2 (2026-11-11)
+
+Hub D-116 (Peter, on the brand review's option page, queue brand-2). AppSpring's accent moves from plum
+`#7b3f8c` / `#b57cc6` to violet **`#5d2eb8` / `#b09af5`**: 14.1 (light) and 11.9 (dark) from its nearest
+accent, Spring's blue, against 8.8 and 7.7 from PulseSpring's magenta before. It is 7.27:1 on the soft
+grey in light and 7.20:1 in dark, and at least 8.6 from every other accent under protanopia and
+deuteranopia. The dolls, favicons and lockup are regenerated. The `PENDING` set in
+test/contrast.test.ts (D-20) is now empty, so every pair of accents must be at least 10 apart with no
+exception. BrainSpring keeps no token and wears Spring's doll (hub D-116 item 2).

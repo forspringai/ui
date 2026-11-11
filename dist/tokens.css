@@ -112,10 +112,10 @@
 }
 
 [data-product="appspring"] {
-  --primary: light-dark(#7b3f8c, #b57cc6);
+  --primary: light-dark(#5d2eb8, #b09af5);
   --primary-foreground: light-dark(#ffffff, #111215);
-  --ring: light-dark(#7b3f8c, #b57cc6);
-  --mark: light-dark(#7b3f8c, #b57cc6);
+  --ring: light-dark(#5d2eb8, #b09af5);
+  --mark: light-dark(#5d2eb8, #b09af5);
 }
 
 [data-product="pulsespring"] {

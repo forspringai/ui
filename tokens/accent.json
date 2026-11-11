@@ -94,17 +94,17 @@
       }
     },
     "appspring": {
-      "$description": "AppSpring (Canonify), plum.",
+      "$description": "AppSpring, violet (hub D-116). Plum #7b3f8c / #b57cc6 until 0.10.2, 8.8 and 7.7 from PulseSpring's magenta (D-21).",
       "light": {
         "$type": "color",
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.4824,
-            0.2471,
-            0.549
+            0.3647,
+            0.1804,
+            0.7216
           ],
-          "hex": "#7b3f8c"
+          "hex": "#5d2eb8"
         }
       },
       "dark": {
@@ -112,11 +112,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.7098,
-            0.4863,
-            0.7765
+            0.6902,
+            0.6039,
+            0.9608
           ],
-          "hex": "#b57cc6"
+          "hex": "#b09af5"
         }
       }
     },

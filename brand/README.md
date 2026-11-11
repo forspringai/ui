@@ -32,7 +32,7 @@ package README, "Favicons").
 | Spring | `#2244FF` | `#6B83FF` |
 | SiteSpring | `#B8442A` | `#E0714F` |
 | DataSpring | `#0B7C82` | `#2BA7AD` |
-| AppSpring | `#7B3F8C` | `#B57CC6` |
+| AppSpring | `#5D2EB8` | `#B09AF5` |
 | PulseSpring | `#A3237A` | `#E06DBA` |
 
 ## The files, in `brand/<product>/`
