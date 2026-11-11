@@ -32,6 +32,43 @@ export function packageRoot() {
 export async function loadTokens(root = packageRoot()) {
     return (await import(pathToFileURL(join(root, "dist/tokens.js")).href));
 }
+/** shadcn's data-size values that are the family's small control. */
+export const SMALL_SIZES = ["sm", "xs", "icon-sm", "icon-xs"];
+/**
+ * The shadcn slots the family fixes, and what it fixes on each (D-33). css/shadcn.css sets exactly
+ * these values on the same slots; test/components.test.ts holds the two together. A slot not here
+ * (layout parts, headers, footers) is the app's own.
+ */
+export const RICH_SLOTS = {
+    button: { radius: "button", height: "control", text: "content.body", small: "content.small" },
+    input: { radius: "input", height: "control", text: "content.body" },
+    "select-trigger": { radius: "input", height: "control", text: "content.body", small: "content.small" },
+    textarea: { radius: "input", text: "content.body" },
+    label: { text: "chrome.body" },
+    card: { radius: "card" },
+    "card-title": { text: "chrome.title" },
+    "card-description": { text: "content.small" },
+    "dialog-content": { radius: "panel" },
+    "alert-dialog-content": { radius: "panel" },
+    "dialog-title": { text: "content.h2" },
+    "alert-dialog-title": { text: "content.h2" },
+    "dialog-description": { text: "content.small" },
+    "alert-dialog-description": { text: "content.small" },
+    "popover-content": { radius: "card", text: "chrome.body" },
+    "dropdown-menu-content": { radius: "card", text: "chrome.body" },
+    "dropdown-menu-sub-content": { radius: "card", text: "chrome.body" },
+    "select-content": { radius: "card", text: "chrome.body" },
+    "dropdown-menu-item": { radius: "button", text: "chrome.body" },
+    "dropdown-menu-checkbox-item": { radius: "button", text: "chrome.body" },
+    "dropdown-menu-radio-item": { radius: "button", text: "chrome.body" },
+    "dropdown-menu-sub-trigger": { radius: "button", text: "chrome.body" },
+    "select-item": { radius: "button", text: "chrome.body" },
+    "tooltip-content": { radius: "button", text: "chrome.body" },
+    table: { text: "chrome.body" },
+    "table-head": { text: "chrome.meta" },
+    "table-cell": { text: "chrome.body" },
+    badge: { radius: "pill", height: "space.5", text: "chrome.label" },
+};
 const hexRgb = (hex) => {
     const n = parseInt(hex.slice(1), 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
@@ -150,6 +187,7 @@ export async function scale(browser, opts, root = packageRoot()) {
         radii: [0, ...Object.values(tokens.radius)],
         palette: await palette(browser, tokens, root, opts.product),
         allowSpacing: opts.allowSpacing,
+        rich: opts.richApp ? { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text } : undefined,
     };
 }
 // --- Rules ---------------------------------------------------------------------------------------
@@ -228,12 +266,66 @@ export function findings(obs, sc, width) {
             }
         }
     }
+    if (sc.rich)
+        out.push(...primitives(obs.slots ?? [], sc.rich, width));
     for (const t of obs.smallTargets)
         out.push({ rule: "target-size", severity: "error", selector: t.selector, value: `${t.width}x${t.height}px`, expected: "at least 24x24px, or 24px clear of other targets", note: "WCAG 2.2 AA, 2.5.8" });
     if (width < PHONE_WIDTH)
         for (const t of obs.primaries)
             if (t.height < 43.5)
                 out.push({ rule: "target-primary", severity: "error", selector: t.selector, value: `${t.height}px tall`, expected: "at least 44px tall on a phone", note: "primary controls on phones (ui-standard §3)" });
+    return out;
+}
+/**
+ * The rich-app check (D-33): each known slot's radius, min-height and font-size against the family's
+ * value, which css/shadcn.css sets. The generic rules accept any token (a 6px button, 14px input
+ * text); this one knows which token each part takes.
+ */
+export function primitives(slots, t, width) {
+    const out = [];
+    const step = (name) => {
+        const [ladder, key] = name.split(".");
+        return { px: t.text[ladder][key], token: `--text-${ladder}-${key}` };
+    };
+    for (const o of slots) {
+        const spec = RICH_SLOTS[o.slot];
+        if (!spec)
+            continue;
+        const small = o.size !== null && SMALL_SIZES.includes(o.size);
+        const note = `data-slot="${o.slot}"${o.size ? ` data-size="${o.size}"` : ""}: @forspring/ui/shadcn.css sets it; keep the copied component's classes off it (D-33)`;
+        const add = (value, expected) => out.push({ rule: "primitive", severity: "error", selector: o.selector, value, expected, note });
+        if (spec.radius) {
+            const want = spec.radius === "pill" ? null : t.radius[spec.radius];
+            const bad = new Set();
+            for (const corner of o.radii)
+                for (const part of corner.split(" ")) {
+                    const n = parseFloat(part);
+                    if (part.endsWith("%") || (want === null ? n < 999 : !near(n, want)))
+                        bad.add(part);
+                }
+            if (bad.size)
+                add(`border-radius ${[...bad].join(" ")}`, want === null ? "a pill (999px)" : `${want}px (--radius-${spec.radius})`);
+        }
+        if (spec.height) {
+            let want;
+            let token;
+            if (spec.height === "control") {
+                [want, token] = width < PHONE_WIDTH ? [t.control.touch, "--control-touch, on a phone"] : small ? [t.control["height-small"], "--control-height-small"] : [t.control.height, "--control-height"];
+            }
+            else {
+                const n = spec.height.slice("space.".length);
+                [want, token] = [t.space[n], `--space-${n}`];
+            }
+            if (!near(o.minHeight, want, 0.5) || o.height < want - 0.5)
+                add(`min-height ${px(o.minHeight)}, ${px(o.height)} tall`, `min-height ${want}px (${token})`);
+        }
+        const text = small && spec.small ? spec.small : spec.text;
+        if (text) {
+            const s = step(text);
+            if (!near(o.fontSize, s.px))
+                add(`font-size ${px(o.fontSize)}`, `${s.px}px (${s.token})`);
+        }
+    }
     return out;
 }
 /** One finding per distinct (rule, selector, value), with a count, errors first. */

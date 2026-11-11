@@ -14,7 +14,7 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, marketingLadder } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, marketingLadder, primitives, RICH_SLOTS } from "../src/audit/audit.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
 
@@ -292,10 +292,45 @@ describe("the marketing ladder", () => {
   }, 120_000);
 });
 
+// A rich React app on shadcn (D-33): the stock components on @forspring/ui/shadcn.css pass; the same
+// app with its copies restyled fails, under --rich-app, on each part, though every value is a token.
+describe("a rich app's primitives (--rich-app)", () => {
+  const slotOf = (f: Finding) => /data-slot="([^"]+)"\]$/.exec(f.selector)?.[1];
+
+  test("shadcn's markup with its stock utilities, on theme.css and shadcn.css, passes at both widths and themes", async () => {
+    const r = await audit(options([`${base}/test/fixtures/shadcn.html`], { richApp: true, product: "dataspring" }), browser);
+    expect(r.pages).toHaveLength(4);
+    expect(all(r)).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 120_000);
+
+  test("restyled copies fail on every off-family radius, height and size, naming the slot; without the flag they pass", async () => {
+    const desk = { widths: [1280], themes: ["light" as const] };
+    const without = await audit(options([`${base}/test/fixtures/shadcn-drift.html`], desk), browser);
+    expect(all(without).filter((f) => f.severity !== "review")).toEqual([]);
+
+    const r = await audit(options([`${base}/test/fixtures/shadcn-drift.html`], { ...desk, richApp: true }), browser);
+    expect(r.ok).toBe(false);
+    const found = all(r);
+    expect(found.every((f) => f.rule === "primitive" && f.severity === "error")).toBe(true);
+    expect(found.map((f) => `${slotOf(f)}: ${f.value} (expected ${f.expected})`).sort()).toEqual([
+      "badge: border-radius 6px (expected a pill (999px))",
+      "button: border-radius 8px (expected 3px (--radius-button))",
+      "button: font-size 14px (expected 15px (--text-content-body))",
+      "button: min-height 36px, 36px tall (expected min-height 44px (--control-height))",
+      "card: border-radius 10px (expected 6px (--radius-card))",
+      "dialog-content: border-radius 6px (expected 10px (--radius-panel))",
+      "dialog-title: font-size 18px (expected 21px (--text-content-h2))",
+      "input: border-radius 3px (expected 8px (--radius-input))",
+      "table-cell: font-size 12px (expected 14px (--text-chrome-body))",
+    ]);
+  }, 120_000);
+});
+
 describe("rules on measurements", () => {
   const sc = { sizes: [11, 12, 13, 14, 15, 16, 18, 21, 30, 40], h1: [30, 40] as [number, number], radii: [0, 3, 6, 8, 10], palette: [[252, 252, 250]] as [number, number, number][], allowSpacing: [6] };
   const box = (o: object) => ({ selector: "div", gsi: false, radii: ["0px", "0px", "0px", "0px"], spacing: [], colours: [], ...o });
-  const run = (o: object, scale: Parameters<typeof findings>[1] = sc) => findings({ texts: [], boxes: [], smallTargets: [], primaries: [], fonts: [], ...o }, scale, 1280);
+  const run = (o: object, scale: Parameters<typeof findings>[1] = sc) => findings({ texts: [], boxes: [], smallTargets: [], primaries: [], fonts: [], slots: [], ...o }, scale, 1280);
 
   test("radius: pills, 50% and the four tokens pass; anything else fails", () => {
     expect(run({ boxes: [box({ radii: ["999px", "50%", "3px", "10px 6px"] })] })).toEqual([]);
@@ -325,6 +360,33 @@ describe("rules on measurements", () => {
     expect(run({ texts }).map((f) => f.value)).toEqual(["20px", "24px", "33.28px", "60px"]);
     // Between the ranges is still off scale.
     expect(run({ texts: [text({ size: 42 })] }, marketing).map((f) => f.expected)).toEqual(["11, 12, 13, 14, 15, 16, 18, 20, 21, 24, 30, 36, 40, 48, 72 px, 30 to 36 px, 48 to 72 px"]);
+  });
+
+  test("primitives: a slot's own token, the small size, the touch floor on a phone, a pill (D-33)", () => {
+    const rich = { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text };
+    const slot = (o: object) => ({ selector: "button", slot: "button", size: "default", radii: ["3px", "3px", "3px", "3px"], minHeight: 44, height: 44, fontSize: 15, ...o });
+    const check = (o: object, width = 1280) => primitives([slot(o)], rich, width).map((f) => `${f.value} / ${f.expected}`);
+    expect(check({})).toEqual([]);
+    // A 6px radius is a token, so the generic rule passes it; on a button it is the card's.
+    expect(check({ radii: ["6px", "6px", "6px", "6px"] })).toEqual(["border-radius 6px / 3px (--radius-button)"]);
+    expect(check({ size: "sm", minHeight: 32, height: 32, fontSize: 13 })).toEqual([]);
+    expect(check({ size: "icon-sm", minHeight: 32, height: 32, fontSize: 13 })).toEqual([]);
+    expect(check({ size: "sm", minHeight: 32, height: 32, fontSize: 13 }, 380)).toEqual(["min-height 32px, 32px tall / min-height 44px (--control-touch, on a phone)"]);
+    // A min-height can be right while a fixed height under it is not, and the other way round.
+    expect(check({ height: 36 })).toEqual(["min-height 44px, 36px tall / min-height 44px (--control-height)"]);
+    expect(check({ minHeight: 48, height: 48 })).toEqual(["min-height 48px, 48px tall / min-height 44px (--control-height)"]);
+    expect(check({ slot: "badge", size: null, radii: ["33554400px", "33554400px", "33554400px", "33554400px"], minHeight: 20, height: 20, fontSize: 11 })).toEqual([]);
+    expect(check({ slot: "badge", size: null, radii: ["50%", "50%", "50%", "50%"], minHeight: 20, height: 20, fontSize: 11 })).toEqual(["border-radius 50% / a pill (999px)"]);
+    // A slot the family does not fix is the app's.
+    expect(check({ slot: "card-header", radii: ["4px", "0px", "0px", "0px"], fontSize: 17 })).toEqual([]);
+    expect(Object.keys(RICH_SLOTS)).toContain("dialog-content");
+  });
+
+  test("primitives are checked only under --rich-app", () => {
+    const slots = [{ selector: "button", slot: "button", size: null, radii: ["8px", "8px", "8px", "8px"], minHeight: 36, height: 36, fontSize: 14 }];
+    expect(run({ slots })).toEqual([]);
+    const rich = { ...sc, rich: { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text } };
+    expect(run({ slots }, rich).map((f) => f.rule)).toEqual(["primitive", "primitive", "primitive"]);
   });
 
   test("contrast: large text needs 3:1, alpha is composited, disabled text is exempt", () => {
@@ -373,6 +435,12 @@ describe("arguments", () => {
     expect(p("http://x/")).toMatchObject({ opts: { marketing: false } });
     expect(p("http://x/", "--marketing", "--product", "sitespring")).toMatchObject({ opts: { marketing: true, product: "sitespring" } });
     expect(p("http://x/", "--marketing=yes")).toMatchObject({ exit: 64, refusal: { reason: "usage" } });
+  });
+
+  test("--rich-app is a switch, off unless given (D-33)", () => {
+    expect(p("http://x/")).toMatchObject({ opts: { richApp: false } });
+    expect(p("http://x/", "--rich-app", "--product", "dataspring")).toMatchObject({ opts: { richApp: true, product: "dataspring" } });
+    expect(p("http://x/", "--rich-app=yes")).toMatchObject({ exit: 64, refusal: { reason: "usage" } });
   });
 
   test("single-page app flags (D-16)", () => {

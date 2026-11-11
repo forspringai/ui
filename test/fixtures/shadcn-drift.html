@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A shadcn app that restyled its components</title>
+<!-- shadcn.html's app after its copied components were edited: important utilities (!rounded-lg,
+     !min-h-9, !text-xs) and an unlayered rule in its own CSS, each on a token value, so the generic
+     rules pass at 1280. test/audit.test.ts expects --rich-app to name every one (D-33). -->
+<style>@layer theme, base, components, utilities;</style>
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/shadcn.css">
+<style>
+@layer base {
+  *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid var(--border); }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: var(--text-content-body); line-height: var(--leading-content-body); }
+  button, input { font: inherit; color: inherit; background: transparent; }
+  h1 { font-size: var(--text-content-h3); line-height: var(--leading-content-h3); }
+}
+@layer utilities {
+  .flex { display: flex; } .grid { display: grid; } .inline-flex { display: inline-flex; } .flex-wrap { flex-wrap: wrap; }
+  .items-center { align-items: center; } .justify-center { justify-content: center; }
+  .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .gap-6 { gap: 24px; }
+  .p-2 { padding: 8px; } .p-4 { padding: 16px; } .p-6 { padding: 24px; } .px-2 { padding-inline: 8px; } .px-3 { padding-inline: 12px; } .px-4 { padding-inline: 16px; }
+  .w-full { width: 100%; } .text-left { text-align: left; }
+  .border { border-width: 1px; } .border-input { border-color: var(--input); }
+  .bg-card { background: var(--card); } .bg-muted { background: var(--muted); } .bg-primary { background: var(--primary); }
+  .text-primary-foreground { color: var(--primary-foreground); } .text-muted-foreground { color: var(--muted-foreground); }
+  /* The edits: Tailwind writes an important utility with !important. */
+  .\!rounded-lg { border-radius: 8px !important; }
+  .\!rounded-sm { border-radius: 3px !important; }
+  .\!min-h-9 { min-height: 36px !important; }
+  .\!text-sm { font-size: 14px !important; }
+  .\!text-xs { font-size: 12px !important; }
+}
+/* The app's own index.css, unlayered, so it beats every layer. */
+[data-slot="card"] { border-radius: 10px; }
+[data-slot="badge"] { border-radius: 6px; }
+[data-slot="dialog-content"] { border-radius: 6px; }
+[data-slot="dialog-title"] { font-size: 18px; }
+</style>
+</head>
+<body>
+<main id="main" class="grid gap-6 p-4">
+<h1>Reports</h1>
+
+<div data-slot="card" class="bg-card grid gap-4 border p-6">
+  <form class="flex flex-wrap items-center gap-2">
+    <label for="q">Search</label>
+    <input data-slot="input" id="q" type="search" class="w-full border border-input bg-card px-3 !rounded-sm">
+    <button data-slot="button" data-size="default" type="submit" class="inline-flex items-center justify-center bg-primary text-primary-foreground px-4 !rounded-lg !min-h-9 !text-sm">Search</button>
+  </form>
+  <table data-slot="table" class="w-full">
+    <thead><tr><th data-slot="table-head" class="px-2 text-left bg-muted text-muted-foreground">Channel</th></tr></thead>
+    <tbody><tr><td data-slot="table-cell" class="p-2 !text-xs">Search</td></tr></tbody>
+  </table>
+  <div class="flex"><span data-slot="badge" class="inline-flex items-center border px-2">Live</span></div>
+</div>
+
+<div data-slot="dialog-content" role="dialog" aria-labelledby="dialog-title" class="bg-card grid gap-4 border p-6">
+  <h2 data-slot="dialog-title" id="dialog-title">Delete the report?</h2>
+</div>
+</main>
+</body>
+</html>

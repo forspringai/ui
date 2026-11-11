@@ -7,26 +7,33 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 import { demoPage, standardPages } from "../demo/index.ts";
-import { PHONE_WIDTH } from "../src/audit/audit.ts";
+import { PHONE_WIDTH, RICH_SLOTS, SMALL_SIZES } from "../src/audit/audit.ts";
 import { model } from "../src/emit.ts";
 
 const root = join(import.meta.dirname, "..");
+const strip = (text: string) => text.replace(/\/\*[\s\S]*?\*\//g, "");
 const css = readFileSync(join(root, "css/components.css"), "utf8");
-const code = css.replace(/\/\*[\s\S]*?\*\//g, "");
+const code = strip(css);
+// The shadcn preset (D-33) is held to the same rules as the component layer.
+const shadcn = strip(readFileSync(join(root, "css/shadcn.css"), "utf8"));
+const sheets: [string, string][] = [
+  ["css/components.css", code],
+  ["css/shadcn.css", shadcn],
+];
 
-test("components.css has no hex, rgb(), hsl() or named colour literals", () => {
+test.each(sheets)("%s: no hex, rgb(), hsl() or named colour literals", (_file, code) => {
   expect(code.match(/#[0-9a-f]{3,8}\b/gi)).toBeNull();
   expect(code.match(/\b(rgba?|hsla?|oklch|oklab|lab|lch|hwb)\(/gi)).toBeNull();
   // Keywords that are colours (transparent and currentColor are not a palette).
   expect(code.match(/:\s*(white|black|red|blue|green|gray|grey)\b/gi)).toBeNull();
 });
 
-test("type sizes come from the two ladders", () => {
+test.each(sheets)("%s: type sizes come from the two ladders", (_file, code) => {
   const sizes = [...code.matchAll(/font(?:-size)?:[^;]*?\b(\d+(?:\.\d+)?)px/g)].map((m) => m[1]);
   expect(sizes).toEqual([]);
 });
 
-test("radii come from the tokens, or are a pill", () => {
+test.each(sheets)("%s: radii come from the tokens, or are a pill", (_file, code) => {
   for (const m of code.matchAll(/border-radius:\s*([^;]+);/g)) expect(m[1]).toMatch(/^(var\(--radius-(button|card|input|panel)\)|999px)$/);
 });
 
@@ -50,7 +57,7 @@ test("every class in the demo page and the standard pages has a rule", () => {
 
 // D-14: every margin, padding, gap and inset is a space token, 0 or auto. The audit checks the
 // rendered page; this checks the rules a page may not happen to show.
-test("spacing comes from the 4px scale: no px literal in a margin, padding, gap or inset", () => {
+test.each(sheets)("%s: spacing comes from the 4px scale: no px literal in a margin, padding, gap or inset", (_file, code) => {
   const props = /^\s*(margin|padding|gap|row-gap|column-gap|inset|top|right|bottom|left)(-[a-z-]+)?:\s*([^;]+);/gm;
   const off: string[] = [];
   for (const m of code.matchAll(props)) {
@@ -87,7 +94,7 @@ test("the select draws its chevron without an image request", () => {
 });
 
 // D-27: motion, elevation and leading are tokens, as spacing is (D-14).
-test("durations come from the motion tokens: no bare 0.15s or 1.4s", () => {
+test.each(sheets)("%s: durations come from the motion tokens: no bare 0.15s or 1.4s", (_file, code) => {
   expect(code.match(/(?<![\w-])\d*\.?\d+m?s\b/g)).toBeNull();
   // Easing is a token or a keyword; a cubic-bezier() written here would be a curve no token names.
   expect(code).not.toMatch(/cubic-bezier\(/);
@@ -105,7 +112,7 @@ test("reduced motion stops everything", () => {
   expect(block).toContain("animation: none !important;");
 });
 
-test("a box-shadow is an elevation token, none, or a 2 to 3px edge rule in a role", () => {
+test.each(sheets)("%s: a box-shadow is an elevation token, none, or a 2 to 3px edge rule in a role", (_file, code) => {
   const off: string[] = [];
   for (const m of code.matchAll(/box-shadow:\s*([^;]+);/g)) {
     const v = m[1]!.trim();
@@ -118,13 +125,13 @@ test("a box-shadow is an elevation token, none, or a 2 to 3px edge rule in a rol
   expect(off).toEqual([]);
 });
 
-test("every line-height is a leading token or a control's line box, never a bare number", () => {
+test.each(sheets)("%s: every line-height is a leading token or a control's line box, never a bare number", (_file, code) => {
   const values = [
     ...[...code.matchAll(/line-height:\s*([^;]+);/g)].map((m) => m[1]!.trim()),
     // The font shorthand's size/line-height.
     ...[...code.matchAll(/\bfont:[^;]*?\)\s*\/\s*([^\s;]+(?:\([^;]*?\))?)/g)].map((m) => m[1]!.trim()),
   ];
-  expect(values.length).toBeGreaterThan(40);
+  expect(values.length).toBeGreaterThan(_file === "css/components.css" ? 40 : 10);
   const off = values.filter((v) => !/^(var\(--(leading-[a-z0-9-]+|_control-line(-small)?|space-\d+)\)|calc\(.*\))$/.test(v));
   expect(off).toEqual([]);
   // A leading named here is one the tokens define.
@@ -137,11 +144,79 @@ test("every line-height is a leading token or a control's line box, never a bare
 });
 
 // A media query cannot read a custom property, so the widths are px here, held to the tokens.
-test("every media query width is a breakpoint token, and the audit's phone is the phone", () => {
+test.each(sheets)("%s: every media query width is a breakpoint token, and the audit's phone is the phone", (_file, code) => {
   const m = model(join(root, "tokens"));
   const widths = [...code.matchAll(/@media[^{]*\((?:max|min)-width:\s*(\d+)px\)/g)].map((x) => Number(x[1]));
   expect(widths.length).toBeGreaterThan(0);
   for (const w of widths) expect(Object.values(m.breakpoint), `${w}px`).toContain(w);
   expect(widths).toContain(m.breakpoint.phone);
   expect(PHONE_WIDTH).toBe(m.breakpoint.phone);
+});
+
+// --- The shadcn preset (D-33) --------------------------------------------------------------------
+
+// Each rule block of shadcn.css: its selectors, its declarations, and whether it sits in @media.
+function rules(text: string): { selectors: string[]; decls: Map<string, string>; media: boolean }[] {
+  const out: { selectors: string[]; decls: Map<string, string>; media: boolean }[] = [];
+  const m = text.indexOf("@media");
+  const mediaEnd = m === -1 ? -1 : (() => {
+    let depth = 0;
+    for (let i = text.indexOf("{", m); i < text.length; i++) {
+      if (text[i] === "{") depth++;
+      else if (text[i] === "}" && --depth === 0) return i;
+    }
+    return text.length;
+  })();
+  for (const b of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    const decls = new Map([...b[2]!.matchAll(/([a-z-]+):\s*([^;]+);/g)].map((d) => [d[1]!, d[2]!.trim()]));
+    // Split the selector list on its top-level commas, not those inside :is().
+    const selectors: string[] = [];
+    let depth = 0;
+    let cur = "";
+    for (const ch of b[1]!) {
+      if (ch === "(") depth++;
+      else if (ch === ")") depth--;
+      if (ch === "," && depth === 0) (selectors.push(cur.trim()), (cur = ""));
+      else cur += ch;
+    }
+    selectors.push(cur.trim());
+    out.push({ selectors, decls, media: m !== -1 && b.index! > m && b.index! < mediaEnd });
+  }
+  return out;
+}
+
+test("shadcn.css: one layer, declared after Tailwind's four, and every rule sits in it", () => {
+  expect(shadcn.trimStart().startsWith("@layer theme, base, components, utilities, forspring-shadcn;")).toBe(true);
+  const outside = shadcn.replace(/@layer forspring-shadcn \{[\s\S]*$/, "").replace("@layer theme, base, components, utilities, forspring-shadcn;", "");
+  expect(outside.trim()).toBe("");
+});
+
+test("shadcn.css sets on each slot exactly what the audit's RICH_SLOTS checks", () => {
+  const all = rules(shadcn);
+  const on = (sel: string, media = false) => {
+    const decls = new Map<string, string>();
+    for (const r of all) if (r.media === media && r.selectors.includes(sel)) for (const [k, v] of r.decls) decls.set(k, v);
+    return decls;
+  };
+  const textVar = (step: string) => `var(--text-${step.replace(".", "-")})`;
+  const smallSel = (slot: string) => all.find((r) => !r.media && r.selectors.some((x) => x.startsWith(`[data-slot="${slot}"]:is(`) && SMALL_SIZES.slice(0, 2).every((z) => x.includes(`[data-size="${z}"]`))));
+  for (const [slot, spec] of Object.entries(RICH_SLOTS)) {
+    const d = on(`[data-slot="${slot}"]`);
+    expect(d.get("border-radius"), slot).toBe(spec.radius === undefined ? undefined : spec.radius === "pill" ? "999px" : `var(--radius-${spec.radius})`);
+    expect(d.get("min-height"), slot).toBe(spec.height === undefined ? undefined : spec.height === "control" ? "var(--control-height)" : `var(--${spec.height.replace(".", "-")})`);
+    expect(d.get("font-size"), slot).toBe(spec.text === undefined ? undefined : textVar(spec.text));
+    if (spec.height === "control") {
+      // Under the phone breakpoint every size reaches the touch floor.
+      expect(on(`[data-slot="${slot}"]`, true).get("min-height"), slot).toBe("var(--control-touch)");
+    }
+    if (spec.small) {
+      const r = smallSel(slot);
+      expect(r, `${slot} small`).toBeDefined();
+      expect(r!.decls.get("min-height")).toBe("var(--control-height-small)");
+      expect(r!.decls.get("font-size")).toBe(textVar(spec.small));
+    }
+  }
+  // And the other way: a slot shadcn.css gives a radius, height or size is one the audit checks.
+  const set = all.filter((r) => ["border-radius", "min-height", "font-size"].some((k) => r.decls.has(k))).flatMap((r) => r.selectors.map((x) => /^\[data-slot="([^"]+)"\]/.exec(x)?.[1]));
+  expect(set.filter((x) => x !== undefined && !(x in RICH_SLOTS))).toEqual([]);
 });

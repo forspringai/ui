@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" data-product="dataspring">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A shadcn app on the preset</title>
+<!-- A rich app's markup as shadcn v4 writes it (data-slot, data-size), with the utilities its copied
+     components carry left in place (h-9, rounded-md, text-sm). The utilities sit in Tailwind's layer
+     order, declared first as Tailwind's output does; @forspring/ui/shadcn.css comes after and wins.
+     test/audit.test.ts expects it to pass with --rich-app at both widths and themes (D-33). -->
+<style>@layer theme, base, components, utilities;</style>
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/shadcn.css">
+<style>
+@layer base {
+  *, ::before, ::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid var(--border); }
+  body { background: var(--background); color: var(--foreground); font-family: var(--font-sans); font-size: var(--text-content-body); line-height: var(--leading-content-body); }
+  button, input { font: inherit; color: inherit; background: transparent; }
+  h1 { font-size: var(--text-content-h3); line-height: var(--leading-content-h3); }
+}
+@layer utilities {
+  .flex { display: flex; } .grid { display: grid; } .inline-flex { display: inline-flex; } .flex-col { flex-direction: column; } .flex-wrap { flex-wrap: wrap; }
+  .items-center { align-items: center; } .justify-center { justify-content: center; } .justify-between { justify-content: space-between; }
+  .gap-1 { gap: 4px; } .gap-1\.5 { gap: 6px; } .gap-2 { gap: 8px; } .gap-4 { gap: 16px; } .gap-6 { gap: 24px; }
+  .p-2 { padding: 8px; } .p-4 { padding: 16px; } .p-6 { padding: 24px; } .px-2 { padding-inline: 8px; } .px-3 { padding-inline: 12px; } .px-4 { padding-inline: 16px; } .px-6 { padding-inline: 24px; }
+  .py-0\.5 { padding-block: 2px; } .py-1 { padding-block: 4px; } .py-2 { padding-block: 8px; } .py-6 { padding-block: 24px; }
+  .h-8 { height: 32px; } .h-9 { height: 36px; } .h-10 { height: 40px; } .size-9 { width: 36px; height: 36px; } .w-full { width: 100%; }
+  .rounded-sm { border-radius: 4px; } .rounded-md { border-radius: 6px; } .rounded-lg { border-radius: 8px; } .rounded-xl { border-radius: 12px; }
+  .text-xs { font-size: 12px; line-height: 16px; } .text-sm { font-size: 14px; line-height: 20px; } .text-base { font-size: 16px; line-height: 24px; } .text-lg { font-size: 18px; line-height: 28px; }
+  .font-medium { font-weight: 500; } .font-semibold { font-weight: 600; } .leading-none { line-height: 1; } .text-left { text-align: left; }
+  .border { border-width: 1px; } .border-b { border-bottom-width: 1px; } .border-input { border-color: var(--input); }
+  .bg-card { background: var(--card); } .bg-muted { background: var(--muted); } .bg-primary { background: var(--primary); }
+  .text-primary-foreground { color: var(--primary-foreground); } .text-muted-foreground { color: var(--muted-foreground); } .text-card-foreground { color: var(--card-foreground); }
+  .whitespace-nowrap { white-space: nowrap; } .max-w-lg { max-width: 32rem; }
+}
+</style>
+</head>
+<body>
+<main id="main" class="grid gap-6 p-4">
+<h1>Reports</h1>
+
+<div data-slot="card" class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6">
+  <div data-slot="card-header" class="grid gap-2 px-6">
+    <div data-slot="card-title" class="leading-none font-semibold">Revenue</div>
+    <div data-slot="card-description" class="text-muted-foreground text-sm">The last 30 days, by channel.</div>
+  </div>
+  <div data-slot="card-content" class="grid gap-4 px-6">
+    <form class="flex flex-wrap items-center gap-2">
+      <label data-slot="label" for="q" class="text-sm font-medium leading-none">Search</label>
+      <input data-slot="input" id="q" type="search" class="h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-base">
+      <button data-slot="select-trigger" data-size="default" type="button" role="combobox" aria-expanded="false" aria-label="Period" class="flex items-center justify-between gap-2 rounded-md border border-input px-3 py-2 text-sm whitespace-nowrap h-9">30 days</button>
+      <button data-slot="select-trigger" data-size="sm" type="button" role="combobox" aria-expanded="false" aria-label="Channel" class="flex items-center justify-between gap-2 rounded-md border border-input px-3 py-2 text-sm whitespace-nowrap h-8">All</button>
+      <button data-slot="button" data-variant="default" data-size="default" type="submit" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold bg-primary text-primary-foreground h-9 px-4 py-2">Search</button>
+      <button data-slot="button" data-variant="outline" data-size="sm" type="button" class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-semibold border border-input bg-card h-8 px-3">Export</button>
+      <button data-slot="button" data-variant="outline" data-size="icon" type="button" aria-label="More" class="inline-flex items-center justify-center rounded-md border border-input bg-card size-9">…</button>
+    </form>
+    <div data-slot="table-container" class="w-full">
+      <table data-slot="table" class="w-full text-sm">
+        <thead data-slot="table-header"><tr data-slot="table-row" class="border-b"><th data-slot="table-head" class="h-10 px-2 text-left bg-muted text-muted-foreground">Channel</th><th data-slot="table-head" class="h-10 px-2 text-left bg-muted text-muted-foreground">Revenue</th></tr></thead>
+        <tbody data-slot="table-body"><tr data-slot="table-row" class="border-b"><td data-slot="table-cell" class="p-2">Search</td><td data-slot="table-cell" class="p-2">12 400 kr.</td></tr><tr data-slot="table-row"><td data-slot="table-cell" class="p-2">Email</td><td data-slot="table-cell" class="p-2">3 100 kr.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="flex gap-2"><span data-slot="badge" class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium">Live</span></div>
+  </div>
+</div>
+
+<div data-slot="dialog-content" role="dialog" aria-labelledby="dialog-title" class="bg-card grid gap-4 rounded-lg border p-6 max-w-lg">
+  <h2 data-slot="dialog-title" id="dialog-title" class="text-lg leading-none font-semibold">Delete the report?</h2>
+  <p data-slot="dialog-description" class="text-muted-foreground text-sm">The report and its schedule go. The data stays.</p>
+  <div class="flex gap-2"><button data-slot="button" data-variant="outline" data-size="default" type="button" class="inline-flex items-center justify-center rounded-md text-sm font-semibold border border-input bg-card h-9 px-4 py-2">Keep it</button></div>
+</div>
+</main>
+</body>
+</html>

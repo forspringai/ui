@@ -1,0 +1,205 @@
+/* The family's geometry for shadcn components (D-33): a rich React app imports this after theme.css
+   and keeps the components it copied from shadcn as they came. shadcn v4 marks every part with
+   data-slot ("button", "input", "card", "dialog-content" and so on), and this file sets on those
+   slots what the family fixes: radii, control heights (D-14), type sizes and leading from the
+   ladders, font families and the focus ring. Colours, spacing, layout and variants stay the app's,
+   through theme.css's roles.
+
+   The layer is declared after Tailwind's four, so it ranks above the utilities a copied component
+   carries (h-9, rounded-md, text-sm) and the family's values win over shadcn's defaults. The
+   statement names Tailwind's layers too, so the order holds wherever the file is imported. An app
+   that must differ says so with an important utility (!h-12) or unlayered CSS, where review sees
+   it, and ui-audit --rich-app reports the value. Roles and tokens only, as in components.css:
+   test/components.test.ts holds both files to the same rules, and holds this one to the audit's
+   table of slots (RICH_SLOTS in src/audit/audit.ts). */
+
+@layer theme, base, components, utilities, forspring-shadcn;
+
+@layer forspring-shadcn {
+  /* A control's line box is what its height leaves after the padding and the 1px borders, as in
+     components.css (D-14), declared here as well so the file stands alone. */
+  :root,
+  [data-product],
+  [data-theme] {
+    --_control-line: calc(var(--control-height) - 2 * var(--space-3) - 2px);
+    --_control-line-small: calc(var(--control-height-small) - 2 * var(--space-1) - 2px);
+  }
+
+  /* --- Controls: one box per size (D-14) ------------------------------------------------------ */
+
+  [data-slot="button"],
+  [data-slot="input"],
+  [data-slot="select-trigger"] {
+    box-sizing: border-box;
+    min-height: var(--control-height);
+    font-family: var(--font-sans);
+    font-size: var(--text-content-body);
+    line-height: var(--_control-line);
+  }
+
+  [data-slot="button"] {
+    border-radius: var(--radius-button);
+  }
+
+  [data-slot="input"],
+  [data-slot="select-trigger"] {
+    border-radius: var(--radius-input);
+  }
+
+  /* shadcn's small sizes (sm, and xs where a registry has it) are the family's one small size. */
+  [data-slot="button"]:is([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"]),
+  [data-slot="select-trigger"]:is([data-size="sm"], [data-size="xs"]) {
+    min-height: var(--control-height-small);
+    font-size: var(--text-content-small);
+    line-height: var(--_control-line-small);
+  }
+
+  /* shadcn's sm button has a 6px gap, off the grid; the default's is 8. */
+  [data-slot="button"]:is([data-size="sm"], [data-size="xs"]) {
+    gap: var(--space-2);
+  }
+
+  /* An icon button is square at the control's height. */
+  [data-slot="button"]:is([data-size="icon"], [data-size="icon-lg"]) {
+    min-width: var(--control-height);
+  }
+
+  [data-slot="button"]:is([data-size="icon-sm"], [data-size="icon-xs"]) {
+    min-width: var(--control-height-small);
+  }
+
+  [data-slot="textarea"] {
+    border-radius: var(--radius-input);
+    font-family: var(--font-sans);
+    font-size: var(--text-content-body);
+    line-height: var(--space-5);
+  }
+
+  [data-slot="label"] {
+    font-family: var(--font-sans);
+    font-size: var(--text-chrome-body);
+    line-height: var(--leading-chrome-body);
+  }
+
+  /* The focus ring is the family's outline in --ring: off the button, on the field's edge. */
+  [data-slot="button"]:focus-visible,
+  [data-slot="badge"]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+
+  [data-slot="input"]:focus-visible,
+  [data-slot="textarea"]:focus-visible,
+  [data-slot="select-trigger"]:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 0;
+    border-color: var(--ring);
+  }
+
+  /* --- Surfaces: card 6, panel 10 ------------------------------------------------------------- */
+
+  [data-slot="card"] {
+    border-radius: var(--radius-card);
+  }
+
+  /* A block title is the chrome ladder's title step; hierarchy comes from weight, not size. */
+  [data-slot="card-title"] {
+    font-family: var(--font-sans);
+    font-size: var(--text-chrome-title);
+    line-height: var(--leading-chrome-title);
+  }
+
+  [data-slot="card-description"],
+  [data-slot="dialog-description"],
+  [data-slot="alert-dialog-description"] {
+    font-size: var(--text-content-small);
+    line-height: var(--leading-content-small);
+  }
+
+  /* The dialog is the family's dialog (D-23): the panel radius, its title an h2. */
+  [data-slot="dialog-content"],
+  [data-slot="alert-dialog-content"] {
+    border-radius: var(--radius-panel);
+  }
+
+  [data-slot="dialog-title"],
+  [data-slot="alert-dialog-title"] {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--text-content-h2);
+    line-height: var(--leading-content-h2);
+    letter-spacing: -0.01em;
+  }
+
+  /* Popovers and menus are the bar's panels: the card radius, chrome body type. */
+  [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"],
+  [data-slot="dropdown-menu-sub-content"],
+  [data-slot="select-content"] {
+    border-radius: var(--radius-card);
+    font-family: var(--font-sans);
+    font-size: var(--text-chrome-body);
+    line-height: var(--leading-chrome-body);
+  }
+
+  /* shadcn's items have 6px of padding above and below, off the grid. */
+  [data-slot="dropdown-menu-item"],
+  [data-slot="dropdown-menu-checkbox-item"],
+  [data-slot="dropdown-menu-radio-item"],
+  [data-slot="dropdown-menu-sub-trigger"],
+  [data-slot="select-item"] {
+    border-radius: var(--radius-button);
+    font-size: var(--text-chrome-body);
+    line-height: var(--leading-chrome-body);
+    padding-block: var(--space-2);
+  }
+
+  [data-slot="tooltip-content"] {
+    border-radius: var(--radius-button);
+    font-family: var(--font-sans);
+    font-size: var(--text-chrome-body);
+    line-height: var(--leading-chrome-body);
+  }
+
+  /* --- Table and badge: the dense ladder ------------------------------------------------------ */
+
+  [data-slot="table"],
+  [data-slot="table-cell"] {
+    font-size: var(--text-chrome-body);
+    line-height: var(--leading-chrome-body);
+  }
+
+  [data-slot="table-head"] {
+    font-family: var(--font-mono);
+    font-size: var(--text-chrome-meta);
+    line-height: var(--leading-chrome-meta);
+  }
+
+  /* The family's tag: a pill in Space Mono at the floor, 20px tall. */
+  [data-slot="badge"] {
+    box-sizing: border-box;
+    min-height: var(--space-5);
+    padding-block: 0;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: var(--text-chrome-label);
+    line-height: var(--leading-chrome-label);
+  }
+
+  /* --- Phone: every control reaches the touch floor ------------------------------------------- */
+
+  @media (max-width: 560px) {
+    /* A small control takes the touch box and keeps its smaller type, as in components.css. */
+    [data-slot="button"],
+    [data-slot="button"]:is([data-size="sm"], [data-size="xs"], [data-size="icon-sm"], [data-size="icon-xs"]),
+    [data-slot="input"],
+    [data-slot="select-trigger"],
+    [data-slot="select-trigger"]:is([data-size="sm"], [data-size="xs"]) {
+      min-height: var(--control-touch);
+    }
+
+    [data-slot="button"]:is([data-size^="icon"]) {
+      min-width: var(--control-touch);
+    }
+  }
+}

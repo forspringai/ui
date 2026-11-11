@@ -25,6 +25,7 @@ fonts/             Archivo, Archivo Condensed, Space Mono (and Roboto Medium for
                    woff2, Latin subset, with their OFL licences (account D-17)
 css/
   components.css   the component layer, on the roles only (D-5)
+  shadcn.css       a shadcn app's geometry on its data-slot attributes, above Tailwind's utilities (D-33)
   google-button.css  Google's button, with Google's colours (optional)
 src/dtcg.ts        reads and validates DTCG: groups, inherited $type, aliases, 2025.10 value shapes
 src/emit.ts        writes the token outputs
@@ -56,7 +57,7 @@ dist/              committed build output (D-2)
   theme.css        Tailwind v4 @theme over the same roles, and a dark: variant
   tokens.js/.d.ts  typed values for code, charts and MCP Apps
   fonts.css        @font-face rules pointing at ../fonts/
-  components.css, google-button.css
+  components.css, shadcn.css, google-button.css
   html, refusals, pages, connect, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
   icons/           lucide.js/.d.ts, imported by html.js, and the icons' LICENSE
   audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
@@ -64,7 +65,8 @@ dist/              committed build output (D-2)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
-                   (demo passes, test/fixtures/broken.html fails), the brand templates (templates.test.ts),
+                   (demo passes, test/fixtures/broken.html fails; shadcn.html passes --rich-app,
+                   shadcn-drift.html fails it), the brand templates (templates.test.ts),
                    visual regression over the demo (visual.test.ts, baselines in test/visual/, D-32)
 ```
 
@@ -112,7 +114,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.18.0"
+"@forspring/ui": "github:forspringai/ui#v0.19.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -121,7 +123,9 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 - Plain CSS: link or inline `@forspring/ui/tokens.css`, set `data-product="<key>"` on `<html>`
   (unset means Forspring), and write `var(--primary)`, `var(--radius-button)` and so on.
 - Tailwind v4 / shadcn: `@import "tailwindcss"; @import "@forspring/ui/theme.css";` then
-  `bg-background`, `text-muted-foreground`, `rounded-card`, `text-content-body`, `dark:`.
+  `bg-background`, `text-muted-foreground`, `rounded-card`, `text-content-body`, `dark:`. A shadcn
+  app adds `@import "@forspring/ui/shadcn.css";` and leaves its copied components' radii, heights and
+  text sizes alone; `ui-audit --rich-app` checks them (D-33).
 - Code: `import { themeFor, chart, radius } from "@forspring/ui"`.
 - Dark mode follows the system; `data-theme="light"` or `"dark"` on any element wins.
 
@@ -158,8 +162,8 @@ The trigger, the stub and the repo connection were made through the Workers Buil
   inset edge rule, and every line-height a `--leading-*` or a control's line box (`--_control-line*`).
   Media queries are px literals (a custom property cannot be read there) at a `breakpoint` value;
   test/components.test.ts checks all four.
-- **Components use roles only.** No hex, rgb() or named colour in `css/components.css` (a test
-  greps for them), type sizes from the chrome and content ladders, radii from the tokens. A shade the roles lack
+- **Components use roles only.** No hex, rgb() or named colour in `css/components.css` or
+  `css/shadcn.css` (a test greps both), type sizes from the chrome and content ladders, radii from the tokens. A shade the roles lack
   is a `color-mix()` of roles (`--_link`, `--_hover`, `--_tint`). Google's button is the one
   exception and lives in its own file.
 - **The account's class names are the API** (D-5). Renaming one breaks every product's markup;
@@ -187,6 +191,8 @@ The trigger, the stub and the repo connection were made through the Workers Buil
   only the audited hosts, apart from origins the run names with `--allow-origin` (D-16); tests must stay offline the same way. Redirect hops bypass the route
   (D-12): they are recorded, never trusted to be answered. Something on the dev host probes
   new localhost ports, so a test server never counts its requests.
+- **shadcn.css and the audit's `RICH_SLOTS` agree** (D-33): a slot given a radius, min-height or
+  font-size in one is in the other with the same token; test/components.test.ts checks both ways.
 - **page.ts runs inside Chromium.** `collect()` is sent as source text: it must not call anything
   outside its own body, and it measures only; verdicts and token values live in audit.ts.
 - **Connecting an agent is interactive first** (D-19, hub D-102). The connect panel's default tabs
