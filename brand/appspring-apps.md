@@ -91,7 +91,9 @@ React wrappers in `@forspring/ui/react`, or the same classes on shadcn's `data-s
   assessor visit"); the other verbs are ghost buttons, and verbs of one model group share a menu. A
   destructive verb comes last, in the menu, in danger text. A verb the reader may not run is not drawn; where
   they would look for it, the reason is said in words ("Only the claims team can close a case."), never a
-  disabled button (D-30).
+  disabled button (D-30). AppSpring's pages today draw a refused action as a greyed button with a tip
+  (kernel pages.md); which way wins is Peter's call (queue canonify-47), and this file keeps the rule above
+  until he answers.
 
 ### 2.3 Boards
 
@@ -103,9 +105,10 @@ React wrappers in `@forspring/ui/react`, or the same classes on shadcn's `data-s
   The record page holds the rest. A card opens its record.
 - **Never colour alone for state.** The column says the state in words; a flagged card has its rail and a
   pill with words ("Overdue · 3 days"). A card's colour never says which column it belongs to.
-- **Dragging is one way to move a card, never the only one.** The same transition is an `Action` on the card
-  and in the record's header, for the keyboard and for touch. A move that needs input opens the action's
-  dialog; an irreversible one asks first (2.6).
+- **A card moves through its menu.** Each card has a "Move to <lane>" action for every move the model
+  allows, the same transition as in the record's header, so it works by keyboard, touch and screen reader.
+  The kernel has no drag (appspring tick lle). A move that needs input opens the action's dialog; an
+  irreversible one asks first (2.6).
 
 Example, a CRM pipeline as one of the tools a customer may have: Lead, Qualified, Proposal, Won, with Lost
 folded at the end; each card the company's name, the contact, the next meeting and the deal's value.
@@ -124,12 +127,14 @@ the renderer draws them by docs/usage.md section 3.
 - **Validate on submit.** The action's handler decides, every time. A failed submit keeps the values (never
   a secret), shows each error beside its field and an `errorSummary()` at the top that takes focus, and the
   page's title starts "Fejl: " / "Error: ".
-- **A warning is said before Submit,** in the guard's own words, and never blocks it ("Over 40 hours this
-  week is overtime."). A refusal is said apart, as an error.
+- **A warning is said at submit, then a second press confirms.** The kernel checks guards when the form is
+  sent, not as the person types: the first press answers with the guard's own words ("Over 40 hours this
+  week is overtime.") and the same button, and a second press goes ahead. A refusal is said apart, as an
+  error.
 - **One primary submit:** the forward one ("Confirm booking"); "Save draft" is ghost.
-- **After a successful submit** the person lands where the result is (the new booking's record page) and a
-  `toast()` says what happened, in the action's `success` words ("Booking confirmed."). It is the
-  server-rendered POST, 303 and toast, in a React shell: never a form that resets with no word that it saved.
+- **After a successful submit** the person goes to the created record when there is one (the new booking's
+  record page), and otherwise the form resets; either way a `toast()` says what happened, in the action's
+  `success` words ("Booking confirmed."). Never a form that resets with no word that it saved.
 
 ### 2.5 Approvals
 
@@ -143,8 +148,11 @@ them all; both draw `approval()` with the package's words (D-24).
   added and removed.
 - **What it does and what it costs:** the effects, a warning one marked ("Pays 14.200 kr to the
   policyholder's account"), and when the request lapses.
-- **Approve, Edit first, Reject.** Approve is primary, in the action's words ("Approve refund"); "Edit first"
-  opens the same input to change before it runs; Reject is ghost, since it loses nothing.
+- **Approve or Reject, never edit.** Approve is primary, in the action's words ("Approve refund"); Reject is
+  ghost, since it loses nothing, and asks for a reason. An approver never edits the request: the edited
+  input would run under the requester's rights. To change it, reject, then start a new request pre-filled
+  from the stored input. The rule's message and the requester's note say why it was asked (AppSpring adds
+  `ApprovalRule.message` and a requester note).
 - **The outcome replaces the actions** on every copy, on the page and in Slack: "Approved by Mette Kjær · 4
   Nov 2026, 10:41". The facts stay as the record of what was decided. Who may decide, and that nobody
   decided first, is the server's check.
@@ -155,7 +163,7 @@ them all; both draw `approval()` with the package's words (D-24).
   with counts ("This removes Nordhavn ApS, its 14 bookings and 3 invoices."), "It can't be undone.", and puts
   Keep first and in focus. "Are you sure?" with OK is never enough.
 - **Type the name when much is lost** or the thing is easy to mistake for another: "Type Nordhavn ApS to
-  confirm". The server checks the name again before it deletes anything.
+  confirm". (In AppSpring this comes with the kernel's `confirm.typeName`.)
 - **Cheap and reversible needs no confirm.** Run it, and offer Undo in the toast ("Booking cancelled." with
   "Fortryd" / "Undo").
 - **Danger only where something is lost:** delete, remove, revoke. Reject, and Cancel in a dialog, lose
@@ -267,7 +275,7 @@ tables (appspring nf7), since AppSpring lays out text by measured widths (sectio
 - [ ] A long list has search, filter chips with counts, the order in words and Previous and Next.
 - [ ] A record page names the record and its state, has one primary action, and explains a missing verb in
       words rather than disabling it.
-- [ ] A board's columns name their state and count their cards; every drag has the same verb as an action.
+- [ ] A board's columns name their state and count their cards; every move is a "Move to <lane>" action on the card.
 - [ ] Every form label is visible, required or optional is said in words, a failed submit has the error
       summary, and a saved one lands on the result with a toast.
 - [ ] An action that needs approval shows who, why, what changes and what it costs, and the outcome on
