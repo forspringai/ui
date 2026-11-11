@@ -776,7 +776,7 @@ destructive one is `button()`'s existing danger variant. The demo shows SiteSpri
 page as `dist/demo/pages/delete-site.<da|en>.html`; both pass the audit for SiteSpring and Forspring at
 1280 and 380, light and dark, open and closed.
 
-## D-24 — Agent approval, diff and "why it did that" (2026-11-11)
+## D-24 — Agent approval, diff and "why it did that"; 0.13.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick sm9): "No agent-interaction
 patterns: approvals, diffs and 'why did it do that' live in Spring's code, not the shared standard."
