@@ -1247,6 +1247,12 @@
     margin: 0;
   }
 
+  /* "påkrævet" / "valgfri" in the label (D-30): in its accessible name, quieter than the label. */
+  .field-mark {
+    font-weight: 400;
+    color: var(--muted-foreground);
+  }
+
   .check {
     display: inline-flex;
     align-items: center;
@@ -1567,6 +1573,31 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  /* A failed submit's summary (D-30): the error notice with a real heading, at the notice title's
+     size, and one link per error. It takes focus, so the ring shows where the page landed. */
+  .error-summary > .notice-title {
+    font: 600 var(--text-content-body)/var(--leading-content-body) var(--font-sans);
+    letter-spacing: normal;
+    margin: 0 0 var(--space-2);
+  }
+
+  .error-summary-list {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  /* A platform error's ref (hub D-88): monospace, and one click selects all of it for a copy. */
+  .error-ref {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-content-small);
+  }
+
+  .error-ref code {
+    user-select: all;
   }
 
   /* --- Tag ------------------------------------------------------------------------------------ */

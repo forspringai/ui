@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.17.0
+pnpm add github:forspringai/ui#v0.18.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -170,7 +170,7 @@ REFUSALS.product_off;   // { status: 403, exit: 4, da: { title, text, fix }, en:
 | `org_suspended` | 403 | 4 | `org`, `people` (owners), `billingHref` |
 | `role_too_low` | 403 | 4 | `org`, `roleNeeded`, `people` |
 | `org_mismatch` | 403 | 4 | `org`, `credentialOrg` |
-| `account_unavailable` | 503 | 1 | `retryHref` |
+| `account_unavailable` | 503 | 1 | `retryHref`, `ref` (D-30) |
 
 **React** (rich apps; `react` is an optional peer dependency, nothing else is added):
 
@@ -509,6 +509,33 @@ React: `<Toast />`, `<ToastRegion />`, `<Tooltip />` and `<Icon name="…" />` f
 `@forspring/ui/react` draw the same markup. The demo's "Toast, værktøjstip og ikoner" section shows
 one toast per tone, a tooltip beside a field's label (`?open=cvr-tip` opens it), buttons with icons
 and every icon with its name.
+
+### Forms and errors: required words, the error summary, the ref (D-30)
+
+When and why are in [docs/usage.md](docs/usage.md) sections 3 and 4; this is the call.
+
+```ts
+import { errorSummary, field, notice } from "@forspring/ui/html";
+
+// A submit that failed answers 422 with the form drawn again, the summary first:
+errorSummary({ lang: "da", errors: [{ field: "email", message: "Mail: skriv en hel mailadresse." }] }),
+field({ lang: "da", label: "Mail", name: "email", type: "email", required: true, value, error: "Skriv en hel mailadresse." }),
+field({ lang: "da", label: "Besked", name: "note", control: "textarea", optional: true }),  // or mark the optional ones
+
+// The product's own server failed: the request's short ref (hub D-88) for support.
+notice({ lang: "da", tone: "error", title: "Noget gik galt hos os", text: "Prøv igen om lidt.", ref }),
+```
+
+- `errorSummary()` is the error notice with a heading ("Ret disse felter" / "Fix these fields", or
+  `title`), `role="alert"`, `tabindex="-1"` and `autofocus`, and one link per error to `#<field id>`.
+  Nothing when `errors` is empty. React: `<ErrorSummary />`, which focuses itself when it mounts.
+- `field()` writes "(påkrævet)" / "(required)" in the label for `required: true` (quiet, but in the
+  accessible name) and "(valgfri)" / "(optional)" for `optional: true`; `requiredWord: false` keeps the
+  attribute and drops the word, for a form that marks its optional fields instead. `lang` defaults to
+  Danish.
+- `ref` on `notice()`, `state()`, `refusedPage()` and `accountUnavailablePage()` draws `errorRef()`:
+  "Fejlkode: <code>4bf92f35</code>" / "Reference: …" and the hint to quote it, escaped.
+- `button({ disabled })` stays for the account's markup (D-5); don't pass it (D-23).
 
 ## Tailwind v4 and shadcn
 

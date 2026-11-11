@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -277,6 +277,20 @@ const checksTable = table({
   },
 });
 
+// On a 422 page the summary takes focus on load. Here, in the middle of the gallery, that would scroll
+// every visit down to the form, so the demo drops only the autofocus; the rest is the helper's markup.
+const FORM_ERRORS = raw(
+  String(
+    errorSummary({
+      lang: "da",
+      errors: [
+        { field: "email", message: "Mail: skriv en hel mailadresse, fx navn@firma.dk." },
+        { field: "role", message: "Rolle: vælg, hvad Mette skal kunne." },
+      ],
+    }),
+  ).replace(' autofocus=""', ""),
+);
+
 const body = html`${controls}
 ${crumbs("Placering", [{ label: "Forside", href: "#" }, { label: "Komponenter", href: "#" }])}
 <h1>Din Forspring-konto</h1>
@@ -287,6 +301,7 @@ ${notice({ text: "Vi sender en mail, når eksporten er klar." })}
 ${notice({ tone: "success", text: "Du har taget imod invitationen." })}
 ${notice({ tone: "warning", title: "Din prøveperiode udløber om 3 dage", text: "Vælg en plan for at beholde dine sider." })}
 ${notice({ tone: "error", text: "Det lykkedes ikke. Hent siden igen og prøv en gang til." })}
+${notice({ tone: "error", title: "Noget gik galt hos os", text: "Intet er gået tabt. Prøv igen om lidt.", ref: "4bf92f35", lang: "da" })}
 </section>
 
 <section><h2>Signaler</h2>
@@ -297,7 +312,8 @@ ${notice({ signal: "ok", title: "Alt kører", text: "Alle 14 tjek har meldt sig 
 </section>
 
 <section><h2>Knapper og mærker</h2>
-<div class="demo-row">${button({ label: "Gem" })}${button({ label: "Annuller", variant: "ghost", type: "button" })}${button({ label: "Slet kunden", variant: "danger", type: "button" })}${button({ label: "Åbn SiteSpring", href: "#" })}${button({ label: "Ikke nu", disabled: true, type: "button" })}</div>
+<div class="demo-row">${button({ label: "Gem" })}${button({ label: "Annuller", variant: "ghost", type: "button" })}${button({ label: "Slet kunden", variant: "danger", type: "button" })}${button({ label: "Åbn SiteSpring", href: "#" })}</div>
+<p class="fine">Ingen knap er slået fra (D-23). Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
 <div class="demo-row">${button({ label: "Tag imod", small: true })}${button({ label: "Afslå", variant: "ghost", small: true })}${button({ label: "Fjern", variant: "danger", small: true })}</div>
 <div class="demo-row">${tag("platform")}${tag("Denne enhed")}${tag("Ny", "primary")}${tag("Aktiv", "success")}${tag("Afventer", "warning")}${tag("Spærret", "danger")}</div>
 </section>
@@ -329,11 +345,12 @@ ${checksTable}
 </section>
 
 <section><h2>Formular</h2>
-${card(html`<form class="form" method="post" action="#">
+<p>Sådan ser formularen ud, når den er sendt med fejl: en oversigt øverst, der får fokus og linker til hvert felt, og fejlen ved feltet. De påkrævede felter står med ord, fordi de er færrest her.</p>
+${card(html`${FORM_ERRORS}<form class="form" method="post" action="#">
 ${field({ label: "Navn", name: "name", value: "Mette Kjær", autocomplete: "name" })}
-${field({ label: "Mail", name: "email", type: "email", value: "mette@eksempel", error: "Skriv en hel mailadresse, fx navn@firma.dk.", autocomplete: "email" })}
-${field({ label: "Rolle", name: "role", control: "select", hint: "Administratorer kan slå produkter til og fra for andre.", options: [{ value: "member", label: "Medlem" }, { value: "admin", label: "Administrator", selected: true }] })}
-${field({ label: "Besked til Mette", name: "note", control: "textarea", placeholder: "Valgfri" })}
+${field({ label: "Mail", name: "email", type: "email", value: "mette@eksempel", required: true, error: "Skriv en hel mailadresse, fx navn@firma.dk.", autocomplete: "email" })}
+${field({ label: "Rolle", name: "role", control: "select", required: true, hint: "Administratorer kan slå produkter til og fra for andre.", error: "Vælg, hvad Mette skal kunne.", options: [{ value: "", label: "Vælg en rolle", selected: true }, { value: "member", label: "Medlem" }, { value: "admin", label: "Administrator" }] })}
+${field({ label: "Besked til Mette", name: "note", control: "textarea" })}
 <fieldset><legend>Produkter at slå til</legend><label><input type="checkbox" name="p" value="site" checked> SiteSpring</label><label><input type="checkbox" name="p" value="data"> DataSpring</label></fieldset>
 <p>${button({ label: "Send invitation" })}</p>
 </form>`)}
@@ -366,9 +383,10 @@ ${confirmDestructive(DELETE_SITE("da"))}
   ],
 })}</div>
 <p>Et værktøjstip forklarer noget, man kan klare sig uden. Det åbner, når man trykker på knappen, og lukker med Escape eller et tryk ved siden af. Det, man skal vide for at udfylde feltet, står i hjælpeteksten.</p>
-${card(html`<form class="form" method="post" action="#">${field({
+${card(html`<form class="form" method="post" action="#">${field({ label: "Firmanavn", name: "company", required: true, requiredWord: false, autocomplete: "organization" })}${field({
   label: "CVR-nummer",
   name: "cvr",
+  optional: true,
   hint: "Otte cifre, fx 12345678.",
   autocomplete: "off",
   help: tooltip({ id: "cvr-tip", label: "Mere om CVR-nummer", trigger: icon("help-circle"), text: "Vi slår firmaets navn og adresse op i CVR-registret, så du ikke skal skrive dem." }),
@@ -470,6 +488,8 @@ function standard(name: string, lang: Lang): StandardPage {
     roleNeeded: "admin",
     credentialOrg: ORGS[1]!.name,
     command: reason === "not_signed_in" ? "dataspring auth login" : reason === "org_required" ? "dataspring datacore status --org bager-hansen" : undefined,
+    // The account not answering is an upstream error, so it carries the request's ref (hub D-88).
+    ref: reason === "account_unavailable" ? "4bf92f35" : undefined,
   });
 }
 

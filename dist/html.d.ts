@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.17.0";
+export declare const VERSION = "0.18.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.17.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.18.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -233,6 +233,9 @@ export type ButtonOptions = {
     value?: string;
     /** The accessible name, when the visible label alone is ambiguous ("Log ud" on which device). */
     ariaLabel?: string;
+    /** Kept for the account's markup (D-5), but don't use it: a disabled button cannot be focused, says
+     *  nothing about why, and needs script to come back (D-23). Keep the button live and let the submit
+     *  say what is missing, or leave it out and say why in words (docs/usage.md section 3). */
     disabled?: boolean;
     /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
      *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
@@ -248,7 +251,16 @@ export type FieldOptions = {
     value?: string;
     hint?: Content;
     error?: Content;
+    /** Sets `required` and says "påkrævet" / "required" in the label, quiet but in its accessible name
+     *  (D-30). Mark whichever is rarer in a form, the required fields or the optional ones, never both. */
     required?: boolean;
+    /** Says "valgfri" / "optional" in the label, in a form that marks its optional fields (D-30). */
+    optional?: boolean;
+    /** false: `required` sets the attribute and writes no word, in a form that marks its optional fields
+     *  instead or says once above it that every field is required. */
+    requiredWord?: boolean;
+    /** The page's language, for the required or optional word; Danish by default. */
+    lang?: Lang;
     autocomplete?: string;
     placeholder?: string;
     /** input (default), textarea, or select with options. */
@@ -275,17 +287,51 @@ export type FieldOptions = {
 /** A label, its control, a hint and an error, wired with aria-describedby and aria-invalid. */
 export declare function field(o: FieldOptions): Html;
 export type Tone = "info" | "success" | "warning" | "error";
-/** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
 /**
- * What just happened, in words. `signal` instead of `tone` reports a monitored state (D-13): the
- * neutral card with the signal's colour as its edge rule and its mark before the title.
+ * A platform error's short `ref` (hub D-88: the first characters of the request's traceparent), in
+ * monospace and selected whole by one click, with the hint to quote it to support (D-30). notice(),
+ * state() and refusedPage() draw it from their `ref`; call it alone for an error drawn without them.
  */
-export declare function notice(o: {
+export declare function errorRef(o: {
+    lang: Lang;
+    ref: string;
+}): Html;
+export type NoticeOptions = {
     tone?: Tone;
     signal?: Signal;
     title?: Content;
     text: Content;
-}): Html;
+    /** A platform error's short ref (hub D-88), shown under the text with errorRef(). */
+    ref?: string;
+    /** The page's language, for the ref's words; Danish by default. */
+    lang?: Lang;
+};
+/**
+ * What is true about this page, in words: errors and warnings are alerts, the rest polite status
+ * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
+ * signal's colour as its edge rule and its mark before the title.
+ */
+export declare function notice(o: NoticeOptions): Html;
+/** One error in a form, for errorSummary(): the field's id (its link target) and what to do. */
+export type FormError = {
+    field: string;
+    message: Content;
+};
+export type ErrorSummaryOptions = {
+    lang: Lang;
+    errors: FormError[];
+    /** The heading; "Ret disse felter" / "Fix these fields" by default. */
+    title?: Content;
+    /** The summary's own id, for a page that moves focus to it; "error-summary" by default. */
+    id?: string;
+};
+/**
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
+ * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
+ * Nothing when there are no errors.
+ */
+export declare function errorSummary(o: ErrorSummaryOptions): Html;
 /** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
 export declare function signal(text: Content, s: Signal): Html;
 /** Where the page sits: its parents as links, before the h1. The page itself is the h1, not a crumb. */
@@ -424,6 +470,10 @@ export type StateOptions = {
     title: Content;
     text?: Content;
     action?: Content;
+    /** failed: a platform error's short ref (hub D-88), shown with errorRef() before the action. */
+    ref?: string;
+    /** The page's language, for the ref's words; Danish by default. */
+    lang?: Lang;
 };
 /**
  * Empty (nothing there, or nothing matching a filter: say which), loading (the shape of what is

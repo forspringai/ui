@@ -8,7 +8,7 @@
 // needs no React build step of its own.
 
 import { createElement, type ReactElement } from "react";
-import { approval, bar, confirmDestructive, dialog, diff, explain, icon, pagination, table, toast, toastRegion, tooltip, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
+import { approval, bar, confirmDestructive, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { connectPanel, type ConnectPanelOptions } from "./connect.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 
@@ -16,8 +16,9 @@ const UNESCAPE: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">
 const unescape = (s: string) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]!);
 
 // React names a few attributes in camelCase and warns on the HTML spelling; the bytes it writes are the
-// same. The stroke ones are an icon's (D-26).
-const PROP: Record<string, string> = { class: "className", tabindex: "tabIndex", "stroke-width": "strokeWidth", "stroke-linecap": "strokeLinecap", "stroke-linejoin": "strokeLinejoin" };
+// same. The stroke ones are an icon's (D-26). autoFocus is a boolean to React (an empty string draws
+// nothing); in an app it focuses the element when it mounts, as the attribute does on a page load.
+const PROP: Record<string, string> = { class: "className", tabindex: "tabIndex", autofocus: "autoFocus", "stroke-width": "strokeWidth", "stroke-linecap": "strokeLinecap", "stroke-linejoin": "strokeLinejoin" };
 
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
 export function fromHtml(h: Html, key?: string): ReactElement {
@@ -26,7 +27,10 @@ export function fromHtml(h: Html, key?: string): ReactElement {
   if (!m) throw new Error("fromHtml: expected a single element");
   const props: Record<string, unknown> = { dangerouslySetInnerHTML: { __html: m[3]! } };
   if (key !== undefined) props.key = key;
-  for (const a of m[2]!.matchAll(/\s([a-zA-Z][a-zA-Z0-9-]*)="([^"]*)"/g)) props[PROP[a[1]!] ?? a[1]!] = unescape(a[2]!);
+  for (const a of m[2]!.matchAll(/\s([a-zA-Z][a-zA-Z0-9-]*)="([^"]*)"/g)) {
+    const name = PROP[a[1]!] ?? a[1]!;
+    props[name] = name === "autoFocus" ? true : unescape(a[2]!);
+  }
   return createElement(m[1]!, props);
 }
 
@@ -43,7 +47,7 @@ export const NoOrg = (props: NoOrgOptions): ReactElement => fromHtml(noOrgPage(p
 export const Refused = (props: RefusedOptions): ReactElement => fromHtml(refusedPage(props).body);
 
 /** The account not answering (accountUnavailablePage). */
-export const AccountUnavailable = (props: { lang: RefusedOptions["lang"]; retryHref?: string; command?: string }): ReactElement => fromHtml(accountUnavailablePage(props).body);
+export const AccountUnavailable = (props: { lang: RefusedOptions["lang"]; retryHref?: string; command?: string; ref?: string }): ReactElement => fromHtml(accountUnavailablePage(props).body);
 
 /** Connect an agent (connectPanel in @forspring/ui/connect, D-19). The tabs need no handlers; for the
  *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
@@ -91,3 +95,10 @@ export const Tooltip = (props: TooltipOptions): ReactElement => fromHtml(tooltip
 
 /** One of the package's icons, inline SVG in currentColor (icon()); aria-hidden unless given a label. */
 export const Icon = (props: { name: IconName; label?: string }): ReactElement => fromHtml(icon(props.name, props.label === undefined ? {} : { label: props.label }));
+
+/** A failed submit's summary (errorSummary, D-30): it takes focus when it mounts. Nothing when there
+ *  are no errors. */
+export const ErrorSummary = (props: ErrorSummaryOptions): ReactElement | null => {
+  const h = errorSummary(props);
+  return String(h) ? fromHtml(h) : null;
+};

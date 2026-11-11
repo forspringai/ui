@@ -66,6 +66,10 @@ export type RefusedOptions = {
     retryHref?: string;
     /** The exact command that fixes it, for an agent reading the page ("dataspring auth login"). */
     command?: string;
+    /** account_unavailable, or any refusal that hid a platform or upstream error: the request's short
+     *  ref (hub D-88), shown last as "Fejlkode" / "Reference" for support (D-30). A plain refusal needs
+     *  none; its reason, the kicker, is the stable code. */
+    ref?: string;
 };
 /** A refusal, by its reason: what happened, what it means, and the fix (D-17, hub D-99). */
 export declare function refusedPage(o: RefusedOptions): StandardPage;
@@ -74,4 +78,5 @@ export declare function accountUnavailablePage(o: {
     lang: Lang;
     retryHref?: string;
     command?: string;
+    ref?: string;
 }): StandardPage;

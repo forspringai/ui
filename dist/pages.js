@@ -8,7 +8,7 @@
 //
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 import { REFUSALS } from "./refusals.js";
-import { button, html, list, ROLE_NAMES, safeHref, tag } from "./html.js";
+import { button, errorRef, html, list, ROLE_NAMES, safeHref, tag } from "./html.js";
 const T = {
     da: {
         chooseTitle: "Vælg en organisation",
@@ -121,6 +121,8 @@ export function refusedPage(o) {
         parts.push(html `<div class="actions">${action}</div>`);
     if (o.command)
         parts.push(html `<p class="fine">${t.agent} <code>${o.command}</code></p>`);
+    if (o.ref)
+        parts.push(errorRef({ lang: o.lang, ref: o.ref }));
     return page(r.status, words.title, "refused", html `<p class="kicker">${o.reason}</p><h1>${words.title}</h1>${parts}`, o.reason);
 }
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */

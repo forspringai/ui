@@ -1131,3 +1131,48 @@ ranges (42 px, say) still fails. **Without it** nothing changes: the same scale,
 test/fixtures/marketing.html uses every marketing step, the fluid ones at 5vw and 2.6vw so the measured
 size sits between the tokens at 1280; test/audit.test.ts holds that it passes with `--marketing` at
 both widths and themes and fails without it, naming each off-scale size.
+
+## D-30 — The helpers do what docs/usage.md says: an error summary, required words, the ref; 0.18.0 (2026-11-11)
+
+Hub tick qs6. Writing docs/usage.md (hub tick tdg) found the helpers short of the guidance in five
+places: `button()` takes `disabled` and the demo drew a disabled "Ikke nu" (against D-23); there was no
+error summary and `notice()` cannot take an id, tabindex or autofocus, so usage.md told products to wrap
+it by hand; nothing showed hub D-88's `ref`; `field({ required })` wrote no word, and the demo labelled
+an optional field with the placeholder "Valgfri"; and `notice()` had two stacked doc comments. Nothing
+is renamed or removed (D-5); no version bump in this change, the next release carries it.
+
+- **`errorSummary({ lang, errors, title?, id? })`**, and `ErrorSummary` in React: the error notice
+  (`.notice.error`, plus `.error-summary`) with `role="alert"`, `tabindex="-1"`, `autofocus` and an id
+  (`error-summary` by default), an h2 ("Ret disse felter" / "Fix these fields") at the notice title's
+  size, and a list of links to `#<field id>`, one per error. Nothing for an empty list, so a product can
+  always call it. The words are the package's, in a catalog beside the field's. It takes focus on a page
+  load (`autofocus`) and, in React, on mount (`autoFocus`, which `fromHtml()` now passes as a boolean);
+  React writes it as `autofocus=""`, so the helper does too and the two stay byte for byte the same.
+  The demo drops only the autofocus, since the summary sits mid-gallery and would scroll every visit.
+- **`field()` writes the word.** `required: true` now adds "(påkrævet)" / "(required)" inside the label,
+  as `.field-mark` (regular weight, `--muted-foreground`), so it is in the accessible name; new
+  `optional: true` adds "(valgfri)" / "(optional)". **This changes visible output for every field
+  passed `required: true`**, a deliberate fix (usage.md: required is said in words) for the release
+  notes; no test pinned the old label. A form marks whichever is rarer, so new `requiredWord: false`
+  keeps the attribute (the browser's check, the screen reader's "required") without the word, for a
+  form that marks its optional fields or says once that all are required. `confirmDestructive()` uses
+  it: its label already says what to type, so its output is unchanged. New `lang` picks the words,
+  Danish by default like `switchButton()`'s, so a caller that passes none keeps compiling. The words are
+  "påkrævet", as the brief asked, rather than usage.md's earlier "skal udfyldes": one word reads as a
+  quiet mark beside a label, where a clause reads as part of it.
+- **The `ref` (hub D-88)** is `ref` on `notice()`, `state()` (failed only), `refusedPage()` and
+  `accountUnavailablePage()`, and `errorRef({ lang, ref })` alone: "Fejlkode: 4bf92f35" / "Reference:
+  4bf92f35", the ref in `<code>` with `user-select: all` so one click selects it for a copy, and under it
+  "Nævn den, hvis du skriver til os." / "Quote it if you contact us." Escaped like everything else. A
+  plain refusal needs none (its reason is the stable code); the account not answering is upstream, so
+  the demo's account_unavailable pages carry one. `state()` was not in the brief; usage.md section 5 asks
+  for the ref there too, and its text is a `<p>`, where `errorRef()` could not go.
+- **`disabled` stays** on `button()` (D-5), with a doc comment saying not to use it and why; the demo's
+  "Ikke nu" is replaced by the pattern usage.md describes: no button, and the reason in words.
+- **`notice()`** has one doc comment and a named options type, `NoticeOptions`.
+
+usage.md now names `errorSummary()` and `errorRef()` (test/usage.test.ts requires it) and no longer
+tells products to wrap a notice, write the ref or mark required fields by hand. The demo's form shows the
+summary over two field errors with the required fields marked; the tooltip's form shows the other
+convention, an optional field marked and a required one with `requiredWord: false`.
+

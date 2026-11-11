@@ -68,7 +68,7 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.17.0";
+export const VERSION = "0.18.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -302,24 +302,52 @@ export function field(o) {
         : o.control === "select"
             ? html `<select${raw(attrs(common))}>${(o.options ?? []).map((op) => html `<option${raw(attrs({ value: op.value, selected: op.selected }))}>${op.label}</option>`)}</select>`
             : html `<input${raw(attrs({ ...common, type: o.type ?? "text", value: o.value, placeholder: o.placeholder, pattern: o.pattern, title: o.title }))}>`;
-    const label = html `<label for="${id}">${o.label}</label>`;
+    const word = o.required ? (o.requiredWord === false ? undefined : FORM[o.lang ?? "da"].required) : o.optional ? FORM[o.lang ?? "da"].optional : undefined;
+    const label = html `<label for="${id}">${o.label}${word ? html ` <span class="field-mark">(${word})</span>` : ""}</label>`;
     return html `<div class="field">${o.help ? html `<div class="field-head">${label}${o.help}</div>` : label}${control}${o.hint ? html `<p class="hint" id="${hintId}">${o.hint}</p>` : ""}${o.error ? html `<p class="field-error" id="${errorId}">${o.error}</p>` : ""}</div>`;
 }
-/** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
+/** The words the form and error helpers add (D-30), Danish and English, the package's like the bar's. */
+const FORM = {
+    da: { required: "påkrævet", optional: "valgfri", summary: "Ret disse felter", ref: "Fejlkode", refHint: "Nævn den, hvis du skriver til os." },
+    en: { required: "required", optional: "optional", summary: "Fix these fields", ref: "Reference", refHint: "Quote it if you contact us." },
+};
 /**
- * What just happened, in words. `signal` instead of `tone` reports a monitored state (D-13): the
- * neutral card with the signal's colour as its edge rule and its mark before the title.
+ * A platform error's short `ref` (hub D-88: the first characters of the request's traceparent), in
+ * monospace and selected whole by one click, with the hint to quote it to support (D-30). notice(),
+ * state() and refusedPage() draw it from their `ref`; call it alone for an error drawn without them.
+ */
+export function errorRef(o) {
+    const t = FORM[o.lang];
+    return html `<p class="error-ref">${t.ref}: <code>${o.ref}</code><br>${t.refHint}</p>`;
+}
+/**
+ * What is true about this page, in words: errors and warnings are alerts, the rest polite status
+ * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
+ * signal's colour as its edge rule and its mark before the title.
  */
 export function notice(o) {
+    const ref = o.ref ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : "";
     if (o.signal) {
         const role = o.signal === "down" || o.signal === "warn" ? "alert" : "status";
         const title = o.title ? html `<strong class="notice-title">${signalMark(o.signal)}${o.title}</strong>` : "";
-        return html `<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}</div>`;
+        return html `<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}${ref}</div>`;
     }
     const tone = o.tone ?? "info";
     const role = tone === "error" || tone === "warning" ? "alert" : "status";
     const title = o.title ? html `<strong class="notice-title">${o.title}</strong>` : "";
-    return html `<div class="${cls("notice", tone !== "info" && tone)}" role="${role}">${title}${o.text}</div>`;
+    return html `<div class="${cls("notice", tone !== "info" && tone)}" role="${role}">${title}${o.text}${ref}</div>`;
+}
+/**
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
+ * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
+ * Nothing when there are no errors.
+ */
+export function errorSummary(o) {
+    if (!o.errors.length)
+        return html ``;
+    const id = o.id ?? "error-summary";
+    return html `<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html `<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div>`;
 }
 /** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
 export function signal(text, s) {
@@ -453,7 +481,7 @@ export function state(o) {
         return html `<div class="data-state loading" role="status" aria-live="polite"><span class="visually-hidden">${o.title}</span><span class="skeleton"></span><span class="skeleton"></span><span class="skeleton"></span></div>`;
     }
     const role = o.kind === "failed" ? raw(' role="alert"') : "";
-    return html `<div class="data-state ${o.kind}"${role}><p class="data-state-title">${o.title}</p>${o.text ? html `<p class="data-state-text">${o.text}</p>` : ""}${o.action ? html `<div class="data-state-actions">${o.action}</div>` : ""}</div>`;
+    return html `<div class="data-state ${o.kind}"${role}><p class="data-state-title">${o.title}</p>${o.text ? html `<p class="data-state-text">${o.text}</p>` : ""}${o.ref && o.kind === "failed" ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : ""}${o.action ? html `<div class="data-state-actions">${o.action}</div>` : ""}</div>`;
 }
 // --- Dialog and the destructive-action confirm (D-23) ----------------------------------------------
 /** Escapes a string for a RegExp, so it matches only itself. Browsers compile an input's pattern with
@@ -568,7 +596,9 @@ export function confirmDestructive(o) {
             label: o.nameLabel ?? t.typeName(name),
             name: o.confirmField ?? "confirm",
             id: `${o.id}-name`,
+            // The label already says what to type; a "required" beside it would only repeat it.
             required: true,
+            requiredWord: false,
             pattern: regexEscape(name),
             title: t.exactly(name),
             autocomplete: "off",

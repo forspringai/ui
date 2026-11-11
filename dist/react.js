@@ -7,14 +7,15 @@
 // React is an optional peer dependency; nothing else is imported at run time. No JSX, so this file
 // needs no React build step of its own.
 import { createElement } from "react";
-import { approval, bar, confirmDestructive, dialog, diff, explain, icon, pagination, table, toast, toastRegion, tooltip } from "./html.js";
+import { approval, bar, confirmDestructive, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip } from "./html.js";
 import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]);
 // React names a few attributes in camelCase and warns on the HTML spelling; the bytes it writes are the
-// same. The stroke ones are an icon's (D-26).
-const PROP = { class: "className", tabindex: "tabIndex", "stroke-width": "strokeWidth", "stroke-linecap": "strokeLinecap", "stroke-linejoin": "strokeLinejoin" };
+// same. The stroke ones are an icon's (D-26). autoFocus is a boolean to React (an empty string draws
+// nothing); in an app it focuses the element when it mounts, as the attribute does on a page load.
+const PROP = { class: "className", tabindex: "tabIndex", autofocus: "autoFocus", "stroke-width": "strokeWidth", "stroke-linecap": "strokeLinecap", "stroke-linejoin": "strokeLinejoin" };
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
 export function fromHtml(h, key) {
     // Attribute names may have a capital: an svg's viewBox.
@@ -24,8 +25,10 @@ export function fromHtml(h, key) {
     const props = { dangerouslySetInnerHTML: { __html: m[3] } };
     if (key !== undefined)
         props.key = key;
-    for (const a of m[2].matchAll(/\s([a-zA-Z][a-zA-Z0-9-]*)="([^"]*)"/g))
-        props[PROP[a[1]] ?? a[1]] = unescape(a[2]);
+    for (const a of m[2].matchAll(/\s([a-zA-Z][a-zA-Z0-9-]*)="([^"]*)"/g)) {
+        const name = PROP[a[1]] ?? a[1];
+        props[name] = name === "autoFocus" ? true : unescape(a[2]);
+    }
     return createElement(m[1], props);
 }
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
@@ -73,3 +76,9 @@ export const ToastRegion = (props) => fromHtml(toastRegion(props));
 export const Tooltip = (props) => fromHtml(tooltip(props));
 /** One of the package's icons, inline SVG in currentColor (icon()); aria-hidden unless given a label. */
 export const Icon = (props) => fromHtml(icon(props.name, props.label === undefined ? {} : { label: props.label }));
+/** A failed submit's summary (errorSummary, D-30): it takes focus when it mounts. Nothing when there
+ *  are no errors. */
+export const ErrorSummary = (props) => {
+    const h = errorSummary(props);
+    return String(h) ? fromHtml(h) : null;
+};
