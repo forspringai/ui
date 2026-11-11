@@ -214,7 +214,7 @@ Where this section and the letter disagree, the letter wins.
 
 - **Warm and direct.** We write as people who built their own businesses and like helping others grow
   theirs.
-- **First person plural** ("we"), to "you" (the customer, "jer" in Danish).
+- **First person plural** ("we"), to "you": in Danish, "I/jer" for the customer company in marketing and sales, "du" for the person on product screens, never "De" (hub D-118).
 - **Plain words, short sentences.** Explain a technical word in the body or leave it out of the headline.
 - **Results, not licences.** We deliver a result and get paid for it; we don't sell a licence the
   customer is left to make work.
