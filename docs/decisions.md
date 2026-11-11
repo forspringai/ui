@@ -665,3 +665,22 @@ ships them.
 The demo shows the panel on the components page (`?tab=claude-ai|other|cli`, `?open=connect-ci`) and
 on pages of its own in SiteSpring, `dist/demo/pages/connect.da.html` and `.en.html`, which
 test/audit.test.ts audits at 1280 and 380, light and dark, with no findings.
+
+## D-20 — Accents apart from each other and readable on the soft grey; 0.10.1 (2026-11-11)
+
+Peter's brand and design review (hub `docs/brand/review-2026-11-11.md`, hub ticks ok6 and 857) found
+two gaps in the colour tests. Accents were tested against the status and signal colours but never
+against each other: AppSpring's plum and PulseSpring's magenta are 8.8 apart in light and 7.7 in dark.
+Accents were also tested on the page and the card but not on the soft grey (`muted`), where
+DataSpring's teal was 4.39:1.
+
+1. **Every pair of distinct product accents is at least 10 apart** (OKLab x100), the bar status
+   colours already meet. Spring and Forspring share one blue (hub D-101) and count as one accent. A
+   pair waiting for a hub decision sits in the test's `PENDING` set and must still be too close, so the
+   exception fails once the fix lands. Today only appspring/pulsespring is pending (hub queue
+   brand-2).
+2. **Every accent is at least 4.5:1 on every surface,** soft included, and every doll at least 3:1
+   on every surface.
+3. **DataSpring's light teal is `#0b7a7f`** (was `#0b7c82`), the smallest darkening that passes on
+   soft (4.52:1). The two are 0.7 apart, under any visible difference. Hub D-90's table is amended to
+   match.

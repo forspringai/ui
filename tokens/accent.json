@@ -67,17 +67,17 @@
       }
     },
     "dataspring": {
-      "$description": "DataSpring, deep teal.",
+      "$description": "DataSpring, deep teal. Light was #0b7c82 until 0.10.1: 4.39:1 on the soft grey (brand review 2026-11-11), so it was darkened by the least that passes, 0.7 apart in OKLab x100, too little to see (D-20).",
       "light": {
         "$type": "color",
         "$value": {
           "colorSpace": "srgb",
           "components": [
             0.0431,
-            0.4863,
-            0.5098
+            0.4784,
+            0.498
           ],
-          "hex": "#0b7c82"
+          "hex": "#0b7a7f"
         }
       },
       "dark": {
