@@ -8,6 +8,7 @@ server-rendered component layer with typed HTML helpers.
 The brand guideline (mark, colour, type, voice and the rest) is [brand/README.md](brand/README.md).
 What Forspring and each product is, in words, lives in the hub's
 [docs/brand/vision.md](https://github.com/forspringai/forspring/blob/main/docs/brand/vision.md).
+When to use which helper, and how forms and errors behave, is [docs/usage.md](docs/usage.md).
 
 ## Install
 

@@ -214,7 +214,7 @@ Where this section and the letter disagree, the letter wins.
 
 - **Warm and direct.** We write as people who built their own businesses and like helping others grow
   theirs.
-- **First person plural** ("we"), to "you" (the customer, "jer" in Danish).
+- **First person plural** ("we"), to "you": in Danish, "I/jer" for the customer company in marketing and sales, "du" for the person on product screens, never "De" (hub D-118).
 - **Plain words, short sentences.** Explain a technical word in the body or leave it out of the headline.
 - **Results, not licences.** We deliver a result and get paid for it; we don't sell a licence the
   customer is left to make work.
@@ -257,13 +257,10 @@ What exists, in this package:
 - **The CSS layer** `css/components.css`, on the roles only.
 - **The demo page:** `pnpm demo`, then http://127.0.0.1:4319/dist/demo/ shows every component, every
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
-- The package README shows how to use each one.
+- The package README shows how to use each one; [docs/usage.md](../docs/usage.md) says when to use
+  which, and how forms, errors and empty, loading and failed states behave (hub tick tdg).
 
-Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); this does not exist yet:
-
-| Pattern | Hub tick |
-|---|---|
-| Usage guidance: when to use which, forms and errors | tdg |
+Everything the brand review (hub `docs/brand/review-2026-11-11.md`) listed as missing now exists.
 
 ## 9. Accessibility
 
