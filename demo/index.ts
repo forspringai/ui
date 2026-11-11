@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -57,6 +57,8 @@ const SCRIPT = `<script>
   if (q.get("open")) document.querySelector("details." + CSS.escape(q.get("open")))?.setAttribute("open", "");
   // ?open=delete-site opens that dialog as a modal (D-23), for a screenshot or the audit.
   if (q.get("open")) { const d = document.getElementById(q.get("open")); if (d instanceof HTMLDialogElement) d.showModal(); }
+  // ?open=cvr-tip opens that tooltip from its button (D-26), so it is anchored as a press anchors it.
+  if (q.get("open")) document.querySelector('[popovertarget="' + CSS.escape(q.get("open")) + '"]')?.click();
   // ?tab=claude-ai (or other, cli) picks a tab in the connect panel (D-19).
   if (q.get("tab")) { const r = document.getElementById("connect-" + q.get("tab")); if (r) r.checked = true; }
   form.addEventListener("change", apply);
@@ -70,6 +72,10 @@ const head = raw(`<link rel="stylesheet" href="../tokens.css"><link rel="stylesh
 .demo-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
 .demo-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .demo-grid > * { margin: 0; }
+.demo-toasts > .toast-region { position: static; inline-size: auto; max-inline-size: 30rem; margin-bottom: var(--space-6); }
+.demo-icons { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+.demo-icons li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); }
+.demo-icons .icon { font-size: var(--text-content-h2); color: var(--foreground); }
 </style>`);
 
 // The standard pages (D-17), each a page of its own in DataSpring, as a product shows them.
@@ -346,6 +352,29 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 <p>Noget, der ikke kan fortrydes, sker aldrig med ét klik. Dialogen siger, hvad der går tabt, beder om navnet og har det sikre valg først. Uden script fører knappen til <a href="pages/delete-site.da.html">en side med det samme spørgsmål</a>.</p>
 <div class="demo-row">${button({ label: "Udgiv ændringer", type: "button" })}${dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" })}</div>
 ${confirmDestructive(DELETE_SITE("da"))}
+</section>
+
+<section id="toast"><h2>Toast, værktøjstip og ikoner</h2>
+<p>En toast siger, hvad den sidste handling gjorde, efter at siden er sendt og hentet igen. På en side ligger den nederst i vinduet; her står de fire i rækkefølge. Luk er et link til siden uden beskeden, så det virker uden script.</p>
+<div class="demo-toasts">${toastRegion({
+  lang: "da",
+  toasts: [
+    toast({ lang: "da", id: "toast-success", tone: "success", text: "Ændringerne er gemt.", dismissHref: "#toast" }),
+    toast({ lang: "da", id: "toast-info", text: "Eksporten er gået i gang. Vi sender en mail, når den er klar.", dismissHref: "#toast" }),
+    toast({ lang: "da", id: "toast-warning", tone: "warning", text: "Siden er udgivet, men 2 billeder mangler en alternativ tekst.", action: { label: "Se billederne", href: "#toast" }, dismissHref: "#toast" }),
+    toast({ lang: "da", id: "toast-danger", tone: "danger", text: "Mailen kunne ikke sendes. Prøv igen om lidt.", action: { label: "Prøv igen", href: "#toast" }, dismissHref: "#toast" }),
+  ],
+})}</div>
+<p>Et værktøjstip forklarer noget, man kan klare sig uden. Det åbner, når man trykker på knappen, og lukker med Escape eller et tryk ved siden af. Det, man skal vide for at udfylde feltet, står i hjælpeteksten.</p>
+${card(html`<form class="form" method="post" action="#">${field({
+  label: "CVR-nummer",
+  name: "cvr",
+  hint: "Otte cifre, fx 12345678.",
+  autocomplete: "off",
+  help: tooltip({ id: "cvr-tip", label: "Mere om CVR-nummer", trigger: icon("help-circle"), text: "Vi slår firmaets navn og adresse op i CVR-registret, så du ikke skal skrive dem." }),
+})}</form>`)}
+<div class="demo-row" style="margin-top: var(--space-6)">${button({ label: "Ny kunde", icon: "plus", type: "button" })}${button({ label: "Hent CSV", icon: "download", variant: "ghost", type: "button" })}${button({ label: "Åbn i SiteSpring", icon: "external-link", variant: "ghost", href: "#" })}${button({ label: "", icon: "trash", variant: "danger", small: true, type: "button", ariaLabel: "Slet kunden" })}</div>
+<ul class="demo-icons" aria-label="Alle ikoner">${ICON_NAMES.map((n) => html`<li>${icon(n)}<code>${n}</code></li>`)}</ul>
 </section>
 
 <section><h2>Agentgodkendelse</h2>

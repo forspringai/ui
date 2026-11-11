@@ -1,3 +1,5 @@
+import { ICON_NAMES, type IconName } from "./icons/lucide.ts";
+export { ICON_NAMES, type IconName };
 declare const BRAND: unique symbol;
 export declare class Html {
     readonly value: string;
@@ -20,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.14.0";
+export declare const VERSION = "0.15.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -36,6 +38,17 @@ export declare const MARK_VIEWBOX = "-184 -160 368 368";
 export declare const mark: () => Html;
 /** The doll's paths alone, classes fill and coil, for the brand files. */
 export declare const MARK_PATHS: string;
+/**
+ * One of the package's icons (ICON_NAMES, a subset of Lucide, ISC) as inline SVG: a 24 by 24 grid,
+ * one stroke weight, in currentColor, so it takes the colour of the text around it and 1em of its
+ * size (.icon). Nothing is fetched: the paths are in the markup.
+ *
+ * Without a label it is decoration, aria-hidden, and the words beside it carry the meaning. With
+ * one it is an image with that name (role="img"), for an icon that stands alone.
+ */
+export declare function icon(name: IconName, o?: {
+    label?: string;
+}): Html;
 /** The page's icons, each a URL. shell() writes them from `brandBase` unless `favicon` names them. */
 export type Favicon = {
     svg: string;
@@ -45,7 +58,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.14.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.15.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -220,6 +233,9 @@ export type ButtonOptions = {
     /** The accessible name, when the visible label alone is ambiguous ("Log ud" on which device). */
     ariaLabel?: string;
     disabled?: boolean;
+    /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
+     *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
+    icon?: IconName;
 };
 export declare function button(o: ButtonOptions): Html;
 export type FieldOptions = {
@@ -251,6 +267,9 @@ export type FieldOptions = {
     autocapitalize?: "off" | "none" | "sentences" | "words" | "characters";
     autocorrect?: "on" | "off";
     spellcheck?: boolean;
+    /** Beside the label, outside it: a tooltip() with more about the field (D-26). Not for what a
+     *  person needs to fill it in; that is the hint, which is always shown. */
+    help?: Content;
 };
 /** A label, its control, a hint and an error, wired with aria-describedby and aria-invalid. */
 export declare function field(o: FieldOptions): Html;
@@ -510,6 +529,77 @@ export type ConfirmDestructiveOptions = {
  * is the browser's, and a request can come from anywhere.
  */
 export declare function confirmDestructive(o: ConfirmDestructiveOptions): Html;
+/** What a toast reports: done, a warning, a failure, or a fact. Not notice()'s Tone: a toast says
+ *  danger, as tag() does, because it reports something that went wrong elsewhere, not a form's error. */
+export type ToastTone = "success" | "warning" | "danger" | "info";
+export type ToastOptions = {
+    lang: Lang;
+    /** Default "info". A danger toast is an alert, read out at once; the rest are polite status. */
+    tone?: ToastTone;
+    /** What happened, in a sentence: "Ændringerne er gemt." */
+    text: Content;
+    /** This page without the toast: its URL with the flash parameter dropped (/o/noon/sites, not
+     *  /o/noon/sites?gemt=1), or the same URL when the flash was a one-time cookie. Dismiss is a link
+     *  here, so it works with no script; toastScript() makes it instant. */
+    dismissHref: string;
+    /** One thing to do about it, a link: "Fortryd", "Se fakturaen". A toast with one never hides itself. */
+    action?: {
+        label: Content;
+        href: string;
+    };
+    /** Unique on the page. Default "toast"; give each one in a toastRegion() its own. */
+    id?: string;
+};
+/**
+ * The message after a POST and its 303 (D-26): "Ændringerne er gemt." It floats at the bottom of the
+ * window, with the tone's icon and, for a screen reader, its word, and a Dismiss link to this page
+ * without it. Draw it early in the page (at the start of main), so a screen reader reaching the page
+ * meets it first: a live region on a page that has just loaded is read in order, not announced.
+ *
+ * Not notice(): a notice is part of the page and stays as long as what it says is true (a form's
+ * errors, a trial running out); a toast reports what the last request did and goes.
+ */
+export declare function toast(o: ToastOptions): Html;
+/** Several toasts stacked at the bottom of the window, newest last, in a region named "Beskeder" /
+ *  "Messages" that a screen reader can jump to. */
+export declare function toastRegion(o: {
+    lang: Lang;
+    toasts: Content;
+    label?: string;
+}): Html;
+/**
+ * The toasts' optional script, as text (toastScript(nonce) writes the tag). Dismiss removes the toast
+ * where it is and puts its link's URL in the address bar (history.replaceState), so a reload does
+ * not bring it back; a modified click is left to the link. A success or info toast with no action
+ * hides itself after 8 seconds, waiting while the pointer or focus is on it. A danger or warning
+ * toast never does, whatever its markup says: a failure stays until a person has read it. Under
+ * prefers-reduced-motion nothing hides by itself, and Dismiss still works.
+ */
+export declare const TOAST_SCRIPT = "(() => {\n  const gone = (t, href) => {\n    const region = t.parentElement;\n    t.remove();\n    if (region && region.classList.contains(\"toast-region\") && !region.querySelector(\".toast\")) region.remove();\n    if (href) try { history.replaceState(history.state, \"\", href); } catch {}\n  };\n  document.addEventListener(\"click\", (e) => {\n    const a = e.target instanceof Element ? e.target.closest(\"[data-toast-dismiss]\") : null;\n    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;\n    const t = a.closest(\".toast\");\n    if (!t) return;\n    e.preventDefault();\n    gone(t, a.getAttribute(\"href\"));\n  });\n  if (matchMedia(\"(prefers-reduced-motion: reduce)\").matches) return;\n  for (const t of document.querySelectorAll(\".toast[data-toast-autohide]\")) {\n    if (t.classList.contains(\"toast-danger\") || t.classList.contains(\"toast-warning\") || t.getAttribute(\"role\") === \"alert\") continue;\n    let timer = 0;\n    const start = () => {\n      clearTimeout(timer);\n      timer = setTimeout(() => {\n        if (t.matches(\":hover, :focus-within\")) return;\n        gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n      }, 8000);\n    };\n    const wait = () => clearTimeout(timer);\n    t.addEventListener(\"pointerenter\", wait);\n    t.addEventListener(\"focusin\", wait);\n    t.addEventListener(\"pointerleave\", start);\n    t.addEventListener(\"focusout\", start);\n    start();\n  }\n})();";
+/** TOAST_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare function toastScript(nonce?: string): Html;
+export type TooltipOptions = {
+    /** The tooltip's id, unique on the page: the trigger opens it and is described by it. */
+    id: string;
+    /** What the person presses, inside a button: icon("help-circle"), or a word. */
+    trigger: Content;
+    /** The trigger's accessible name, when the trigger is an icon: "Mere om CVR-nummer". */
+    label?: string;
+    /** A sentence or two, plain text and inline markup. */
+    text: Content;
+};
+/**
+ * A short explanation beside something (D-26): a button and a native popover. Pressing the button,
+ * or tapping it, shows the text (popovertarget, popovertargetaction="show"); a press elsewhere or
+ * Escape hides it, all with no script. Where the browser has interest invokers (interestfor,
+ * Chromium only), pointing at it or focusing it shows it too, and the browser lets Escape hide that.
+ * The trigger is described by the text (aria-describedby), which is in the DOM throughout, so a
+ * screen reader reads it with the button even closed.
+ *
+ * A tooltip never holds the only copy of something a person needs to act: what a field needs is its
+ * hint, and what a button does is its label. A tooltip is for the curious, so it is fine to miss it.
+ */
+export declare function tooltip(o: TooltipOptions): Html;
 /** A moment: a Date, written in the page's language in Copenhagen's time (as the standard pages
  *  write one), a Date with the caller's own words for it ("om 2 timer"), or words alone. */
 export type When = Date | string | {
@@ -655,4 +745,3 @@ export declare function explain(o: ExplainOptions): Html;
 export declare const orDivider: (text: Content) => Html;
 /** Google's button (google-button.css), as a submit button for the caller's form. */
 export declare function googleButton(label: Content): Html;
-export {};

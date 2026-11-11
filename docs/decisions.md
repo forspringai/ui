@@ -909,3 +909,97 @@ small ghost buttons. `empty` draws a `state()` in place of the table when no row
 DESIGN-SURFACE asks: say there is nothing matching, and which. The demo's "Tabel med mange rækker"
 section is the review's checks in Danish: 248 in all, the first six worst first, with a down, a late
 and four up, and passes the audit for PulseSpring and SiteSpring.
+
+## D-26 — Toast, tooltip and an icon set; 0.15.0 (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick vt2): "A chrome kit, not a
+library: about 18 helpers, no dialog, toast, tooltip, pagination or icon set." D-23 and D-25 did the
+dialog and the paging; this does the other three. `@forspring/ui/html` has `toast()`, `toastRegion()`,
+`toastScript()` / `TOAST_SCRIPT`, `tooltip()`, `icon()` with `ICON_NAMES` and the `IconName` union;
+`button()` takes an optional `icon` and `field()` an optional `help`, both added, nothing renamed (D-5);
+`@forspring/ui/react` has `Toast`, `ToastRegion`, `Tooltip` and `Icon`. No version bump in this change;
+the next release carries it.
+
+**A toast is the flash after a POST and its 303.** It floats at the bottom of the window (the end
+corner on a wide screen, between the gutters on a phone), the card's surface with the tone as its edge
+rule and its icon's colour. The tone is never colour alone: each has its own shape (a tick for
+success, a triangle for a warning, an octagon for danger, an i for a fact) and a visually hidden word
+read before the text ("Udført:", "Advarsel:", "Fejl:", "Bemærk:"). A danger toast is `role="alert"`;
+the others are `role="status"` with `aria-live="polite"`. A page that has just loaded announces no
+live region, so the README says to draw the toast at the start of `main`, where a screen reader meets
+it first. The tones are those of `tag()` (success, warning, danger) plus info, not `notice()`'s
+"error": a toast reports something the last request did, while a notice is part of the page and stays
+while it is true (a form's errors, a trial running out). A form's errors are never a toast, so the two
+do not overlap.
+
+**Dismiss is a link, not a details or popover trick.** `dismissHref` is the page without the flash
+parameter (or the same URL for a one-time cookie flash), so Dismiss works with no script, and after it
+a reload, Back or a copied URL no longer shows the message, which only dropping the parameter does.
+The alternatives were weighed: a `details` whose summary is "Luk" is announced as an expanded
+disclosure, not a close button, and its content cannot follow its summary; a `popover` cannot start
+open without script; a `<dialog open>` closed by `form method="dialog"` works with no script and no
+request, but makes every toast a dialog to a screen reader. The cost of the link is a request when
+there is no script, which is the cost every other no-script control here pays (D-23's confirm page,
+D-25's paging). So `dismissHref` is required, an addition to the brief's signature. `toastScript()`
+follows `dialogScript()`'s pattern: a nonce, one document listener, a modified click left to the
+link. It removes the toast in place and writes `dismissHref` into the address bar with
+`history.replaceState`.
+
+**Auto-hide is narrow.** Only `toastScript()` hides anything, and only a success or info toast with
+no action (`data-toast-autohide`, which `toast()` writes for exactly those), after 8 seconds, waiting
+while the pointer or focus is on it. A warning or danger toast never hides itself: the script checks
+the class and the alert role itself, so a hand-written attribute cannot make it, and a test runs the
+script to prove it. A toast with an action stays because an "Undo" that vanishes before a person
+reaches it is a time limit (WCAG 2.2.1). Under `prefers-reduced-motion` the script hides nothing and
+only makes Dismiss instant. There is no entry animation, as the dialog has none.
+
+**A tooltip is a button and a native popover.** `popover="auto"` with `popovertarget` and
+`popovertargetaction="show"` opens it on a press or a tap and closes it on a press elsewhere or
+Escape, with no script; "show" rather than "toggle" so a press after a hover has opened it does not
+close it again. The trigger is `aria-describedby` the text, which is markup in the DOM throughout
+(closed it is `display: none`, which a description still reads), not a `title`, which touch screens
+never show. Hover is progressive through `interestfor`, not CSS: content shown by CSS `:hover` or
+`:focus-visible` cannot be hidden with Escape, which WCAG 1.4.13 asks of content on hover or focus,
+while an interest invoker is the browser's own and hides on Escape. Baseline, as of this change:
+`popover`, `popovertarget` and `popovertargetaction` are widely available (newly in April 2024);
+CSS anchor positioning, with a popover's invoker as its implicit anchor, is newly available (January
+2026, Firefox 147), so the tooltip opens above its button with `position-area: top` and flips below
+when there is no room, behind `@supports`, and an older browser shows it where it centres a popover;
+`interestfor` is Chromium only (142) and not Baseline, so elsewhere a tooltip opens by press alone.
+The rule is in the doc comment and the README: **a tooltip never holds the only copy of something a
+person needs to act.** What a field needs is its hint, which is always shown; the tooltip is for the
+curious. `field()`'s `help` draws it beside the label and outside it, because a button inside a label
+is invalid and would join the field's name.
+
+**The icons are Lucide's, vendored, not drawn here.** 32 icons, the names the suite's screens use
+(check, x, alert-triangle, alert-octagon, info, help-circle, the four chevrons, arrow-up and down,
+search, filter, plus, minus, edit, trash, external-link, copy, download, upload, settings, user,
+users, log-out, eye, eye-off, clock, calendar, mail, more-horizontal); alert-octagon and help-circle
+are beyond the brief's list, for the danger toast's shape and the tooltip's trigger. Drawing our own
+would mean thirty drawings to keep consistent and review; Lucide is already one stroke weight on a 24
+grid with round caps, which is the look asked for, and DataSpring's React screens already use it, so
+the server pages and the boards now draw the same pencil. The paths are copied from lucide-react
+1.46.0 with the React keys dropped and some renamed to the suite's words (Lucide's triangle-alert,
+octagon-alert, circle-question-mark, funnel, pencil and ellipsis). **Licence:** Lucide is ISC
+(Copyright 2026 Lucide Icons and Contributors), and its icons derived from Feather, most of these, are
+MIT (Copyright 2013-present Cole Bemis). Lucide's LICENSE, both notices, sits beside the code in
+`src/icons/LICENSE`, the build copies it to `dist/icons/LICENSE`, and `src/icons/lucide.ts` carries the
+same text as a `/*! @license` comment, which bundlers keep, so a product that bundles `html.js` keeps
+the notice too. Nothing loads from a CDN: the paths are in the markup (account D-17).
+
+**`icon(name, { label? })`** writes an `<svg class="icon">` with the stroke attributes set once,
+`currentColor`, `viewBox="0 0 24 24"`; without a label it is `aria-hidden` and the words beside it
+carry the meaning, with one it is `role="img"` with that `aria-label`. An unknown name throws rather
+than drawing nothing. `.icon` is 1em square, set a little below the baseline as a capital sits, so
+its size comes from the type ladder of the text it is in; no new size. In a button the icon goes
+before the label, and a `button` holding one is a flex row with the link button's gap. `fromHtml`
+now reads attribute names with a capital (an svg's `viewBox`) and maps the stroke attributes to
+React's names, so `Icon` draws the same bytes.
+
+**Look and the rules.** The toast's buttons are the small ghost box (D-14), 44px on a phone; Dismiss
+shows only its x, with "Luk" / "Dismiss" hidden and the toast's text as its description. The
+tooltip's trigger is the small control box, square, the icon at the h3 size, 44px on a phone; the
+bubble is the popover role with the chrome body size. Every spacing is a `--space-*` token and every
+colour a role. The demo's "Toast, værktøjstip og ikoner" section shows one toast per tone in place,
+the CVR field's tooltip, buttons with icons and every icon with its name, and passes the audit for
+Forspring and DataSpring.

@@ -28,7 +28,9 @@ src/emit.ts        writes the token outputs
 src/assets.ts      writes fonts.css, the component CSS and the demo page
 src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6), the bar (D-17), the
                    doll and the favicon links (D-18), the dialog and the destructive confirm (D-23),
-                   agent approval, diff and explain (D-24), the table at scale and pagination (D-25)
+                   agent approval, diff and explain (D-24), the table at scale and pagination (D-25),
+                   toast, tooltip and icon() (D-26)
+src/icons/         lucide.ts, the vendored Lucide subset icon() draws, and Lucide's LICENSE (ISC, Feather's MIT)
 src/brand.ts       the brand SVGs from the tokens and brand/wordmarks.json (D-18, hub D-101)
 src/refusals.ts    the refusal vocabulary, Danish and English, no markup (D-17)
 src/pages.ts       the standard pages: choose an org, no org, refused, account unavailable (D-17)
@@ -53,6 +55,7 @@ dist/              committed build output (D-2)
   fonts.css        @font-face rules pointing at ../fonts/
   components.css, google-button.css
   html, refusals, pages, connect, react (.js/.d.ts)  the helpers, compiled, so a product needs no TypeScript loader
+  icons/           lucide.js/.d.ts, imported by html.js, and the icons' LICENSE
   audit/           src/audit/ compiled; dist/audit/cli.js is the ui-audit bin
   brand/<product>/ mark, favicon and logo SVGs and their PNGs, what products serve (D-18)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
@@ -78,7 +81,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.14.0"
+"@forspring/ui": "github:forspringai/ui#v0.15.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

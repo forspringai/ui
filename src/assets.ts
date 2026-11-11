@@ -19,6 +19,8 @@ export function assets(root: string): Record<string, string> {
     "fonts.css": generated("src/html.ts fontFaces()") + fontFaces("../fonts/"),
     "components.css": css("components.css"),
     "google-button.css": css("google-button.css") + "\n" + googleFontFace("../fonts/"),
+    // The vendored icons' licence (Lucide's ISC and Feather's MIT, D-26), beside dist/icons/lucide.js.
+    "icons/LICENSE": readFileSync(join(root, "src/icons/LICENSE"), "utf8"),
     "demo/index.html": demoPage() + "\n",
     ...brandSvgs(model(join(root, "tokens")), readWordmarks(root)),
     ...Object.fromEntries(Object.entries(standardPages()).map(([k, v]) => [`demo/${k}`, v])),
