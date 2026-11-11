@@ -848,3 +848,64 @@ colour, beside bold words). The buttons are ordinary buttons in one wrapping row
 box (D-14), and on a phone they share the row's width with the draft link on its own line. The demo's
 "Agentgodkendelse" section shows the brand review's payment-reminders case waiting, with its trail, one
 already approved, and a channel's setup before and after.
+
+## D-25 — A table at scale: search, filters, the stated order and paging; 0.14.0 (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick tiu): "The table helper lists
+every row. The pattern adds search, a filter, a sort order and paging." The review's mock-up is
+PulseSpring's checks: "Search 248 checks", the chips "Needs attention 2" and "All 248", the columns
+Check, State (a signal with its word), Uptime 30d and Response, and the footer "1-6 of 248, worst
+first" with Previous and Next. `table()` now takes an optional `controls` part and `Column` an optional
+`sort`; `@forspring/ui/html` has `pagination()` and `pageOf()`; `@forspring/ui/react` has `Table` and
+`Pagination`. No version bump in this change; the next release carries it.
+
+**Added, not changed (D-5).** `table()` is the API every product already calls. Without `controls` and
+without a sorting column it draws the same bytes as before, and a test pins them. With `controls` it
+wraps the frame in `.data-table` with the controls above and the footer below.
+
+**A GET form and links, so the URL holds the state.** The search is a `form method="get"` with no
+action (it goes to this page) and the filters, the sortable headers and Previous and Next are links.
+So the page works with no script, a person can bookmark, share or reload a filtered, sorted page and
+get the same rows, Back goes to the page before, and the server, which has the data, does the work.
+A GET form replaces the whole query string, so `keep` writes the other parameters in force (the
+filter, the sort) as hidden inputs; the page is left out on purpose, so a new search starts on page
+1. The filter links are the caller's URLs, so a product decides whether a filter keeps the search.
+Filters are links rather than a select or checkboxes because each one is a page you can link to, and
+it takes no submit; the current one is `aria-current="true"`, drawn filled with the ink, a change of
+fill rather than hue.
+
+**No client-side sort.** A table at this scale is one page of many: sorting the rows in the browser
+would sort six of 248 and look right while being wrong. Sorting is a query the server answers, so a
+sortable header is a link to the page in that order. The header in force has `aria-sort` and an arrow
+beside its word (↑ or ↓, hidden from a screen reader, which has `aria-sort`), so the order is never
+told by colour. The order is also said in words in the footer, as the review's "worst first": the
+caller's `sort.label`, or, without one, the sorted column ("sorteret efter Tilstand, faldende").
+"Worst first" is an order no column header can say, which is why the words come first and the arrow
+second.
+
+**Paging is links too, and its arithmetic is shared.** `pagination()` draws "1–6 af 248" / "1–6 of
+248" in a labelled nav, the numbers in the page's language (Danish 1.248, English 1,248), and Previous
+and Next ("Forrige", "Næste") as links with `rel`. At an end the word stays where it was, a span with
+`aria-disabled`, so the row does not shift and a screen reader hears there is no next page. The range
+takes an en dash, the range sign in both languages, where the review's mock-up typed a hyphen.
+`pageOf(total, page, size)` is the arithmetic the product's query and the links both use: page 0 or
+less is the first, a page past the end the last (an old link still shows rows), a broken number the
+first, and no rows one empty page ("0 af 0"). It returns the clamped page, so a product can redirect
+`?side=999` if it wants a canonical URL. Numbered page links are left out: at 42 pages they are noise,
+and a person looking for one check searches.
+
+**The words are the package's,** as the bar's, the confirm's and the approval's are (D-17, D-23,
+D-24): "Søg" / "Search", "af" / "of", "Forrige" / "Previous", "Næste" / "Next", "sorteret efter" /
+"sorted by", "stigende" / "ascending", "faldende" / "descending", and the landmarks' names "Filtre for
+<table>" and "Sider i <table>", so two lists on one page are told apart. The placeholder, the filter
+labels and the stated order are the product's. The search's label is the placeholder unless the
+caller gives another, and is visually hidden when it says the same.
+
+**Look.** The search and the chips share one row and take the small control box (D-14), as the bar's
+controls do, so the field, its button and the chips line up; on a phone they grow to the touch floor
+and the search takes its own row. A chip is a pill in the small box with its count in mono, the
+current one filled. The footer is the range and the order in the mono meta size, Previous and Next as
+small ghost buttons. `empty` draws a `state()` in place of the table when no row matches, as Canonify's
+DESIGN-SURFACE asks: say there is nothing matching, and which. The demo's "Tabel med mange rækker"
+section is the review's checks in Danish: 248 in all, the first six worst first, with a down, a late
+and four up, and passes the audit for PulseSpring and SiteSpring.

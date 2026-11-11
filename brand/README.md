@@ -230,9 +230,12 @@ What exists, in this package:
   destructive-action confirm `confirmDestructive` (ui D-23: says what is lost, asks for the name, the
   safe action first and in focus), and the agent-interaction patterns `approval`, `diff` and `explain`
   (ui D-24: what an agent wants to do, for whom, why and what changes, approve or reject, the outcome on
-  every copy, and "why did it do that", in the words of Spring's Slack cards); the standard pages in
-  `@forspring/ui/pages`; the refusal words in `@forspring/ui/refusals`; the "Connect an agent" panel in
-  `@forspring/ui/connect`; React wrappers in `@forspring/ui/react` that draw the same markup.
+  every copy, and "why did it do that", in the words of Spring's Slack cards), and the table at scale,
+  `table` with `controls`, `pagination` and `pageOf` (ui D-25: a search, filter chips with counts, the
+  order stated in words, Previous and Next, all links and a GET form so the URL holds the state); the
+  standard pages in `@forspring/ui/pages`; the refusal words in `@forspring/ui/refusals`; the
+  "Connect an agent" panel in `@forspring/ui/connect`; React wrappers in `@forspring/ui/react` that
+  draw the same markup.
 - **The CSS layer** `css/components.css`, on the roles only.
 - **The demo page:** `pnpm demo`, then http://127.0.0.1:4319/dist/demo/ shows every component, every
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
@@ -242,7 +245,6 @@ Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); none of t
 
 | Pattern | Hub tick |
 |---|---|
-| A table at scale: sorting, filtering, pagination | tiu |
 | Toast, tooltip and an icon set | vt2 |
 | Usage guidance: when to use which, forms and errors | tdg |
 
