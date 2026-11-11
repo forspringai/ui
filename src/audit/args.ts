@@ -11,6 +11,8 @@ Audits each page at 1280 and 380 px wide, in light and dark, against @forspring/
 
   --budget-js <size>      script files per page, gzipped (default 0; e.g. 20kb for htmx)
   --product <key>         accept only this product's accent (forspring, sitespring, ...)
+  --marketing             a marketing page: accept the marketing type ladder too (eyebrow 13,
+                          lede 20, h3 24, h2 30 to 36, h1 48 to 72); never for a console
   --allow-spacing <list>  off-grid spacings in px to accept while migrating (e.g. 2,6,10,14,18)
   --allow-status <list>   HTTP statuses a page may answer with and still be audited (e.g. 403,503
                           for refusal pages); any other status of 400 or over is an error
@@ -51,13 +53,16 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
   const flags = new Map<string, string>();
   const allowOriginArgs: string[] = [];
   let help = false;
+  let marketing = false;
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]!;
     if (a === "--help" || a === "-h") help = true;
     else if (a === "--json") flags.set("format", "json");
+    else if (a === "--marketing") marketing = true;
     else if (a.startsWith("--")) {
       const eq = a.indexOf("=");
       const name = a.slice(2, eq === -1 ? undefined : eq);
+      if (name === "marketing") return usage("--marketing takes no value");
       if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "allow-origin", "wait-for", "wait-timeout", "settle", "format"].includes(name)) return usage(`unknown option --${name}`);
       const value = eq === -1 ? argv[++i] : a.slice(eq + 1);
       if (value === undefined || value.startsWith("--")) return usage(`--${name} needs a value`);
@@ -145,7 +150,7 @@ export function parseArgs(argv: string[], products: readonly string[], env: Reco
   const waitFor = flags.get("wait-for");
   if (waitFor !== undefined && !waitFor.trim()) return invalid("invalid_wait_for", "--wait-for takes a CSS selector, such as main h1");
 
-  return { opts: { urls, budgetJs, product, allowSpacing, allowStatus, cookie, allowOrigins, waitFor, waitTimeout, settle, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
+  return { opts: { urls, budgetJs, product, marketing, allowSpacing, allowStatus, cookie, allowOrigins, waitFor, waitTimeout, settle, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
 }
 
 /**

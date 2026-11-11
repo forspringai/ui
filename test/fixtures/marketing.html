@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A marketing page</title>
+<!-- Every size on the marketing ladder (D-22), the fluid steps clamped between their two tokens so
+     the measured px is a value between them at 1280. test/audit.test.ts expects it to pass with
+     --marketing and to fail without it (D-29). -->
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/components.css">
+<style>
+.eyebrow { font: 600 var(--text-marketing-eyebrow)/var(--leading-marketing-eyebrow) var(--font-mono); text-transform: uppercase; }
+.hero { font: 900 clamp(var(--text-marketing-h1-min), 5vw, var(--text-marketing-h1))/var(--leading-marketing-h1) var(--font-display); }
+.lede { font: 400 var(--text-marketing-lede)/var(--leading-marketing-lede) var(--font-sans); }
+.section { font: 800 clamp(var(--text-marketing-h2-min), 2.6vw, var(--text-marketing-h2))/var(--leading-marketing-h2) var(--font-display); }
+.feature { font: 700 var(--text-marketing-h3)/var(--leading-marketing-h3) var(--font-sans); }
+</style>
+</head>
+<body>
+<main id="main" class="wrap">
+<p class="eyebrow">SiteSpring</p>
+<h1 class="hero">Sites that ship</h1>
+<p class="lede">A lede at twenty pixels, under the hero.</p>
+<h2 class="section">Built on the tokens</h2>
+<h3 class="feature">One feature</h3>
+<p>Running text stays on content's body.</p>
+</main>
+</body>
+</html>

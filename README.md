@@ -546,7 +546,9 @@ pnpm exec ui-audit http://127.0.0.1:8787/ http://127.0.0.1:8787/settings \
 Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script files), `--product
 <key>` to accept only that product's accent, `--allow-spacing 6,10` while a page's own CSS still
 carries off-grid values (the component layer has none since 0.5.0, D-14; don't pass it otherwise),
-`--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error), and
+`--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error),
+`--marketing` for a marketing page, which accepts the marketing type ladder as well (eyebrow 13, lede
+20, h3 24, h2 anywhere from 30 to 36, h1 from 48 to 72, D-29; never pass it for a console), and
 `--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
 offline apart from the pages themselves. The one way past that is a redirect from the audited

@@ -1105,3 +1105,29 @@ in this change; the next release carries it.
 `<link rel="manifest" href=".../site.webmanifest">` after the icons; a `favicon` a product names itself
 gets the link only when it gives `manifest`. Products serve the file as `application/manifest+json`,
 and a strict CSP needs `manifest-src 'self'` beside `img-src 'self'` (README).
+
+## D-29 — The audit knows the marketing ladder, when the run asks (2026-11-11)
+
+Hub tick pg3. D-22 added `text.marketing` (eyebrow 13, lede 20, h3 24, h2 30 to 36, h1 48 to 72) and
+left the audit for later: its `font-size` rule knew the chrome and content ladders only, so a marketing
+page built on the tokens failed on its lede, its h3 and its hero. Consoles must keep the strict check,
+where a 48 px heading is a mistake, not a hero. No version bump in this change; the next release
+carries it.
+
+**The opt-in is a flag, `--marketing`** (`marketing: true` in `AuditOptions`), and only a flag. A page
+attribute such as `data-ui-scale="marketing"` was the other choice; it was left out because it would
+let any page loosen its own audit, a console included, with nothing in the CI configuration to show
+it. The audit is the standard made executable (D-8): what a run accepts is stated where the run is,
+beside `--allow-spacing` and `--allow-status`. A product with both kinds of page runs the audit twice,
+once over its marketing URLs with the flag and once over the rest without.
+
+**With the flag**, the marketing steps join the scale, and each fluid step is a range: a step with a
+`-min` token (D-22's shape) accepts any measured px from the `-min` value to the plain one, because a
+page clamps between them on the viewport's width and the audit measures the computed size. The ranges
+apply to any element, not only h1 and h2, because marketing markup puts the hero size on whatever
+element carries the headline; content's own h1 range stays on h1 only, as before. A size between the
+ranges (42 px, say) still fails. **Without it** nothing changes: the same scale, the same note.
+
+test/fixtures/marketing.html uses every marketing step, the fluid ones at 5vw and 2.6vw so the measured
+size sits between the tokens at 1280; test/audit.test.ts holds that it passes with `--marketing` at
+both widths and themes and fails without it, naming each off-scale size.

@@ -122,13 +122,31 @@ export async function palette(browser, tokens, root, product) {
         await context.close();
     }
 }
+/**
+ * The marketing ladder's sizes and fluid ranges (D-29). A fluid step is two tokens, `<step>-min` and
+ * `<step>` (D-22), and a page clamps between them, so the audit measures any px in that range.
+ */
+export function marketingLadder(marketing) {
+    const ranges = [];
+    for (const [step, min] of Object.entries(marketing)) {
+        const max = step.endsWith("-min") ? marketing[step.slice(0, -"-min".length)] : undefined;
+        if (max !== undefined)
+            ranges.push([min, max]);
+    }
+    return { sizes: Object.values(marketing), ranges: ranges.sort((a, b) => a[0] - b[0]) };
+}
 export async function scale(browser, opts, root = packageRoot()) {
     const tokens = await loadTokens(root);
     const { chrome, content } = tokens.text;
+    // Marketing pages ask for their ladder; a console's page never sees it, so a hero size on a console
+    // still fails.
+    const marketing = opts.marketing ? marketingLadder(tokens.text.marketing ?? {}) : { sizes: [], ranges: [] };
     return {
-        sizes: [...new Set([...Object.values(chrome), ...Object.values(content)])].sort((a, b) => a - b),
+        sizes: [...new Set([...Object.values(chrome), ...Object.values(content), ...marketing.sizes])].sort((a, b) => a - b),
         // h1 is fluid between its two steps (clamp() in components.css).
         h1: [content["h1-min"], content["h1"]],
+        ranges: marketing.ranges,
+        marketing: opts.marketing,
         radii: [0, ...Object.values(tokens.radius)],
         palette: await palette(browser, tokens, root, opts.product),
         allowSpacing: opts.allowSpacing,
@@ -149,7 +167,9 @@ const px = (n) => `${Math.round(n * 100) / 100}px`;
 const colourText = (c) => toHex(c) + (c[3] < 1 ? ` at ${Math.round(c[3] * 100)}%` : "");
 export function findings(obs, sc, width) {
     const out = [];
-    const sizesText = sc.sizes.join(", ") + " px";
+    const ranges = sc.ranges ?? [];
+    const sizesText = sc.sizes.join(", ") + " px" + ranges.map(([a, b]) => `, ${a} to ${b} px`).join("");
+    const inRange = (size, [a, b]) => size >= a - 0.05 && size <= b + 0.05;
     for (const t of obs.texts) {
         // Contrast. Disabled controls are exempt (WCAG 1.4.3).
         if (!t.disabled) {
@@ -169,8 +189,8 @@ export function findings(obs, sc, width) {
         // Type size.
         if (t.size < 11 - 0.05)
             out.push({ rule: "text-min", severity: "error", selector: t.selector, value: px(t.size), expected: "at least 11px", note: "no text under 11px (ui-standard §3)" });
-        else if (!(t.gsi || sc.sizes.some((s) => near(s, t.size)) || (t.h1 && t.size >= sc.h1[0] - 0.05 && t.size <= sc.h1[1] + 0.05)))
-            out.push({ rule: "font-size", severity: "error", selector: t.selector, value: px(t.size), expected: sizesText, note: "a size on neither type ladder (tokens/geometry.json text.chrome, text.content)" });
+        else if (!(t.gsi || sc.sizes.some((s) => near(s, t.size)) || (t.h1 && inRange(t.size, sc.h1)) || ranges.some((r) => inRange(t.size, r))))
+            out.push({ rule: "font-size", severity: "error", selector: t.selector, value: px(t.size), expected: sizesText, note: sc.marketing ? "a size on none of the type ladders (tokens/geometry.json text.chrome, text.content, text.marketing)" : "a size on neither type ladder (tokens/geometry.json text.chrome, text.content)" });
         // Family.
         const families = t.gsi ? [...FAMILIES, ...GOOGLE_FAMILIES] : FAMILIES;
         if (!families.includes(t.family))
