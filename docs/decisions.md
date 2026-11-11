@@ -695,7 +695,7 @@ deuteranopia. The dolls, favicons and lockup are regenerated. The `PENDING` set 
 test/contrast.test.ts (D-20) is now empty, so every pair of accents must be at least 10 apart with no
 exception. BrainSpring keeps no token and wears Spring's doll (hub D-116 item 2).
 
-## D-22 — A third type ladder for marketing pages, and the brand templates (2026-11-11)
+## D-22 — A third type ladder for marketing pages, and the brand templates; 0.11.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick xl9) asked for a marketing type
 scale, imagery rules and email, deck and social templates. Content's ladder tops out at a 40 px h1,
