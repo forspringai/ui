@@ -1249,7 +1249,7 @@ Not chosen: whole-page screenshots (one failure for any change, and a long page'
 every section above it); `@playwright/test` for `toHaveScreenshot` (a second test runner for one
 assertion); all six products (the accents are covered elsewhere, and the baselines would triple).
 
-## D-33 — A shadcn preset on data-slot, and the audit's rich-app mode (2026-11-11)
+## D-33 — A shadcn preset on data-slot, and the audit's rich-app mode; 0.19.0 (2026-11-11)
 
 Hub tick 7z3, from Peter's brand review: "Rich apps can drift: DataSpring and AppSpring style shadcn
 themselves. Only token values are checked." shadcn copies each component's source into the app, and
