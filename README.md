@@ -14,7 +14,7 @@ What Forspring and each product is, in words, lives in the hub's
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.11.0
+pnpm add github:forspringai/ui#v0.12.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency

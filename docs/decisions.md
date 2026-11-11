@@ -718,7 +718,7 @@ files on the token values, and test/templates.test.ts holds them to the tokens a
 requests. The design audit's scale still knows the chrome and content ladders only; teaching it the
 marketing ladder (and the marketing h1's range) is its own change.
 
-## D-23 — A native dialog, and the destructive-action confirm (2026-11-11)
+## D-23 — A native dialog, and the destructive-action confirm; 0.12.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick ah0): "No dialog; delete is one
 click beside publish." In SiteSpring, "Delete site" sat next to "Publish changes" with only a notice
