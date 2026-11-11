@@ -1202,3 +1202,49 @@ D-41) with PulseSpring's branch trigger so a PR gets the check.
 Not chosen: a self-hosted runner with a browser on the shared dev host (it would compete with the
 agents' work), and Cloudflare Browser Rendering (it would change how the audit drives Chromium for
 one CI job).
+
+## D-32 — Visual regression tests over the demo, against PNG baselines made on the dev host (2026-11-11)
+
+Hub tick 860, from Peter's brand review: the audit (D-8) checks every value against the tokens, not
+whether a layout broke. A padding that moves a button by 4 px is on the grid, in a token and
+passes; so does a wrapper that collapses. `test/visual.test.ts` catches those.
+
+- **What it shoots.** Every top-level section of the built demo (found by its heading and named in
+  the test, so a new section without a name fails), the bar, the open explain fold (`?open=explain`,
+  the approval card) and the open dialog (`?open=delete-site`, the window over its backdrop): 18
+  shots at 1280 and 380 px, light and dark, for Forspring (the ink mark) and SiteSpring (a coloured
+  accent). 144 baselines, `test/visual/<shot>-<product>-<width>-<theme>.png`, 6.3 MB. Element
+  screenshots, not the whole page, so a change shows up in the sections it touches and the failure
+  names them. One product with an accent is enough: the products differ only in the accent, which
+  the audit and the contrast tests check for all six.
+- **How.** The demo is served and Chromium launched as in `test/audit.test.ts` (no host but
+  127.0.0.1 resolves). Device scale factor 1, emulated `prefers-color-scheme` and reduced motion,
+  Playwright's `animations: "disabled"` and `caret: "hide"`, and `document.fonts.ready` before the
+  first shot. Plain `playwright`: `@playwright/test`'s `toHaveScreenshot` is not installed, and
+  neither are `pngjs` or `pixelmatch`, so the test carries a small PNG reader and writer on
+  `node:zlib` (no new dependency).
+- **The threshold.** A pixel differs when any channel moves by more than 16 of 255; a shot fails when
+  more than 0.1% of its pixels differ, or its size changes. On the baselines' own Chromium the
+  render is deterministic (a second run passed every shot), so both numbers are margins for
+  antialiasing jitter, not a budget for change. They are low enough that a 4 px padding change on
+  `.tag` failed the buttons (2.2 to 2.7%), lists (0.2 to 0.45%) and tables (2%) shots, and nothing
+  else. A one-glyph text change can fall under 0.1% in a large section; the test is for layout,
+  and the words are reviewed in the diff of the helpers and the demo.
+- **On failure** the actual shot and a diff (the baseline faded, differing pixels red) are written to
+  `test/visual/__diff__/` (gitignored), and the message names each shot, its share and both files.
+- **Baselines are made on the dev host (ralph)**, Linux x64, with the pinned Playwright's Chromium
+  (1.64.0, Chromium 156.0.8078.4, in `test/visual/meta.json`). Another OS or Chromium renders text
+  differently, so the test skips there and says why, rather than failing on pixels nobody changed.
+  A Playwright upgrade therefore means new baselines, on the dev host, in the same commit.
+- **New baselines are a deliberate step**: `pnpm test:visual:update` (`UPDATE_VISUAL=1`) rewrites
+  them, removes the ones for shots that no longer exist and rewrites `meta.json`; every changed PNG
+  is looked at in the diff before the commit.
+- **Where it runs.** In `pnpm test:browser` with the audit, so in `.githooks/pre-push` and the full
+  `pnpm test`, and not in `test:ci` (ui-ci's builder has no browser, D-31). About 45 s. The hook's
+  paths now include `fonts/` (a font change moves every glyph, and the audit checks the families
+  too) and the browser tests themselves (`test/audit.test.ts`, `test/visual*`), so a push that only
+  changes a baseline is checked.
+
+Not chosen: whole-page screenshots (one failure for any change, and a long page's tail shifts with
+every section above it); `@playwright/test` for `toHaveScreenshot` (a second test runner for one
+assertion); all six products (the accents are covered elsewhere, and the baselines would triple).

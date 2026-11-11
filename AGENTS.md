@@ -64,7 +64,8 @@ dist/              committed build output (D-2)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
-                   (demo passes, test/fixtures/broken.html fails), the brand templates (templates.test.ts)
+                   (demo passes, test/fixtures/broken.html fails), the brand templates (templates.test.ts),
+                   visual regression over the demo (visual.test.ts, baselines in test/visual/, D-32)
 ```
 
 ## Commands
@@ -74,8 +75,9 @@ pnpm install --frozen-lockfile
 pnpm build        # tokens/ -> dist/
 pnpm typecheck
 pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the sources
-pnpm test:ci      # what ui-ci runs: all but the browser test
-pnpm test:browser # the browser test: the design audit over the demo (pre-push runs it)
+pnpm test:ci      # what ui-ci runs: all but the browser tests
+pnpm test:browser # the browser tests: the design audit and the visual tests over the demo (pre-push runs them)
+pnpm test:visual:update  # rewrites test/visual/ baselines on purpose (D-32); look at every PNG it changes
 pnpm ci:log --watch  # ui-ci's verdict for HEAD
 pnpm demo         # the demo page, for a look or an agent-browser screenshot and axe run
 pnpm audit <url>  # the design audit (dist/audit/cli.js); see README "Run the audit in CI"
@@ -92,7 +94,7 @@ suite's model (hub `docs/suite-infrastructure.md`, "CI on Cloudflare"). Two halv
 - **After the push: `ui-ci`**, a Workers Build on every push to `main` and to every other branch (so
   a PR shows the check `Workers Builds: ui-ci`), every path except `.tick/*`. Its build command is
   `bash infra/ci-worker/build.sh`: install, typecheck, and `pnpm test:ci` (the whole vitest suite
-  except `test/audit.test.ts`, which needs a browser; `test/build.test.ts` fails if `dist/` is
+  except `test/audit.test.ts` and `test/visual.test.ts`, which need a browser; `test/build.test.ts` fails if `dist/` is
   stale). The log ends in a `──── VERDICT …` line. Its deploy command ships an inert stub Worker
   (`infra/ci-worker/`, no routes). Nothing requires the check (branch protection is a paid GitHub
   feature for private repos), so look before merging: `gh pr checks <n>`, or
@@ -100,8 +102,8 @@ suite's model (hub `docs/suite-infrastructure.md`, "CI on Cloudflare"). Two halv
   `--retrigger` starts a build if the push webhook was dropped).
 - **Before the push: `.githooks/pre-push`**, installed by `pnpm install`. It runs `pnpm typecheck`,
   and, when the pushed commits touch tokens, CSS, helpers, the demo, brand files or `dist/`,
-  `pnpm test:browser` (the design audit over the demo for every product, and the audit's browser
-  tests). The builder has no browser, so this is the only place they run before a merge.
+  `pnpm test:browser` (the design audit over the demo for every product, the audit's browser
+  tests, and the visual regression tests, D-32). The builder has no browser, so this is the only place they run before a merge.
   `SKIP_GATE=1 git push` skips it, consciously. Before a release, run the full `pnpm test` as well.
 
 The trigger, the stub and the repo connection were made through the Workers Builds API with the
@@ -164,6 +166,10 @@ The trigger, the stub and the repo connection were made through the Workers Buil
   add, don't rename, and record a removal as a decision.
 - **The helpers escape everything.** Strings are text; only `Html` from a helper or `raw()` passes
   through. Never call `raw()` on anything a person or another system wrote.
+- **The visual baselines change only on purpose** (D-32). When `test/visual.test.ts` fails, open
+  the `.diff.png` it names in `test/visual/__diff__/`. A regression is fixed in the CSS; a meant
+  change is `pnpm test:visual:update` on the dev host, and every changed PNG is looked at before the
+  commit. Never raise the threshold to make a shot pass.
 - **After a component change**, run `pnpm demo` and look at it with agent-browser at 1280 and
   380 px, light and dark, and run `agent-browser a11y` on it: zero violations.
 - **No text under 11px; touch targets at least 24px, primary controls 44px under 560px; focus
