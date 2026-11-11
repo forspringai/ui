@@ -1,0 +1,56 @@
+#!/bin/sh
+# The local gate before a push (ui D-31). ui-ci (a Workers Build, infra/ci-worker/build.sh) runs
+# typecheck and the test suite after the push, on every branch, but its builder has no browser.
+# So the checks that need one run here, before the push: test/audit.test.ts, which runs the design
+# audit over the demo for every product and its own browser tests, and (with hub tick 860) the
+# visual tests. They take a few minutes and drive Chromium, so they run only when the pushed commits
+# touch what they check: the tokens, the CSS, the helpers, the demo, the brand files or dist/.
+#
+# Installed by `pnpm install` (the `prepare` script sets core.hooksPath).
+# Conscious override: SKIP_GATE=1 git push   (ui-ci still runs the rest after the push)
+
+if [ "${SKIP_GATE:-}" = "1" ]; then
+  echo "pre-push: SKIP_GATE=1, pushing without the gate (ui-ci will still run the suite)"
+  exit 0
+fi
+
+zero=0000000000000000000000000000000000000000
+pushing=0
+browser=0
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ "$local_sha" = "$zero" ] && continue # a deletion: nothing to check
+  pushing=1
+  if [ "$remote_sha" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null || echo "")
+  else
+    base="$remote_sha"
+  fi
+  if [ -z "$base" ]; then
+    browser=1
+  elif git diff --name-only "$base" "$local_sha" 2>/dev/null |
+    grep -qE '^(tokens/|css/|src/|demo/|brand/|dist/|scripts/(build|assets|brand-png)\.ts|package\.json|pnpm-lock\.yaml)'; then
+    browser=1
+  fi
+done
+[ "$pushing" = "1" ] || exit 0
+
+if [ ! -d node_modules ]; then
+  echo "pre-push: no node_modules in this checkout, installing first"
+  pnpm install --frozen-lockfile --prefer-offline || exit 1
+fi
+
+fail() {
+  echo ""
+  echo "pre-push: $1 is red, push refused. Fix it, or consciously SKIP_GATE=1 git push."
+  exit 1
+}
+
+echo "pre-push: typecheck"
+pnpm -s typecheck || fail "typecheck"
+
+if [ "$browser" = "1" ]; then
+  echo "pre-push: this push touches what the browser checks cover; running pnpm test:browser (Chromium, a few minutes)"
+  pnpm -s test:browser || fail "test:browser"
+else
+  echo "pre-push: nothing the browser checks cover changed; ui-ci runs the suite after the push"
+fi

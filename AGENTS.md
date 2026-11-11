@@ -74,12 +74,38 @@ pnpm install --frozen-lockfile
 pnpm build        # tokens/ -> dist/
 pnpm typecheck
 pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the sources
+pnpm test:ci      # what ui-ci runs: all but the browser test
+pnpm test:browser # the browser test: the design audit over the demo (pre-push runs it)
+pnpm ci:log --watch  # ui-ci's verdict for HEAD
 pnpm demo         # the demo page, for a look or an agent-browser screenshot and axe run
 pnpm audit <url>  # the design audit (dist/audit/cli.js); see README "Run the audit in CI"
 ```
 
 Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs and the audit tests need Chromium:
 `pnpm exec playwright install chromium` once per machine.
+
+## CI (ui D-31)
+
+GitHub Actions cannot run for the `forspringai` org, so CI is a Cloudflare Workers Build, on the
+suite's model (hub `docs/suite-infrastructure.md`, "CI on Cloudflare"). Two halves:
+
+- **After the push: `ui-ci`**, a Workers Build on every push to `main` and to every other branch (so
+  a PR shows the check `Workers Builds: ui-ci`), every path except `.tick/*`. Its build command is
+  `bash infra/ci-worker/build.sh`: install, typecheck, and `pnpm test:ci` (the whole vitest suite
+  except `test/audit.test.ts`, which needs a browser; `test/build.test.ts` fails if `dist/` is
+  stale). The log ends in a `──── VERDICT …` line. Its deploy command ships an inert stub Worker
+  (`infra/ci-worker/`, no routes). Nothing requires the check (branch protection is a paid GitHub
+  feature for private repos), so look before merging: `gh pr checks <n>`, or
+  `pnpm ci:log --watch` (under `forspring`/`prd_deploy`; exits 0 green, 1 red, 3 no build, 4 running;
+  `--retrigger` starts a build if the push webhook was dropped).
+- **Before the push: `.githooks/pre-push`**, installed by `pnpm install`. It runs `pnpm typecheck`,
+  and, when the pushed commits touch tokens, CSS, helpers, the demo, brand files or `dist/`,
+  `pnpm test:browser` (the design audit over the demo for every product, and the audit's browser
+  tests). The builder has no browser, so this is the only place they run before a merge.
+  `SKIP_GATE=1 git push` skips it, consciously. Before a release, run the full `pnpm test` as well.
+
+The trigger, the stub and the repo connection were made through the Workers Builds API with the
+`prd_deploy` token, no dashboard (hub recipe; ids in docs/decisions.md D-31).
 
 ## Using it in a product
 

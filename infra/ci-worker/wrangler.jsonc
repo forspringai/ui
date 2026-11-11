@@ -1,0 +1,11 @@
+// ui-ci: the test verdict on every push, run on Cloudflare Workers Builds (GitHub Actions cannot run
+// for the forspringai org). The Workers Build's BUILD COMMAND is the payload
+// (`bash infra/ci-worker/build.sh`); this Worker is an inert stub with no routes, deployed only so
+// the build has something to finish on. See AGENTS.md, "CI" (ui D-31).
+{
+  "name": "ui-ci",
+  "main": "worker.ts",
+  "compatibility_date": "2026-10-01",
+  "workers_dev": false,
+  "preview_urls": false
+}
