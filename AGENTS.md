@@ -81,7 +81,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.14.0"
+"@forspring/ui": "github:forspringai/ui#v0.15.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

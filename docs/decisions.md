@@ -910,7 +910,7 @@ DESIGN-SURFACE asks: say there is nothing matching, and which. The demo's "Tabel
 section is the review's checks in Danish: 248 in all, the first six worst first, with a down, a late
 and four up, and passes the audit for PulseSpring and SiteSpring.
 
-## D-26 — Toast, tooltip and an icon set (2026-11-11)
+## D-26 — Toast, tooltip and an icon set; 0.15.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick vt2): "A chrome kit, not a
 library: about 18 helpers, no dialog, toast, tooltip, pagination or icon set." D-23 and D-25 did the
