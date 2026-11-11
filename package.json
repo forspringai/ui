@@ -62,8 +62,9 @@
     "test": "vitest run",
     "demo": "node scripts/demo.ts",
     "audit": "node dist/audit/cli.js",
-    "test:ci": "vitest run --exclude test/audit.test.ts",
-    "test:browser": "vitest run test/audit.test.ts",
+    "test:ci": "vitest run --exclude test/audit.test.ts --exclude test/visual.test.ts",
+    "test:browser": "vitest run test/audit.test.ts test/visual.test.ts",
+    "test:visual:update": "UPDATE_VISUAL=1 vitest run test/visual.test.ts",
     "ci:log": "doppler run --project forspring --config prd_deploy -- node scripts/ci-log.ts",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },

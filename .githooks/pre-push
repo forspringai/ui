@@ -4,7 +4,8 @@
 # So the checks that need one run here, before the push: test/audit.test.ts, which runs the design
 # audit over the demo for every product and its own browser tests, and (with hub tick 860) the
 # visual tests. They take a few minutes and drive Chromium, so they run only when the pushed commits
-# touch what they check: the tokens, the CSS, the helpers, the demo, the brand files or dist/.
+# touch what they check: the tokens, the CSS, the fonts, the helpers, the demo, the brand files,
+# dist/, or the browser tests and their baselines themselves.
 #
 # Installed by `pnpm install` (the `prepare` script sets core.hooksPath).
 # Conscious override: SKIP_GATE=1 git push   (ui-ci still runs the rest after the push)
@@ -28,7 +29,7 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   if [ -z "$base" ]; then
     browser=1
   elif git diff --name-only "$base" "$local_sha" 2>/dev/null |
-    grep -qE '^(tokens/|css/|src/|demo/|brand/|dist/|scripts/(build|assets|brand-png)\.ts|package\.json|pnpm-lock\.yaml)'; then
+    grep -qE '^(tokens/|css/|src/|demo/|brand/|dist/|fonts/|test/(audit\.test\.ts|visual)|scripts/(build|assets|brand-png)\.ts|package\.json|pnpm-lock\.yaml)'; then
     browser=1
   fi
 done

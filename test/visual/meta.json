@@ -1,0 +1,5 @@
+{
+  "chromium": "156.0.8078.4",
+  "playwright": "1.64.0",
+  "platform": "linux-x64"
+}

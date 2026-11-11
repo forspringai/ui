@@ -61,6 +61,13 @@ return new Response(String(page), { headers: { "content-type": "text/html; chars
 `pnpm demo` serves the demo page with every component (http://127.0.0.1:4319/dist/demo/), with
 switches for the product and the theme.
 
+`pnpm test:browser` checks it in Chromium: the design audit, and visual regression tests that
+compare each demo section, the bar, the open dialog and the open explain fold with PNG baselines in
+`test/visual/` (1280 and 380 px, light and dark, Forspring and SiteSpring; D-32). A change to the
+look that is meant needs new baselines: `pnpm test:visual:update`, run on the dev host, is a
+deliberate step, and the PNGs it changes are looked at in the diff before they are committed. A
+failing run names each shot and writes the actual image and a diff to `test/visual/__diff__/`.
+
 ### Controls: one height, one line (0.5.0, D-14)
 
 Inputs, selects and buttons share a height per size, so a row of them lines up on one baseline:
