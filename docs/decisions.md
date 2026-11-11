@@ -1176,3 +1176,24 @@ tells products to wrap a notice, write the ref or mark required fields by hand. 
 summary over two field errors with the required fields marked; the tooltip's form shows the other
 convention, an optional field marked and a required one with `requiredWord: false`.
 
+
+## D-31 — CI: a ui-ci Workers Build on every push, and the browser checks before the push (2026-11-11)
+
+Every product pins this package, and until now nothing ran its tests but the person releasing it.
+GitHub Actions cannot run for the `forspringai` org, so CI follows the suite's recipe (hub
+`docs/suite-infrastructure.md`, "CI on Cloudflare"), shaped like `forspringai/account`'s (account
+D-41) with PulseSpring's branch trigger so a PR gets the check.
+
+- **`ui-ci`**, a Workers Build with two triggers, `ui-ci main` and `ui-ci branches` (every other
+  branch), every path except `.tick/*`. Build command `bash infra/ci-worker/build.sh`: install,
+  typecheck, `pnpm test:ci` with two workers (`CI_TEST_WORKERS` overrides), ending in a `VERDICT`
+  line. Deploy command: the inert stub in `infra/ci-worker/`. `NODE_VERSION=24`.
+- **The builder has no browser**, so `test/audit.test.ts` (Chromium: the design audit over the demo
+  for every product) is not in `test:ci`. It is `pnpm test:browser`, run by `.githooks/pre-push`
+  when a push touches what it checks, and part of the full `pnpm test` before a release. The visual
+  tests (hub tick 860) join it there.
+- `pnpm ci:log` (copied from the account) reads a build's whole log.
+
+Not chosen: a self-hosted runner with a browser on the shared dev host (it would compete with the
+agents' work), and Cloudflare Browser Rendering (it would change how the audit drives Chromium for
+one CI job).

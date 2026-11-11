@@ -61,7 +61,11 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "demo": "node scripts/demo.ts",
-    "audit": "node dist/audit/cli.js"
+    "audit": "node dist/audit/cli.js",
+    "test:ci": "vitest run --exclude test/audit.test.ts",
+    "test:browser": "vitest run test/audit.test.ts",
+    "ci:log": "doppler run --project forspring --config prd_deploy -- node scripts/ci-log.ts",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
     "@types/node": "24.19.1",
