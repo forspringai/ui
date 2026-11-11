@@ -1,9 +1,9 @@
 // Turns the token sets into the package's outputs: dist/tokens.css (roles as custom properties, light
 // and dark paired with light-dark()), dist/theme.css (the same roles as a Tailwind v4 @theme) and
-// dist/tokens.js with its .d.ts (typed values for code, charts and MCP Apps). Only roles, accents and
-// geometry leave the package; the raw palette stays private (hub ui-standard §2).
+// dist/tokens.js with its .d.ts (typed values for code, charts and MCP Apps). Only roles, accents,
+// geometry, motion and shadows leave the package; the raw palette stays private (hub ui-standard §2).
 
-import { TokenSet, cssDimension, cssFontFamily, readTokens } from "./dtcg.ts";
+import { type ShadowLayer, TokenSet, cssColor, cssCubicBezier, cssDimension, cssDuration, cssFontFamily, readTokens } from "./dtcg.ts";
 
 export type Mode = "light" | "dark";
 export const MODES: Mode[] = ["light", "dark"];
@@ -29,6 +29,14 @@ export type Model = {
   // control heights (D-14): steps of the space scale, so a row of controls shares one height
   control: Record<string, number>;
   text: Record<string, Record<string, number>>;
+  // line-height per ladder step (D-27), unitless, plus solid (1) for one line in its own box
+  leading: { solid: number } & Record<string, Record<string, number>>;
+  // viewport widths in px; media queries cannot read custom properties, so these go to TS and Tailwind
+  breakpoint: Record<string, number>;
+  // durations in seconds, easings as cubic-bezier() (D-27)
+  motion: { duration: Record<string, number>; ease: Record<string, [number, number, number, number]> };
+  // elevation -> mode -> a box-shadow value; the geometry is the same in both modes
+  shadow: Record<string, Record<Mode, string>>;
   fonts: Record<string, string>;
 };
 
@@ -64,6 +72,32 @@ export function model(dir: string): Model {
     return d.value;
   };
   const record = (group: string) => Object.fromEntries(s.names(group).map((n) => [n, px(`${group}.${n}`)]));
+  const ladders = s.names("text");
+
+  // Every ladder step has a leading and every leading a step, so a size never goes out without one.
+  const leading: Record<string, number | Record<string, number>> = { solid: s.number("leading.solid") };
+  const leadingProblems: string[] = [];
+  for (const ladder of s.names("leading").filter((n) => n !== "solid")) {
+    if (!ladders.includes(ladder)) leadingProblems.push(`leading.${ladder} has no text.${ladder}`);
+  }
+  for (const ladder of ladders) {
+    const steps = s.names(`text.${ladder}`);
+    const lead = s.names(`leading.${ladder}`);
+    for (const n of steps) if (!lead.includes(n)) leadingProblems.push(`text.${ladder}.${n} has no leading.${ladder}.${n}`);
+    for (const n of lead) if (!steps.includes(n)) leadingProblems.push(`leading.${ladder}.${n} has no text.${ladder}.${n}`);
+    leading[ladder] = Object.fromEntries(lead.map((n) => [n, s.number(`leading.${ladder}.${n}`)]));
+  }
+  if (leadingProblems.length) throw new TokenProblems(leadingProblems);
+
+  const seconds = (path: string) => Number(cssDuration(s.duration(path)).slice(0, -1));
+  const shadow: Model["shadow"] = {};
+  for (const level of s.names("shadow")) {
+    const [l, d] = [s.shadow(`shadow.${level}.light`), s.shadow(`shadow.${level}.dark`)];
+    const geometry = (layers: ShadowLayer[]) => JSON.stringify(layers.map(({ color: _, ...rest }) => rest));
+    if (geometry(l) !== geometry(d)) throw new TokenProblems([`shadow.${level}: light and dark differ in more than colour, which light-dark() cannot pair`]);
+    shadow[level] = { light: cssShadow(l), dark: cssShadow(d) };
+  }
+
   return {
     roles: light,
     products,
@@ -72,7 +106,14 @@ export function model(dir: string): Model {
     radius: record("radius"),
     space: record("space"),
     control: record("control"),
-    text: Object.fromEntries(s.names("text").map((ladder) => [ladder, record(`text.${ladder}`)])),
+    text: Object.fromEntries(ladders.map((ladder) => [ladder, record(`text.${ladder}`)])),
+    leading: leading as Model["leading"],
+    breakpoint: record("breakpoint"),
+    motion: {
+      duration: Object.fromEntries(s.names("motion.duration").map((n) => [n, seconds(`motion.duration.${n}`)])),
+      ease: Object.fromEntries(s.names("motion.ease").map((n) => [n, s.cubicBezier(`motion.ease.${n}`)])),
+    },
+    shadow,
     fonts: Object.fromEntries(s.names("font").map((n) => [n, cssFontFamily(s.fontFamily(`font.${n}`))])),
   };
 }
@@ -87,13 +128,33 @@ export class TokenProblems extends Error {
 
 const pair = (c: Record<Mode, string>) => (c.light === c.dark ? c.light : `light-dark(${c.light}, ${c.dark})`);
 
+const cssShadow = (layers: ShadowLayer[]) =>
+  layers.map((l) => [l.inset ? "inset" : "", ...[l.offsetX, l.offsetY, l.blur, l.spread].map(cssDimension), cssColor(l.color)].filter(Boolean).join(" ")).join(", ");
+
+// light-dark() takes colours only, so a shadow pairs its colours and keeps the shared geometry outside.
+// A shadow value's colour is its last word (cssShadow writes it there).
+function pairShadow(s: Record<Mode, string>): string {
+  if (s.light === s.dark) return s.light;
+  const split = (v: string) => /^(.*?) (#[0-9a-f]{6}|rgb\([^)]*\))$/.exec(v)!;
+  const [l, d] = [split(s.light), split(s.dark)];
+  return `${l[1]} light-dark(${l[2]}, ${d[2]})`;
+}
+
+const ladderSteps = (m: Model) =>
+  Object.entries(m.leading).flatMap(([ladder, steps]) => (typeof steps === "number" ? [] : Object.entries(steps).map(([k, v]) => [ladder, k, v] as const)));
+
 function geometry(m: Model): string[] {
   return [
     ...Object.entries(m.radius).map(([k, v]) => `--radius-${k}: ${v}px;`),
     ...Object.entries(m.space).map(([k, v]) => `--space-${k}: ${v}px;`),
     ...Object.entries(m.control).map(([k, v]) => `--control-${k}: ${v}px;`),
     ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
+    `--leading-solid: ${m.leading.solid};`,
+    ...ladderSteps(m).map(([ladder, k, v]) => `--leading-${ladder}-${k}: ${v};`),
     ...Object.entries(m.fonts).map(([k, v]) => `--font-${k}: ${v};`),
+    ...Object.entries(m.motion.duration).map(([k, v]) => `--motion-duration-${k}: ${v}s;`),
+    ...Object.entries(m.motion.ease).map(([k, v]) => `--motion-ease-${k}: ${cssCubicBezier(v)};`),
+    ...Object.entries(m.shadow).map(([k, v]) => `--shadow-${k}: ${pairShadow(v)};`),
   ];
 }
 
@@ -113,6 +174,8 @@ export function tokensCss(m: Model): string {
     "/* An explicit theme (the person's choice, or an MCP host's) wins over the system setting. */",
     block('[data-theme="light"]', ["color-scheme: light;"]),
     block('[data-theme="dark"]', ["color-scheme: dark;"]),
+    "/* Under reduced motion every duration is 0 (D-27): what is built on the tokens stops moving. */",
+    `@media (prefers-reduced-motion: reduce) {\n${block("  :root", Object.keys(m.motion.duration).map((k) => `  --motion-duration-${k}: 0s;`)).replace(/\n}\n$/, "\n  }\n")}}\n`,
     "/* One accent per product (hub D-90). Unset means Forspring. */",
     ...m.products.map((p) => block(`[data-product="${p}"]`, PRODUCT_ROLES.map((r) => `--${r}: ${pair(m.product[p]![r])};`))),
   ].join("\n");
@@ -128,8 +191,22 @@ export function themeCss(m: Model): string {
     `--spacing: ${m.space["1"]}px;`,
     // h-control, h-control-small, min-h-control-touch: the same heights as components.css.
     ...Object.entries(m.control).map(([k, v]) => `--spacing-${["control", k.replace(/^height-?/, "")].filter(Boolean).join("-")}: ${v}px;`),
-    ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
+    // text-content-body sets its line-height too (Tailwind's --text-*--line-height companion), and
+    // leading-content-body names it alone.
+    ...Object.entries(m.text).flatMap(([ladder, steps]) =>
+      Object.entries(steps).flatMap(([k, v]) => [`--text-${ladder}-${k}: ${v}px;`, `--text-${ladder}-${k}--line-height: ${(m.leading[ladder] as Record<string, number>)[k]};`]),
+    ),
+    `--leading-solid: ${m.leading.solid};`,
+    ...ladderSteps(m).map(([ladder, k, v]) => `--leading-${ladder}-${k}: ${v};`),
+    // phone:, tablet:, wide: are min-width, as Tailwind's own; max-phone: is "on a phone", the
+    // max-width the components use.
+    ...Object.entries(m.breakpoint).map(([k, v]) => `--breakpoint-${k}: ${v}px;`),
     ...Object.entries(m.fonts).map(([k, v]) => `--font-${k}: ${v};`),
+    // ease-standard and ease-out; ease-out replaces Tailwind's own with the brand's curve.
+    ...Object.entries(m.motion.ease).map(([k, v]) => `--ease-${k}: ${cssCubicBezier(v)};`),
+    `--default-transition-duration: ${m.motion.duration.fast}s;`,
+    `--default-transition-timing-function: ${cssCubicBezier(m.motion.ease.standard!)};`,
+    ...Object.entries(m.shadow).map(([k, v]) => `--shadow-${k}: ${pairShadow(v)};`),
   ];
   return [
     `/* ${HEADER} */\n`,
@@ -169,6 +246,10 @@ function values(m: Model) {
     space: m.space,
     control: m.control,
     text: m.text,
+    leading: m.leading,
+    breakpoint: m.breakpoint,
+    motion: m.motion,
+    shadow: m.shadow,
     fonts: m.fonts,
   };
 }
@@ -216,6 +297,14 @@ export declare const space: Deep<${JSON.stringify(v.space)}>;
 export declare const control: Deep<${JSON.stringify(v.control)}>;
 /** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<${JSON.stringify(v.text)}>;
+/** Line-height per ladder step, unitless (D-27), and solid (1) for one line in a box of its own. */
+export declare const leading: Deep<${JSON.stringify(v.leading)}>;
+/** Viewport widths in px (D-27). Each is the widest the smaller layout goes: max-width: phone is "on a phone". */
+export declare const breakpoint: Deep<${JSON.stringify(v.breakpoint)}>;
+/** Durations in seconds and easings as cubic-bezier control points (D-27). Under reduced motion use 0. */
+export declare const motion: Deep<${JSON.stringify(v.motion)}>;
+/** box-shadow values per theme (D-27): raised for a thumb, overlay for what floats over the page. Never on a card. */
+export declare const shadow: Deep<${JSON.stringify(v.shadow)}>;
 /** CSS font-family stacks. */
 export declare const fonts: Deep<${JSON.stringify(v.fonts)}>;
 /** The roles for one product in one theme. */

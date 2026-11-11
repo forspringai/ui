@@ -1,0 +1,61 @@
+{
+  "motion": {
+    "$description": "Durations and easings (D-27). Under prefers-reduced-motion every duration is 0: tokens.css sets each one to 0s there, and components.css also turns transitions and animations off, so nothing a person asked to keep still moves. Marketing animation follows brand/README.md section 10: 0.4 to 1.2 s, ease-out, a static end frame under reduced motion.",
+    "duration": {
+      "fast": {
+        "$type": "duration",
+        "$value": {
+          "value": 150,
+          "unit": "ms"
+        },
+        "$description": "A control's state: hover colours, the switch's thumb, a chevron turning. What every transition in components.css uses."
+      },
+      "base": {
+        "$type": "duration",
+        "$value": {
+          "value": 250,
+          "unit": "ms"
+        },
+        "$description": "Something that moves across the screen in a product: a panel opening, a toast arriving."
+      },
+      "slow": {
+        "$type": "duration",
+        "$value": {
+          "value": 600,
+          "unit": "ms"
+        },
+        "$description": "Marketing pages: a section's entrance or a diagram drawing itself, inside the 0.4 to 1.2 s band. Never in product chrome."
+      },
+      "pulse": {
+        "$type": "duration",
+        "$value": {
+          "value": 1400,
+          "unit": "ms"
+        },
+        "$description": "One cycle of a loop that says 'still loading' (the skeleton). Slow enough to read as calm, not as an alarm."
+      }
+    },
+    "ease": {
+      "standard": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.25,
+          0.1,
+          0.25,
+          1
+        ],
+        "$description": "CSS's own ease, what the transitions used before this token: product state changes."
+      },
+      "out": {
+        "$type": "cubicBezier",
+        "$value": [
+          0.22,
+          1,
+          0.36,
+          1
+        ],
+        "$description": "Fast then settling: things arriving, and marketing animation (brand/README.md section 10 says ease-out)."
+      }
+    }
+  }
+}

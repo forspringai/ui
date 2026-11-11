@@ -39,7 +39,7 @@
     margin: 0;
     background: var(--background);
     color: var(--body-foreground);
-    font: 400 var(--text-content-body)/1.55 var(--font-sans);
+    font: 400 var(--text-content-body)/var(--leading-content-body) var(--font-sans);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     display: flex;
@@ -55,19 +55,19 @@
   }
 
   h1 {
-    font: 800 clamp(var(--text-content-h1-min), 4.4vw, var(--text-content-h1))/1.05 var(--font-display);
+    font: 800 clamp(var(--text-content-h1-min), 4.4vw, var(--text-content-h1))/var(--leading-content-h1) var(--font-display);
     letter-spacing: -0.02em;
     margin-bottom: var(--space-3);
   }
 
   h2 {
-    font: 800 var(--text-content-h2)/1.15 var(--font-display);
+    font: 800 var(--text-content-h2)/var(--leading-content-h2) var(--font-display);
     letter-spacing: -0.01em;
     margin-bottom: var(--space-3);
   }
 
   h3 {
-    font: 600 var(--text-content-h3)/1.3 var(--font-sans);
+    font: 600 var(--text-content-h3)/var(--leading-content-h3) var(--font-sans);
     margin-bottom: var(--space-2);
   }
 
@@ -119,7 +119,7 @@
     border: 1px solid var(--primary);
     background: var(--primary);
     color: var(--primary-foreground);
-    transition: background-color 0.15s, border-color 0.15s;
+    transition: background-color var(--motion-duration-fast) var(--motion-ease-standard), border-color var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   button:hover {
@@ -258,7 +258,7 @@
   }
 
   th {
-    font: 400 var(--text-chrome-meta)/1.3 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     background: var(--muted);
     white-space: nowrap;
@@ -278,6 +278,8 @@
     padding-block: var(--space-11) var(--space-16);
   }
 
+  /* The same rule as the motion tokens (tokens/motion.json): under reduced motion tokens.css sets
+     every --motion-duration-* to 0s, and this turns off anything that moves without them too. */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -385,12 +387,12 @@
   }
 
   .brand .word {
-    font: 900 var(--text-content-h2)/1 var(--font-display);
+    font: 900 var(--text-content-h2)/var(--leading-solid) var(--font-display);
     letter-spacing: -0.01em;
   }
 
   .brand .sub {
-    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-solid) var(--font-mono);
     color: var(--muted-foreground);
     display: inline-flex;
     align-items: center;
@@ -405,7 +407,7 @@
   }
 
   .who {
-    font: 400 var(--text-chrome-meta)/1.2 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     overflow-wrap: anywhere;
   }
@@ -424,7 +426,7 @@
     padding: var(--space-1) var(--space-3);
     border: 1px solid var(--input);
     border-radius: var(--radius-button);
-    font: 400 var(--text-chrome-meta)/1.2 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     cursor: pointer;
   }
@@ -461,7 +463,7 @@
     color: var(--popover-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+    box-shadow: var(--shadow-overlay);
   }
 
   .switcher a {
@@ -519,8 +521,8 @@
     color: var(--popover-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
-    font: 400 var(--text-chrome-body)/1.3 var(--font-sans);
+    box-shadow: var(--shadow-overlay);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
   }
 
   .bar-panel ul {
@@ -540,14 +542,14 @@
   }
 
   .bar-item-meta {
-    font: 400 var(--text-chrome-meta)/1.2 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
   }
 
   .bar-panel-label {
     margin: 0;
     padding: var(--space-2) var(--space-3) var(--space-1);
-    font: 400 var(--text-chrome-label)/1.3 var(--font-mono);
+    font: 400 var(--text-chrome-label)/var(--leading-chrome-label) var(--font-mono);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted-foreground);
@@ -582,7 +584,7 @@
   }
 
   .avatar {
-    font: 600 var(--text-chrome-meta)/1 var(--font-sans);
+    font: 600 var(--text-chrome-meta)/var(--leading-solid) var(--font-sans);
     letter-spacing: 0.02em;
     color: var(--foreground);
   }
@@ -602,7 +604,7 @@
 
   .user-email,
   .user-role {
-    font: 400 var(--text-chrome-meta)/1.3 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     overflow-wrap: anywhere;
   }
@@ -639,7 +641,7 @@
 
   .std-label {
     margin: var(--space-6) 0 var(--space-2);
-    font: 400 var(--text-chrome-label)/1.3 var(--font-mono);
+    font: 400 var(--text-chrome-label)/var(--leading-chrome-label) var(--font-mono);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted-foreground);
@@ -707,7 +709,7 @@
   nav.menu {
     display: grid;
     gap: var(--space-6);
-    font: 400 var(--text-chrome-body)/1.3 var(--font-sans);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
   }
 
   nav.menu ul {
@@ -722,7 +724,7 @@
     display: block;
     margin: 0 0 var(--space-2);
     padding-inline: var(--space-3);
-    font: 400 var(--text-chrome-label)/1.3 var(--font-mono);
+    font: 400 var(--text-chrome-label)/var(--leading-chrome-label) var(--font-mono);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted-foreground);
@@ -763,7 +765,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-solid) var(--font-mono);
     color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
   }
@@ -839,7 +841,7 @@
     color: var(--popover-foreground);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+    box-shadow: var(--shadow-overlay);
   }
 
   details.menu-context a {
@@ -871,7 +873,7 @@
     gap: var(--space-1) var(--space-2);
     margin: 0 0 var(--space-3);
     padding: 0;
-    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
   }
 
   .crumbs li {
@@ -906,7 +908,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    font: 500 var(--text-chrome-body)/1.2 var(--font-sans);
+    font: 500 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
     white-space: nowrap;
   }
@@ -945,7 +947,7 @@
 
   footer {
     border-top: 1px solid var(--border);
-    font: 400 var(--text-chrome-meta)/1.5 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
   }
 
@@ -973,7 +975,7 @@
   }
 
   .kicker {
-    font: 400 var(--text-content-small)/1.4 var(--font-mono);
+    font: 400 var(--text-content-small)/var(--leading-content-small) var(--font-mono);
     color: var(--primary);
     margin: 0 0 var(--space-3);
   }
@@ -1012,7 +1014,7 @@
 
   .back {
     display: inline-block;
-    font: 400 var(--text-content-small)/1.4 var(--font-mono);
+    font: 400 var(--text-content-small)/var(--leading-content-small) var(--font-mono);
     color: var(--muted-foreground);
     text-decoration: none;
     margin-bottom: var(--space-6);
@@ -1113,7 +1115,7 @@
     justify-content: center;
     gap: var(--space-2);
     text-align: center;
-    transition: background-color 0.15s, border-color 0.15s;
+    transition: background-color var(--motion-duration-fast) var(--motion-ease-standard), border-color var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   .button:hover {
@@ -1338,7 +1340,7 @@
   }
 
   .table-search > label:not(.visually-hidden) {
-    font: 600 var(--text-chrome-body)/1.2 var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
     white-space: nowrap;
   }
@@ -1381,7 +1383,7 @@
   }
 
   .chip-count {
-    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-solid) var(--font-mono);
     font-variant-numeric: tabular-nums;
     color: var(--muted-foreground);
   }
@@ -1407,7 +1409,7 @@
   .table-order,
   .pagination-range {
     margin: 0;
-    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     font-variant-numeric: tabular-nums;
   }
@@ -1465,7 +1467,7 @@
     background: var(--input);
     position: relative;
     flex: none;
-    transition: background-color 0.15s;
+    transition: background-color var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   .switch .track::after {
@@ -1477,8 +1479,8 @@
     height: var(--space-4);
     border-radius: 999px;
     background: light-dark(var(--card), var(--foreground));
-    box-shadow: 0 1px 2px var(--_shadow);
-    transition: transform 0.15s;
+    box-shadow: var(--shadow-raised);
+    transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   .switch[aria-checked="true"] .track {
@@ -1570,7 +1572,7 @@
   /* --- Tag ------------------------------------------------------------------------------------ */
 
   .tag {
-    font: 400 var(--text-chrome-label)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-label)/var(--leading-chrome-label) var(--font-mono);
     color: var(--muted-foreground);
     border: 1px solid var(--input);
     border-radius: 999px;
@@ -1627,7 +1629,7 @@
 
   .data-state-title {
     margin: 0 0 var(--space-1);
-    font: 600 var(--text-content-lede)/1.4 var(--font-sans);
+    font: 600 var(--text-content-lede)/var(--leading-content-lede) var(--font-sans);
     color: var(--foreground);
   }
 
@@ -1663,7 +1665,7 @@
     height: var(--space-3);
     border-radius: var(--radius-button);
     background: var(--border);
-    animation: forspring-pulse 1.4s ease-in-out infinite;
+    animation: forspring-pulse var(--motion-duration-pulse) ease-in-out infinite;
   }
 
   .skeleton:nth-child(3n + 1) {
@@ -1691,7 +1693,7 @@
     align-items: center;
     gap: var(--space-3);
     margin: var(--space-5) 0;
-    font: 400 var(--text-chrome-meta)/1 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-solid) var(--font-mono);
     color: var(--muted-foreground);
   }
 
@@ -1733,7 +1735,7 @@
       align-items: center;
       min-height: var(--control-height-small);
       padding: var(--space-1) var(--space-3);
-      font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+      font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
       color: var(--muted-foreground);
       cursor: pointer;
     }
@@ -1780,7 +1782,7 @@
   }
 
   .connect-who {
-    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
   }
 
@@ -1807,9 +1809,11 @@
     color: var(--foreground);
   }
 
+  /* Each line of a command is the copy button's height less the pre's padding (24px), so the first
+     line sits level with the button beside it. Control geometry, not a leading. */
   .connect-code code {
     font-size: var(--text-content-small);
-    line-height: 1.85;
+    line-height: calc(var(--control-height-small) - 2 * var(--space-1));
     user-select: all;
   }
 
@@ -1855,7 +1859,7 @@
     align-items: center;
     gap: var(--space-2);
     min-height: var(--control-height);
-    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
     cursor: pointer;
     list-style: none;
@@ -1872,7 +1876,7 @@
     border-right: 1.5px solid currentColor;
     border-bottom: 1.5px solid currentColor;
     transform: translateY(-1px) rotate(-45deg);
-    transition: transform 0.15s;
+    transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   details.connect-ci[open] > summary::before {
@@ -1890,7 +1894,7 @@
   .connect-key > label {
     display: block;
     margin-bottom: var(--space-2);
-    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
   }
 
   .connect-key .toolbar > input {
@@ -1919,7 +1923,7 @@
     border-radius: var(--radius-panel);
     background: var(--card);
     color: var(--card-foreground);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+    box-shadow: var(--shadow-overlay);
   }
 
   /* The page behind dims towards ink in light and towards the ground in dark, as --_shadow does, so
@@ -2038,7 +2042,7 @@
     border-radius: var(--radius-card);
     background: var(--card);
     color: var(--card-foreground);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
+    box-shadow: var(--shadow-overlay);
   }
 
   /* A fact takes the accent at the edge, as a plain notice does; the tones that mean status take
@@ -2108,7 +2112,7 @@
     background: transparent;
     color: var(--muted-foreground);
     font-size: var(--text-content-h3);
-    line-height: 1;
+    line-height: var(--leading-solid);
     vertical-align: middle;
   }
 
@@ -2133,8 +2137,8 @@
     border-radius: var(--radius-button);
     background: var(--popover);
     color: var(--popover-foreground);
-    box-shadow: 0 var(--space-1) var(--space-4) var(--_shadow);
-    font: 400 var(--text-chrome-body)/1.45 var(--font-sans);
+    box-shadow: var(--shadow-overlay);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     text-align: start;
     overflow: visible;
   }
@@ -2171,7 +2175,7 @@
   }
 
   .approval-kicker {
-    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
     margin: 0 0 var(--space-2);
   }
@@ -2181,7 +2185,7 @@
   }
 
   .approval-title {
-    font: 800 var(--text-content-h3)/1.25 var(--font-display);
+    font: 800 var(--text-content-h3)/var(--leading-content-h3) var(--font-display);
     letter-spacing: -0.01em;
     margin: 0 0 var(--space-2);
   }
@@ -2206,7 +2210,7 @@
   }
 
   .approval-facts dt {
-    font: 400 var(--text-chrome-meta)/1.4 var(--font-mono);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
     color: var(--muted-foreground);
   }
 
@@ -2347,7 +2351,7 @@
   }
 
   .diff-label {
-    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
     margin-bottom: var(--space-2);
   }
@@ -2421,7 +2425,7 @@
     align-items: center;
     gap: var(--space-2);
     min-height: var(--control-height);
-    font: 600 var(--text-chrome-body)/1.3 var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
     cursor: pointer;
     list-style: none;
@@ -2438,7 +2442,7 @@
     border-right: 1.5px solid currentColor;
     border-bottom: 1.5px solid currentColor;
     transform: translateY(-1px) rotate(-45deg);
-    transition: transform 0.15s;
+    transition: transform var(--motion-duration-fast) var(--motion-ease-standard);
   }
 
   details.explain[open] > summary::before {
@@ -2500,7 +2504,7 @@
       gap: var(--space-3);
       min-height: var(--space-11);
       padding: 0 var(--space-4);
-      font: 600 var(--text-chrome-body)/1.2 var(--font-sans);
+      font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
       color: var(--foreground);
       cursor: pointer;
     }

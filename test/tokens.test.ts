@@ -90,6 +90,74 @@ test("three ladders; marketing's display steps sit above content's h1 and reach 
   expect(out["tokens.d.ts"]).toContain('"marketing":{"eyebrow":13,');
 });
 
+test("every ladder step has a leading, unitless and sensible, and every output carries them (D-27)", () => {
+  const m = model(dir);
+  expect(m.leading.solid).toBe(1);
+  for (const [ladder, steps] of Object.entries(m.text)) {
+    const lead = m.leading[ladder] as Record<string, number>;
+    expect(Object.keys(lead), ladder).toEqual(Object.keys(steps));
+    for (const v of Object.values(lead)) {
+      expect(v).toBeGreaterThanOrEqual(1);
+      expect(v).toBeLessThanOrEqual(1.6);
+    }
+  }
+  // Running text is looser than the headings above it.
+  expect(m.leading.content!.body).toBeGreaterThan(m.leading.content!.h1!);
+  const out = build(dir);
+  expect(out["tokens.css"]).toContain("--leading-content-body: 1.55;");
+  expect(out["tokens.css"]).toContain("--leading-solid: 1;");
+  expect(out["theme.css"]).toContain("--text-content-body--line-height: 1.55;");
+  expect(out["theme.css"]).toContain("--leading-chrome-meta: 1.4;");
+});
+
+test("a step without a leading fails the build", () => {
+  const broken = mkdtempSync(join(tmpdir(), "ui-tokens-"));
+  cpSync(dir, broken, { recursive: true });
+  const g = read("geometry.json");
+  delete ((g.leading as Group).content as Group).h2;
+  writeFileSync(join(broken, "geometry.json"), JSON.stringify(g));
+  expect(() => model(broken)).toThrow(/text\.content\.h2 has no leading\.content\.h2/);
+});
+
+test("breakpoints: the phone is the one components.css and the audit use, and they rise (D-27)", () => {
+  const m = model(dir);
+  expect(m.breakpoint).toEqual({ phone: 560, tablet: 800, wide: 1280 });
+  const out = build(dir);
+  for (const [k, v] of Object.entries(m.breakpoint)) expect(out["theme.css"]).toContain(`--breakpoint-${k}: ${v}px;`);
+  // A custom property cannot be read in a media query, so tokens.css carries none.
+  expect(out["tokens.css"]).not.toContain("--breakpoint-");
+  expect(out["tokens.d.ts"]).toContain('export declare const breakpoint: Deep<{"phone":560,"tablet":800,"wide":1280}>;');
+});
+
+test("motion: fast is what the transitions used, slow sits in the marketing band, reduced motion zeroes all (D-27)", () => {
+  const m = model(dir);
+  expect(m.motion.duration).toEqual({ fast: 0.15, base: 0.25, slow: 0.6, pulse: 1.4 });
+  expect(m.motion.duration.slow).toBeGreaterThanOrEqual(0.4);
+  expect(m.motion.duration.slow).toBeLessThanOrEqual(1.2);
+  expect(m.motion.ease.standard).toEqual([0.25, 0.1, 0.25, 1]);
+  const out = build(dir);
+  expect(out["tokens.css"]).toContain("--motion-duration-fast: 0.15s;");
+  expect(out["tokens.css"]).toContain("--motion-ease-out: cubic-bezier(0.22, 1, 0.36, 1);");
+  const reduced = out["tokens.css"]!.slice(out["tokens.css"]!.indexOf("@media (prefers-reduced-motion: reduce)"));
+  for (const k of Object.keys(m.motion.duration)) expect(reduced).toContain(`--motion-duration-${k}: 0s;`);
+  expect(out["theme.css"]).toContain("--ease-out: cubic-bezier(0.22, 1, 0.36, 1);");
+});
+
+test("shadows: ink in light and the ground in dark at 25%, as --_shadow, and never for a card (D-27)", () => {
+  const m = model(dir);
+  expect(Object.keys(m.shadow)).toEqual(["raised", "overlay"]);
+  const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(" ");
+  for (const level of Object.keys(m.shadow)) {
+    expect(m.shadow[level]!.light).toMatch(new RegExp(`rgb\\(${rgb(m.colors.foreground!.light)} / 0\\.25\\)$`));
+    expect(m.shadow[level]!.dark).toMatch(new RegExp(`rgb\\(${rgb(m.colors.background!.dark)} / 0\\.25\\)$`));
+  }
+  expect(m.shadow.raised!.light).toBe("0px 1px 2px 0px rgb(20 21 26 / 0.25)");
+  expect(m.shadow.overlay!.light).toBe(`0px ${m.space["1"]}px ${m.space["4"]}px 0px rgb(20 21 26 / 0.25)`);
+  const out = build(dir);
+  expect(out["tokens.css"]).toContain("--shadow-overlay: 0px 4px 16px 0px light-dark(rgb(20 21 26 / 0.25), rgb(17 18 21 / 0.25));");
+  expect(out["theme.css"]).toContain("--shadow-raised: 0px 1px 2px 0px light-dark(");
+});
+
 describe("the reader refuses what is not DTCG", () => {
   const color = (hex: string) => ({ $type: "color", $value: { colorSpace: "srgb", components: [1, 1, 1], hex } });
   const problems = (...trees: Group[]) => new TokenSet(trees).problems;
@@ -102,6 +170,14 @@ describe("the reader refuses what is not DTCG", () => {
   test("a pre-2025.10 string colour", () => expect(problems({ a: { $type: "color", $value: "#ffffff" } })).toEqual(["a: a color $value is { colorSpace, components }"]));
   test("a dimension as a string", () => expect(problems({ a: { $type: "dimension", $value: "4px" } })[0]).toMatch(/dimension/));
   test("a name with a dot", () => expect(problems({ "a.b": color("#ffffff") })[0]).toMatch(/may not contain/));
+  test("a duration as a string", () => expect(problems({ a: { $type: "duration", $value: "150ms" } })[0]).toMatch(/duration/));
+  test("a cubicBezier with an x outside 0 to 1", () => expect(problems({ a: { $type: "cubicBezier", $value: [1.2, 0, 0.5, 1] } })[0]).toMatch(/x coordinates/));
+  test("a number as a string", () => expect(problems({ a: { $type: "number", $value: "1.5" } })).toEqual(["a: a number $value is a number"]));
+  test("a shadow with a string offset and an alias of the wrong type", () => {
+    const px = (value: number) => ({ value, unit: "px" });
+    const shadow = { color: { colorSpace: "srgb", components: [0, 0, 0], alpha: 0.25 }, offsetX: px(0), offsetY: "1px", blur: "{c}", spread: px(0) };
+    expect(problems({ c: color("#ffffff"), s: { $type: "shadow", $value: shadow } })).toEqual(["s.offsetY: a dimension $value is { value: number, unit: \"px\" | \"rem\" }", "s.blur: aliases c, a color, not a dimension"]);
+  });
   test("a type inherited from a group is enough", () => expect(problems({ g: { $type: "dimension", a: { $value: { value: 1, unit: "px" } } } })).toEqual([]));
   test("a theme missing a role fails the build", () => {
     const broken = mkdtempSync(join(tmpdir(), "ui-tokens-"));

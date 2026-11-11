@@ -135,6 +135,33 @@
       "$description": "The floor for primary controls under 560px, where fingers are used (WCAG 2.5.5 at 44px)."
     }
   },
+  "breakpoint": {
+    "$description": "Viewport widths where layout changes (D-27). A media query cannot read a custom property, so these reach tokens.js (breakpoint) and Tailwind's @theme (--breakpoint-*, as phone:, max-phone: and so on), and components.css writes them as px literals that test/components.test.ts holds to these values. Each is the largest width that still counts as the smaller layout: write @media (max-width: <value>px) for 'on a phone'.",
+    "phone": {
+      "$type": "dimension",
+      "$value": {
+        "value": 560,
+        "unit": "px"
+      },
+      "$description": "Under this the phone floors apply: primary controls 44 px (control.touch), one column, the bar sheds the person's address, tables drop the columns marked to go. The audit's PHONE_WIDTH."
+    },
+    "tablet": {
+      "$type": "dimension",
+      "$value": {
+        "value": 800,
+        "unit": "px"
+      },
+      "$description": "Under this an app's sidebar folds into a menu above main."
+    },
+    "wide": {
+      "$type": "dimension",
+      "$value": {
+        "value": 1280,
+        "unit": "px"
+      },
+      "$description": "At and above this a page has its full width: content stops growing (about 1200 px), and the audit's and reviews' desktop width."
+    }
+  },
   "text": {
     "$description": "Three ladders: a dense one for UI chrome and a reading one for page content, as Canonify's DESIGN-SURFACE has, and a display one for marketing pages (D-22). Hierarchy comes from weight on these steps, not from colour. Nothing under 11px.",
     "chrome": {
@@ -291,6 +318,101 @@
           "unit": "px"
         },
         "$description": "The hero headline, once per page; the figures on a numbers row."
+      }
+    }
+  },
+  "leading": {
+    "$description": "Line-height per step of the three type ladders (D-27), unitless so it scales with the size: leading.<ladder>.<step> beside text.<ladder>.<step>. A step's leading is for its running use (wrapping text, a label that may break); headings are tighter, running text looser. solid is 1, for one line in a box of its own: the wordmark, an avatar's initials, a count badge, an icon. A control's line box is not a leading: it is what the control's height leaves (--_control-line, D-14).",
+    "solid": {
+      "$type": "number",
+      "$value": 1,
+      "$description": "One line in a box of its own: the wordmark, initials, a count, an icon. Never text that may wrap."
+    },
+    "chrome": {
+      "$description": "Dense UI. Tight, so a row of table cells or menu items stays compact.",
+      "label": {
+        "$type": "number",
+        "$value": 1.3
+      },
+      "meta": {
+        "$type": "number",
+        "$value": 1.4
+      },
+      "title": {
+        "$type": "number",
+        "$value": 1.3
+      },
+      "body": {
+        "$type": "number",
+        "$value": 1.3
+      },
+      "figure": {
+        "$type": "number",
+        "$value": 1.1,
+        "$description": "A metric's value, one line, display weight."
+      }
+    },
+    "content": {
+      "$description": "Pages. Running text at 1.55, the account's; headings tighten as they grow.",
+      "small": {
+        "$type": "number",
+        "$value": 1.4
+      },
+      "body": {
+        "$type": "number",
+        "$value": 1.55,
+        "$description": "Default running text."
+      },
+      "lede": {
+        "$type": "number",
+        "$value": 1.4
+      },
+      "h3": {
+        "$type": "number",
+        "$value": 1.3
+      },
+      "h2": {
+        "$type": "number",
+        "$value": 1.15
+      },
+      "h1-min": {
+        "$type": "number",
+        "$value": 1.05
+      },
+      "h1": {
+        "$type": "number",
+        "$value": 1.05
+      }
+    },
+    "marketing": {
+      "$description": "Landing pages, decks, share images (D-22): the values brand/templates/deck.html uses. A two-line hero at 72 px and 1.05 is about 150 px tall.",
+      "eyebrow": {
+        "$type": "number",
+        "$value": 1.5
+      },
+      "lede": {
+        "$type": "number",
+        "$value": 1.5
+      },
+      "h3": {
+        "$type": "number",
+        "$value": 1.2
+      },
+      "h2-min": {
+        "$type": "number",
+        "$value": 1.05
+      },
+      "h2": {
+        "$type": "number",
+        "$value": 1.05
+      },
+      "h1-min": {
+        "$type": "number",
+        "$value": 1.05
+      },
+      "h1": {
+        "$type": "number",
+        "$value": 1.05
       }
     }
   },

@@ -17,7 +17,10 @@ tokens/            the one source: W3C DTCG 2025.10 JSON
   chart.json       chart-1..8, categorical
   role.light.json  semantic roles, light theme (aliases into the files above)
   role.dark.json   the same roles, dark theme
-  geometry.json    radii, the 4px space scale, control heights (D-14), the three type ladders (D-4, D-22), font families
+  geometry.json    radii, the 4px space scale, control heights (D-14), breakpoints (D-27), the three type
+                   ladders (D-4, D-22) and their leading (D-27), font families
+  motion.json      durations and easings (D-27); 0 under reduced motion
+  shadow.json      the two elevations, raised and overlay, light and dark (D-27)
 fonts/             Archivo, Archivo Condensed, Space Mono (and Roboto Medium for Google's button),
                    woff2, Latin subset, with their OFL licences (account D-17)
 css/
@@ -45,7 +48,7 @@ demo/account-home.html  parity fixture: the account's home markup on this packag
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/; brand files to dist/brand/ and brand/
 scripts/brand-png.ts  renders the brand PNGs from the SVGs in Chromium (Playwright)
 scripts/wordmarks.py  outlines the product names into brand/wordmarks.json (run by hand, D-18)
-brand/             README.md (the rules), voice.md, marketing.md (D-22), wordmarks.json, <product>/ the
+brand/             README.md (the rules), voice.md, marketing.md (D-22), charts.md (D-27), wordmarks.json, <product>/ the
                    generated brand files, templates/ email, deck and social templates on the token values
 scripts/demo.ts    pnpm demo: serves the repo at http://127.0.0.1:4319/dist/demo/
 dist/              committed build output (D-2)
@@ -122,6 +125,11 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
   colour, and always come with a word or icon. Chart slots encode identity only, in fixed order.
 - **No third-party requests.** Nothing in this package, or in a page built from it, loads fonts,
   scripts or styles from a CDN or any outside origin (account D-17).
+- **Motion, elevation and leading are tokens too** (D-27): every transition and animation takes a
+  `--motion-duration-*`, every box-shadow is `--shadow-raised`, `--shadow-overlay`, none or a 2 to 3px
+  inset edge rule, and every line-height a `--leading-*` or a control's line box (`--_control-line*`).
+  Media queries are px literals (a custom property cannot be read there) at a `breakpoint` value;
+  test/components.test.ts checks all four.
 - **Components use roles only.** No hex, rgb() or named colour in `css/components.css` (a test
   greps for them), type sizes from the chrome and content ladders, radii from the tokens. A shade the roles lack
   is a `color-mix()` of roles (`--_link`, `--_hover`, `--_tint`). Google's button is the one

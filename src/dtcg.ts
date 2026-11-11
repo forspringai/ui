@@ -1,7 +1,8 @@
 // Reads design tokens in the W3C DTCG 2025.10 format: groups and tokens, `$type` inherited from the
 // nearest group, `{dot.path}` aliases, and the 2025.10 value shapes for the types this package uses
 // (color as an object with colorSpace and components, dimension as value and unit, fontFamily as a
-// name or a list of names). Anything it cannot read is a problem, reported with its path, so a bad
+// name or a list of names, duration as value and unit, cubicBezier as four numbers, shadow as one
+// layer or a list of them, number as a number). Anything it cannot read is a problem, reported with its path, so a bad
 // token fails the build and the tests rather than producing a quiet gap in the CSS.
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -21,9 +22,12 @@ export type Token = {
 
 export type ColorValue = { colorSpace: string; components: (number | "none")[]; alpha?: number; hex?: string };
 export type DimensionValue = { value: number; unit: "px" | "rem" };
+export type DurationValue = { value: number; unit: "ms" | "s" };
+export type ShadowLayer = { color: ColorValue; offsetX: DimensionValue; offsetY: DimensionValue; blur: DimensionValue; spread: DimensionValue; inset?: boolean };
 
-// The types the 2025.10 format module defines. The build only knows how to write the first three;
-// the rest are accepted as valid DTCG and refused by the writer if a role ever uses one.
+// The types the 2025.10 format module defines. The build writes color, dimension, fontFamily,
+// duration, cubicBezier, shadow and number; the rest are accepted as valid DTCG and refused by the
+// writer if a token ever uses one.
 const TYPES = new Set(["color", "dimension", "fontFamily", "fontWeight", "duration", "cubicBezier", "number", "strokeStyle", "border", "transition", "shadow", "gradient", "typography"]);
 const ALIAS = /^\{([^{}]+)\}$/;
 
@@ -66,7 +70,7 @@ export class TokenSet {
         const { type, value } = this.resolve(path);
         if (type === undefined) this.problems.push(`${path}: no $type on the token, its groups or its alias target`);
         else if (!TYPES.has(type)) this.problems.push(`${path}: unknown $type ${type}`);
-        else this.problems.push(...checkValue(path, type, value));
+        else this.problems.push(...checkValue(path, type, value, (p) => this.resolve(p, [path])));
       } catch (e) {
         this.problems.push((e as Error).message);
       }
@@ -105,6 +109,46 @@ export class TokenSet {
     return value as DimensionValue;
   }
 
+  duration(path: string): DurationValue {
+    const { type, value } = this.resolve(path);
+    if (type !== "duration") throw new Error(`${path}: expected a duration, found ${type}`);
+    return value as DurationValue;
+  }
+
+  cubicBezier(path: string): [number, number, number, number] {
+    const { type, value } = this.resolve(path);
+    if (type !== "cubicBezier") throw new Error(`${path}: expected a cubicBezier, found ${type}`);
+    return value as [number, number, number, number];
+  }
+
+  number(path: string): number {
+    const { type, value } = this.resolve(path);
+    if (type !== "number") throw new Error(`${path}: expected a number, found ${type}`);
+    return value as number;
+  }
+
+  // A shadow's layers with every member alias followed (2025.10 lets a composite's parts reference
+  // other tokens, so an overlay's offset can be a space step).
+  shadow(path: string): ShadowLayer[] {
+    const { type, value } = this.resolve(path);
+    if (type !== "shadow") throw new Error(`${path}: expected a shadow, found ${type}`);
+    const member = (v: Json) => {
+      const m = typeof v === "string" ? ALIAS.exec(v) : null;
+      return m ? this.resolve(m[1]!, [path]).value : v;
+    };
+    return (Array.isArray(value) ? value : [value]).map((layer) => {
+      const l = layer as Group;
+      return {
+        color: member(l.color!) as ColorValue,
+        offsetX: member(l.offsetX!) as DimensionValue,
+        offsetY: member(l.offsetY!) as DimensionValue,
+        blur: member(l.blur!) as DimensionValue,
+        spread: member(l.spread!) as DimensionValue,
+        ...(l.inset === true ? { inset: true } : {}),
+      };
+    });
+  }
+
   fontFamily(path: string): string[] {
     const { type, value } = this.resolve(path);
     if (type !== "fontFamily") throw new Error(`${path}: expected a fontFamily, found ${type}`);
@@ -112,7 +156,9 @@ export class TokenSet {
   }
 }
 
-function checkValue(path: string, type: string, v: Json): string[] {
+type Resolver = (path: string) => { type: string | undefined; value: Json };
+
+function checkValue(path: string, type: string, v: Json, resolve: Resolver): string[] {
   if (type === "color") {
     if (!isGroup(v) || typeof v.colorSpace !== "string" || !Array.isArray(v.components)) return [`${path}: a color $value is { colorSpace, components }`];
     if (v.colorSpace !== "srgb") return [`${path}: only srgb colours are written so far, found ${v.colorSpace}`];
@@ -132,6 +178,46 @@ function checkValue(path: string, type: string, v: Json): string[] {
     if (typeof v === "string" ? v === "" : !Array.isArray(v) || v.length === 0 || !v.every((f) => typeof f === "string" && f !== "")) return [`${path}: a fontFamily $value is a name or a list of names`];
     return [];
   }
+  if (type === "duration") {
+    if (!isGroup(v) || typeof v.value !== "number" || v.value < 0 || (v.unit !== "ms" && v.unit !== "s")) return [`${path}: a duration $value is { value: number >= 0, unit: "ms" | "s" }`];
+    return [];
+  }
+  if (type === "cubicBezier") {
+    if (!Array.isArray(v) || v.length !== 4 || !v.every((n) => typeof n === "number")) return [`${path}: a cubicBezier $value is four numbers`];
+    const [x1, , x2] = v as number[];
+    if (x1! < 0 || x1! > 1 || x2! < 0 || x2! > 1) return [`${path}: a cubicBezier's x coordinates are from 0 to 1`];
+    return [];
+  }
+  if (type === "number") {
+    if (typeof v !== "number" || !Number.isFinite(v)) return [`${path}: a number $value is a number`];
+    return [];
+  }
+  if (type === "shadow") {
+    const layers = Array.isArray(v) ? v : [v];
+    if (layers.length === 0) return [`${path}: a shadow $value is a layer or a list of layers`];
+    const out: string[] = [];
+    // Each member is a value of its own type or an alias to one.
+    const member = (layer: Group, key: string, want: string) => {
+      const m = typeof layer[key] === "string" ? ALIAS.exec(layer[key] as string) : null;
+      if (!m) return checkValue(`${path}.${key}`, want, layer[key] ?? null, resolve);
+      try {
+        const target = resolve(m[1]!);
+        return target.type === want ? [] : [`${path}.${key}: aliases ${m[1]}, a ${target.type}, not a ${want}`];
+      } catch (e) {
+        return [(e as Error).message];
+      }
+    };
+    for (const layer of layers) {
+      if (!isGroup(layer)) {
+        out.push(`${path}: a shadow layer is { color, offsetX, offsetY, blur, spread, inset? }`);
+        continue;
+      }
+      out.push(...member(layer, "color", "color"));
+      for (const k of ["offsetX", "offsetY", "blur", "spread"]) out.push(...member(layer, k, "dimension"));
+      if (layer.inset !== undefined && typeof layer.inset !== "boolean") out.push(`${path}.inset: a boolean`);
+    }
+    return out;
+  }
   return [];
 }
 
@@ -142,6 +228,17 @@ export function colorHex(v: ColorValue): string {
 }
 
 export const cssDimension = (d: DimensionValue) => `${d.value}${d.unit}`;
+
+// Always seconds, so every duration in the outputs reads on one scale (0.15s beside 0.6s).
+export const cssDuration = (d: DurationValue) => `${d.unit === "ms" ? d.value / 1000 : d.value}s`;
+
+export const cssCubicBezier = (c: number[]) => `cubic-bezier(${c.join(", ")})`;
+
+// rgb() with alpha rather than an 8-digit hex: a shadow's 25% is exact, where #rrggbb40 is 25.1%.
+export const cssColor = (c: ColorValue) => {
+  const [r, g, b] = (c.components as number[]).map((x) => Math.round(x * 255));
+  return c.alpha === undefined || c.alpha === 1 ? colorHex(c) : `rgb(${r} ${g} ${b} / ${c.alpha})`;
+};
 
 const GENERIC = /^(serif|sans-serif|monospace|cursive|fantasy|system-ui|math|emoji|ui-[a-z-]+)$/;
 export const cssFontFamily = (names: string[]) => names.map((n) => (GENERIC.test(n) || /^[A-Za-z-]+$/.test(n) ? n : JSON.stringify(n))).join(", ");

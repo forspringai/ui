@@ -1003,3 +1003,78 @@ bubble is the popover role with the chrome body size. Every spacing is a `--spac
 colour a role. The demo's "Toast, værktøjstip og ikoner" section shows one toast per tone in place,
 the CVR field's tooltip, buttons with icons and every icon with its name, and passes the audit for
 Forspring and DataSpring.
+
+## D-27 — Motion, shadow, breakpoint and line-height tokens, and the chart rules (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick sbb): "Thin token coverage: no
+motion, shadow, breakpoint or line-height tokens. Charts get 8 colours and no rules." components.css
+wrote `0.15s` and `1.4s`, two shadows built by hand, some forty unitless line-heights and the 560 and
+800 px media queries as literals, so a product copying the look had to copy the numbers. No version
+bump in this change; the next release carries it.
+
+**Motion** (`tokens/motion.json`, DTCG `duration` and `cubicBezier`): `motion.duration.fast` 150 ms
+(what every transition used), `base` 250 ms (something moving across a product's screen), `slow` 600
+ms (marketing, inside brand/README.md section 10's 0.4 to 1.2 s band), and `pulse` 1400 ms, the
+skeleton's loop. pulse was not in the brief's three: the skeleton's 1.4 s is a loop's period, not a
+transition's length, and folding it into slow would have changed the skeleton or broken the band.
+`motion.ease.standard` is CSS's own `ease` (0.25, 0.1, 0.25, 1), so the transitions look exactly as
+before; `motion.ease.out` (0.22, 1, 0.36, 1) is for things arriving and for marketing's ease-out. The
+skeleton keeps the `ease-in-out` keyword, a symmetric pulse no token needs to name. Out as
+`--motion-duration-*` and `--motion-ease-*` in tokens.css, `--ease-*` and Tailwind's default
+transition duration and curve in theme.css, and `motion` (seconds, control points) in tokens.js.
+Under reduced motion every duration is 0: tokens.css sets each `--motion-duration-*` to 0s in a
+`prefers-reduced-motion` block, so a product's own animation on the tokens stops too, and
+components.css keeps its `transition: none; animation: none` block for anything not on them.
+
+**Shadow** (`tokens/shadow.json`, DTCG `shadow`): `shadow.raised` 0 1 2 px for the switch's thumb and
+`shadow.overlay` 0 4 16 px for the bar's menus, popovers, the dialog, toasts and tooltips, its offset
+and blur aliases of `space.1` and `space.4` (the reader now follows aliases inside a composite). Each
+has a light and a dark value because `--_shadow` differs by theme: ink at 25% in light, the dark
+ground at 25% in dark. The shadow file states those colours as components with `alpha: 0.25`
+(DTCG cannot alias a colour and change its alpha), and test/tokens.test.ts holds them to the
+`foreground` and `background` roles. `light-dark()` takes colours only, so the build pairs the colour
+and keeps the geometry outside (`0px 4px 16px 0px light-dark(...)`), and refuses a shadow whose light
+and dark geometry differ. The computed value is the same `rgba(20, 21, 26, 0.25)` as the old
+`color-mix()`. `--_shadow` stays for the table's scroll shadows and the dialog's backdrop, which are
+gradients and a tint, not elevation. Cards keep no shadow (brand/README.md section 6).
+
+**Breakpoints** (`breakpoint` in geometry.json, DTCG `dimension`): phone 560 (D-5's, the audit's
+`PHONE_WIDTH`), tablet 800 (where an app's sidebar folds, already in components.css) and wide 1280
+(full width, the width the audit and reviews use). A custom property cannot be read in a media query,
+so they go to tokens.js (`breakpoint`) and theme.css (`--breakpoint-*`, Tailwind's `phone:` and
+`max-phone:`), not tokens.css; components.css keeps `@media (max-width: 560px)` and `800px` as
+literals, and test/components.test.ts fails on a media query width that is not a breakpoint, and on
+`PHONE_WIDTH` differing from `breakpoint.phone`.
+
+**Line-height** (`leading` in geometry.json, DTCG `number`): a parallel group, `leading.<ladder>.
+<step>` beside `text.<ladder>.<step>`, because the emitter reads every `text` step as a px dimension;
+the build fails when a step lacks a leading or a leading lacks a step. Chrome: label 1.3, meta 1.4,
+title 1.3, body 1.3, figure 1.1. Content: small 1.4, body 1.55, lede 1.4, h3 1.3, h2 1.15, h1 1.05.
+Marketing: the deck template's values, eyebrow and lede 1.5, h3 1.2, h2 and h1 1.05. `leading.solid`
+(1) is for one line in a box of its own. Out as `--leading-*` in tokens.css and theme.css (Tailwind's
+`leading-*`), as the `--text-*--line-height` companion so `text-content-body` sets both, and as
+`leading` in tokens.js. Every font shorthand and line-height in components.css now names its step's
+leading. Where a rule had used another value at that step, it takes the step's: chrome meta at 1.2
+(the person's address, the switcher, a bar item's meta), 1.3 (table heads, a user's role) and 1.5
+(the footer) are 1.4; chrome body at 1.2 (signals, the table search's label, the phone's menu fold)
+and the tooltip's 1.45 are 1.3; the approval title's 1.25 is h3's 1.3. Each is a pixel or two on one
+line; the audit passes. The 1s (the wordmark and its sub-line, initials, count badges, the "or" rule, the tooltip's
+icon) are `leading.solid`. The connect panel's code at 1.85 was a 24px line to sit level with the
+copy button, so it is now `calc(var(--control-height-small) - 2 * var(--space-1))`, geometry rather
+than a leading. test/components.test.ts fails on a bare duration, a box-shadow that is not a token,
+none or an edge rule, and a line-height that is not a leading, a control's line box or a calc.
+
+What stays literal, and why: control line boxes (`--_control-line*`, D-14), which are what a control's
+height leaves, not type; the textarea's `var(--space-5)` line, a reading line on the grid; the 2 to 3
+px inset edge rules (`box-shadow: inset 2px 0 0 var(--primary)`), which are borders drawn without
+moving the box (D-14's kept px), not elevation; the media query widths, held by the test; the
+skeleton's `ease-in-out`; and brand/templates/, static files whose line-heights already equal the
+marketing leading.
+
+**Charts** get their rules in `brand/charts.md`, linked from brand/README.md section 4: which chart for
+which question (a line for change over time, bars for comparison, a stat tile for one number, a table
+for exact values; no pie past three parts, never 3D), the slots in fixed order with a ninth as Other in
+`muted-foreground`, the accent only for a single-series chart, status and signal colours never a
+series, direct labels over legends, bars from zero, unit and source on every chart, the dark slots on
+dark surfaces, and a text summary or table beside every chart with series told apart by more than
+colour. The 3:1 rule is test/chart.test.ts's, unchanged.

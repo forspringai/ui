@@ -219,6 +219,75 @@ export const text = Object.freeze({
   }
 });
 
+export const leading = Object.freeze({
+  "solid": 1,
+  "chrome": {
+    "label": 1.3,
+    "meta": 1.4,
+    "title": 1.3,
+    "body": 1.3,
+    "figure": 1.1
+  },
+  "content": {
+    "small": 1.4,
+    "body": 1.55,
+    "lede": 1.4,
+    "h3": 1.3,
+    "h2": 1.15,
+    "h1-min": 1.05,
+    "h1": 1.05
+  },
+  "marketing": {
+    "eyebrow": 1.5,
+    "lede": 1.5,
+    "h3": 1.2,
+    "h2-min": 1.05,
+    "h2": 1.05,
+    "h1-min": 1.05,
+    "h1": 1.05
+  }
+});
+
+export const breakpoint = Object.freeze({
+  "phone": 560,
+  "tablet": 800,
+  "wide": 1280
+});
+
+export const motion = Object.freeze({
+  "duration": {
+    "fast": 0.15,
+    "base": 0.25,
+    "slow": 0.6,
+    "pulse": 1.4
+  },
+  "ease": {
+    "standard": [
+      0.25,
+      0.1,
+      0.25,
+      1
+    ],
+    "out": [
+      0.22,
+      1,
+      0.36,
+      1
+    ]
+  }
+});
+
+export const shadow = Object.freeze({
+  "raised": {
+    "light": "0px 1px 2px 0px rgb(20 21 26 / 0.25)",
+    "dark": "0px 1px 2px 0px rgb(17 18 21 / 0.25)"
+  },
+  "overlay": {
+    "light": "0px 4px 16px 0px rgb(20 21 26 / 0.25)",
+    "dark": "0px 4px 16px 0px rgb(17 18 21 / 0.25)"
+  }
+});
+
 export const fonts = Object.freeze({
   "sans": "Archivo, Arial, sans-serif",
   "display": "\"Archivo Condensed\", \"Arial Narrow\", Arial, sans-serif",

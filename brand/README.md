@@ -144,8 +144,9 @@ Values from `tokens/status.json` and `tokens/signal.json` (ui D-3, D-13; hub D-9
 
 Eight categorical slots, `chart-1` to `chart-8`, in `tokens/chart.json` (ui D-3): identity only,
 assigned in a fixed order and never cycled; a ninth series folds into Other. Status meaning wears the
-status tokens, never a chart slot. Fuller chart rules (when to use which chart, axes, labels) are coming
-with hub tick sbb.
+status tokens, never a chart slot. When to use which chart, series order and Other, labels and axes,
+units and sources, and the accessible summary beside every chart are in [charts.md](charts.md) (hub
+tick sbb, ui D-27).
 
 ## 5. Type
 
@@ -168,6 +169,10 @@ with hub tick sbb.
 | | | h1 (phone to wide) | 30 to 40 |
 
 - **Nothing under 11 px.** A new size is a token and a decision first.
+- **Every step has its line-height** (`leading.<ladder>.<step>`, `--leading-content-body`, ui D-27):
+  running text at 1.55, chrome at 1.3 to 1.4, headings tightening to 1.05 as they grow, and `leading.solid`
+  (1) for one line in a box of its own (the wordmark, a count, an icon). In Tailwind, `text-content-body`
+  sets both.
 - **Marketing** (landing pages, share images, decks; ui D-22): eyebrow 13, lede 20, h3 24, h2 30 to 36,
   h1 48 to 72. Running text stays on content's body. When to use which step is in
   [marketing.md](marketing.md).
@@ -184,6 +189,16 @@ geometry.
   every control in the bar (`control.height-small`), and 44 px as the floor for primary controls under
   560 px (`control.touch`). A row of controls shares one height and one baseline.
 - **Cards** are the card surface with a 1 px `border`; no drop shadows.
+- **Elevation is for what floats** (`tokens/shadow.json`, ui D-27): `shadow.overlay` (0 4 16 px) for
+  menus, popovers, the dialog, toasts and tooltips, `shadow.raised` (0 1 2 px) for a switch's thumb.
+  Ink at 25% in light, the ground at 25% in dark. Never on a card or a section.
+- **Breakpoints** (`breakpoint`, ui D-27): phone 560 px (the phone floors, one column), tablet 800 px (a
+  sidebar folds), wide 1280 px (full width). Each is the widest the smaller layout goes:
+  `@media (max-width: 560px)` is "on a phone"; in Tailwind, `max-phone:`.
+- **Motion** (`tokens/motion.json`, ui D-27): `motion.duration.fast` 0.15 s for a control's state,
+  `base` 0.25 s for something moving in a product, `slow` 0.6 s for marketing, `pulse` 1.4 s for a
+  loading loop; `motion.ease.standard` (CSS's ease) and `motion.ease.out` for things arriving. Every
+  duration is 0 under reduced motion.
 
 For marketing pages, kept from the retired forspring.ai site (its `site/DESIGN.md`):
 
@@ -258,7 +273,9 @@ From this repo's AGENTS.md rules and hub ui-standard §3. The audit (`ui-audit`)
   at least 3:1.
 - **Targets:** at least 24 px; primary controls 44 px under 560 px.
 - **Focus is always visible,** drawn with `--ring`. A skip link on every page.
-- **Motion off under `prefers-reduced-motion`.**
+- **Motion off under `prefers-reduced-motion`:** tokens.css sets every `--motion-duration-*` to 0s there.
+- **Every chart has a text summary or a table beside it,** and never tells series apart by colour alone
+  ([charts.md](charts.md)).
 - **Status is never colour alone:** a word or an icon with it.
 - **Nothing a person needs lives only in a tooltip,** and nothing that reports a failure hides itself
   (ui D-26).

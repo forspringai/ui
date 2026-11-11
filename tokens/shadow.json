@@ -1,0 +1,123 @@
+{
+  "shadow": {
+    "$description": "Elevation (D-27), for things that float over the page only. Cards and sections stay flat: a 1px border, never a drop shadow (brand/README.md section 6). The colour is ink at 25% in light and the dark ground at 25% in dark, the same as components.css's --_shadow, so a shadow darkens towards the ground in both themes; the geometry is the same in both themes, only the colour changes.",
+    "raised": {
+      "$description": "A small thing lifted off its own control: the switch's thumb.",
+      "light": {
+        "$type": "shadow",
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0784,
+              0.0824,
+              0.102
+            ],
+            "alpha": 0.25,
+            "hex": "#14151a"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": {
+            "value": 1,
+            "unit": "px"
+          },
+          "blur": {
+            "value": 2,
+            "unit": "px"
+          },
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        }
+      },
+      "dark": {
+        "$type": "shadow",
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0667,
+              0.0706,
+              0.0824
+            ],
+            "alpha": 0.25,
+            "hex": "#111215"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": {
+            "value": 1,
+            "unit": "px"
+          },
+          "blur": {
+            "value": 2,
+            "unit": "px"
+          },
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        }
+      }
+    },
+    "overlay": {
+      "$description": "Over the page: the bar's menus, popovers, the dialog, toasts and tooltips. Offset and blur are space steps.",
+      "light": {
+        "$type": "shadow",
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0784,
+              0.0824,
+              0.102
+            ],
+            "alpha": 0.25,
+            "hex": "#14151a"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": "{space.1}",
+          "blur": "{space.4}",
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        }
+      },
+      "dark": {
+        "$type": "shadow",
+        "$value": {
+          "color": {
+            "colorSpace": "srgb",
+            "components": [
+              0.0667,
+              0.0706,
+              0.0824
+            ],
+            "alpha": 0.25,
+            "hex": "#111215"
+          },
+          "offsetX": {
+            "value": 0,
+            "unit": "px"
+          },
+          "offsetY": "{space.1}",
+          "blur": "{space.4}",
+          "spread": {
+            "value": 0,
+            "unit": "px"
+          }
+        }
+      }
+    }
+  }
+}
