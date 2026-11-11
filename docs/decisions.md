@@ -1248,3 +1248,80 @@ passes; so does a wrapper that collapses. `test/visual.test.ts` catches those.
 Not chosen: whole-page screenshots (one failure for any change, and a long page's tail shifts with
 every section above it); `@playwright/test` for `toHaveScreenshot` (a second test runner for one
 assertion); all six products (the accents are covered elsewhere, and the baselines would triple).
+
+## D-33 — A shadcn preset on data-slot, and the audit's rich-app mode (2026-11-11)
+
+Hub tick 7z3, from Peter's brand review: "Rich apps can drift: DataSpring and AppSpring style shadcn
+themselves. Only token values are checked." shadcn copies each component's source into the app, and
+the app then owns the classes. The colours already come from `theme.css`'s roles; the geometry did
+not. DataSpring's dashboard (`apps/dashboard/src/components/ui/`, 12 components) gets its radii by
+renaming Tailwind's scale in its own CSS (`--radius-md` is 3px there, `--radius-lg` and `-xl` 6px,
+`-2xl` to `-4xl` 8px), so `rounded-md` means 3px in DataSpring and 6px in stock shadcn, and the
+rest is whatever the copy says: buttons and inputs `h-9` (36px, the family's control is 44), button
+text `text-sm` (14px against 15), inputs `text-base md:text-sm` (16 then 14), the select trigger
+`rounded-md` (3px, a button's radius on a field), the dialog `rounded-lg` (6px, the panel is 10) with
+an 18px title, the badge `rounded-sm` (3px, the family's tag is a pill) with 2px of padding, and
+shadcn's 3px translucent box-shadow ring instead of the family's outline. Every one of those is a
+token value, so the audit passed them. AppSpring's legacy web app (28 components, frozen) derives
+its radii from shadcn's single `--radius` knob and polices them with a source grep: the same
+problem solved a third way.
+
+**A CSS layer on `data-slot`, `@forspring/ui/shadcn.css`.** shadcn v4 marks every part it ships
+with `data-slot` (`button`, `input`, `select-trigger`, `card`, `dialog-content`, `table-head`,
+`badge`, ...; DataSpring's copies carry them all) and buttons and select triggers with `data-size`.
+The preset sets the family's geometry on those attributes: radii (button 3, field 8, card, popover
+and menu 6, dialog 10, badge a pill), control heights (D-14: 44, 32 at `sm`/`xs`/`icon-sm`, 44 for
+all under 560px; icon buttons square), type sizes with their step's leading, families (Space Mono
+on table heads and badges, Archivo Condensed 800 on a dialog's title) and the focus outline in
+`--ring`. Controls take content body 15 and small 13, the same box as components.css's (D-14), not
+chrome body 14: a server-rendered page's button and a React app's are then the same button. Dense
+parts take the chrome ladder: table cells and menus 14, table heads 12, a card's title 13 (its block
+title step), badges 11. Three stock values off the 4px grid are corrected in passing (the small
+button's 6px gap, items' 6px vertical padding, the badge's 2px); nothing else touches spacing.
+
+The layer is declared after Tailwind's four (`@layer theme, base, components, utilities,
+forspring-shadcn;`, the statement in the file itself, so the order holds wherever it is imported),
+so it ranks above the utilities a copied component carries and wins over `h-9` and `rounded-md`
+without the app editing anything. The brief asked for "an app's utilities still win where they
+must": they do through an important utility (`!h-12`) or unlayered CSS, both visible in review, and
+both reported by the audit below. A layer under the utilities would have done nothing for stock
+copies, which set every one of these properties.
+
+Not chosen: **our own shadcn registry** (forked component source served to `shadcn add`). It still
+copies source into each app, which can drift again the day after; it needs hosting, an
+`--overwrite` upgrade per app per change, and a fork of upstream's every release. The data-slot
+hook is shadcn's own and stable, the layer changes no line of an app, applies to copies the app
+already has, and moves with the package's version pin like the rest of the CSS. **React wrappers**
+(D-17's way) for these primitives: a rich app uses shadcn to own its components; wrapping Radix
+here would be a component library to keep. **Remapping Tailwind's radius scale** (DataSpring's
+way): it changes what `rounded-md` means app-wide and still lets a copy pick the wrong step.
+
+**What stays the app's own:** colours, by role (the palette rule checks them), spacing on the 4px
+scale (the spacing rule), layout, variants, composition, weights, a textarea's height, and every
+slot the preset does not name (headers, footers, triggers, containers).
+
+**The audit's rich-app mode**, `ui-audit --rich-app` (`richApp` in `AuditOptions`): on each rendered
+element whose `data-slot` is in `RICH_SLOTS` (src/audit/audit.ts), it compares the computed
+border-radius (every corner), min-height (and the rendered height, so a fixed `height` under a
+right min-height is caught too) and font-size with the slot's token, at `sm` sizes the small
+control's and under 560px the touch floor. An off value is a `primitive` error naming the element
+(its short path ending in `[data-slot="..."]`), the value and the token expected, as the spacing rule
+does. Error, not warning: geometry is fixed (D-8). Without the flag nothing changes; the slots are
+measured but give no findings. A flag rather than automatic on any `data-slot`, because other kits
+use the attribute too, and, as for `--marketing` (D-29), what a run checks is stated where the run
+is. `RICH_SLOTS` and shadcn.css state the same table twice, once as tokens to measure and once as
+CSS; test/components.test.ts holds them equal both ways (every slot the audit knows has those
+declarations, and every slot the CSS sizes is one the audit knows), and holds shadcn.css to the
+component layer's rules (no colour literal, ladders, radius tokens, spacing on the scale, leading
+tokens, breakpoint widths).
+
+test/fixtures/shadcn.html is shadcn's markup with its stock utilities, in Tailwind's layer order,
+on tokens.css, fonts.css and shadcn.css: it passes with `--rich-app` at 1280 and 380, light and
+dark, with no finding. test/fixtures/shadcn-drift.html is the same kind of app after its copies were
+edited (important utilities and an unlayered rule, all on token values): it passes the audit at 1280
+without the flag and fails with it on all nine edits (test/audit.test.ts).
+
+**Adopting it in DataSpring and AppSpring is each product's tick, not this one**: import the file,
+drop the radius remapping and the role mapping theme.css already gives, run the audit with
+`--rich-app`. AppSpring's legacy web app is frozen; its successor adopts the preset when it builds
+on shadcn. No version bump in this change; the next release carries it.

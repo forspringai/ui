@@ -550,7 +550,48 @@ notice({ lang: "da", tone: "error", title: "Noget gik galt hos os", text: "Prøv
 @import "tailwindcss";
 @import "@forspring/ui/theme.css";    /* bg-background, text-primary, rounded-card */
 @import "@forspring/ui/fonts.css";
+@import "@forspring/ui/shadcn.css";   /* a shadcn app: the family's geometry on its components */
 ```
+
+`theme.css` gives Tailwind the roles (`bg-primary`, `text-muted-foreground`, `border-input`, under
+shadcn's own names), the radii, the control heights, the type ladders with their leading, the
+fonts and a `dark:` that follows the system and `data-theme`. Set `data-product="<key>"` on `<html>`
+for the accent. Don't map the roles again in the app's CSS, and don't keep a palette of its own.
+
+**A shadcn app (D-33)** adds `shadcn.css`. shadcn copies each component's source into the app, so
+the geometry used to be whatever the copy said (`h-9`, `rounded-md`, `text-sm`) and drifted per
+app. The preset sets it on shadcn's `data-slot` attributes instead, in a layer above Tailwind's
+utilities, so the copies stay as shadcn wrote them and still look like the family:
+
+| Slot | Radius | Height | Type |
+|---|---|---|---|
+| `button` | 3 | 44, 32 at `data-size="sm"`/`icon-sm`; 44 under 560 px | content body 15 (small 13) |
+| `input`, `select-trigger` | 8 | 44, select's `sm` 32; 44 under 560 px | content body 15 (small 13) |
+| `textarea` | 8 | the app's | content body 15 |
+| `card` / `card-title`, `card-description` | 6 | | chrome title 13 / content small 13 |
+| `dialog-content`, `alert-dialog-content` / their title, description | 10 | | content h2 21, Archivo Condensed 800 / content small 13 |
+| `popover-content`, `dropdown-menu-content`, `select-content`, `tooltip-content` | 6 (tooltip 3) | | chrome body 14 |
+| menu and select items | 3 | | chrome body 14 |
+| `table`, `table-cell` / `table-head` | | | chrome body 14 / chrome meta 12, Space Mono |
+| `badge` | pill | 20 | chrome label 11, Space Mono |
+| `label` | | | chrome body 14 |
+
+Focus is the family's 2px outline in `--ring`. Line heights are the step's leading, and a control's
+line box is what its height leaves (D-14). Icon buttons are square at the control's height.
+
+Setting up an app:
+
+- `components.json`: `"cssVariables": true` (the components then read `--primary` and the rest,
+  which theme.css provides). `baseColor` does not matter: delete the colour block shadcn's init
+  writes into the CSS file, since theme.css defines every role.
+- Import order as above. The file declares its layer after Tailwind's four, wherever it is imported.
+- In the copied components, **don't edit radii, heights or text sizes**: no `rounded-*`, `h-*` /
+  `min-h-*` or `text-*` changed or added on these slots, and no `!` versions. The stock classes can
+  stay; the preset wins over them. Colours (by role), spacing on the 4px scale, layout, variants and
+  composition are the app's own.
+- When a part truly must differ, it is a token or a decision here first, not a class in the app.
+- `ui-audit --rich-app` checks it: on every element with one of these slots, its radius,
+  min-height and font-size against the table, naming the element (below).
 
 ## Code
 
@@ -583,7 +624,10 @@ Options: `--budget-js 20kb` for a page with htmx (the default is 0: no script fi
 carries off-grid values (the component layer has none since 0.5.0, D-14; don't pass it otherwise),
 `--allow-status 403,503` to audit refusal pages (any other status of 400 or over is an error),
 `--marketing` for a marketing page, which accepts the marketing type ladder as well (eyebrow 13, lede
-20, h3 24, h2 anywhere from 30 to 36, h1 from 48 to 72, D-29; never pass it for a console), and
+20, h3 24, h2 anywhere from 30 to 36, h1 from 48 to 72, D-29; never pass it for a console),
+`--rich-app` for a React app on shadcn, which also checks each known `data-slot`'s radius,
+min-height and font-size against what `shadcn.css` sets (a `primitive` error names the element, the
+value and the token it should be; D-33), and
 `--cookie-env <NAME>` for signed-in pages (below). The audit
 never fetches an off-origin request: it records it as a finding and answers it empty, so a run is
 offline apart from the pages themselves. The one way past that is a redirect from the audited

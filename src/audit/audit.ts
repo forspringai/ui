@@ -9,7 +9,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page, Request } from "playwright";
-import { collect, type Observations, type Rgba } from "./page.js";
+import { collect, type Observations, type Rgba, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
 
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
@@ -41,12 +41,68 @@ type Tokens = {
   accents: Record<string, { light: string; dark: string }>;
   roles: { light: Record<string, string> };
   radius: Record<string, number>;
+  control: Record<string, number>;
+  space: Record<string, number>;
   text: { chrome: Record<string, number>; content: Record<string, number>; marketing?: Record<string, number> };
 };
 
 export async function loadTokens(root = packageRoot()): Promise<Tokens> {
   return (await import(pathToFileURL(join(root, "dist/tokens.js")).href)) as Tokens;
 }
+
+/** A slot's family values (D-33): token names, resolved against tokens.js when the audit runs. */
+export type SlotSpec = {
+  /** A radius token, or a pill (999px and over). */
+  radius?: "button" | "card" | "input" | "panel" | "pill";
+  /**
+   * min-height: "control" is --control-height, --control-height-small at a small data-size, and
+   * --control-touch on a phone (D-14); "space.<n>" is that space step at any width.
+   */
+  height?: "control" | `space.${number}`;
+  /** font-size, a ladder step: "chrome.body", "content.small". */
+  text?: string;
+  /** font-size at a small data-size. */
+  small?: string;
+}
+
+/** shadcn's data-size values that are the family's small control. */
+export const SMALL_SIZES = ["sm", "xs", "icon-sm", "icon-xs"];
+
+/**
+ * The shadcn slots the family fixes, and what it fixes on each (D-33). css/shadcn.css sets exactly
+ * these values on the same slots; test/components.test.ts holds the two together. A slot not here
+ * (layout parts, headers, footers) is the app's own.
+ */
+export const RICH_SLOTS: Record<string, SlotSpec> = {
+  button: { radius: "button", height: "control", text: "content.body", small: "content.small" },
+  input: { radius: "input", height: "control", text: "content.body" },
+  "select-trigger": { radius: "input", height: "control", text: "content.body", small: "content.small" },
+  textarea: { radius: "input", text: "content.body" },
+  label: { text: "chrome.body" },
+  card: { radius: "card" },
+  "card-title": { text: "chrome.title" },
+  "card-description": { text: "content.small" },
+  "dialog-content": { radius: "panel" },
+  "alert-dialog-content": { radius: "panel" },
+  "dialog-title": { text: "content.h2" },
+  "alert-dialog-title": { text: "content.h2" },
+  "dialog-description": { text: "content.small" },
+  "alert-dialog-description": { text: "content.small" },
+  "popover-content": { radius: "card", text: "chrome.body" },
+  "dropdown-menu-content": { radius: "card", text: "chrome.body" },
+  "dropdown-menu-sub-content": { radius: "card", text: "chrome.body" },
+  "select-content": { radius: "card", text: "chrome.body" },
+  "dropdown-menu-item": { radius: "button", text: "chrome.body" },
+  "dropdown-menu-checkbox-item": { radius: "button", text: "chrome.body" },
+  "dropdown-menu-radio-item": { radius: "button", text: "chrome.body" },
+  "dropdown-menu-sub-trigger": { radius: "button", text: "chrome.body" },
+  "select-item": { radius: "button", text: "chrome.body" },
+  "tooltip-content": { radius: "button", text: "chrome.body" },
+  table: { text: "chrome.body" },
+  "table-head": { text: "chrome.meta" },
+  "table-cell": { text: "chrome.body" },
+  badge: { radius: "pill", height: "space.5", text: "chrome.label" },
+};
 
 type Scale = {
   sizes: number[];
@@ -57,6 +113,8 @@ type Scale = {
   radii: number[];
   palette: [number, number, number][];
   allowSpacing: number[];
+  /** The token values RICH_SLOTS names, under --rich-app only (D-33). */
+  rich?: Pick<Tokens, "radius" | "control" | "space" | "text">;
 };
 
 const hexRgb = (hex: string): [number, number, number] => {
@@ -177,6 +235,7 @@ export async function scale(browser: Browser, opts: AuditOptions, root = package
     radii: [0, ...Object.values(tokens.radius)],
     palette: await palette(browser, tokens, root, opts.product),
     allowSpacing: opts.allowSpacing,
+    rich: opts.richApp ? { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text } : undefined,
   };
 }
 
@@ -254,10 +313,62 @@ export function findings(obs: Observations, sc: Scale, width: number): Finding[]
     }
   }
 
+  if (sc.rich) out.push(...primitives(obs.slots ?? [], sc.rich, width));
+
   for (const t of obs.smallTargets) out.push({ rule: "target-size", severity: "error", selector: t.selector, value: `${t.width}x${t.height}px`, expected: "at least 24x24px, or 24px clear of other targets", note: "WCAG 2.2 AA, 2.5.8" });
   if (width < PHONE_WIDTH)
     for (const t of obs.primaries)
       if (t.height < 43.5) out.push({ rule: "target-primary", severity: "error", selector: t.selector, value: `${t.height}px tall`, expected: "at least 44px tall on a phone", note: "primary controls on phones (ui-standard §3)" });
+  return out;
+}
+
+/**
+ * The rich-app check (D-33): each known slot's radius, min-height and font-size against the family's
+ * value, which css/shadcn.css sets. The generic rules accept any token (a 6px button, 14px input
+ * text); this one knows which token each part takes.
+ */
+export function primitives(slots: SlotObservation[], t: NonNullable<Scale["rich"]>, width: number): Finding[] {
+  const out: Finding[] = [];
+  const step = (name: string) => {
+    const [ladder, key] = name.split(".") as [keyof typeof t.text, string];
+    return { px: t.text[ladder]![key]!, token: `--text-${ladder}-${key}` };
+  };
+  for (const o of slots) {
+    const spec = RICH_SLOTS[o.slot];
+    if (!spec) continue;
+    const small = o.size !== null && SMALL_SIZES.includes(o.size);
+    const note = `data-slot="${o.slot}"${o.size ? ` data-size="${o.size}"` : ""}: @forspring/ui/shadcn.css sets it; keep the copied component's classes off it (D-33)`;
+    const add = (value: string, expected: string) => out.push({ rule: "primitive", severity: "error", selector: o.selector, value, expected, note });
+
+    if (spec.radius) {
+      const want = spec.radius === "pill" ? null : t.radius[spec.radius]!;
+      const bad = new Set<string>();
+      for (const corner of o.radii)
+        for (const part of corner.split(" ")) {
+          const n = parseFloat(part);
+          if (part.endsWith("%") || (want === null ? n < 999 : !near(n, want))) bad.add(part);
+        }
+      if (bad.size) add(`border-radius ${[...bad].join(" ")}`, want === null ? "a pill (999px)" : `${want}px (--radius-${spec.radius})`);
+    }
+
+    if (spec.height) {
+      let want: number;
+      let token: string;
+      if (spec.height === "control") {
+        [want, token] = width < PHONE_WIDTH ? [t.control.touch!, "--control-touch, on a phone"] : small ? [t.control["height-small"]!, "--control-height-small"] : [t.control.height!, "--control-height"];
+      } else {
+        const n = spec.height.slice("space.".length);
+        [want, token] = [t.space[n]!, `--space-${n}`];
+      }
+      if (!near(o.minHeight, want, 0.5) || o.height < want - 0.5) add(`min-height ${px(o.minHeight)}, ${px(o.height)} tall`, `min-height ${want}px (${token})`);
+    }
+
+    const text = small && spec.small ? spec.small : spec.text;
+    if (text) {
+      const s = step(text);
+      if (!near(o.fontSize, s.px)) add(`font-size ${px(o.fontSize)}`, `${s.px}px (${s.token})`);
+    }
+  }
   return out;
 }
 

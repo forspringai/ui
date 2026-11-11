@@ -29,6 +29,19 @@ export type BoxObservation = {
         rgba: Rgba;
     }[];
 };
+/** An element shadcn marked with data-slot, measured for the rich-app check (D-33). */
+export type SlotObservation = {
+    selector: string;
+    slot: string;
+    /** data-size, which shadcn sets on buttons and select triggers ("default", "sm", "icon"), or null. */
+    size: string | null;
+    radii: string[];
+    /** Computed min-height in px; 0 for auto or none. */
+    minHeight: number;
+    /** The rendered height in px. */
+    height: number;
+    fontSize: number;
+};
 export type TargetObservation = {
     selector: string;
     width: number;
@@ -43,5 +56,7 @@ export type Observations = {
     primaries: TargetObservation[];
     /** Families of the font faces the page loaded. */
     fonts: string[];
+    /** Every rendered element with a data-slot; audit.ts checks the known ones under --rich-app. */
+    slots: SlotObservation[];
 };
 export declare function collect(): Observations;

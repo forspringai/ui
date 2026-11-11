@@ -188,6 +188,26 @@ export function collect() {
         if (onScreen(r))
             primaries.push({ selector: selector(el), width: Math.round(r.width * 10) / 10, height: Math.round(r.height * 10) / 10 });
     }
+    // shadcn's parts (data-slot), measured whatever the run; only --rich-app turns them into findings.
+    const slots = [];
+    for (const el of document.body.querySelectorAll("[data-slot]")) {
+        if (el instanceof SVGElement || !rendered(el))
+            continue;
+        const r = el.getBoundingClientRect();
+        if (!onScreen(r))
+            continue;
+        const s = getComputedStyle(el);
+        const slot = el.getAttribute("data-slot");
+        slots.push({
+            selector: `${selector(el)}[data-slot="${slot}"]`,
+            slot,
+            size: el.getAttribute("data-size"),
+            radii: [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomRightRadius, s.borderBottomLeftRadius],
+            minHeight: parseFloat(s.minHeight) || 0,
+            height: Math.round(r.height * 10) / 10,
+            fontSize: parseFloat(s.fontSize),
+        });
+    }
     const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
-    return { texts, boxes, smallTargets, primaries, fonts };
+    return { texts, boxes, smallTargets, primaries, fonts, slots };
 }

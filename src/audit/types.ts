@@ -14,6 +14,7 @@ export type Rule =
   | "target-size"
   | "target-primary"
   | "palette"
+  | "primitive"
   | "axe"
   | "third-party"
   | "js-budget";
@@ -56,6 +57,12 @@ export type AuditOptions = {
    * anywhere between their two values (D-29). Off by default: consoles keep the two ladders.
    */
   marketing?: boolean;
+  /**
+   * A rich React app on shadcn (D-33): on elements whose data-slot is one the family fixes (RICH_SLOTS
+   * in audit.ts), check border-radius, min-height and font-size against the family's values. Off by
+   * default: a server-rendered page has no slots.
+   */
+  richApp?: boolean;
   /** Off-grid spacings (px) accepted for products migrating onto the 4px grid (D-8). */
   allowSpacing: number[];
   /** HTTP statuses (400 and over) a page may answer with and still be audited: a refusal page (D-10). */
