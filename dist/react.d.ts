@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type Html } from "./html.ts";
+import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -28,3 +28,11 @@ export declare const ConnectAgent: (props: ConnectPanelOptions) => ReactElement;
 export declare const Dialog: (props: DialogOptions) => ReactElement;
 /** The destructive-action confirm (confirmDestructive). The server checks the typed name again. */
 export declare const ConfirmDestructive: (props: ConfirmDestructiveOptions) => ReactElement;
+/** An agent's request for approval (approval() in @forspring/ui/html, D-24). Approve and reject are
+ *  plain POST forms, so it needs no handlers; the product's server decides and redraws it with
+ *  `outcome`. */
+export declare const Approval: (props: ApprovalOptions) => ReactElement;
+/** A change to fields or text, as the caller computed it (diff()). */
+export declare const Diff: (props: DiffOptions) => ReactElement;
+/** "Why Spring did this": the agent's steps in a closed details element (explain()). */
+export declare const Explain: (props: ExplainOptions) => ReactElement;

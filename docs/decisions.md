@@ -775,3 +775,76 @@ destructive one is `button()`'s existing danger variant. The demo shows SiteSpri
 "Udgiv ændringer", with `?open=delete-site` to open it for a screenshot or the audit, and the fallback
 page as `dist/demo/pages/delete-site.<da|en>.html`; both pass the audit for SiteSpring and Forspring at
 1280 and 380, light and dark, open and closed.
+
+## D-24 — Agent approval, diff and "why it did that" (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick sm9): "No agent-interaction
+patterns: approvals, diffs and 'why did it do that' live in Spring's code, not the shared standard."
+Until now a product asking a person to allow an agent's action had a card and two buttons.
+`@forspring/ui/html` now has `approval()`, `diff()` and `explain()`; `@forspring/ui/react` has
+`Approval`, `Diff` and `Explain`. No version bump in this change; the next release carries it.
+
+**Why these three.** They are the three questions a person has when an agent acts for them: what does
+it want to do (and may it), what exactly changes, and why did it decide this. `approval()` answers the
+first and carries the decision; `diff()` the second, for a change to text or settings rather than a
+list of items; `explain()` the third, folded away until asked, so it costs a line. Each works alone:
+`explain()` also goes under something an agent already did, `diff()` in a review page.
+
+**One request, the same words on a page and in Slack.** Spring already asks for approval in Slack
+(Spring's `apps/harness/src/approval-message.ts`, cards built with `cards.ts`). The page reuses its
+vocabulary so a person who saw the card in a channel and opens the page reads the same request:
+
+| Spring's Slack card | `approval()` |
+|---|---|
+| Card title ("Connect a system", "SiteSpring: change something live") | the section's heading, `title`; the agent on the kicker line with "Waiting for approval" |
+| Fact "Asked by: Maria via Spring" | dt "Asked by" / "Anmodet af", dd "Maria (Finance) via Spring" (`onBehalfOf`, `agent`) |
+| Fact "Why" (and "Why:" on the skill card) | dt "Why" / "Hvorfor", with "Follows <the skill, linked>" |
+| Fact "Expires" | dt "Expires" / "Udløber", a Date in Copenhagen's time, or words |
+| Fact "What it does" and the closing sentence ("Approving sends exactly this at once …") | dt "What it does" / "Hvad det gør", the `effects`, a warning one marked |
+| The diff, or the channel card's "only what changes" lines, "Nothing changes." | dt "What changes" / "Hvad ændres", the items with "+k more"; `diff()` for field and text changes; "Nothing changes." / "Intet ændres." |
+| Buttons Approve (primary) and Reject | POST forms: approve (primary, "Approve" by default, the product's "Approve and send"), "Edit first" as a link, reject (ghost), and "See the draft" |
+| Decision record "Approved by", "Rejected by", "Already decided" on the other copies | `outcome`: "Approved by Mette Kjær · 4 Nov 2026, 10:41", "Rejected by …", "Expired …", with a note |
+
+The facts are a description list, one row per fact in the card's order, because the card's facts are
+label and value pairs; that keeps the two in step when one gains a fact. The labels are the package's,
+in Danish and English, as the bar's and the confirm's are (D-17, D-23); the title, summary, items,
+effects and button labels are the product's. Reject is a ghost button, not danger: Slack's red marks
+the choice that is not the primary one, but in this package danger means something is lost (D-23), and
+rejecting loses nothing.
+
+**Spring's Block Kit cards are unchanged.** This tick adds the web side only. Aligning the card's words
+with the page where they differ (the card says "Approve" where a product page says "Approve and send",
+has no "What changes" label, no "Edit first" and no draft link) is a Spring tick, not this one.
+
+**A decision closes every copy.** Spring sends a request to several approvers, and once one decides it
+redraws the others (`otherCopies()`, Spring's D-52), so nobody approves what someone else rejected. The
+page does the same with `outcome`: it replaces the buttons and the expiry with a signal and the words
+(approved a dot, rejected a hollow ring, expired a triangle; D-13's marks, each with its word), and
+keeps the request's facts as the record of what was decided. The decision is the server's: the forms
+post to the product, which checks the CSRF token, that the person may decide and that nobody decided
+first, then draws `outcome`. The helper's doc comment says so.
+
+**Diffs are the caller's.** `diff()` has no diffing algorithm: the server knows what changed (Spring's
+`configChanges()` already compares the fields it cares about) and passes before and after pairs, or
+lines with a kind. Field changes are a table of field, before and after (`table()`, so a wide one
+scrolls on a phone); a missing value is "None" / "Ingen". Lines are `ins` and `del` with a visible +
+or −, the hidden words "Added:" / "Removed:" for a screen reader, and a wash of the success or danger
+colour behind them. That is the one place a status colour stands for something other than a status:
+added and removed are the state of a line, and the sign and the words carry it, so the colour only
+repeats them, as AGENTS.md asks of every status colour.
+
+**"Why Spring did this" is closed by default.** A native `details`, no script, its summary a full
+control's height, titled from `agent` ("Hvorfor Spring gjorde det"). The steps are an ordered list:
+what it did, what it was based on ("Based on" is the skill card's "Based on" fact), linked when it can
+be opened, and the time of day, since a trail is minutes long. The rule or skill it followed closes
+it, in the same "Follows" words as the approval's why. `approval({ explain })` draws one inside the
+request, between the facts and the buttons.
+
+**Look.** The approval is a card (`--radius-card`, `--space-7` of padding, `--space-6` / `--space-5` on
+a phone), its title the content h3 size in the display face, the labels in the mono meta size beside
+their values on a wide screen and over them on a phone. The changes are a ruled list in tabular
+figures; each effect has a mark (a dot, or a warning's triangle and a danger's diamond in the status
+colour, beside bold words). The buttons are ordinary buttons in one wrapping row, so they share one
+box (D-14), and on a phone they share the row's width with the draft link on its own line. The demo's
+"Agentgodkendelse" section shows the brand review's payment-reminders case waiting, with its trail, one
+already approved, and a channel's setup before and after.

@@ -417,6 +417,147 @@ export type ConfirmDestructiveOptions = {
  * is the browser's, and a request can come from anywhere.
  */
 export declare function confirmDestructive(o: ConfirmDestructiveOptions): Html;
+/** A moment: a Date, written in the page's language in Copenhagen's time (as the standard pages
+ *  write one), a Date with the caller's own words for it ("om 2 timer"), or words alone. */
+export type When = Date | string | {
+    at: Date;
+    label: Content;
+};
+/** A decision that has been made: it replaces the buttons on every copy of the request (Spring's
+ *  D-52: one decision closes them all), so nobody approves something already rejected. */
+export type ApprovalOutcome = {
+    status: "approved" | "rejected" | "expired";
+    /** Who decided: "Peter Engelbrecht". Not for an expired request. */
+    by?: Content;
+    at?: When;
+    /** What follows from it, in Spring's words: "Påmindelserne er sendt." */
+    note?: Content;
+};
+/** One short fact about what approving does. A warning ("Kan ikke fortrydes") takes a triangle and
+ *  a danger a diamond, in the status colour, beside words that say it. */
+export type ApprovalEffect = {
+    text: Content;
+    tone?: "warning" | "danger";
+};
+export type ApprovalOptions = {
+    lang: Lang;
+    /** The section's id, unique on the page; the title's id derives from it. */
+    id: string;
+    /** The agent asking: "Spring". */
+    agent: string;
+    /** The person it acts for: "Maria (Økonomi)", shown as "Maria (Økonomi) via Spring". */
+    onBehalfOf?: Content;
+    /** What it wants to do, the section's heading: "Spring vil sende 14 betalingspåmindelser". */
+    title: Content;
+    /** A sentence under the title: what it prepared and what it waits for. */
+    summary?: Content;
+    /** The title's heading level: 2 by default, 3 inside a section that has its own h2. */
+    headingLevel?: 2 | 3;
+    /** When the request lapses. Hidden once it is decided. */
+    expires?: When;
+    /** The reason, and the rule or skill it follows, linked: "Følger skillen Rykker for forfaldne
+     *  fakturaer, trin 3". */
+    why?: {
+        text: Content;
+        links?: Link[];
+    };
+    /** What it changes, one item each: an item is one Content, or an array of parts written with " · "
+     *  between them (["Nordkraft ApS #2041", "33 dage", "12.400 kr."]). The first `show` (3) are drawn,
+     *  then "+k flere", where k is `total` (default: the items' count) less those drawn, linked to
+     *  `moreHref`. So a caller can pass only the first few of a long list. */
+    changes: {
+        items: Content[];
+        total?: number;
+        show?: number;
+        moreHref?: string;
+    };
+    /** What approving costs or touches: "Sender 14 mails fra finance@", "Kan ikke fortrydes". */
+    effects?: ApprovalEffect[];
+    /** POST forms, each with its hidden fields (the CSRF token and the request's id), as confirmDestructive's. */
+    approve: {
+        label?: Content;
+        action: string;
+        fields?: Record<string, string>;
+    };
+    /** A link to change the request before deciding. */
+    edit?: {
+        label?: Content;
+        href: string;
+    };
+    reject?: {
+        label?: Content;
+        action: string;
+        fields?: Record<string, string>;
+    };
+    /** "Se udkastet": the thing itself (the mails, the page) as it would go out. */
+    draftHref?: string;
+    /** An explain() trail, drawn after the facts. */
+    explain?: Content;
+    /** Decided already: the outcome line replaces the buttons and the expiry. */
+    outcome?: ApprovalOutcome;
+};
+/**
+ * An agent's request for approval, as a section a person can decide on: who asks and for whom, what
+ * it wants to do, why (and the rule it follows), what changes, what approving does, when it lapses,
+ * and the decision as POST forms. The facts are a description list, one row per fact, in the order
+ * and words of Spring's Slack card, so the web and the channel say the same thing.
+ *
+ * Approve and reject post to the product, which checks the CSRF token, that the person may decide,
+ * and that nobody decided first, before it acts: a page can be old, and a request can come from
+ * anywhere. Once decided, every copy draws `outcome` in place of the buttons.
+ */
+export declare function approval(o: ApprovalOptions): Html;
+/** A field that changes: its name and its value before and after. A missing value is "Ingen". */
+export type DiffField = {
+    label: Content;
+    before?: Content;
+    after?: Content;
+};
+/** A line of text, as the caller split it: unchanged context, added or removed. */
+export type DiffLine = {
+    kind: "same" | "added" | "removed";
+    text: Content;
+};
+export type DiffOptions = {
+    lang: Lang;
+    /** What changes, a caption above it and the table's accessible name: "Kanalens brief". */
+    label?: string;
+    /** Changed fields, drawn as a table of field, before and after. */
+    fields?: DiffField[];
+    /** Changed text, line by line. */
+    lines?: DiffLine[];
+};
+/**
+ * A change to fields or text, as the caller computed it: no diffing here, so the server decides what
+ * changed and the page only shows it. Fields are a table with "Før" and "Efter" as its columns; lines
+ * carry a sign (+, −) and, for a screen reader, the words "Tilføjet:" and "Fjernet:", so added and
+ * removed are never told apart by colour alone. Pass only what differs, as Spring's channel card
+ * does: a whole text twice makes the reader find the change by eye.
+ */
+export declare function diff(o: DiffOptions): Html;
+/** One step the agent took: what it did, what it read or used (linked when it can be opened), and when. */
+export type ExplainStep = {
+    text: Content;
+    used?: {
+        label: Content;
+        href?: string;
+    };
+    at?: When;
+};
+export type ExplainOptions = {
+    lang: Lang;
+    /** The agent: "Spring", in the summary "Hvorfor Spring gjorde det". */
+    agent: string;
+    steps: ExplainStep[];
+    /** The rule or skill it followed, linked. */
+    follows?: Link[];
+};
+/**
+ * "Hvorfor Spring gjorde det": the trail of steps behind something an agent did or asks to do, as an
+ * ordered list in a details element, closed so it costs the page one line until someone asks. A
+ * Date on a step is written as a time of day: a trail is minutes long.
+ */
+export declare function explain(o: ExplainOptions): Html;
 /** The divider between two ways in: "eller". */
 export declare const orDivider: (text: Content) => Html;
 /** Google's button (google-button.css), as a submit button for the caller's form. */

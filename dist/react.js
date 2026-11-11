@@ -7,7 +7,7 @@
 // React is an optional peer dependency; nothing else is imported at run time. No JSX, so this file
 // needs no React build step of its own.
 import { createElement } from "react";
-import { bar, confirmDestructive, dialog } from "./html.js";
+import { approval, bar, confirmDestructive, dialog, diff, explain } from "./html.js";
 import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
@@ -44,3 +44,11 @@ export const ConnectAgent = (props) => fromHtml(connectPanel(props));
 export const Dialog = (props) => fromHtml(dialog(props));
 /** The destructive-action confirm (confirmDestructive). The server checks the typed name again. */
 export const ConfirmDestructive = (props) => fromHtml(confirmDestructive(props));
+/** An agent's request for approval (approval() in @forspring/ui/html, D-24). Approve and reject are
+ *  plain POST forms, so it needs no handlers; the product's server decides and redraws it with
+ *  `outcome`. */
+export const Approval = (props) => fromHtml(approval(props));
+/** A change to fields or text, as the caller computed it (diff()). */
+export const Diff = (props) => fromHtml(diff(props));
+/** "Why Spring did this": the agent's steps in a closed details element (explain()). */
+export const Explain = (props) => fromHtml(explain(props));

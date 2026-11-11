@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, explain, field, googleButton, html, list, notice, orDivider, raw, shell, signal, state, switchButton, table, tag, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -138,6 +138,74 @@ const DELETE_SITE = (lang: Lang): ConfirmDestructiveOptions & { title: string } 
         confirmLabel: "Delete site",
       };
 
+// Agent approval (D-24), the brand review's case: Spring asks before it sends payment reminders for
+// Maria in finance, with the trail behind it folded in. A second request, already approved, shows the
+// outcome in place of the buttons, as every copy shows it once someone decides.
+const REMINDERS = approval({
+  lang: "da",
+  id: "approve-reminders",
+  headingLevel: 3,
+  agent: "Spring",
+  onBehalfOf: "Maria (Økonomi)",
+  title: "Spring vil sende 14 betalingspåmindelser",
+  summary: "Spring har gjort påmindelser klar til de forfaldne fakturaer og venter på godkendelse.",
+  expires: new Date(Date.UTC(2026, 10, 12, 13, 0)),
+  why: { text: "Fakturaerne er mindst 14 dage forfaldne.", links: [{ label: "skillen Rykker for forfaldne fakturaer, trin 3", href: "#" }] },
+  changes: {
+    items: [
+      ["Nordkraft ApS #2041", "33 dage", "12.400 kr."],
+      ["Bager Hansen ApS #2038", "21 dage", "3.150 kr."],
+      ["Østerbro Cykler #2044", "16 dage", "8.720 kr."],
+    ],
+    total: 14,
+    moreHref: "#",
+  },
+  effects: [{ text: "Sender 14 mails fra finance@" }, { text: "Kan ikke fortrydes", tone: "warning" }, { text: "Der bliver ikke trukket penge" }],
+  explain: explain({
+    lang: "da",
+    agent: "Spring",
+    steps: [
+      { text: "Fandt 14 fakturaer, der er mere end 14 dage forfaldne", used: { label: "e-conomic: åbne fakturaer", href: "#" }, at: new Date(Date.UTC(2026, 10, 11, 8, 2)) },
+      { text: "Tjekkede, at ingen af kunderne har aftalt en senere betaling", used: { label: "kundernes noter" }, at: new Date(Date.UTC(2026, 10, 11, 8, 3)) },
+      { text: "Skrev en påmindelse til hver kunde", used: { label: "skabelonen Venlig påmindelse", href: "#" }, at: new Date(Date.UTC(2026, 10, 11, 8, 5)) },
+    ],
+    follows: [{ label: "skillen Rykker for forfaldne fakturaer, trin 3", href: "#" }],
+  }),
+  approve: { label: "Godkend og send", action: "#", fields: { csrf: "demo", request: "r-2041" } },
+  edit: { href: "#" },
+  reject: { action: "#", fields: { csrf: "demo", request: "r-2041" } },
+  draftHref: "#",
+});
+
+const REMINDERS_DONE = approval({
+  lang: "da",
+  id: "approved-reminders",
+  headingLevel: 3,
+  agent: "Spring",
+  onBehalfOf: "Maria (Økonomi)",
+  title: "Spring vil sende 3 betalingspåmindelser",
+  changes: { items: [["Ærø Kaffebrænderi #2011", "18 dage", "980 kr."], ["Nordkraft ApS #2016", "15 dage", "4.300 kr."], ["Bager Hansen ApS #2019", "14 dage", "1.250 kr."]] },
+  effects: [{ text: "Sender 3 mails fra finance@" }, { text: "Kan ikke fortrydes", tone: "warning" }],
+  approve: { label: "Godkend og send", action: "#" },
+  outcome: { status: "approved", by: "Mette Kjær", at: new Date(Date.UTC(2026, 10, 4, 9, 41)), note: "Påmindelserne er sendt." },
+});
+
+// A change to a channel's setup, as Spring's channel card shows one: only what differs.
+const BRIEF_DIFF = diff({
+  lang: "da",
+  label: "Kanalen #økonomi",
+  fields: [
+    { label: "Ejere", before: "Maria Holm", after: "Maria Holm, Jonas Holm" },
+    { label: "Procedurer", before: "", after: "Rykker for forfaldne fakturaer" },
+  ],
+  lines: [
+    { kind: "same", text: "Svar på dansk, kort og venligt." },
+    { kind: "removed", text: "Send aldrig noget til kunder." },
+    { kind: "added", text: "Påmindelser til kunder sendes kun efter godkendelse fra Maria eller Jonas." },
+    { kind: "same", text: "Spørg, hvis en faktura mangler et nummer." },
+  ],
+});
+
 const people = [
   ["Mette Kjær", "mette@eksempel.dk", "Administrator", true, false, 1240],
   ["Jonas Holm", "jonas@eksempel.dk", "Medlem", true, true, 87],
@@ -237,6 +305,14 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 <p>Noget, der ikke kan fortrydes, sker aldrig med ét klik. Dialogen siger, hvad der går tabt, beder om navnet og har det sikre valg først. Uden script fører knappen til <a href="pages/delete-site.da.html">en side med det samme spørgsmål</a>.</p>
 <div class="demo-row">${button({ label: "Udgiv ændringer", type: "button" })}${dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" })}</div>
 ${confirmDestructive(DELETE_SITE("da"))}
+</section>
+
+<section><h2>Agentgodkendelse</h2>
+<p>En agent spørger, før den gør noget, der rækker ud over den selv: hvem der spørger, hvorfor, hvad der ændres, og hvad det gør. Siden siger det samme som kortet i Slack, og når nogen har besluttet, viser hver kopi beslutningen.</p>
+${REMINDERS}
+${REMINDERS_DONE}
+<h3 style="margin-top: var(--space-8)">Før og efter</h3>
+${BRIEF_DIFF}
 </section>
 
 ${connectPanel(CONNECT("da"))}
