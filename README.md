@@ -5,6 +5,10 @@ tokens built from W3C DTCG 2025.10 JSON into CSS custom properties, a Tailwind v
 TypeScript; self-hosted fonts; every product's mark, logo and favicons (`brand/`); and a small
 server-rendered component layer with typed HTML helpers.
 
+The brand guideline (mark, colour, type, voice and the rest) is [brand/README.md](brand/README.md).
+What Forspring and each product is, in words, lives in the hub's
+[docs/brand/vision.md](https://github.com/forspringai/forspring/blob/main/docs/brand/vision.md).
+
 ## Install
 
 By git tag; each product pins a version and upgrades on purpose (D-2):
@@ -380,5 +384,5 @@ same options are `AuditOptions` fields: `cookie`, `allowOrigins`, `waitFor`, `wa
 (and `budgetJs`, `product`, `allowSpacing`, `allowStatus`, `widths`, `themes`). Launch the browser
 with `--host-resolver-rules` resolving only the audited and allowed hosts, as `cli.ts` does.
 
-Products: `forspring`, `sitespring`, `dataspring`, `appspring`, `pulsespring`.
+Products: `forspring`, `spring`, `sitespring`, `dataspring`, `appspring`, `pulsespring` (BrainSpring uses `spring`, hub D-116).
 See [AGENTS.md](AGENTS.md) for the rules and [docs/decisions.md](docs/decisions.md) for why.
