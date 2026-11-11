@@ -7,7 +7,7 @@
 // React is an optional peer dependency; nothing else is imported at run time. No JSX, so this file
 // needs no React build step of its own.
 import { createElement } from "react";
-import { bar } from "./html.js";
+import { bar, confirmDestructive, dialog } from "./html.js";
 import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
@@ -38,3 +38,9 @@ export const AccountUnavailable = (props) => fromHtml(accountUnavailablePage(pro
  *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
  *  so it works for panels React draws after it has run. */
 export const ConnectAgent = (props) => fromHtml(connectPanel(props));
+/** A native dialog (dialog() in @forspring/ui/html, D-23). It draws closed: put dialogScript() (or
+ *  DIALOG_SCRIPT) on the page once and a trigger with data-dialog-open="<id>", or call showModal() on
+ *  the element by its id. The script listens on the document, so dialogs drawn after it ran open too. */
+export const Dialog = (props) => fromHtml(dialog(props));
+/** The destructive-action confirm (confirmDestructive). The server checks the typed name again. */
+export const ConfirmDestructive = (props) => fromHtml(confirmDestructive(props));

@@ -476,6 +476,16 @@ export type FieldOptions = {
   /** input (default), textarea, or select with options. */
   control?: "input" | "textarea" | "select";
   options?: { value: string; label: string; selected?: boolean }[];
+  /** An input's pattern, a regular expression the whole value must match; the browser blocks the
+   *  form's submit until it does. The browser reads it with the v flag, so escape it (regexEscape). */
+  pattern?: string;
+  /** The words a browser adds to its own message when the pattern does not match. */
+  title?: string;
+  /** "off" for a value that must be typed exactly (a name to confirm), so a phone neither
+   *  capitalizes nor corrects it. */
+  autocapitalize?: "off" | "none" | "sentences" | "words" | "characters";
+  autocorrect?: "on" | "off";
+  spellcheck?: boolean;
 };
 
 /** A label, its control, a hint and an error, wired with aria-describedby and aria-invalid. */
@@ -484,13 +494,23 @@ export function field(o: FieldOptions): Html {
   const hintId = o.hint ? `${id}-hint` : undefined;
   const errorId = o.error ? `${id}-error` : undefined;
   const described = [hintId, errorId].filter(Boolean).join(" ") || undefined;
-  const common = { id, name: o.name, required: o.required, autocomplete: o.autocomplete, "aria-invalid": o.error ? "true" : undefined, "aria-describedby": described };
+  const common = {
+    id,
+    name: o.name,
+    required: o.required,
+    autocomplete: o.autocomplete,
+    autocapitalize: o.autocapitalize,
+    autocorrect: o.autocorrect,
+    spellcheck: o.spellcheck === undefined ? undefined : String(o.spellcheck),
+    "aria-invalid": o.error ? "true" : undefined,
+    "aria-describedby": described,
+  };
   const control =
     o.control === "textarea"
       ? html`<textarea${raw(attrs({ ...common, placeholder: o.placeholder }))}>${o.value ?? ""}</textarea>`
       : o.control === "select"
         ? html`<select${raw(attrs(common))}>${(o.options ?? []).map((op) => html`<option${raw(attrs({ value: op.value, selected: op.selected }))}>${op.label}</option>`)}</select>`
-        : html`<input${raw(attrs({ ...common, type: o.type ?? "text", value: o.value, placeholder: o.placeholder }))}>`;
+        : html`<input${raw(attrs({ ...common, type: o.type ?? "text", value: o.value, placeholder: o.placeholder, pattern: o.pattern, title: o.title }))}>`;
   return html`<div class="field"><label for="${id}">${o.label}</label>${control}${o.hint ? html`<p class="hint" id="${hintId!}">${o.hint}</p>` : ""}${o.error ? html`<p class="field-error" id="${errorId!}">${o.error}</p>` : ""}</div>`;
 }
 
@@ -587,6 +607,209 @@ export function state(o: StateOptions): Html {
   }
   const role = o.kind === "failed" ? raw(' role="alert"') : "";
   return html`<div class="data-state ${o.kind}"${role}><p class="data-state-title">${o.title}</p>${o.text ? html`<p class="data-state-text">${o.text}</p>` : ""}${o.action ? html`<div class="data-state-actions">${o.action}</div>` : ""}</div>`;
+}
+
+// --- Dialog and the destructive-action confirm (D-23) ----------------------------------------------
+
+/** Escapes a string for a RegExp, so it matches only itself. Browsers compile an input's pattern with
+ *  the v flag, where escaping anything but these characters is a syntax error (and the browser then
+ *  ignores the pattern), so this escapes exactly the syntax characters and "/". */
+export const regexEscape = (s: string): string => s.replace(/[\\^$.*+?()[\]{}|/]/g, "\\$&");
+
+export type DialogOptions = {
+  /** The dialog's id, unique on the page; the title's id and the close form's derive from it. */
+  id: string;
+  title: Content;
+  body: Content;
+  /** The safe action's words ("Luk", "Behold"): first in the footer, a ghost button that closes the
+   *  dialog through a form method="dialog", and the one focused when it opens. */
+  close: Content;
+  /** The other actions, after the close button. */
+  actions?: Content;
+  /** One POST form around the body and the actions, so a field in the body is sent with the
+   *  action's button: `fields` are hidden inputs (the CSRF token). */
+  form?: { action: string; fields?: Record<string, string> };
+  /** A choice that needs an answer before anything else (a destructive confirm): role alertdialog,
+   *  described by the body, so a screen reader reads what is lost with the title. */
+  alert?: boolean;
+  /** Draw it as the no-script fallback page instead: a section in place, the title the page's h1,
+   *  and the close button a link to `closeHref`. A trigger's href leads here when script is off. */
+  page?: { closeHref: string };
+};
+
+/**
+ * A native <dialog>, opened as a modal by dialogScript() from a dialogTrigger() (or by the product's
+ * own showModal()). What the browser does and this package relies on: showModal() makes the rest of
+ * the page inert, puts focus on the autofocus element (the close button, the safe action), Escape
+ * closes it, and a form method="dialog" closes it with no request. The script returns focus to the
+ * trigger on close, which browsers do too but Safari not after a mouse click on a link.
+ */
+export function dialog(o: DialogOptions): Html {
+  const titleId = `${o.id}-title`;
+  const closeId = `${o.id}-close`;
+  const close = o.page
+    ? html`<a class="button ghost" href="${safeHref(o.page.closeHref)}" autofocus>${o.close}</a>`
+    : html`<button type="submit" class="ghost" form="${closeId}" value="close" autofocus>${o.close}</button>`;
+  const inner = html`<div class="dialog-body" id="${`${o.id}-body`}">${o.body}</div><div class="dialog-actions">${close}${o.actions}</div>`;
+  const fields = Object.entries(o.form?.fields ?? {}).map(([name, value]) => html`<input type="hidden" name="${name}" value="${value}">`);
+  const content = o.form ? html`<form class="dialog-form" method="post" action="${safeHref(o.form.action)}">${fields}${inner}</form>` : inner;
+  // On the fallback page it is the page's content, not a dialog over it, so it takes no dialog role.
+  const alert = o.alert && !o.page;
+  const a = raw(attrs({ id: o.id, role: alert ? "alertdialog" : undefined, "aria-labelledby": titleId, "aria-describedby": alert ? `${o.id}-body` : undefined }));
+  if (o.page) return html`<section class="dialog dialog-page"${a}><h1 class="dialog-title" id="${titleId}">${o.title}</h1>${content}</section>`;
+  // The close form sits outside the POST form (forms do not nest); the close button reaches it with
+  // form="", so it closes the dialog without the name field's validation.
+  return html`<dialog class="dialog"${a}><h2 class="dialog-title" id="${titleId}">${o.title}</h2>${content}<form method="dialog" id="${closeId}"></form></dialog>`;
+}
+
+/** The button that opens a dialog: a link to the no-script confirm page (`href`), which
+ *  dialogScript() turns into showModal() on the dialog with id `dialog`. */
+export function dialogTrigger(o: { dialog: string; href: string; label: Content; variant?: ButtonOptions["variant"]; small?: boolean }): Html {
+  const variant = o.variant && o.variant !== "primary" ? o.variant : null;
+  return html`<a${raw(attrs({ class: cls("button", variant, o.small && "small"), href: safeHref(o.href), "data-dialog-open": o.dialog }))}>${o.label}</a>`;
+}
+
+/**
+ * The triggers' script, as text: put it on the page once (dialogScript(nonce) writes the tag), or
+ * bundle it. It listens on the document, so dialogs React draws later open too. Without it, or in a
+ * browser with no <dialog>, the trigger is the link it is and the server's confirm page answers. A
+ * modified click (a new tab) is left to the link. On close it puts focus back on the trigger and
+ * resets the dialog's forms, so a half-typed name is gone when it opens again. A click on the
+ * backdrop does not close it: a destructive choice is left by a button or Escape, never by a stray
+ * click.
+ */
+export const DIALOG_SCRIPT = `(() => {
+  if (typeof HTMLDialogElement !== "function") return;
+  document.addEventListener("click", (e) => {
+    const t = e.target instanceof Element ? e.target.closest("[data-dialog-open]") : null;
+    if (!t || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const d = document.getElementById(t.getAttribute("data-dialog-open"));
+    if (!(d instanceof HTMLDialogElement) || d.open) return;
+    e.preventDefault();
+    d.addEventListener("close", () => {
+      d.querySelectorAll("form").forEach((f) => f.reset());
+      t.focus();
+    }, { once: true });
+    d.showModal();
+  });
+})();`;
+
+/** DIALOG_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export function dialogScript(nonce?: string): Html {
+  return html`<script${raw(nonce ? ` nonce="${nonce.replace(/[^A-Za-z0-9+/=_-]/g, "")}"` : "")}>${raw(DIALOG_SCRIPT)}</script>`;
+}
+
+/** The confirm's own words, Danish and English. Like the bar's (D-17), they are the package's, so
+ *  every product asks the same way. */
+type ConfirmText = {
+  keep: string;
+  removes: (list: Html) => Html;
+  removesList: string;
+  and: string;
+  irreversible: string;
+  typeName: (name: string) => Html;
+  exactly: (name: string) => string;
+};
+
+const CONFIRM: Record<Lang, ConfirmText> = {
+  da: {
+    keep: "Behold",
+    removes: (list) => html`Det fjerner ${list}.`,
+    removesList: "Det fjerner:",
+    and: "og",
+    irreversible: "Det kan ikke fortrydes.",
+    typeName: (name) => html`Skriv <b>${name}</b> for at bekræfte`,
+    exactly: (name) => `Skriv ${name} præcis, som det står.`,
+  },
+  en: {
+    keep: "Keep",
+    removes: (list) => html`This removes ${list}.`,
+    removesList: "This removes:",
+    and: "and",
+    irreversible: "It can't be undone.",
+    typeName: (name) => html`Type <b>${name}</b> to confirm`,
+    exactly: (name) => `Type ${name} exactly as it is written.`,
+  },
+};
+
+export type ConfirmDestructiveOptions = {
+  lang: Lang;
+  /** The dialog's id, unique on the page; a dialogTrigger() names it. */
+  id: string;
+  /** The question, naming the thing: "Slet banegaarden.dk?". */
+  title: Content;
+  /** What is lost, each with its count: ["181 pages", "4 forms", "62 redirects"]. Up to four are one
+   *  sentence ("This removes 181 pages, 4 forms and 62 redirects."), more a list. */
+  losses?: Content[];
+  /** What else happens, after the losses: "The domain stops answering at once." */
+  text?: Content;
+  /** Adds "It can't be undone." / "Det kan ikke fortrydes." */
+  irreversible?: boolean;
+  /** The name the person must type before the browser lets the form submit. The server checks it
+   *  again: the browser's check is a speed bump, not a guard. */
+  confirmName?: string;
+  /** The typed name's input name. Default "confirm". */
+  confirmField?: string;
+  /** Overrides the field's label, "Skriv <name> for at bekræfte". */
+  nameLabel?: Content;
+  /** Where the destructive POST goes, and its hidden fields (the CSRF token), as connectPanel's createKey. */
+  action: string;
+  fields?: Record<string, string>;
+  /** The safe action. Default "Behold" / "Keep"; better with the thing: "Behold hjemmesiden". */
+  keepLabel?: Content;
+  /** The destructive action, verb first: "Slet hjemmesiden". */
+  confirmLabel: Content;
+  /** The no-script fallback page, Keep a link back to `keepHref` (see dialog()). */
+  page?: { keepHref: string };
+};
+
+/**
+ * A destructive action's confirm, on dialog(): it says what is lost, whether it can be undone, can
+ * ask for the thing's name, and puts the safe action first and in focus. With `confirmName`, the
+ * input's pattern is that exact name and it is required, so the browser holds the submit until it
+ * matches, with no script, and the destructive button looks unavailable until then (CSS :has()).
+ *
+ * The server must check the name again, and the CSRF token, before it deletes anything: a pattern
+ * is the browser's, and a request can come from anywhere.
+ */
+export function confirmDestructive(o: ConfirmDestructiveOptions): Html {
+  const t = CONFIRM[o.lang];
+  const losses = o.losses ?? [];
+  const join = (items: Content[]) => html`${items.slice(0, -1).map((l, i) => html`${i ? ", " : ""}${l}`)}${items.length > 1 ? ` ${t.and} ` : ""}${items[items.length - 1]}`;
+  const after = [o.text, o.irreversible ? html`<strong>${t.irreversible}</strong>` : ""].filter(Boolean);
+  const afterText = after.map((a, i) => html`${i ? " " : ""}${a}`);
+  let words: Html;
+  if (losses.length > 4) {
+    words = html`<p>${t.removesList}</p><ul class="dialog-losses">${losses.map((l) => html`<li>${l}</li>`)}</ul>${after.length ? html`<p>${afterText}</p>` : ""}`;
+  } else {
+    const sentence = losses.length ? t.removes(join(losses)) : "";
+    words = sentence || after.length ? html`<p>${sentence}${sentence && after.length ? " " : ""}${afterText}</p>` : html``;
+  }
+  const name = o.confirmName;
+  const input = name
+    ? field({
+        label: o.nameLabel ?? t.typeName(name),
+        name: o.confirmField ?? "confirm",
+        id: `${o.id}-name`,
+        required: true,
+        pattern: regexEscape(name),
+        title: t.exactly(name),
+        autocomplete: "off",
+        autocapitalize: "off",
+        autocorrect: "off",
+        spellcheck: false,
+      })
+    : "";
+  return dialog({
+    id: o.id,
+    title: o.title,
+    body: html`${words}${input}`,
+    close: o.keepLabel ?? t.keep,
+    actions: button({ label: o.confirmLabel, variant: "danger" }),
+    form: { action: o.action, fields: o.fields },
+    alert: true,
+    page: o.page ? { closeHref: o.page.keepHref } : undefined,
+  });
 }
 
 /** The divider between two ways in: "eller". */

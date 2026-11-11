@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type BarOptions, type Html } from "./html.ts";
+import { type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type Html } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -22,3 +22,9 @@ export declare const AccountUnavailable: (props: {
  *  copy buttons, put connectScript() (or CONNECT_SCRIPT) on the page once: it listens on the document,
  *  so it works for panels React draws after it has run. */
 export declare const ConnectAgent: (props: ConnectPanelOptions) => ReactElement;
+/** A native dialog (dialog() in @forspring/ui/html, D-23). It draws closed: put dialogScript() (or
+ *  DIALOG_SCRIPT) on the page once and a trigger with data-dialog-open="<id>", or call showModal() on
+ *  the element by its id. The script listens on the document, so dialogs drawn after it ran open too. */
+export declare const Dialog: (props: DialogOptions) => ReactElement;
+/** The destructive-action confirm (confirmDestructive). The server checks the typed name again. */
+export declare const ConfirmDestructive: (props: ConfirmDestructiveOptions) => ReactElement;
