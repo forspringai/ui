@@ -7,6 +7,10 @@ behave"). The rules come from hub `docs/ui-standard.md` (§1 surfaces, §3 rules
 (D-n) and [brand/voice.md](../brand/voice.md). Where this file and a decision disagree, the decision
 wins; fix this file.
 
+Apps built on AppSpring follow this file too, through AppSpring's renderer:
+[brand/appspring-apps.md](../brand/appspring-apps.md) says which Spring UI element draws like which
+helper here, and how a customer's theme changes the screen.
+
 `test/usage.test.ts` fails when a helper a product calls is not named here, so a new helper comes
 with its guidance.
 

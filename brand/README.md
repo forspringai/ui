@@ -154,7 +154,8 @@ Customer themes are the customer's brand on their own surfaces in AppSpring: hos
 e-sign portal and emails (hub D-103 item 4). Forspring's chrome, the bar, the console and the doll in
 it, never changes. A theme is an accent, a surface tint and a logo, values only, in a checked file
 that `validateTheme()` holds to the same rules as a product accent (hub D-117, ui D-34); the format,
-the refusals and `customerTheme()` are in the [README](../README.md#a-customers-theme).
+the refusals and `customerTheme()` are in the [README](../README.md#a-customers-theme), and what each
+level changes on screen in [appspring-apps.md](appspring-apps.md).
 
 ## 5. Type
 
@@ -267,6 +268,9 @@ What exists, in this package:
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
 - The package README shows how to use each one; [docs/usage.md](../docs/usage.md) says when to use
   which, and how forms, errors and empty, loading and failed states behave (hub tick tdg).
+- **Apps built on AppSpring:** the screens a customer's people see (lists, records, boards, forms,
+  approvals, destructive actions), which Spring UI element renders like which pattern here, and how a
+  customer's theme works, are in [appspring-apps.md](appspring-apps.md) (hub tick y1f).
 
 Everything the brand review (hub `docs/brand/review-2026-11-11.md`) listed as missing now exists.
 
