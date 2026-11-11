@@ -10,7 +10,8 @@ import { gzipSync } from "node:zlib";
 import { collect } from "./page.js";
 export const DEFAULT_WIDTHS = [1280, 380];
 export const DEFAULT_THEMES = ["light", "dark"];
-/** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint). */
+/** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint, the
+ * breakpoint.phone token since D-27; test/components.test.ts holds the two equal). */
 export const PHONE_WIDTH = 560;
 export const FAMILIES = ["Archivo", "Archivo Condensed", "Space Mono"];
 // Google's button sets its own Roboto, by Google's branding guidelines (D-7).

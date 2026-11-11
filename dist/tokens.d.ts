@@ -24,6 +24,14 @@ export declare const space: Deep<{"1":4,"2":8,"3":12,"4":16,"5":20,"6":24,"7":28
 export declare const control: Deep<{"height":44,"height-small":32,"touch":44}>;
 /** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<{"chrome":{"label":11,"meta":12,"title":13,"body":14,"figure":30},"content":{"small":13,"body":15,"lede":16,"h3":18,"h2":21,"h1-min":30,"h1":40},"marketing":{"eyebrow":13,"lede":20,"h3":24,"h2-min":30,"h2":36,"h1-min":48,"h1":72}}>;
+/** Line-height per ladder step, unitless (D-27), and solid (1) for one line in a box of its own. */
+export declare const leading: Deep<{"solid":1,"chrome":{"label":1.3,"meta":1.4,"title":1.3,"body":1.3,"figure":1.1},"content":{"small":1.4,"body":1.55,"lede":1.4,"h3":1.3,"h2":1.15,"h1-min":1.05,"h1":1.05},"marketing":{"eyebrow":1.5,"lede":1.5,"h3":1.2,"h2-min":1.05,"h2":1.05,"h1-min":1.05,"h1":1.05}}>;
+/** Viewport widths in px (D-27). Each is the widest the smaller layout goes: max-width: phone is "on a phone". */
+export declare const breakpoint: Deep<{"phone":560,"tablet":800,"wide":1280}>;
+/** Durations in seconds and easings as cubic-bezier control points (D-27). Under reduced motion use 0. */
+export declare const motion: Deep<{"duration":{"fast":0.15,"base":0.25,"slow":0.6,"pulse":1.4},"ease":{"standard":[0.25,0.1,0.25,1],"out":[0.22,1,0.36,1]}}>;
+/** box-shadow values per theme (D-27): raised for a thumb, overlay for what floats over the page. Never on a card. */
+export declare const shadow: Deep<{"raised":{"light":"0px 1px 2px 0px rgb(20 21 26 / 0.25)","dark":"0px 1px 2px 0px rgb(17 18 21 / 0.25)"},"overlay":{"light":"0px 4px 16px 0px rgb(20 21 26 / 0.25)","dark":"0px 4px 16px 0px rgb(17 18 21 / 0.25)"}}>;
 /** CSS font-family stacks. */
 export declare const fonts: Deep<{"sans":"Archivo, Arial, sans-serif","display":"\"Archivo Condensed\", \"Arial Narrow\", Arial, sans-serif","mono":"\"Space Mono\", \"Courier New\", monospace"}>;
 /** The roles for one product in one theme. */

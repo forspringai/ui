@@ -69,3 +69,10 @@ test("tokens.js: themeFor gives a product its accent over the shared roles", () 
   expect(tokens.chart.light).toHaveLength(8);
   expect(() => tokens.themeFor("nope" as never, "light")).toThrow(/unknown product/);
 });
+
+test("tokens.js carries leading, breakpoints, motion and shadows (D-27)", () => {
+  expect(tokens.leading.content.body).toBe(1.55);
+  expect(tokens.breakpoint.phone).toBe(560);
+  expect(tokens.motion.duration.fast).toBe(0.15);
+  expect(tokens.shadow.overlay.dark).toMatch(/^0px 4px 16px 0px rgb\(/);
+});

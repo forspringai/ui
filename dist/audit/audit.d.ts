@@ -4,7 +4,8 @@ import type { AuditOptions, AuditResult, Finding, Theme } from "./types.js";
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 export declare const DEFAULT_WIDTHS: number[];
 export declare const DEFAULT_THEMES: Theme[];
-/** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint). */
+/** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint, the
+ * breakpoint.phone token since D-27; test/components.test.ts holds the two equal). */
 export declare const PHONE_WIDTH = 560;
 export declare const FAMILIES: string[];
 /** The package root, from src/audit/ (tests) or dist/audit/ (the bin) alike. */
