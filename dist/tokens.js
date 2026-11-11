@@ -207,6 +207,15 @@ export const text = Object.freeze({
     "h2": 21,
     "h1-min": 30,
     "h1": 40
+  },
+  "marketing": {
+    "eyebrow": 13,
+    "lede": 20,
+    "h3": 24,
+    "h2-min": 30,
+    "h2": 36,
+    "h1-min": 48,
+    "h1": 72
   }
 });
 

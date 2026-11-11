@@ -694,3 +694,26 @@ grey in light and 7.20:1 in dark, and at least 8.6 from every other accent under
 deuteranopia. The dolls, favicons and lockup are regenerated. The `PENDING` set in
 test/contrast.test.ts (D-20) is now empty, so every pair of accents must be at least 10 apart with no
 exception. BrainSpring keeps no token and wears Spring's doll (hub D-116 item 2).
+
+## D-22 — A third type ladder for marketing pages, and the brand templates; 0.11.0 (2026-11-11)
+
+Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick xl9) asked for a marketing type
+scale, imagery rules and email, deck and social templates. Content's ladder tops out at a 40 px h1,
+which is right for the account's pages and too small for a landing page's hero; the retired
+forspring.ai site set its own sizes in CSS (a 48 to 116 px hero), outside any token.
+
+`text.marketing` in `tokens/geometry.json`, beside `chrome` and `content`: eyebrow 13, lede 20, h3 24,
+h2 30 to 36, h1 48 to 72. A fluid step is two tokens, `-min` for the phone and the plain name for wide
+screens, as content's h1 already is, and a page writes `clamp(var(--text-marketing-h1-min), <vw>,
+var(--text-marketing-h1))`. The hero stops at 72 rather than the old site's 116, so a two-line
+headline (about 150 px at line-height 1.05), the lede and the call to action fit the first screen at
+1280 × 720 under the bar. Running text on a marketing
+page stays on content's body (15 px), so a page reads the same as the account. The ladder flows
+through the existing build with no change to `src/emit.ts`: `--text-marketing-*` in tokens.css and
+theme.css (`text-marketing-h1` in Tailwind) and `text.marketing` in tokens.js. Nothing is under 11 px.
+
+The rules for using it, imagery, the doll in marketing and share images are `brand/marketing.md`; the
+templates are `brand/templates/` (email, a 16:9 deck, 1200 × 630 and 1080 × 1080 social images), static
+files on the token values, and test/templates.test.ts holds them to the tokens and to no third-party
+requests. The design audit's scale still knows the chrome and content ladders only; teaching it the
+marketing ladder (and the marketing h1's range) is its own change.

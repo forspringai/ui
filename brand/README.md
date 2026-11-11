@@ -155,8 +155,8 @@ with hub tick sbb.
 - **Archivo Condensed is for display only:** headings at 700 to 900 and the wordmark at 900. Never
   running text.
 - **Space Mono is for small labels** (tags, meta lines, table heads). Never paragraphs.
-- **Two ladders** (`tokens/geometry.json` `text`, ui D-4). Hierarchy comes from weight on these steps,
-  not from colour.
+- **Three ladders** (`tokens/geometry.json` `text`, ui D-4 and D-22): chrome and content below, and
+  marketing for landing pages. Hierarchy comes from weight on these steps, not from colour.
 
 | Chrome (dense UI) | px | Content (pages) | px |
 |---|---|---|---|
@@ -168,7 +168,9 @@ with hub tick sbb.
 | | | h1 (phone to wide) | 30 to 40 |
 
 - **Nothing under 11 px.** A new size is a token and a decision first.
-- A marketing type scale (larger display sizes for landing pages) is coming with hub tick xl9.
+- **Marketing** (landing pages, share images, decks; ui D-22): eyebrow 13, lede 20, h3 24, h2 30 to 36,
+  h1 48 to 72. Running text stays on content's body. When to use which step is in
+  [marketing.md](marketing.md).
 
 ## 6. Layout and geometry
 
@@ -282,7 +284,9 @@ site, as rules:
 - **One call to action per page,** said the same way everywhere it appears.
 - **Every comparison and statistic is verifiable,** with its sources kept and rechecked before an edit.
 
-Templates (email, deck, social) and the marketing type scale are coming with hub tick xl9.
+The marketing rules (the marketing type ladder, landing-page layout, imagery, the doll in marketing, share
+images) and the email, deck and social templates are in [marketing.md](marketing.md) and
+[templates/](templates/README.md) (hub tick xl9, ui D-22).
 
 ## 11. Where things are decided
 
@@ -299,3 +303,4 @@ Templates (email, deck, social) and the marketing type scale are coming with hub
 | ui D-18 | The doll in every bar, brand files per product, favicons from `shell()` |
 | ui D-20 | Accents 10 apart from each other and 4.5:1 on the soft grey; DataSpring's teal darkened |
 | ui D-21 | AppSpring's accent becomes violet |
+| ui D-22 | The marketing type ladder, the marketing rules and the brand templates |

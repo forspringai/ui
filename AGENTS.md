@@ -17,7 +17,7 @@ tokens/            the one source: W3C DTCG 2025.10 JSON
   chart.json       chart-1..8, categorical
   role.light.json  semantic roles, light theme (aliases into the files above)
   role.dark.json   the same roles, dark theme
-  geometry.json    radii, the 4px space scale, control heights (D-14), the two type ladders, font families
+  geometry.json    radii, the 4px space scale, control heights (D-14), the three type ladders (D-4, D-22), font families
 fonts/             Archivo, Archivo Condensed, Space Mono (and Roboto Medium for Google's button),
                    woff2, Latin subset, with their OFL licences (account D-17)
 css/
@@ -42,7 +42,8 @@ demo/account-home.html  parity fixture: the account's home markup on this packag
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/; brand files to dist/brand/ and brand/
 scripts/brand-png.ts  renders the brand PNGs from the SVGs in Chromium (Playwright)
 scripts/wordmarks.py  outlines the product names into brand/wordmarks.json (run by hand, D-18)
-brand/             README.md (the rules), wordmarks.json, <product>/ the generated brand files
+brand/             README.md (the rules), voice.md, marketing.md (D-22), wordmarks.json, <product>/ the
+                   generated brand files, templates/ email, deck and social templates on the token values
 scripts/demo.ts    pnpm demo: serves the repo at http://127.0.0.1:4319/dist/demo/
 dist/              committed build output (D-2)
   tokens.css       roles as custom properties (light-dark()), [data-theme], [data-product]
@@ -56,7 +57,7 @@ dist/              committed build output (D-2)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
-                   (demo passes, test/fixtures/broken.html fails)
+                   (demo passes, test/fixtures/broken.html fails), the brand templates (templates.test.ts)
 ```
 
 ## Commands
@@ -76,7 +77,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.10.2"
+"@forspring/ui": "github:forspringai/ui#v0.11.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -95,7 +96,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
   Never edit `dist/` by hand.
 - **Roles, not raw values.** Products use `--background`, `--primary`, `--chart-3`. The raw palette
   (`palette.*`) never leaves the package; no output names `--paper` or `--blue`.
-- **Geometry is fixed.** Radii 3/6/8/10, spacing on 4px, the two type ladders, nothing under 11px.
+- **Geometry is fixed.** Radii 3/6/8/10, spacing on 4px, the type ladders (chrome, content, marketing), nothing under 11px.
   Products choose values, never geometry (Canonify's seam). A new size is a token here first.
 - **Every margin, padding, gap and inset in components.css is a `--space-*` token, 0 or auto**
   (D-14; test/components.test.ts greps for px). The kept exceptions are not spacing: 1px borders
@@ -118,7 +119,7 @@ Node 22.18 or later (the build runs TypeScript directly). The build's brand PNGs
 - **No third-party requests.** Nothing in this package, or in a page built from it, loads fonts,
   scripts or styles from a CDN or any outside origin (account D-17).
 - **Components use roles only.** No hex, rgb() or named colour in `css/components.css` (a test
-  greps for them), type sizes from the two ladders, radii from the tokens. A shade the roles lack
+  greps for them), type sizes from the chrome and content ladders, radii from the tokens. A shade the roles lack
   is a `color-mix()` of roles (`--_link`, `--_hover`, `--_tint`). Google's button is the one
   exception and lives in its own file.
 - **The account's class names are the API** (D-5). Renaming one breaks every product's markup;

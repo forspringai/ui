@@ -71,6 +71,13 @@
   --text-content-h2: 21px;
   --text-content-h1-min: 30px;
   --text-content-h1: 40px;
+  --text-marketing-eyebrow: 13px;
+  --text-marketing-lede: 20px;
+  --text-marketing-h3: 24px;
+  --text-marketing-h2-min: 30px;
+  --text-marketing-h2: 36px;
+  --text-marketing-h1-min: 48px;
+  --text-marketing-h1: 72px;
   --font-sans: Archivo, Arial, sans-serif;
   --font-display: "Archivo Condensed", "Arial Narrow", Arial, sans-serif;
   --font-mono: "Space Mono", "Courier New", monospace;
