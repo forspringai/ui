@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type PaginationOptions, type TableOptions } from "./html.ts";
+import { type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -42,3 +42,21 @@ export declare const Explain: (props: ExplainOptions) => ReactElement;
 export declare const Table: (props: TableOptions) => ReactElement;
 /** "1–6 af 248" with Previous and Next as links (pagination()). */
 export declare const Pagination: (props: PaginationOptions) => ReactElement;
+/** The message after a POST and its 303 (toast() in @forspring/ui/html, D-26). Dismiss is a link to
+ *  `dismissHref`; put toastScript() (or TOAST_SCRIPT) on the page for an instant dismiss and the
+ *  optional auto-hide, which never hides a danger toast. */
+export declare const Toast: (props: ToastOptions) => ReactElement;
+/** Several toasts stacked at the bottom of the window (toastRegion()); `toasts` is Html from toast(). */
+export declare const ToastRegion: (props: {
+    lang: Lang;
+    toasts: Html | Html[];
+    label?: string;
+}) => ReactElement;
+/** A button and a native popover with a short explanation (tooltip()). It needs no handlers: the
+ *  browser opens it from the button. Never the only copy of something a person needs to act. */
+export declare const Tooltip: (props: TooltipOptions) => ReactElement;
+/** One of the package's icons, inline SVG in currentColor (icon()); aria-hidden unless given a label. */
+export declare const Icon: (props: {
+    name: IconName;
+    label?: string;
+}) => ReactElement;

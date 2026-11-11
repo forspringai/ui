@@ -232,7 +232,10 @@ What exists, in this package:
   (ui D-24: what an agent wants to do, for whom, why and what changes, approve or reject, the outcome on
   every copy, and "why did it do that", in the words of Spring's Slack cards), and the table at scale,
   `table` with `controls`, `pagination` and `pageOf` (ui D-25: a search, filter chips with counts, the
-  order stated in words, Previous and Next, all links and a GET form so the URL holds the state); the
+  order stated in words, Previous and Next, all links and a GET form so the URL holds the state), and
+  `toast`, `tooltip` and `icon` (ui D-26: the flash after a POST, dismissed by a link with no script and
+  never hidden by itself when it reports a danger; a short explanation in a native popover, never the
+  only copy of what a person needs; 32 of Lucide's icons, ISC, inline in currentColor); the
   standard pages in `@forspring/ui/pages`; the refusal words in `@forspring/ui/refusals`; the
   "Connect an agent" panel in `@forspring/ui/connect`; React wrappers in `@forspring/ui/react` that
   draw the same markup.
@@ -241,11 +244,10 @@ What exists, in this package:
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
 - The package README shows how to use each one.
 
-Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); none of these exists yet:
+Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); this does not exist yet:
 
 | Pattern | Hub tick |
 |---|---|
-| Toast, tooltip and an icon set | vt2 |
 | Usage guidance: when to use which, forms and errors | tdg |
 
 ## 9. Accessibility
@@ -258,6 +260,8 @@ From this repo's AGENTS.md rules and hub ui-standard §3. The audit (`ui-audit`)
 - **Focus is always visible,** drawn with `--ring`. A skip link on every page.
 - **Motion off under `prefers-reduced-motion`.**
 - **Status is never colour alone:** a word or an icon with it.
+- **Nothing a person needs lives only in a tooltip,** and nothing that reports a failure hides itself
+  (ui D-26).
 - **No text under 11 px.**
 - **Links inside running text are underlined,** not told apart by colour alone.
 - **Headings in order:** one h1 per page.

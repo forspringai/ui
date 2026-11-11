@@ -40,7 +40,7 @@ test("every class in the demo page and the standard pages has a rule", () => {
   // The demo's own layout, the mark's parts (styled as .brand .mark .fill), and data-state's "empty",
   // which is the plain state and only names the kind for a product's own rules; likewise the bar menus'
   // and standard pages' kinds (D-17), hooks for a product's own rules.
-  const demoOnly = ["demo-controls", "demo-row", "demo-grid", "mark", "fill", "coil", "empty", "org-switcher", "product-switcher", "choose-org", "no-org", "refused"];
+  const demoOnly = ["demo-controls", "demo-row", "demo-grid", "demo-toasts", "demo-icons", "mark", "fill", "coil", "empty", "org-switcher", "product-switcher", "choose-org", "no-org", "refused"];
   const missing = [...used].filter((c) => !demoOnly.includes(c) && !new RegExp(`\\.${c}\\b`).test(css + gsi));
   expect(missing).toEqual([]);
 });

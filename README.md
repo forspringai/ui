@@ -422,6 +422,92 @@ table({
 React: `<Table {...sameOptions} />` and `<Pagination />` from `@forspring/ui/react` draw the same
 markup. The demo's "Tabel med mange rækker" section is the brand review's PulseSpring checks.
 
+### Toast, tooltip and icons (D-26)
+
+**A toast** is the message after a POST and its 303: "Ændringerne er gemt." It floats at the bottom of
+the window with the tone's icon (a tick, a triangle, an octagon, an i) and, for a screen reader, the
+tone's word ("Udført:", "Advarsel:", "Fejl:", "Bemærk:"). A danger toast is `role="alert"`; the rest
+are `role="status"` with `aria-live="polite"`.
+
+```ts
+import { toast, toastRegion, toastScript } from "@forspring/ui/html";
+
+// POST /o/noon/sites/42 saves, then 303 to /o/noon/sites/42?gemt=1, which draws:
+const body = [
+  toast({
+    lang: "da",
+    tone: "success",                                  // "success" | "warning" | "danger" | "info" (default)
+    text: "Ændringerne er gemt.",
+    dismissHref: "/o/noon/sites/42",                  // this page without the flash parameter
+    action: { label: "Fortryd", href: "/o/noon/sites/42/undo" },  // optional, one link
+  }),
+  page,
+  toastScript(nonce),                                 // optional
+];
+```
+
+- **Dismiss works with no script:** it is a link to `dismissHref`, the page without the flash
+  parameter (or the same URL when the flash was a one-time cookie). With `toastScript(nonce)` (or
+  `TOAST_SCRIPT` as a file) Dismiss removes the toast at once and puts that URL in the address bar,
+  so a reload does not bring it back.
+- **Auto-hide is the script's, and narrow:** a success or info toast with no action hides after 8
+  seconds, waiting while the pointer or focus is on it. A warning or danger toast never hides itself,
+  whatever its markup, and under `prefers-reduced-motion` nothing does.
+- **Not a notice.** A notice is part of the page and stays while what it says is true (a form's
+  errors, a trial running out). A toast reports what the last request did, and goes. A form's errors
+  are never a toast.
+- Draw it at the start of `main`: a live region on a page that has just loaded is read in order, not
+  announced, so it should come first. Several at once go in `toastRegion({ lang, toasts })`, a region
+  named "Beskeder" / "Messages", each toast with its own `id`.
+
+**A tooltip** is a short explanation beside something, for the curious. It is a button and a native
+popover: pressing or tapping the button shows it, a press elsewhere or Escape hides it, with no
+script. In Chromium, pointing at or focusing the button shows it too (`interestfor`). The button is
+described by the text (`aria-describedby`), which is in the DOM throughout, not a `title`.
+
+```ts
+import { field, icon, tooltip } from "@forspring/ui/html";
+
+field({
+  label: "CVR-nummer",
+  name: "cvr",
+  hint: "Otte cifre, fx 12345678.",                  // what a person needs: always shown
+  help: tooltip({ id: "cvr-tip", label: "Mere om CVR-nummer", trigger: icon("help-circle"), text: "Vi slår firmaets navn og adresse op i CVR-registret." }),
+});
+```
+
+- **A tooltip never holds the only copy of something a person needs to act.** What a field needs is
+  its hint, what a button does is its label, and what went wrong is a notice. Someone who never opens
+  the tooltip must still be able to do the task.
+- `help` on `field()` puts it beside the label, outside it, so the label names only the field.
+- With anchor positioning (Baseline 2026) it opens above its button, or below when there is no room;
+  an older browser shows it where it centres a popover.
+
+**Icons:** `icon(name, { label? })` draws one of 32 icons, a subset of [Lucide](https://lucide.dev)
+(ISC; its Feather-derived icons MIT) vendored into `src/icons/` with the licence beside it
+(`dist/icons/LICENSE`). Inline SVG on a 24 grid, one stroke weight, `currentColor`, 1em of the text it
+sits in (`.icon`). Without a label it is `aria-hidden` decoration, and the words beside it carry the
+meaning; with one it is `role="img"` with that `aria-label`. Nothing is fetched.
+
+```ts
+import { button, html, icon, ICON_NAMES, type IconName } from "@forspring/ui/html";
+
+button({ label: "Hent CSV", icon: "download", variant: "ghost" });            // the icon before the label
+button({ label: "", icon: "trash", variant: "danger", small: true, ariaLabel: "Slet kunden" });
+html`<p>${icon("clock")} Kører hver time</p>`;
+```
+
+The names (`IconName`, and `ICON_NAMES` at run time): check, x, alert-triangle, alert-octagon, info,
+help-circle, chevron-left, chevron-right, chevron-up, chevron-down, arrow-up, arrow-down, search,
+filter, plus, minus, edit, trash, external-link, copy, download, upload, settings, user, users,
+log-out, eye, eye-off, clock, calendar, mail, more-horizontal. An unknown name throws. A new icon is
+Lucide's own drawing added to `src/icons/lucide.ts` (its header says how), not one drawn here.
+
+React: `<Toast />`, `<ToastRegion />`, `<Tooltip />` and `<Icon name="…" />` from
+`@forspring/ui/react` draw the same markup. The demo's "Toast, værktøjstip og ikoner" section shows
+one toast per tone, a tooltip beside a field's label (`?open=cvr-tip` opens it), buttons with icons
+and every icon with its name.
+
 ## Tailwind v4 and shadcn
 
 ```css

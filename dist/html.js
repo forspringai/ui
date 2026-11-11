@@ -6,6 +6,8 @@
 // the html`` tag unescaped; a plain string is always text. raw() is the one way to vouch for a
 // string as markup, for a stylesheet or markup the caller built and escaped itself. String(h) or
 // `${h}` gives the HTML.
+import { ICON_NAMES, ICON_PATHS } from "./icons/lucide.js";
+export { ICON_NAMES };
 // A registered symbol rather than instanceof, so Html from a second copy of this module (src/ and
 // dist/, or two installed versions) still passes through instead of being escaped twice.
 const BRAND = Symbol.for("@forspring/ui/html");
@@ -102,6 +104,21 @@ const MARK_SVG = `<svg class="mark" viewBox="${MARK_VIEWBOX}" aria-hidden="true"
 export const mark = () => raw(MARK_SVG);
 /** The doll's paths alone, classes fill and coil, for the brand files. */
 export const MARK_PATHS = MARK_SVG.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+// --- Icons (D-26) -----------------------------------------------------------------------------------
+/**
+ * One of the package's icons (ICON_NAMES, a subset of Lucide, ISC) as inline SVG: a 24 by 24 grid,
+ * one stroke weight, in currentColor, so it takes the colour of the text around it and 1em of its
+ * size (.icon). Nothing is fetched: the paths are in the markup.
+ *
+ * Without a label it is decoration, aria-hidden, and the words beside it carry the meaning. With
+ * one it is an image with that name (role="img"), for an icon that stands alone.
+ */
+export function icon(name, o = {}) {
+    if (!Object.hasOwn(ICON_PATHS, name))
+        throw new Error(`icon: no icon named ${JSON.stringify(name)}`);
+    const a = o.label ? `role="img" aria-label="${esc(o.label)}"` : 'aria-hidden="true"';
+    return raw(`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${a} focusable="false">${ICON_PATHS[name]}</svg>`);
+}
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
 export const DEFAULT_BRAND_BASE = `/assets/ui/${VERSION}/brand/`;
@@ -255,12 +272,13 @@ ${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html `<main id="main" class="${
 ${footer}</body></html>`;
 }
 export function button(o) {
+    const label = o.icon ? html `${icon(o.icon)}${o.label}` : o.label;
     const variant = o.variant && o.variant !== "primary" ? o.variant : null;
     if (o.href !== undefined) {
-        return html `<a${raw(attrs({ class: cls("button", variant, o.small && "small", o.wide && "wide"), href: safeHref(o.href), "aria-label": o.ariaLabel }))}>${o.label}</a>`;
+        return html `<a${raw(attrs({ class: cls("button", variant, o.small && "small", o.wide && "wide"), href: safeHref(o.href), "aria-label": o.ariaLabel }))}>${label}</a>`;
     }
     const a = { class: cls(variant, o.small && "small", o.wide && "wide"), type: o.type ?? "submit", name: o.name, value: o.value, "aria-label": o.ariaLabel, disabled: o.disabled };
-    return html `<button${raw(attrs(a))}>${o.label}</button>`;
+    return html `<button${raw(attrs(a))}>${label}</button>`;
 }
 /** A label, its control, a hint and an error, wired with aria-describedby and aria-invalid. */
 export function field(o) {
@@ -284,7 +302,8 @@ export function field(o) {
         : o.control === "select"
             ? html `<select${raw(attrs(common))}>${(o.options ?? []).map((op) => html `<option${raw(attrs({ value: op.value, selected: op.selected }))}>${op.label}</option>`)}</select>`
             : html `<input${raw(attrs({ ...common, type: o.type ?? "text", value: o.value, placeholder: o.placeholder, pattern: o.pattern, title: o.title }))}>`;
-    return html `<div class="field"><label for="${id}">${o.label}</label>${control}${o.hint ? html `<p class="hint" id="${hintId}">${o.hint}</p>` : ""}${o.error ? html `<p class="field-error" id="${errorId}">${o.error}</p>` : ""}</div>`;
+    const label = html `<label for="${id}">${o.label}</label>`;
+    return html `<div class="field">${o.help ? html `<div class="field-head">${label}${o.help}</div>` : label}${control}${o.hint ? html `<p class="hint" id="${hintId}">${o.hint}</p>` : ""}${o.error ? html `<p class="field-error" id="${errorId}">${o.error}</p>` : ""}</div>`;
 }
 /** What just happened. Errors and warnings are alerts; the rest are polite status messages. */
 /**
@@ -568,6 +587,101 @@ export function confirmDestructive(o) {
         alert: true,
         page: o.page ? { closeHref: o.page.keepHref } : undefined,
     });
+}
+// The package's words, as the bar's and the confirm's are (D-17, D-23). The tone's word is read
+// before the text, so a screen reader hears what kind of message it is, as an eye sees from the icon.
+const TOAST = {
+    da: { dismiss: "Luk", region: "Beskeder", tone: { success: "Udført", warning: "Advarsel", danger: "Fejl", info: "Bemærk" } },
+    en: { dismiss: "Dismiss", region: "Messages", tone: { success: "Done", warning: "Warning", danger: "Error", info: "Note" } },
+};
+// A shape per tone as well as a colour, so the tone is never told by colour alone: a tick, a
+// triangle, an octagon and an i.
+const TOAST_ICON = { success: "check", warning: "alert-triangle", danger: "alert-octagon", info: "info" };
+/**
+ * The message after a POST and its 303 (D-26): "Ændringerne er gemt." It floats at the bottom of the
+ * window, with the tone's icon and, for a screen reader, its word, and a Dismiss link to this page
+ * without it. Draw it early in the page (at the start of main), so a screen reader reaching the page
+ * meets it first: a live region on a page that has just loaded is read in order, not announced.
+ *
+ * Not notice(): a notice is part of the page and stays as long as what it says is true (a form's
+ * errors, a trial running out); a toast reports what the last request did and goes.
+ */
+export function toast(o) {
+    const t = TOAST[o.lang];
+    const tone = o.tone ?? "info";
+    const id = o.id ?? "toast";
+    const textId = `${id}-text`;
+    // Only a success or a fact with nothing to do may hide itself, and only through toastScript().
+    const autohide = (tone === "success" || tone === "info") && !o.action;
+    const a = raw(attrs({ class: `toast toast-${tone}`, id, role: tone === "danger" ? "alert" : "status", "aria-live": tone === "danger" ? undefined : "polite", "data-toast-autohide": autohide ? "true" : undefined }));
+    const action = o.action ? html `<a class="button ghost small" href="${safeHref(o.action.href)}" aria-describedby="${textId}">${o.action.label}</a>` : "";
+    return html `<div${a}>${icon(TOAST_ICON[tone])}<p class="toast-text" id="${textId}"><span class="visually-hidden">${t.tone[tone]}: </span>${o.text}</p><span class="toast-actions">${action}<a class="button ghost small toast-dismiss" href="${safeHref(o.dismissHref)}" data-toast-dismiss="${id}" aria-describedby="${textId}">${icon("x")}<span class="visually-hidden">${t.dismiss}</span></a></span></div>`;
+}
+/** Several toasts stacked at the bottom of the window, newest last, in a region named "Beskeder" /
+ *  "Messages" that a screen reader can jump to. */
+export function toastRegion(o) {
+    return html `<section class="toast-region" aria-label="${o.label ?? TOAST[o.lang].region}">${o.toasts}</section>`;
+}
+/**
+ * The toasts' optional script, as text (toastScript(nonce) writes the tag). Dismiss removes the toast
+ * where it is and puts its link's URL in the address bar (history.replaceState), so a reload does
+ * not bring it back; a modified click is left to the link. A success or info toast with no action
+ * hides itself after 8 seconds, waiting while the pointer or focus is on it. A danger or warning
+ * toast never does, whatever its markup says: a failure stays until a person has read it. Under
+ * prefers-reduced-motion nothing hides by itself, and Dismiss still works.
+ */
+export const TOAST_SCRIPT = `(() => {
+  const gone = (t, href) => {
+    const region = t.parentElement;
+    t.remove();
+    if (region && region.classList.contains("toast-region") && !region.querySelector(".toast")) region.remove();
+    if (href) try { history.replaceState(history.state, "", href); } catch {}
+  };
+  document.addEventListener("click", (e) => {
+    const a = e.target instanceof Element ? e.target.closest("[data-toast-dismiss]") : null;
+    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const t = a.closest(".toast");
+    if (!t) return;
+    e.preventDefault();
+    gone(t, a.getAttribute("href"));
+  });
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  for (const t of document.querySelectorAll(".toast[data-toast-autohide]")) {
+    if (t.classList.contains("toast-danger") || t.classList.contains("toast-warning") || t.getAttribute("role") === "alert") continue;
+    let timer = 0;
+    const start = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (t.matches(":hover, :focus-within")) return;
+        gone(t, t.querySelector("[data-toast-dismiss]")?.getAttribute("href"));
+      }, 8000);
+    };
+    const wait = () => clearTimeout(timer);
+    t.addEventListener("pointerenter", wait);
+    t.addEventListener("focusin", wait);
+    t.addEventListener("pointerleave", start);
+    t.addEventListener("focusout", start);
+    start();
+  }
+})();`;
+/** TOAST_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export function toastScript(nonce) {
+    return html `<script${raw(nonce ? ` nonce="${nonce.replace(/[^A-Za-z0-9+/=_-]/g, "")}"` : "")}>${raw(TOAST_SCRIPT)}</script>`;
+}
+/**
+ * A short explanation beside something (D-26): a button and a native popover. Pressing the button,
+ * or tapping it, shows the text (popovertarget, popovertargetaction="show"); a press elsewhere or
+ * Escape hides it, all with no script. Where the browser has interest invokers (interestfor,
+ * Chromium only), pointing at it or focusing it shows it too, and the browser lets Escape hide that.
+ * The trigger is described by the text (aria-describedby), which is in the DOM throughout, so a
+ * screen reader reads it with the button even closed.
+ *
+ * A tooltip never holds the only copy of something a person needs to act: what a field needs is its
+ * hint, and what a button does is its label. A tooltip is for the curious, so it is fine to miss it.
+ */
+export function tooltip(o) {
+    const trigger = raw(attrs({ type: "button", class: "tooltip-trigger", popovertarget: o.id, popovertargetaction: "show", interestfor: o.id, "aria-describedby": o.id, "aria-label": o.label }));
+    return html `<span class="tooltip-wrap"><button${trigger}>${o.trigger}</button><span class="tooltip" id="${o.id}" popover="auto" role="tooltip">${o.text}</span></span>`;
 }
 const AGENT = {
     da: {
