@@ -1,6 +1,6 @@
 {
   "name": "@forspring/ui",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "description": "Forspring suite UI: design tokens, fonts, brand files, a server-rendered component layer and the design audit (hub D-90, D-101)",
   "private": true,
   "type": "module",
@@ -15,7 +15,8 @@
     "dist",
     "tokens",
     "fonts",
-    "css"
+    "css",
+    "schema"
   ],
   "exports": {
     ".": {
@@ -42,6 +43,11 @@
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
     },
+    "./theme": {
+      "types": "./dist/theme.d.ts",
+      "default": "./dist/theme.js"
+    },
+    "./schema/customer-theme.schema.json": "./schema/customer-theme.schema.json",
     "./tokens.css": "./dist/tokens.css",
     "./theme.css": "./dist/theme.css",
     "./fonts.css": "./dist/fonts.css",

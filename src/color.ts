@@ -58,3 +58,29 @@ export function distance(a: string, b: string, vision?: Vision): number {
   const [p, q] = [oklab(a, vision), oklab(b, vision)];
   return 100 * Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]);
 }
+
+// OKLCH: lightness, chroma and hue in degrees (0 for a grey).
+export function oklch(hex: string): [number, number, number] {
+  const [l, a, b] = oklab(hex);
+  const h = (Math.atan2(b, a) * 180) / Math.PI;
+  return [l, Math.hypot(a, b), h < 0 ? h + 360 : h];
+}
+
+// Back from OKLCH to #rrggbb, or null when the colour is outside sRGB. Björn Ottosson's inverse of
+// the transform in oklab() above; a theme's fix is searched in OKLCH and written as a hex.
+export function fromOklch(l: number, c: number, h: number): string | null {
+  const a = c * Math.cos((h * Math.PI) / 180);
+  const b = c * Math.sin((h * Math.PI) / 180);
+  const lms = [l + 0.3963377774 * a + 0.2158037573 * b, l - 0.1055613458 * a - 0.0638541728 * b, l - 0.0894841775 * a - 1.291485548 * b].map((x) => x ** 3) as [number, number, number];
+  const lin = [
+    4.0767416621 * lms[0] - 3.3077115913 * lms[1] + 0.2309699292 * lms[2],
+    -1.2684380046 * lms[0] + 2.6097574011 * lms[1] - 0.3413193965 * lms[2],
+    -0.0041960863 * lms[0] - 0.7034186147 * lms[1] + 1.707614701 * lms[2],
+  ];
+  if (lin.some((x) => x < -1e-4 || x > 1 + 1e-4)) return null;
+  const encode = (x: number) => {
+    const v = Math.max(0, Math.min(1, x));
+    return v <= 0.0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - 0.055;
+  };
+  return `#${lin.map((x) => Math.round(encode(x) * 255).toString(16).padStart(2, "0")).join("")}`;
+}

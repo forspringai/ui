@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.19.0
+pnpm add github:forspringai/ui#v0.20.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -595,11 +595,101 @@ Setting up an app:
 
 ## Code
 
+`@forspring/ui` for the token values, `@forspring/ui/theme` for a customer's theme (below).
+
 ```ts
 import { themeFor, chart } from "@forspring/ui";
 themeFor("dataspring", "dark").primary; // "#2ba7ad"
 themeFor("forspring", "light").mark;    // "#14151a", the doll's colour (marks has every product's)
 ```
+
+## A customer's theme
+
+AppSpring's customers wear their own brand on their own surfaces: hosted apps, forms, the e-sign
+portal and emails (hub D-103 item 4). Forspring's chrome, the bar and the console, never changes. A
+theme is a checked file in the app's bundle (hub D-117): an agent may draft it from the customer's
+site or brand guide, `validateTheme()` checks it at compile time, and promoting it in AppSpring is
+the person's approval. Values only, never geometry (D-34).
+
+```json
+{
+  "$schema": "node_modules/@forspring/ui/schema/customer-theme.schema.json",
+  "level": "brand",
+  "brand": {
+    "accent": { "light": "#0f5132" },
+    "tint": { "light": "#eef6f0" },
+    "logo": { "light": "https://acme.example/logo.svg", "alt": "Acme" }
+  }
+}
+```
+
+- **level**: `default` (Forspring's look, no brand block), `brand` (accent, tint, logo) or
+  `guideline` (Brand plus an approved font and a radius and a density preset; accepted by the schema,
+  refused by `validateTheme()` until it ships, hub D-117).
+- **accent**: buttons, links, the focus ring and the doll. **tint**: the soft surface (table heads,
+  hover rows, quiet sections); the page is the same hue a step lighter in light and darker in dark,
+  the family's own step from soft to page. **logo**: an `https:` URL, a `data:image/` URL or a
+  relative path in the bundle, and its `alt`. A colour is `#rrggbb` or a DTCG `srgb` colour value.
+- **dark** is optional for the accent and the tint: without it, a dark value is derived (the nearest
+  to the light one that passes in dark), checked, and reported as a warning carrying the value, so
+  the file can pin it.
+- The JSON Schema is `@forspring/ui/schema/customer-theme.schema.json`; it checks the shape only.
+
+```ts
+import { customerTheme, validateTheme } from "@forspring/ui/theme";
+
+const v = validateTheme(file, { product: "appspring" }); // { ok, errors, warnings }
+// errors: [{ path: "brand.accent.light", code: "theme.accent.contrast", message, fix: "#636363" }]
+
+const t = customerTheme(file, { selector: '[data-theme-org="acme"]' }); // throws ThemeRefused when invalid
+t.roles.light.primary; // every role per theme, the family's values with the customer's in place
+t.css;                 // custom properties under the selector; "" at the Default level
+t.logo;                // { light, dark, alt } or null
+```
+
+`t.css` for the file above:
+
+```css
+/* A customer's theme (@forspring/ui customerTheme, ui D-34): values on the roles, never geometry. */
+[data-theme-org="acme"] {
+  --primary: light-dark(#0f5132, #5f9c78);
+  --primary-foreground: light-dark(#ffffff, #111215);
+  --ring: light-dark(#0f5132, #5f9c78);
+  --mark: light-dark(#0f5132, #5f9c78);
+  --background: light-dark(#fefffe, #0e1410);
+  --muted: light-dark(#eef6f0, #171d19);
+  --secondary: light-dark(#eef6f0, #171d19);
+  --accent: light-dark(#eef6f0, #171d19);
+  --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
+  --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
+  --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
+}
+```
+
+Put it after `tokens.css`, on the element that holds the customer's surface, not on the one with
+`data-product`. The last three lines are the component layer's own shades, declared again because
+a custom property resolves its `var()`s where it is declared.
+
+Refusals. Every code is stable; a colour refusal's `fix` is the nearest value at the same hue that
+passes every rule there (lightness and chroma stepped, as D-20 did for DataSpring's teal).
+
+| Code | When | fix |
+|---|---|---|
+| `theme.schema` | Not JSON, an unknown key, a missing key, a wrong type or enum | |
+| `theme.color.format` | A colour that is not `#rrggbb` or an opaque DTCG `srgb` value | |
+| `theme.level.mismatch` | Default with a brand block, Brand or Guideline without one, a guideline block below Guideline | the level |
+| `theme.accent.contrast` | The accent under 4.5:1 on background, card or muted (tinted), in either theme | a colour |
+| `theme.accent.label_contrast` | Neither the family's label nor the ink reaches 4.5:1 on the filled accent | a colour |
+| `theme.accent.status_clash` | The accent within 10 (OKLab x100) of success, warning, danger or a signal colour | a colour |
+| `theme.tint.text_contrast` | A text role (foreground, body, muted, status) under 4.5:1 on the tinted page or soft surface | a colour |
+| `theme.tint.mark_contrast` | A signal mark under 3:1 on the tinted page or soft surface | a colour |
+| `theme.logo.alt_missing` | A logo with no `alt`, or a blank one | |
+| `theme.logo.unsafe_url` | A logo that is not `https:`, `data:image/` or a bundle path (no `..`, no `//`) | |
+| `theme.guideline.unavailable` | The Guideline level, or a guideline block: not available yet (hub D-117) | `brand` |
+
+Warnings never refuse: `theme.accent.dark_derived` and `theme.tint.dark_derived` (the value in
+`fix`), and `theme.accent.product_close` (with `product`, an accent within 10 of that product's own,
+so the customer's views could read as the product's chrome).
 
 ## Run the audit in CI
 

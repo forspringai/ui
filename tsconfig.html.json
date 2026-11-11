@@ -15,6 +15,7 @@
     "src/refusals.ts",
     "src/pages.ts",
     "src/connect.ts",
-    "src/react.ts"
+    "src/react.ts",
+    "src/theme.ts"
   ]
 }

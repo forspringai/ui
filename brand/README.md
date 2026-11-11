@@ -148,6 +148,14 @@ status tokens, never a chart slot. When to use which chart, series order and Oth
 units and sources, and the accessible summary beside every chart are in [charts.md](charts.md) (hub
 tick sbb, ui D-27).
 
+### A customer's theme
+
+Customer themes are the customer's brand on their own surfaces in AppSpring: hosted apps, forms, the
+e-sign portal and emails (hub D-103 item 4). Forspring's chrome, the bar, the console and the doll in
+it, never changes. A theme is an accent, a surface tint and a logo, values only, in a checked file
+that `validateTheme()` holds to the same rules as a product accent (hub D-117, ui D-34); the format,
+the refusals and `customerTheme()` are in the [README](../README.md#a-customers-theme).
+
 ## 5. Type
 
 - **Three families, self-hosted** from `fonts/` (woff2, Latin subset, OFL; `tokens/geometry.json`
@@ -326,3 +334,4 @@ images) and the email, deck and social templates are in [marketing.md](marketing
 | ui D-20 | Accents 10 apart from each other and 4.5:1 on the soft grey; DataSpring's teal darkened |
 | ui D-21 | AppSpring's accent becomes violet |
 | ui D-22 | The marketing type ladder, the marketing rules and the brand templates |
+| ui D-34 | A customer's theme as a checked file: `validateTheme()` and `customerTheme()` |
