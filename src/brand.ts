@@ -1,6 +1,6 @@
 // The brand files (hub D-101), generated from the tokens so a colour lives in one place: per product,
 // the doll alone (mark.svg, favicon.svg) and the lockup (logo.svg), each with its dark variant inside
-// a prefers-color-scheme rule. scripts/build.ts writes them to dist/brand/<product>/ and brand/<product>/
+// a prefers-color-scheme rule, and the web manifest naming the app icons (D-28). scripts/build.ts writes them to dist/brand/<product>/ and brand/<product>/
 // and renders the PNGs from them (scripts/brand-png.ts).
 //
 // The lockup's wordmark is outlined (brand/wordmarks.json, from scripts/wordmarks.py), so it renders
@@ -87,13 +87,36 @@ export const PNGS = [
   { file: "logo-1200x300.png", from: "logo.svg", width: 1200, height: 300, paper: false },
 ] as const;
 
-/** brand/<product>/{mark,favicon,logo}.svg for every product in the tokens. */
+/**
+ * site.webmanifest (D-28): the product's name and its two app icons, so a product need not write its
+ * own. The icon paths are relative to the manifest, so the folder works wherever it is served.
+ * display is "browser": the consoles are pages in a browser tab, and "standalone" would open an
+ * installed shortcut in a window with no address bar or back button. No theme_color: browsers paint
+ * their chrome with it, the family's chrome is paper and never the accent alone, and a manifest
+ * cannot give dark mode its own value, so the browser's default is closer than any one colour.
+ */
+export function webManifest(m: Model, p: Product): string {
+  const manifest = {
+    name: PRODUCT_NAMES[p],
+    short_name: PRODUCT_NAMES[p],
+    icons: [
+      { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
+    ],
+    background_color: m.colors.background!.light,
+    display: "browser",
+  };
+  return JSON.stringify(manifest, null, 2) + "\n";
+}
+
+/** brand/<product>/{mark,favicon,logo}.svg and site.webmanifest for every product in the tokens. */
 export function brandSvgs(m: Model, w: Wordmarks): Record<string, string> {
   const out: Record<string, string> = {};
   for (const p of m.products as Product[]) {
     out[`brand/${p}/mark.svg`] = markSvg(m, p);
     out[`brand/${p}/favicon.svg`] = markSvg(m, p, true);
     out[`brand/${p}/logo.svg`] = logoSvg(m, w, p);
+    out[`brand/${p}/site.webmanifest`] = webManifest(m, p);
   }
   return out;
 }

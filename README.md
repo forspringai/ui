@@ -198,6 +198,7 @@ the doll's colour is the new `--mark` role, set by `data-product`. `spring` is a
 `pulsespring`, into `dist/brand/<product>/` (and `brand/<product>/`): `mark.svg`, `favicon.svg` (both
 with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touch-icon-180.png`,
 `icon-512.png`, `logo.svg` (wordmark outlined, no font needed) and `logo-1200x300.png`.
+And `site.webmanifest` (D-28): the name and the two app icons, linked by `shell()` and `faviconLinks()`; serve it as `application/manifest+json`.
 
 **Wiring the favicon in a product:**
 
@@ -216,7 +217,7 @@ with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touc
    `faviconLinks(faviconFor("sitespring", "/assets/ui/0.9.0/brand/"))` in `<head>`, or write the four
    tags by hand. A bundler can take the files from `@forspring/ui/brand/<product>/<file>`.
 5. Optional: answer `/favicon.ico` with `favicon-32.png`, for clients that ask for it before reading
-   the page. The CSP needs only `img-src 'self'`.
+   the page. The CSP needs only `img-src 'self'` and `manifest-src 'self'`.
 
 ### Connect an agent (0.10.0, D-19, hub D-102)
 

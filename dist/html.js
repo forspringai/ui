@@ -125,14 +125,14 @@ export const DEFAULT_BRAND_BASE = `/assets/ui/${VERSION}/brand/`;
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export function faviconFor(product, base = DEFAULT_BRAND_BASE) {
     const dir = `${base}${product}/`;
-    return { svg: `${dir}favicon.svg`, png32: `${dir}favicon-32.png`, png16: `${dir}favicon-16.png`, appleTouch: `${dir}apple-touch-icon-180.png` };
+    return { svg: `${dir}favicon.svg`, png32: `${dir}favicon-32.png`, png16: `${dir}favicon-16.png`, appleTouch: `${dir}apple-touch-icon-180.png`, manifest: `${dir}site.webmanifest` };
 }
 /**
- * The <link> tags for a favicon. The PNGs carry sizes and come first, so a browser that reads SVG
- * icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
+ * The <link> tags for a favicon and the web manifest. The PNGs carry sizes and come first, so a
+ * browser that reads SVG icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
  */
 export function faviconLinks(f) {
-    return html `${f.png32 ? html `<link rel="icon" type="image/png" sizes="32x32" href="${safeHref(f.png32)}">` : ""}${f.png16 ? html `<link rel="icon" type="image/png" sizes="16x16" href="${safeHref(f.png16)}">` : ""}<link rel="icon" type="image/svg+xml" href="${safeHref(f.svg)}">${f.appleTouch ? html `<link rel="apple-touch-icon" sizes="180x180" href="${safeHref(f.appleTouch)}">` : ""}`;
+    return html `${f.png32 ? html `<link rel="icon" type="image/png" sizes="32x32" href="${safeHref(f.png32)}">` : ""}${f.png16 ? html `<link rel="icon" type="image/png" sizes="16x16" href="${safeHref(f.png16)}">` : ""}<link rel="icon" type="image/svg+xml" href="${safeHref(f.svg)}">${f.appleTouch ? html `<link rel="apple-touch-icon" sizes="180x180" href="${safeHref(f.appleTouch)}">` : ""}${f.manifest ? html `<link rel="manifest" href="${safeHref(f.manifest)}">` : ""}`;
 }
 export const ROLES = ["owner", "admin", "member", "viewer"];
 /** The roles as words inside a sentence or beside a name, as the account writes them. */

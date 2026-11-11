@@ -49,12 +49,13 @@ export declare const MARK_PATHS: string;
 export declare function icon(name: IconName, o?: {
     label?: string;
 }): Html;
-/** The page's icons, each a URL. shell() writes them from `brandBase` unless `favicon` names them. */
+/** The page's icons, each a URL, and the web manifest (D-28). shell() writes them from `brandBase` unless `favicon` names them. */
 export type Favicon = {
     svg: string;
     png32?: string;
     png16?: string;
     appleTouch?: string;
+    manifest?: string;
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
@@ -62,8 +63,8 @@ export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.16.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
- * The <link> tags for a favicon. The PNGs carry sizes and come first, so a browser that reads SVG
- * icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
+ * The <link> tags for a favicon and the web manifest. The PNGs carry sizes and come first, so a
+ * browser that reads SVG icons takes the SVG (it has the dark-mode doll) and the rest take a PNG.
  */
 export declare function faviconLinks(f: Favicon): Html;
 export type Link = {

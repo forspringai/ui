@@ -1,9 +1,9 @@
 // Marks and wordmarks (D-18, hub D-101): every bar has a doll and a wordmark, the doll in the
 // product's accent (ink for Forspring), the brand files are generated from the tokens and present
-// for every product, shell() links the favicon, and the retired blue is gone.
+// for every product, shell() links the favicon and the web manifest (D-28), and the retired blue is gone.
 
 import { execFileSync } from "node:child_process";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { inflateSync } from "node:zlib";
 import { createElement } from "react";
@@ -11,14 +11,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import { CLEAR, DOLL_HEIGHT, PNGS, lockup, readWordmarks } from "../src/brand.ts";
 import { model } from "../src/emit.ts";
-import { DEFAULT_BRAND_BASE, PRODUCT_NAMES, VERSION, bar, faviconFor, shell, type Product } from "../src/html.ts";
+import { DEFAULT_BRAND_BASE, PRODUCT_NAMES, VERSION, bar, faviconFor, faviconLinks, shell, type Product } from "../src/html.ts";
 import { Bar } from "../src/react.ts";
 import * as tokens from "../dist/tokens.js";
 
 const root = join(import.meta.dirname, "..");
 const m = model(join(root, "tokens"));
 const PRODUCTS = tokens.products as readonly Product[];
-const FILES = ["mark.svg", "favicon.svg", "logo.svg", ...PNGS.map((p) => p.file)].sort();
+const FILES = ["mark.svg", "favicon.svg", "logo.svg", "site.webmanifest", ...PNGS.map((p) => p.file)].sort();
 const ink = m.colors.foreground!;
 
 describe.each(PRODUCTS)("the bar in %s", (p) => {
@@ -65,7 +65,7 @@ describe("favicons in shell()", () => {
     expect(DEFAULT_BRAND_BASE).toBe(`/assets/ui/${VERSION}/brand/`);
     const b = `/assets/ui/${VERSION}/brand/spring/`;
     expect(page()).toContain(
-      `<link rel="icon" type="image/png" sizes="32x32" href="${b}favicon-32.png"><link rel="icon" type="image/png" sizes="16x16" href="${b}favicon-16.png"><link rel="icon" type="image/svg+xml" href="${b}favicon.svg"><link rel="apple-touch-icon" sizes="180x180" href="${b}apple-touch-icon-180.png">`,
+      `<link rel="icon" type="image/png" sizes="32x32" href="${b}favicon-32.png"><link rel="icon" type="image/png" sizes="16x16" href="${b}favicon-16.png"><link rel="icon" type="image/svg+xml" href="${b}favicon.svg"><link rel="apple-touch-icon" sizes="180x180" href="${b}apple-touch-icon-180.png"><link rel="manifest" href="${b}site.webmanifest">`,
     );
   });
 
@@ -83,6 +83,11 @@ describe("favicons in shell()", () => {
   test("faviconFor names the generated files", () => {
     const f = faviconFor("pulsespring", "/x/");
     for (const url of Object.values(f)) expect(FILES).toContain(url.replace("/x/pulsespring/", ""));
+  });
+
+  test("faviconLinks links the web manifest beside the icons, for a page not drawn by shell()", () => {
+    expect(String(faviconLinks(faviconFor("sitespring", "/b/")))).toMatch(/<link rel="apple-touch-icon" sizes="180x180" href="\/b\/sitespring\/apple-touch-icon-180.png"><link rel="manifest" href="\/b\/sitespring\/site.webmanifest">$/);
+    expect(String(faviconLinks({ svg: "/icon.svg" }))).not.toContain("manifest");
   });
 });
 
@@ -151,6 +156,26 @@ describe.each(PRODUCTS)("brand/%s/", (p) => {
     expect(logo).toContain(`.word{fill:${ink.dark}}`);
     expect(logo).toMatch(/<path class="word" transform="[^"]+" d="M[^"]+"\/>/);
     expect(logo).not.toMatch(/<text|font-family/);
+  });
+
+  test("site.webmanifest names the product and icons that exist, relative to itself (D-28)", () => {
+    const manifest = JSON.parse(readFileSync(join(dir, "site.webmanifest"), "utf8"));
+    expect(manifest).toEqual({
+      name: PRODUCT_NAMES[p],
+      short_name: PRODUCT_NAMES[p],
+      icons: [
+        { src: "icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: "apple-touch-icon-180.png", sizes: "180x180", type: "image/png" },
+      ],
+      background_color: m.colors.background!.light,
+      display: "browser",
+    });
+    for (const icon of manifest.icons) {
+      expect(icon.src).not.toMatch(/^\/|:/);
+      expect(existsSync(join(dir, icon.src)), icon.src).toBe(true);
+      const png = PNGS.find((x) => x.file === icon.src)!;
+      expect(icon.sizes).toBe(`${png.width}x${png.height}`);
+    }
   });
 
   test("the lockup keeps a quarter of the doll's height clear on every side", () => {
