@@ -10,9 +10,10 @@ import { MODES, model } from "../src/emit.ts";
 const m = model(join(import.meta.dirname, "..", "tokens"));
 const SURFACES = ["background", "card", "muted"] as const;
 const AA = 4.5;
-// Accent pairs known to clash, waiting for Peter's choice (hub queue brand-2, tick 857): AppSpring's
-// plum and PulseSpring's magenta are 8.8 apart in light and 7.7 in dark. Remove the entry with the fix.
-const PENDING = new Set(["appspring/pulsespring"]);
+// Accent pairs known to clash while a hub decision is pending; each must still be too close, so the
+// entry goes with the fix. Empty since 0.10.2: AppSpring's plum, 8.8 and 7.7 from PulseSpring's magenta,
+// became violet (hub D-116, D-21).
+const PENDING = new Set<string>([]);
 
 describe.each(MODES)("%s theme", (mode) => {
   const c = (role: string) => m.colors[role]![mode];
@@ -58,7 +59,7 @@ describe.each(MODES)("%s theme", (mode) => {
         const pending = PENDING.has(`${p}/${q}`) || PENDING.has(`${q}/${p}`);
         // A pending pair must still be too close: once Peter's choice lands, this fails until the
         // entry is removed, so the exception cannot outlive the clash.
-        if (pending) test(`${p} / ${q}: ${d.toFixed(1)} (pending hub queue brand-2)`, () => expect(d).toBeLessThan(10));
+        if (pending) test(`${p} / ${q}: ${d.toFixed(1)} (pending a hub decision)`, () => expect(d).toBeLessThan(10));
         else test(`${p} / ${q}: ${d.toFixed(1)}`, () => expect(d).toBeGreaterThanOrEqual(10));
       }
     }
@@ -94,7 +95,7 @@ test("the D-90 accents, exactly, and Spring on Forspring's blue (hub D-101)", ()
     spring: { light: "#2244ff", dark: "#6b83ff" },
     sitespring: { light: "#b8442a", dark: "#e0714f" },
     dataspring: { light: "#0b7a7f", dark: "#2ba7ad" },
-    appspring: { light: "#7b3f8c", dark: "#b57cc6" },
+    appspring: { light: "#5d2eb8", dark: "#b09af5" },
     pulsespring: { light: "#a3237a", dark: "#e06dba" },
   });
 });

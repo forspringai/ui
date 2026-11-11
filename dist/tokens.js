@@ -27,8 +27,8 @@ export const accents = Object.freeze({
     "dark": "#2ba7ad"
   },
   "appspring": {
-    "light": "#7b3f8c",
-    "dark": "#b57cc6"
+    "light": "#5d2eb8",
+    "dark": "#b09af5"
   },
   "pulsespring": {
     "light": "#a3237a",
@@ -54,8 +54,8 @@ export const marks = Object.freeze({
     "dark": "#2ba7ad"
   },
   "appspring": {
-    "light": "#7b3f8c",
-    "dark": "#b57cc6"
+    "light": "#5d2eb8",
+    "dark": "#b09af5"
   },
   "pulsespring": {
     "light": "#a3237a",
