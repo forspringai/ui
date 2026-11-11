@@ -1004,7 +1004,7 @@ colour a role. The demo's "Toast, værktøjstip og ikoner" section shows one toa
 the CVR field's tooltip, buttons with icons and every icon with its name, and passes the audit for
 Forspring and DataSpring.
 
-## D-27 — Motion, shadow, breakpoint and line-height tokens, and the chart rules (2026-11-11)
+## D-27 — Motion, shadow, breakpoint and line-height tokens, and the chart rules; 0.16.0 (2026-11-11)
 
 Peter's brand review (hub `docs/brand/review-2026-11-11.md`, hub tick sbb): "Thin token coverage: no
 motion, shadow, breakpoint or line-height tokens. Charts get 8 colours and no rules." components.css
