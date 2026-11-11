@@ -257,13 +257,10 @@ What exists, in this package:
 - **The CSS layer** `css/components.css`, on the roles only.
 - **The demo page:** `pnpm demo`, then http://127.0.0.1:4319/dist/demo/ shows every component, every
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
-- The package README shows how to use each one.
+- The package README shows how to use each one; [docs/usage.md](../docs/usage.md) says when to use
+  which, and how forms, errors and empty, loading and failed states behave (hub tick tdg).
 
-Coming, from the brand review (hub `docs/brand/review-2026-11-11.md`); this does not exist yet:
-
-| Pattern | Hub tick |
-|---|---|
-| Usage guidance: when to use which, forms and errors | tdg |
+Everything the brand review (hub `docs/brand/review-2026-11-11.md`) listed as missing now exists.
 
 ## 9. Accessibility
 
