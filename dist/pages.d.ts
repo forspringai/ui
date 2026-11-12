@@ -68,7 +68,7 @@ export type RefusedOptions = {
     command?: string;
     /** account_unavailable, or any refusal that hid a platform or upstream error: the request's short
      *  ref (hub D-88), shown last as "Fejlkode" / "Reference" for support (D-30). A plain refusal needs
-     *  none; its reason, the kicker, is the stable code. */
+     *  none; its reason, the card's data-reason, is the stable code. */
     ref?: string;
 };
 /** A refusal, by its reason: what happened, what it means, and the fix (D-17, hub D-99). */

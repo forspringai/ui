@@ -12,12 +12,14 @@ export const REFUSALS = {
         da: {
             title: "Du er ikke logget ind",
             text: "Siden kræver, at du er logget ind med din Forspring-konto.",
-            fix: "Log ind, så kommer du tilbage hertil. En agent kører auth login.",
+            fix: "Log ind, så kommer du tilbage hertil.",
+            agent: "En agent kører auth login.",
         },
         en: {
             title: "You are not signed in",
             text: "This page needs you to be signed in with your Forspring account.",
-            fix: "Sign in and you will come back here. An agent runs auth login.",
+            fix: "Sign in and you will come back here.",
+            agent: "An agent runs auth login.",
         },
     },
     org_required: {
@@ -26,12 +28,14 @@ export const REFUSALS = {
         da: {
             title: "Vælg en organisation",
             text: "Du er med i flere organisationer, og der er ikke valgt en af dem.",
-            fix: "Vælg den, du vil arbejde i. En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.",
+            fix: "Vælg den, du vil arbejde i.",
+            agent: "En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.",
         },
         en: {
             title: "Choose an organization",
             text: "You are in several organizations and none of them was named.",
-            fix: "Pick the one to work in. An agent names it with --org, <PRODUCT>_ORG or .forspring.json.",
+            fix: "Pick the one to work in.",
+            agent: "An agent names it with --org, <PRODUCT>_ORG or .forspring.json.",
         },
     },
     // A 404, the same as an organization that does not exist, so its name cannot be probed.
@@ -123,3 +127,9 @@ export const REFUSALS = {
 /** Every reason, in the order of the hub's table. */
 export const REFUSAL_REASONS = Object.keys(REFUSALS);
 export const isRefusal = (s) => typeof s === "string" && Object.hasOwn(REFUSALS, s);
+/** The fix for an API, CLI or MCP answer: the person's words, then the agent's when the reason has
+ *  them. A page uses `fix` alone. */
+export function agentFix(reason, lang = "en") {
+    const w = REFUSALS[reason][lang];
+    return w.agent ? `${w.fix} ${w.agent}` : w.fix;
+}

@@ -3,8 +3,11 @@ export type RefusalText = {
     title: string;
     /** What it means, in one or two sentences. */
     text: string;
-    /** What the person or agent can do about it. */
+    /** What the person can do about it. Shown on pages, so never a command (Peter, 2026-11-12: an
+     *  end-user page never tells people to run a CLI command). */
     fix: string;
+    /** What an agent does about it, for an API, CLI or MCP answer only; never shown on a page. */
+    agent?: string;
 };
 export type RefusalInfo = {
     /** The HTTP status a page or an API answers with. */
@@ -21,12 +24,14 @@ export declare const REFUSALS: {
         readonly da: {
             readonly title: "Du er ikke logget ind";
             readonly text: "Siden kræver, at du er logget ind med din Forspring-konto.";
-            readonly fix: "Log ind, så kommer du tilbage hertil. En agent kører auth login.";
+            readonly fix: "Log ind, så kommer du tilbage hertil.";
+            readonly agent: "En agent kører auth login.";
         };
         readonly en: {
             readonly title: "You are not signed in";
             readonly text: "This page needs you to be signed in with your Forspring account.";
-            readonly fix: "Sign in and you will come back here. An agent runs auth login.";
+            readonly fix: "Sign in and you will come back here.";
+            readonly agent: "An agent runs auth login.";
         };
     };
     readonly org_required: {
@@ -35,12 +40,14 @@ export declare const REFUSALS: {
         readonly da: {
             readonly title: "Vælg en organisation";
             readonly text: "Du er med i flere organisationer, og der er ikke valgt en af dem.";
-            readonly fix: "Vælg den, du vil arbejde i. En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.";
+            readonly fix: "Vælg den, du vil arbejde i.";
+            readonly agent: "En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.";
         };
         readonly en: {
             readonly title: "Choose an organization";
             readonly text: "You are in several organizations and none of them was named.";
-            readonly fix: "Pick the one to work in. An agent names it with --org, <PRODUCT>_ORG or .forspring.json.";
+            readonly fix: "Pick the one to work in.";
+            readonly agent: "An agent names it with --org, <PRODUCT>_ORG or .forspring.json.";
         };
     };
     readonly not_a_member: {
@@ -133,3 +140,6 @@ export type Refusal = keyof typeof REFUSALS;
 /** Every reason, in the order of the hub's table. */
 export declare const REFUSAL_REASONS: Refusal[];
 export declare const isRefusal: (s: unknown) => s is Refusal;
+/** The fix for an API, CLI or MCP answer: the person's words, then the agent's when the reason has
+ *  them. A page uses `fix` alone. */
+export declare function agentFix(reason: Refusal, lang?: "da" | "en"): string;
