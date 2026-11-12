@@ -115,7 +115,9 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   nothing (brand §9).
 - **`REFUSALS`**, **`REFUSAL_REASONS`** and **`isRefusal()`** are the refusal words with no markup, for
   an API, a CLI or an MCP server: answer with `REFUSALS[reason].status` (or `exit`) and its words, and
-  check a reason from another service with `isRefusal()` before you trust it.
+  check a reason from another service with `isRefusal()` before you trust it. `fix` is the person's
+  words and never names a command; where an agent has its own way out (`auth login`, `--org`), it is
+  in `agent`, and **`agentFix()`** joins the two for an API, CLI or MCP answer. A page shows `fix` alone.
 
 ### Data
 
@@ -176,7 +178,9 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 ### Brand
 
 - **`mark()`** is the doll inline. The bar draws it already, so a product rarely needs it; when it
-  does (a sign-in card, an email), it is never recoloured or redrawn: its colour is `--mark`.
+  does (a sign-in card, an email), it is never recoloured or redrawn: its colour is `--mark`. It
+  carries `width` and `height` of 28 px (`--space-7`), so a page whose stylesheet failed to load shows
+  a small doll, not one the size of the window; size it with CSS.
 - **`fontFaces()`** builds the `@font-face` rules when you serve the package's `fonts/` from your own
   path and inline your CSS; with a bundler, import `fonts.css` instead.
 - **`faviconFor()`** and **`faviconLinks()`** write a product's favicon and manifest links when you
@@ -254,7 +258,7 @@ tilbage hertil." (voice §6).
   account not answering is upstream); they draw "Fejlkode: 4bf92f35" / "Reference: 4bf92f35" in
   monospace, selected whole by one click, and ask the person to quote it if they write to us. Elsewhere,
   `errorRef()`. Your own text still says what to do ("Noget gik galt hos os. Prøv igen om lidt."). A
-  refusal needs none; its reason (the page's kicker) is the stable code.
+  refusal needs none; its reason (the card's `data-reason`) is the stable code, never shown as words.
 - **Never an error with no way forward.** Every one ends in an action: try again (a link to the same
   page), fix the field, sign in, ask the named person, or the exact command for an agent
   (`refusedPage({ command })`).

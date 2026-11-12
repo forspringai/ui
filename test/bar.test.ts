@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 import { bar, esc, initials, orgPath, shell, type BarOptions } from "../src/html.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "../src/pages.ts";
 import { AccountUnavailable, Bar, ChooseOrg, NoOrg, Refused } from "../src/react.ts";
-import { isRefusal, REFUSAL_REASONS, REFUSALS } from "../src/refusals.ts";
+import { agentFix, isRefusal, REFUSAL_REASONS, REFUSALS, type RefusalText } from "../src/refusals.ts";
 
 const evil = `<script>alert("x")</script>&'`;
 
@@ -44,7 +44,7 @@ describe("the bar", () => {
   const out = String(bar(opts));
 
   test("the lockup is the product's doll and its name alone, and leads to the org's home (D-98, D-18)", () => {
-    expect(out).toMatch(/^<header class="bar"><div class="wrap bar-inner"><a class="brand" href="\/o\/noon\/" aria-label="DataSpring"><svg class="mark" viewBox="-184 -160 368 368" aria-hidden="true" focusable="false">.*?<\/svg><span class="word">DataSpring<\/span><\/a>/);
+    expect(out).toMatch(/^<header class="bar"><div class="wrap bar-inner"><a class="brand" href="\/o\/noon\/" aria-label="DataSpring"><svg class="mark" viewBox="-184 -160 368 368" width="28" height="28" aria-hidden="true" focusable="false">.*?<\/svg><span class="word">DataSpring<\/span><\/a>/);
     expect(out).not.toContain("Forspring</span>");
   });
 
@@ -131,6 +131,17 @@ describe("the refusal vocabulary", () => {
       for (const l of ["da", "en"] as const) for (const k of ["title", "text", "fix"] as const) expect(v[l][k]).toMatch(/^[^—]{4,}$/);
     }
     expect(REFUSALS.not_a_member.status).toBe(404); // the same as an org that does not exist
+  });
+
+  test("a page's words never tell a person to run a command; the agent's words are separate", () => {
+    for (const r of REFUSAL_REASONS)
+      for (const l of ["da", "en"] as const) {
+        const w: RefusalText = REFUSALS[r][l];
+        for (const k of ["title", "text", "fix"] as const) expect(w[k], `${r}.${l}.${k}`).not.toMatch(/\bagent\b|auth login|--[a-z]|_ORG\b|\.json\b/i);
+        expect(agentFix(r, l)).toBe(w.agent ? `${w.fix} ${w.agent}` : w.fix);
+      }
+    expect(agentFix("not_signed_in")).toBe("Sign in and you will come back here. An agent runs auth login.");
+    expect(agentFix("org_required", "da")).toBe("Vælg den, du vil arbejde i. En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.");
     expect(REFUSALS.account_unavailable.status).toBe(503);
   });
 });
@@ -144,8 +155,11 @@ describe("the standard pages", () => {
         expect(p.status).toBe(REFUSALS[reason].status);
         expect(p.title).toBe(REFUSALS[reason][lang].title);
         expect(b).toContain(`data-reason="${reason}"`);
-        expect(b).toContain(`<p class="kicker">${reason}</p>`);
+        expect(b).not.toContain("kicker"); // the code is for machines: data-reason, never the page's words
+        expect(b).not.toMatch(new RegExp(`>${reason}<`));
         for (const k of ["text", "fix"] as const) expect(b).toContain(esc(REFUSALS[reason][lang][k]));
+        const agent = (REFUSALS[reason][lang] as RefusalText).agent;
+        if (agent) expect(b).not.toContain(esc(agent));
       }
   });
 

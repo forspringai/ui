@@ -1396,3 +1396,23 @@ compile check (zcr) wait for it.
   platform font is Archivo, appspring question 7, and fonts wait for the Guideline level), the colour
   mode setting (`safeColorMode`: the person's or the system's choice, not the customer's), and the
   plum default accent (`CANONIFY_DEFAULT_ACCENT`: the Default level is the product's own accent).
+
+## D-35 — A page never tells a person to run a command; the doll has a size without CSS; 0.21.0 (2026-11-12)
+
+From AppSpring's P1 on app.appspring.app, reported by lead-canonify. Peter: an end-user page must never
+tell people to run a CLI command. The same run showed the AppSpring doll at the window's full size on a
+page whose stylesheet was missing (fixed on AppSpring's side in forspringai/appspring#1286).
+
+1. **The agent's words are their own field.** `RefusalText` gains `agent?`: what an agent does about a
+   refusal, for an API, CLI or MCP answer only. `not_signed_in` ("An agent runs auth login.") and
+   `org_required` ("An agent names it with --org, <PRODUCT>_ORG or .forspring.json.") move their
+   agent sentence out of `fix`, which is now the person's words alone. `agentFix(reason, lang)` joins
+   the two for an answer to an agent; a product that sent `REFUSALS[r].en.fix` to agents switches to
+   it to keep the hint. A test holds every `title`, `text` and `fix` free of command words. A page
+   that wants the exact command for an agent still passes `refusedPage({ command })`, shown small
+   under "From an agent:".
+2. **No code as words.** `refusedPage()` no longer draws the reason (`not_signed_in`) as a kicker
+   above the title. The stable code stays in the card's `data-reason`, for machines and tests.
+3. **The doll has a size.** `mark()` (and so the bar) carries `width="28" height="28"`, the same
+   28 px as `--space-7` that the CSS sets. With the stylesheet the CSS wins; without it the doll stays
+   small instead of filling the window.

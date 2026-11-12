@@ -123,7 +123,7 @@ export function refusedPage(o) {
         parts.push(html `<p class="fine">${t.agent} <code>${o.command}</code></p>`);
     if (o.ref)
         parts.push(errorRef({ lang: o.lang, ref: o.ref }));
-    return page(r.status, words.title, "refused", html `<p class="kicker">${o.reason}</p><h1>${words.title}</h1>${parts}`, o.reason);
+    return page(r.status, words.title, "refused", html `<h1>${words.title}</h1>${parts}`, o.reason);
 }
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */
 export function accountUnavailablePage(o) {

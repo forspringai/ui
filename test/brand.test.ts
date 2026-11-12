@@ -28,7 +28,7 @@ describe.each(PRODUCTS)("the bar in %s", (p) => {
   const brand = /<a class="brand"[^>]*>(.*?)<\/a>/.exec(out)![1]!;
 
   test("shows the doll and the wordmark", () => {
-    expect(brand).toMatch(/^<svg class="mark" viewBox="-184 -160 368 368" aria-hidden="true" focusable="false">/);
+    expect(brand).toMatch(/^<svg class="mark" viewBox="-184 -160 368 368" width="28" height="28" aria-hidden="true" focusable="false">/);
     expect(brand).toMatch(own ? /<\/svg><span class="word">Forspring<\/span> <span class="sub">konto<\/span>$/ : new RegExp(`</svg><span class="word">${PRODUCT_NAMES[p]}</span>$`));
     if (!own) expect(out).not.toMatch(/forspring/i);
   });

@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.20.0
+pnpm add github:forspringai/ui#v0.21.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -166,6 +166,7 @@ The refusal vocabulary (`@forspring/ui/refusals`, no markup, for CLIs and MCP se
 ```ts
 import { REFUSALS, REFUSAL_REASONS, type Refusal } from "@forspring/ui/refusals";
 REFUSALS.product_off;   // { status: 403, exit: 4, da: { title, text, fix }, en: { title, text, fix } }
+agentFix("not_signed_in"); // fix plus the agent's words, for an API, CLI or MCP answer; pages show fix alone
 ```
 
 | Reason | HTTP | Exit | Details `refusedPage` shows |
