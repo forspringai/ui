@@ -216,6 +216,11 @@
         }
       }
     },
-    "$description": "Categorical series colours: identity only, assigned in this order and never cycled; a ninth series folds into Other. Same hue per slot in both themes. Validated with the dataviz validator (adjacent CVD separation >= 8, normal vision >= 15, all >= 3:1 on paper and card) and kept apart from the accents and status colours where the eight hues allow (test/chart.test.ts). Status meaning wears the status tokens, never a chart slot."
+    "$description": "Categorical series colours: identity only, assigned in this order and never cycled; a ninth series folds into Other. Same hue per slot in both themes. Validated with the dataviz validator (adjacent CVD separation >= 8, normal vision >= 15, all >= 3:1 on paper and card) and kept apart from the accents and status colours where the eight hues allow (test/chart.test.ts). Status meaning wears the status tokens, never a chart slot.",
+    "tint": {
+      "$type": "number",
+      "$description": "An identity surface (a calendar block, a timeline bar): the slot at this share on --card, in each theme (D-37)",
+      "$value": 0.2
+    }
   }
 }

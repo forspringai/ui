@@ -51,6 +51,14 @@
   --color-chart-6: var(--chart-6);
   --color-chart-7: var(--chart-7);
   --color-chart-8: var(--chart-8);
+  --color-chart-1-tint: var(--chart-1-tint);
+  --color-chart-2-tint: var(--chart-2-tint);
+  --color-chart-3-tint: var(--chart-3-tint);
+  --color-chart-4-tint: var(--chart-4-tint);
+  --color-chart-5-tint: var(--chart-5-tint);
+  --color-chart-6-tint: var(--chart-6-tint);
+  --color-chart-7-tint: var(--chart-7-tint);
+  --color-chart-8-tint: var(--chart-8-tint);
   --radius-button: 3px;
   --radius-card: 6px;
   --radius-input: 8px;

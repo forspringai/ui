@@ -39,6 +39,10 @@ the roles for every surface, nothing under 11 px.
   others in `border` or `muted-foreground`.
 - **Dark mode uses the dark slots.** `tokens.chart.dark` (or `--chart-n`, which follows the theme on
   its own) on `background` or `card`; never the light values on a dark surface.
+- **A tinted surface for an identity** (a calendar block, a timeline bar, a lane) is the slot's tint,
+  `--chart-n-tint` (`bg-chart-n-tint`): the slot at 20 % on the card, per theme (ui D-37). Never mix
+  your own share. Text on a tint is `foreground`; an edge, if it has one, is the slot itself, which is
+  3:1 on the card. The block also carries its name in words, so the tint is never the only cue.
 - **Gridlines and axes** are `border`; tick labels `muted-foreground` on `text.chrome.meta`.
 
 ## 3. Labels and axes

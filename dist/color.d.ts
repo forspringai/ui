@@ -1,4 +1,6 @@
 export declare function rgb(hex: string): [number, number, number];
+/** CSS color-mix(in srgb, a share, b), as #rrggbb: gamma-encoded channels, rounded. */
+export declare function mix(a: string, b: string, share: number): string;
 export declare function luminance(hex: string): number;
 export declare function contrast(a: string, b: string): number;
 type Vision = "protan" | "deutan" | "tritan";

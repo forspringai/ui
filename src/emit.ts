@@ -3,6 +3,7 @@
 // dist/tokens.js with its .d.ts (typed values for code, charts and MCP Apps). Only roles, accents,
 // geometry, motion and shadows leave the package; the raw palette stays private (hub ui-standard §2).
 
+import { mix } from "./color.ts";
 import { type ShadowLayer, TokenSet, cssColor, cssCubicBezier, cssDimension, cssDuration, cssFontFamily, readTokens } from "./dtcg.ts";
 
 export type Mode = "light" | "dark";
@@ -53,6 +54,14 @@ export function model(dir: string): Model {
   const s = sets.light;
   const colors: Model["colors"] = {};
   for (const r of light) colors[r] = { light: sets.light.color(`role.${r}`), dark: sets.dark.color(`role.${r}`) };
+  // Each chart slot's tint (D-37): the slot at chart.tint on the card, per theme, so an identity
+  // surface (a calendar block, a timeline bar) is a named token, never a free color-mix.
+  const share = sets.light.number("chart.tint");
+  const roles = [...light];
+  for (const r of light.filter((n) => /^chart-\d+$/.test(n))) {
+    colors[`${r}-tint`] = { light: mix(colors[r]!.light, colors.card!.light, share), dark: mix(colors[r]!.dark, colors.card!.dark, share) };
+    roles.push(`${r}-tint`);
+  }
 
   const products = s.names("accent");
   if (!products.includes(DEFAULT_PRODUCT)) throw new TokenProblems([`accent.${DEFAULT_PRODUCT} is missing`]);
@@ -99,7 +108,7 @@ export function model(dir: string): Model {
   }
 
   return {
-    roles: light,
+    roles,
     products,
     colors,
     product,
@@ -239,8 +248,8 @@ function values(m: Model) {
     marks: Object.fromEntries(m.products.map((p) => [p, m.product[p]!.mark])),
     roles: { light: roleColors(m, "light"), dark: roleColors(m, "dark") },
     chart: {
-      light: m.roles.filter((r) => r.startsWith("chart-")).map((r) => m.colors[r]!.light),
-      dark: m.roles.filter((r) => r.startsWith("chart-")).map((r) => m.colors[r]!.dark),
+      light: m.roles.filter((r) => /^chart-\d+$/.test(r)).map((r) => m.colors[r]!.light),
+      dark: m.roles.filter((r) => /^chart-\d+$/.test(r)).map((r) => m.colors[r]!.dark),
     },
     radius: m.radius,
     space: m.space,
