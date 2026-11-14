@@ -683,7 +683,7 @@
   .app {
     flex: 1;
     display: grid;
-    grid-template-columns: 13.5rem minmax(0, 1fr);
+    grid-template-columns: var(--layout-menu) minmax(0, 1fr);
     gap: var(--space-12);
     align-items: start;
   }
@@ -699,18 +699,24 @@
     padding-block: var(--space-11) var(--space-8);
   }
 
+  /* The narrow fold sits inside its own nav (D-38), so landmark navigation finds the menu while the
+     fold is closed; on a wide screen the whole nav goes, leaving one menu landmark. */
+  .menu-fold-nav,
   .menu-fold {
     display: none;
   }
 
-  /* nav.menu, not .menu: a product's own details.menu (SiteSpring's account menu) must not become a grid. */
-  nav.menu {
+  /* nav.menu, not .menu: a product's own details.menu (SiteSpring's account menu) must not become a grid.
+     .menu-fold > .menu is the fold's list, a div since D-38 (the nav is outside the fold). */
+  nav.menu,
+  .menu-fold > .menu {
     display: grid;
     gap: var(--space-6);
     font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
   }
 
-  nav.menu ul {
+  nav.menu ul,
+  .menu-fold > .menu ul {
     list-style: none;
     margin: 0;
     padding: 0;
@@ -2516,6 +2522,10 @@
 
     nav.menu-side {
       display: none;
+    }
+
+    .menu-fold-nav {
+      display: block;
     }
 
     .menu-fold {

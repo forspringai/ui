@@ -22,6 +22,8 @@ export declare const radius: Deep<{"button":3,"card":6,"input":8,"panel":10}>;
 export declare const space: Deep<{"1":4,"2":8,"3":12,"4":16,"5":20,"6":24,"7":28,"8":32,"10":40,"11":44,"12":48,"16":64}>;
 /** Control heights in px (D-14): height (default), height-small, touch (the phone floor). */
 export declare const control: Deep<{"height":44,"height-small":32,"touch":44}>;
+/** Fixed widths of the page frame in px (D-38): menu, the sidebar's column. */
+export declare const layout: Deep<{"menu":216}>;
 /** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<{"chrome":{"label":11,"meta":12,"title":13,"body":14,"figure":30},"content":{"small":13,"body":15,"lede":16,"h3":18,"h2":21,"h1-min":30,"h1":40},"marketing":{"eyebrow":13,"lede":20,"h3":24,"h2-min":30,"h2":36,"h1-min":48,"h1":72}}>;
 /** Line-height per ladder step, unitless (D-27), and solid (1) for one line in a box of its own. */

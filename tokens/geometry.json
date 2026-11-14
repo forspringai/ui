@@ -135,6 +135,17 @@
       "$description": "The floor for primary controls under 560px, where fingers are used (WCAG 2.5.5 at 44px)."
     }
   },
+  "layout": {
+    "$description": "Fixed widths of the page frame (D-38). The menu column beside main on a wide screen; a product that draws its own frame beside ui's menu reads this, never a copy.",
+    "menu": {
+      "$type": "dimension",
+      "$value": {
+        "value": 216,
+        "unit": "px"
+      },
+      "$description": "The sidebar menu's column (13.5rem at the 16px root)."
+    }
+  },
   "breakpoint": {
     "$description": "Viewport widths where layout changes (D-27). A media query cannot read a custom property, so these reach tokens.js (breakpoint) and Tailwind's @theme (--breakpoint-*, as phone:, max-phone: and so on), and components.css writes them as px literals that test/components.test.ts holds to these values. Each is the largest width that still counts as the smaller layout: write @media (max-width: <value>px) for 'on a phone'.",
     "phone": {

@@ -207,6 +207,10 @@ export const control = Object.freeze({
   "touch": 44
 });
 
+export const layout = Object.freeze({
+  "menu": 216
+});
+
 export const text = Object.freeze({
   "chrome": {
     "label": 11,

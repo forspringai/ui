@@ -68,7 +68,7 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.23.0";
+export const VERSION = "0.24.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -230,7 +230,8 @@ export function bar(o) {
     return html `<header class="bar"><div class="wrap bar-inner">${brand}${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
 }
 const signalMark = (s) => html `<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
-function menuBody(m) {
+/** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
+export function menuBody(m) {
     const ctx = m.context;
     const others = ctx?.items ?? [];
     const context = !ctx
@@ -251,9 +252,14 @@ const currentLabel = (m) => {
     const items = m.groups.flatMap((g) => g.items);
     return (items.find((i) => i.current === true) ?? items.find((i) => i.current === "parent"))?.label;
 };
-function menuFrame(m, body, narrow) {
+/**
+ * The menu beside main: the sidebar on a wide screen, the fold under "Menu" on a narrow one, and main.
+ * The fold sits inside its own nav (D-38), so a screen reader's landmark list has the menu while the
+ * fold is closed; CSS shows one of the two navs at a time.
+ */
+export function menuFrame(m, body, narrow) {
     const current = currentLabel(m);
-    return html `<div class="wrap app"><details class="menu-fold"><summary><span>${m.toggle}</span>${current ? html `<span class="menu-fold-current">${current}</span>` : ""}</summary><nav class="menu" aria-label="${m.label}">${menuBody(m)}</nav></details><nav class="menu menu-side" aria-label="${m.label}">${menuBody(m)}</nav><main id="main"${raw(attrs({ class: cls(narrow && "narrow") }))}>${body}</main></div>`;
+    return html `<div class="wrap app"><nav class="menu-fold-nav" aria-label="${m.label}"><details class="menu-fold"><summary><span>${m.toggle}</span>${current ? html `<span class="menu-fold-current">${current}</span>` : ""}</summary><div class="menu">${menuBody(m)}</div></details></nav><nav class="menu menu-side" aria-label="${m.label}">${menuBody(m)}</nav><main id="main"${raw(attrs({ class: cls(narrow && "narrow") }))}>${body}</main></div>`;
 }
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export function shell(o) {

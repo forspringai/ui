@@ -1454,3 +1454,23 @@ accepted any mix would bless the drift.
    on the card, ink at least 4.5:1 on it (12 to 15:1 today), and at least 5 apart (OKLab x100) from
    the card (7.1 to 10.3), in both themes. The slot's own contrast on its tint is not required (2.5 to
    4.2:1): the edge sits against the card, where the slot is 3:1.
+
+## D-38 — The menu frame is public, its fold is a landmark, and the sidebar has a width token; 0.24.0 (2026-11-14)
+
+From lead-ui's AppSpring app-shell review (AppSpring #1455), which draws the console chrome through
+`bar()` and the menu: AppSpring and Account each copied the private menu markup (with a parity test to
+guard the copy), and copied the sidebar's 13.5rem into their own page widths.
+
+1. **`menuFrame()` and `menuBody()` are exported** from `src/html.ts`: the frame (the sidebar, the
+   narrow fold and `main`) and the menu's contents alone. A product that draws its own document
+   calls them instead of copying the markup (docs/usage.md, Page frame).
+2. **The narrow fold is a landmark while closed.** At 800 px and below the only menu sat in a
+   `nav` inside a closed `details`, so a screen reader's landmark list had no navigation until the
+   fold was opened. The `nav` (`.menu-fold-nav`, with the menu's name) now wraps the `details`; the
+   list inside the fold is a `div.menu`, so an open fold adds no second landmark. CSS shows one of
+   the two navs at a time, so each layout has exactly one menu landmark. The look is unchanged.
+3. **`--layout-menu` (216 px, 13.5rem at the 16 px root)** in a new `layout` group of
+   `tokens/geometry.json`: in `tokens.css`, `tokens.js` (`layout.menu`) and `tokens.d.ts`.
+   `components.css` draws the sidebar column from it; a product's own widths read it, never a copy.
+4. **Copies:** products whose frame still has the old markup keep working (the `nav.menu` rules
+   stay), but lose point 2 until they call `menuFrame()`.

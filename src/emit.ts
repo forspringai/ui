@@ -29,6 +29,8 @@ export type Model = {
   space: Record<string, number>;
   // control heights (D-14): steps of the space scale, so a row of controls shares one height
   control: Record<string, number>;
+  // fixed widths of the page frame (D-38): the menu column
+  layout: Record<string, number>;
   text: Record<string, Record<string, number>>;
   // line-height per ladder step (D-27), unitless, plus solid (1) for one line in its own box
   leading: { solid: number } & Record<string, Record<string, number>>;
@@ -115,6 +117,7 @@ export function model(dir: string): Model {
     radius: record("radius"),
     space: record("space"),
     control: record("control"),
+    layout: record("layout"),
     text: Object.fromEntries(ladders.map((ladder) => [ladder, record(`text.${ladder}`)])),
     leading: leading as Model["leading"],
     breakpoint: record("breakpoint"),
@@ -157,6 +160,7 @@ function geometry(m: Model): string[] {
     ...Object.entries(m.radius).map(([k, v]) => `--radius-${k}: ${v}px;`),
     ...Object.entries(m.space).map(([k, v]) => `--space-${k}: ${v}px;`),
     ...Object.entries(m.control).map(([k, v]) => `--control-${k}: ${v}px;`),
+    ...Object.entries(m.layout).map(([k, v]) => `--layout-${k}: ${v}px;`),
     ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
     `--leading-solid: ${m.leading.solid};`,
     ...ladderSteps(m).map(([ladder, k, v]) => `--leading-${ladder}-${k}: ${v};`),
@@ -254,6 +258,7 @@ function values(m: Model) {
     radius: m.radius,
     space: m.space,
     control: m.control,
+    layout: m.layout,
     text: m.text,
     leading: m.leading,
     breakpoint: m.breakpoint,
@@ -304,6 +309,8 @@ export declare const radius: Deep<${JSON.stringify(v.radius)}>;
 export declare const space: Deep<${JSON.stringify(v.space)}>;
 /** Control heights in px (D-14): height (default), height-small, touch (the phone floor). */
 export declare const control: Deep<${JSON.stringify(v.control)}>;
+/** Fixed widths of the page frame in px (D-38): menu, the sidebar's column. */
+export declare const layout: Deep<${JSON.stringify(v.layout)}>;
 /** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<${JSON.stringify(v.text)}>;
 /** Line-height per ladder step, unitless (D-27), and solid (1) for one line in a box of its own. */
