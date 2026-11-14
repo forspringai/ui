@@ -36,7 +36,15 @@ export const ROLES = {
         "chart-5": "#d868ab",
         "chart-6": "#5f7630",
         "chart-7": "#975ad1",
-        "chart-8": "#3097b3"
+        "chart-8": "#3097b3",
+        "chart-1-tint": "#e1e7fc",
+        "chart-2-tint": "#fbe1d2",
+        "chart-3-tint": "#cfece1",
+        "chart-4-tint": "#eee6d2",
+        "chart-5-tint": "#f7e1ee",
+        "chart-6-tint": "#dfe4d6",
+        "chart-7-tint": "#eadef6",
+        "chart-8-tint": "#d6eaf0"
     },
     "dark": {
         "background": "#111215",
@@ -73,7 +81,15 @@ export const ROLES = {
         "chart-5": "#924d7d",
         "chart-6": "#5a7323",
         "chart-7": "#824aca",
-        "chart-8": "#077fa8"
+        "chart-8": "#077fa8",
+        "chart-1-tint": "#1b2641",
+        "chart-2-tint": "#332521",
+        "chart-3-tint": "#1e342b",
+        "chart-4-tint": "#372d19",
+        "chart-5-tint": "#30232f",
+        "chart-6-tint": "#242a1d",
+        "chart-7-tint": "#2c223f",
+        "chart-8-tint": "#142d38"
     }
 };
 /** Each product's own roles (primary, primary-foreground, ring, mark) per theme. */

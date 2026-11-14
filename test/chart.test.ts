@@ -4,14 +4,14 @@
 
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { contrast, distance, lc } from "../src/color.ts";
+import { contrast, distance, lc, mix } from "../src/color.ts";
 import { MODES, model } from "../src/emit.ts";
 
 const m = model(join(import.meta.dirname, "..", "tokens"));
 const BAND = { light: [0.43, 0.77], dark: [0.48, 0.67] } as const;
 
 test("eight slots", () => {
-  expect(m.roles.filter((r) => r.startsWith("chart-"))).toEqual(["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6", "chart-7", "chart-8"]);
+  expect(m.roles.filter((r) => /^chart-\d+$/.test(r))).toEqual(["chart-1", "chart-2", "chart-3", "chart-4", "chart-5", "chart-6", "chart-7", "chart-8"]);
 });
 
 describe.each(MODES)("%s theme", (mode) => {
@@ -50,5 +50,24 @@ describe.each(MODES)("%s theme", (mode) => {
   test("no slot a near copy of an accent or a status colour (>= 7)", () => {
     const reserved = [...m.products.map((p) => m.product[p]!.primary[mode]), ...["success", "warning", "danger"].map((r) => m.colors[r]![mode])];
     for (const c of slots) for (const r of reserved) expect(distance(c, r), `${c} / ${r}`).toBeGreaterThanOrEqual(7);
+  });
+});
+
+// The tints (D-37): an identity surface, a calendar block or a timeline bar, is the slot at chart.tint
+// on the card, a named token, so a renderer never mixes its own share (Shift had 14, 16 and 22%).
+test("one tint per slot, nothing else", () => {
+  expect(m.roles.filter((r) => r.endsWith("-tint"))).toEqual([1, 2, 3, 4, 5, 6, 7, 8].map((i) => `chart-${i}-tint`));
+});
+
+describe.each(MODES)("%s tints", (mode) => {
+  const c = (r: string) => m.colors[r]![mode];
+  test.each([1, 2, 3, 4, 5, 6, 7, 8])("chart-%i-tint is the slot at 20% on the card, ink 4.5:1 on it", (i) => {
+    const tint = c(`chart-${i}-tint`);
+    expect(tint).toBe(mix(c(`chart-${i}`), c("card"), 0.2));
+    // Text on a tint is --foreground (the screens check's gray-on-color rule); muted-foreground also
+    // passes today, but is not the rule.
+    expect(contrast(c("foreground"), tint)).toBeGreaterThanOrEqual(4.5);
+    // It reads as a tint: a visible step from the card it sits on.
+    expect(distance(tint, c("card"))).toBeGreaterThanOrEqual(5);
   });
 });

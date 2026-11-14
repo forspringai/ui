@@ -37,6 +37,14 @@
   --chart-6: light-dark(#5f7630, #5a7323);
   --chart-7: light-dark(#975ad1, #824aca);
   --chart-8: light-dark(#3097b3, #077fa8);
+  --chart-1-tint: light-dark(#e1e7fc, #1b2641);
+  --chart-2-tint: light-dark(#fbe1d2, #332521);
+  --chart-3-tint: light-dark(#cfece1, #1e342b);
+  --chart-4-tint: light-dark(#eee6d2, #372d19);
+  --chart-5-tint: light-dark(#f7e1ee, #30232f);
+  --chart-6-tint: light-dark(#dfe4d6, #242a1d);
+  --chart-7-tint: light-dark(#eadef6, #2c223f);
+  --chart-8-tint: light-dark(#d6eaf0, #142d38);
   --radius-button: 3px;
   --radius-card: 6px;
   --radius-input: 8px;

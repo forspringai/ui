@@ -1435,3 +1435,22 @@ dark, and the screens check's verdict differed by theme.
 4. **Customer themes follow:** their dark tint sits at the family's dark soft lightness (D-34), so a
    theme's dark `muted` moves the same step (the example in `test/theme.test.ts` goes from `#171d19`
    to `#1d231f`). The dark visual baselines are re-rendered; no light baseline changed.
+
+## D-37 — Each chart slot has a named tint for identity surfaces; 0.23.0 (2026-11-14)
+
+From lead-bench's screens check (#1419): ui-audit's palette rule warned 76 times on Shift's DayGrid
+block, `#dce2f8`, a `color-mix()` in AppSpring's renderer (chart-1 at about 22 % on the page). Shift's
+prototype mixed the same kind of surface at 14, 16 and 22 %: a free mix drifts, and an audit that
+accepted any mix would bless the drift.
+
+1. **`--chart-1-tint` to `--chart-8-tint`**: each slot at `chart.tint` (0.2, in `tokens/chart.json`)
+   on `--card`, per theme, derived by the build (`src/emit.ts`, `mix()` in `src/color.ts`, the same
+   arithmetic as `color-mix(in srgb, …)`). They are roles like any other: in `tokens.css`, in
+   `theme.css` (`bg-chart-1-tint`), in `tokens.js`, and so token colours to ui-audit.
+2. **For identity surfaces only:** a calendar block, a timeline bar, a lane (brand/charts.md section
+   2). Text on a tint is `--foreground` (the screens check's gray-on-color rule); an edge is the slot
+   itself, 3:1 on the card. The block names itself in words; the tint is never the only cue.
+3. **Tests** (`test/chart.test.ts`): one tint per slot and nothing else, each exactly the slot at 20 %
+   on the card, ink at least 4.5:1 on it (12 to 15:1 today), and at least 5 apart (OKLab x100) from
+   the card (7.1 to 10.3), in both themes. The slot's own contrast on its tint is not required (2.5 to
+   4.2:1): the edge sits against the card, where the slot is 3:1.

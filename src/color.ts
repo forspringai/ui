@@ -10,6 +10,12 @@ export function rgb(hex: string): [number, number, number] {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => c / 255) as [number, number, number];
 }
 
+/** CSS color-mix(in srgb, a share, b), as #rrggbb: gamma-encoded channels, rounded. */
+export function mix(a: string, b: string, share: number): string {
+  const [x, y] = [rgb(a), rgb(b)];
+  return `#${x.map((c, i) => Math.round((c * share + y[i]! * (1 - share)) * 255).toString(16).padStart(2, "0")).join("")}`;
+}
+
 const linear = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
 
 export function luminance(hex: string): number {
