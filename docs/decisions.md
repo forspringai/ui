@@ -1416,3 +1416,22 @@ page whose stylesheet was missing (fixed on AppSpring's side in forspringai/apps
 3. **The doll has a size.** `mark()` (and so the bar) carries `width="28" height="28"`, the same
    28 px as `--space-7` that the CSS sets. With the stylesheet the CSS wins; without it the doll stays
    small instead of filling the window.
+
+## D-36 — Dark soft is a step you can see on the card; 0.22.0 (2026-11-14)
+
+From lead-ui's review of the screens check's rules (via lead-bench). In dark, `muted` (= `secondary`,
+`accent`) was `#1a1b1f` on a `#17181c` card: 3/255 apart, 0.013 in OKLab lightness, where light has
+0.043. The dark palette was tuned against the page, never against the card, so a table head inside a
+card, a hover row in a card and a disabled field (soft on a card-coloured field) all but vanished in
+dark, and the screens check's verdict differed by theme.
+
+1. **Dark soft is `#202126`** (was `#1a1b1f`): 0.039 above the card, light's step, and 0.067 above the
+   page. Light is unchanged.
+2. **Everything on it still passes as it was,** no threshold lowered: the worst accent is Spring and
+   Forspring's blue `#6b83ff` at 4.83:1 (was 5.17), `muted-foreground` 6.09:1, and the dolls, status
+   and signal colours keep their tests.
+3. **A test holds the step:** `muted` at least 0.03 in OKLab lightness from the page and from the card,
+   in both themes (`test/contrast.test.ts`).
+4. **Customer themes follow:** their dark tint sits at the family's dark soft lightness (D-34), so a
+   theme's dark `muted` moves the same step (the example in `test/theme.test.ts` goes from `#171d19`
+   to `#1d231f`). The dark visual baselines are re-rendered; no light baseline changed.
