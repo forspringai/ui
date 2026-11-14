@@ -38,6 +38,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   or reword its menus: the org switcher, the product switcher and "Log ud af Forspring" are the same in
   every product (D-17). It uses `orgPath()` to keep the person's place when they switch org and
   `initials()` for the avatar; call them yourself only for your own links or avatars.
+- **`menuFrame()`** is the menu and `main` without the rest of the page, for a product that draws its
+  own document around `bar()` (D-38). **`menuBody()`** is the menu's contents alone, for a frame of your
+  own. Use these, never a copy of the markup: the fold's nav landmark, the one-landmark-per-layout rule
+  and the sidebar's width (`--layout-menu`) come with them.
 - **`crumbs()`** names a detail page's parents, quiet, just before its h1. The page itself is the h1,
   never the last crumb. A top-level page has no crumbs.
 - **`ROLES`** and **`ROLE_NAMES`** are the account's four roles and their words ("ejer",

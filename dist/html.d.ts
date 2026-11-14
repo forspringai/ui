@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.23.0";
+export declare const VERSION = "0.24.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.23.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.24.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -219,6 +219,14 @@ export type Menu = {
     };
     groups: MenuGroup[];
 };
+/** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
+export declare function menuBody(m: Menu): Html;
+/**
+ * The menu beside main: the sidebar on a wide screen, the fold under "Menu" on a narrow one, and main.
+ * The fold sits inside its own nav (D-38), so a screen reader's landmark list has the menu while the
+ * fold is closed; CSS shows one of the two navs at a time.
+ */
+export declare function menuFrame(m: Menu, body: Content, narrow?: boolean): Html;
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
 export declare function shell(o: ShellOptions): Html;
 export type ButtonOptions = {

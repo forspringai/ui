@@ -54,6 +54,15 @@ test("geometry is the fixed ladder", () => {
   for (const ladder of Object.values(m.text)) for (const v of Object.values(ladder)) expect(v).toBeGreaterThanOrEqual(11);
 });
 
+test("the menu column is a token every output carries (D-38)", () => {
+  const m = model(dir);
+  expect(m.layout).toEqual({ menu: 216 });
+  const out = build(dir);
+  expect(out["tokens.css"]).toContain("--layout-menu: 216px;");
+  expect(out["tokens.js"]).toMatch(/export const layout = Object\.freeze\(\{\s*"menu": 216\s*\}\);/);
+  expect(out["tokens.d.ts"]).toContain('export declare const layout: Deep<{"menu":216}>;');
+});
+
 test("control heights are steps of the space scale, and every output carries them (D-14)", () => {
   const m = model(dir);
   expect(m.control).toEqual({ height: 44, "height-small": 32, touch: 44 });

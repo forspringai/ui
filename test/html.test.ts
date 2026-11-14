@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import * as tokens from "../dist/tokens.js";
 import type { Product } from "../src/html.ts";
-import { button, confirmDestructive, crumbs, errorRef, errorSummary, esc, field, html, list, notice, raw, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
+import { button, confirmDestructive, crumbs, errorRef, errorSummary, esc, field, html, list, menuBody, menuFrame, notice, raw, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
 import { ErrorSummary } from "../src/react.ts";
 
 const evil = `<script>alert("x")</script>&'`;
@@ -133,9 +133,19 @@ describe("menu, crumbs and signals (D-13)", () => {
 
   test("a menu widens the frame and puts the sidebar and the phone's fold beside main", () => {
     expect(page).toContain('<body class="has-menu">');
-    expect(page).toMatch(/<div class="wrap app"><details class="menu-fold"><summary><span>Menu<\/span><span class="menu-fold-current">Hub<\/span><\/summary><nav class="menu" aria-label="Main menu">/);
+    expect(page).toMatch(/<div class="wrap app"><nav class="menu-fold-nav" aria-label="Main menu"><details class="menu-fold"><summary><span>Menu<\/span><span class="menu-fold-current">Hub<\/span><\/summary><div class="menu">/);
     expect(page).toContain('<nav class="menu menu-side" aria-label="Main menu">');
     expect(page).toContain('<main id="main"><h1>x</h1></main></div>');
+  });
+
+  test("the closed fold is still a nav landmark, with one menu landmark per layout (D-38)", () => {
+    // The nav wraps the details, so landmark navigation finds it while the fold is closed; inside the
+    // fold the list is a plain div, so an open fold does not add a second landmark.
+    const fold = page.slice(page.indexOf('<details class="menu-fold">'), page.indexOf('<nav class="menu menu-side"'));
+    expect(fold).not.toContain("<nav");
+    expect(page.match(/aria-label="Main menu"/g)).toHaveLength(2);
+    expect(String(menuFrame(menu, html`<h1>x</h1>`))).toBe(page.match(/<div class="wrap app">.*?<\/main><\/div>/s)![0]);
+    expect(String(menuBody(menu))).toContain('<div class="menu-group">');
   });
 
   test("the context is a switcher with more than one org, and plain text with one", () => {

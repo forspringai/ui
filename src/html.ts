@@ -87,7 +87,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.23.0";
+export const VERSION = "0.24.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -406,7 +406,8 @@ export type Menu = {
 
 const signalMark = (s: Signal): Html => html`<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
 
-function menuBody(m: Menu): Html {
+/** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
+export function menuBody(m: Menu): Html {
   const ctx = m.context;
   const others = ctx?.items ?? [];
   const context = !ctx
@@ -433,9 +434,14 @@ const currentLabel = (m: Menu): string | undefined => {
   return (items.find((i) => i.current === true) ?? items.find((i) => i.current === "parent"))?.label;
 };
 
-function menuFrame(m: Menu, body: Content, narrow?: boolean): Html {
+/**
+ * The menu beside main: the sidebar on a wide screen, the fold under "Menu" on a narrow one, and main.
+ * The fold sits inside its own nav (D-38), so a screen reader's landmark list has the menu while the
+ * fold is closed; CSS shows one of the two navs at a time.
+ */
+export function menuFrame(m: Menu, body: Content, narrow?: boolean): Html {
   const current = currentLabel(m);
-  return html`<div class="wrap app"><details class="menu-fold"><summary><span>${m.toggle}</span>${current ? html`<span class="menu-fold-current">${current}</span>` : ""}</summary><nav class="menu" aria-label="${m.label}">${menuBody(m)}</nav></details><nav class="menu menu-side" aria-label="${m.label}">${menuBody(m)}</nav><main id="main"${raw(attrs({ class: cls(narrow && "narrow") }))}>${body}</main></div>`;
+  return html`<div class="wrap app"><nav class="menu-fold-nav" aria-label="${m.label}"><details class="menu-fold"><summary><span>${m.toggle}</span>${current ? html`<span class="menu-fold-current">${current}</span>` : ""}</summary><div class="menu">${menuBody(m)}</div></details></nav><nav class="menu menu-side" aria-label="${m.label}">${menuBody(m)}</nav><main id="main"${raw(attrs({ class: cls(narrow && "narrow") }))}>${body}</main></div>`;
 }
 
 /** A whole page: doctype, head, skip link, bar, the menu when there is one, main and footer. */
