@@ -82,7 +82,7 @@ the raw names (`--background`, not `--paper`).
 | Palette | Role | Light | Dark | Use |
 |---|---|---|---|---|
 | paper | `background` | `#FCFCFA` | `#111215` | The page ground |
-| soft | `muted` | `#F1F1EC` | `#1A1B1F` | A quiet surface: table heads, hover rows, alternating sections |
+| soft | `muted` | `#F1F1EC` | `#202126` | A quiet surface: table heads, hover rows, alternating sections |
 | card | `card` | `#FFFFFF` | `#17181C` | Cards, fields, popovers |
 | ink | `foreground` | `#14151A` | `#EDEDEA` | Headings, strong text, the wordmark, Forspring's doll |
 | body | `body-foreground` | `#3C3E46` | `#C8C9CE` | Running text |

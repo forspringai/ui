@@ -10,11 +10,11 @@
   --card-foreground: light-dark(#14151a, #ededea);
   --popover: light-dark(#ffffff, #17181c);
   --popover-foreground: light-dark(#14151a, #ededea);
-  --muted: light-dark(#f1f1ec, #1a1b1f);
+  --muted: light-dark(#f1f1ec, #202126);
   --muted-foreground: light-dark(#5b5e68, #9d9fa8);
-  --secondary: light-dark(#f1f1ec, #1a1b1f);
+  --secondary: light-dark(#f1f1ec, #202126);
   --secondary-foreground: light-dark(#14151a, #ededea);
-  --accent: light-dark(#f1f1ec, #1a1b1f);
+  --accent: light-dark(#f1f1ec, #202126);
   --accent-foreground: light-dark(#14151a, #ededea);
   --border: light-dark(#e4e5e1, #2a2c32);
   --input: light-dark(#c6c8c2, #42454d);

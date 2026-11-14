@@ -4,7 +4,7 @@
 
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { contrast, distance } from "../src/color.ts";
+import { contrast, distance, oklab } from "../src/color.ts";
 import { MODES, model } from "../src/emit.ts";
 
 const m = model(join(import.meta.dirname, "..", "tokens"));
@@ -85,6 +85,12 @@ describe.each(MODES)("%s theme", (mode) => {
 
   test("the focus ring is visible on the page (non-text, 3:1)", () => {
     for (const p of m.products) expect(contrast(m.product[p]!.ring[mode], c("background"))).toBeGreaterThanOrEqual(3);
+  });
+
+  // The soft grey is a surface you can see: a table head or a disabled field on a card, a hover row on
+  // the page. Until 0.22.0 dark soft was 0.013 from the card, a box on a card read as nothing (D-36).
+  test.each(["background", "card"] as const)("muted is a visible step on %s (OKLab L at least 0.03)", (s) => {
+    expect(Math.abs(oklab(c("muted"))[0] - oklab(c(s))[0])).toBeGreaterThanOrEqual(0.03);
   });
 });
 
