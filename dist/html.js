@@ -6,6 +6,7 @@
 // the html`` tag unescaped; a plain string is always text. raw() is the one way to vouch for a
 // string as markup, for a stylesheet or markup the caller built and escaped itself. String(h) or
 // `${h}` gives the HTML.
+import { iconSvg } from "./icons.js";
 import { ICON_NAMES, ICON_PATHS } from "./icons/lucide.js";
 export { ICON_NAMES };
 // A registered symbol rather than instanceof, so Html from a second copy of this module (src/ and
@@ -68,7 +69,7 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.25.0";
+export const VERSION = "0.26.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -116,8 +117,7 @@ export const MARK_PATHS = MARK_SVG.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/
 export function icon(name, o = {}) {
     if (!Object.hasOwn(ICON_PATHS, name))
         throw new Error(`icon: no icon named ${JSON.stringify(name)}`);
-    const a = o.label ? `role="img" aria-label="${esc(o.label)}"` : 'aria-hidden="true"';
-    return raw(`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${a} focusable="false">${ICON_PATHS[name]}</svg>`);
+    return raw(iconSvg(ICON_PATHS[name], o));
 }
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
@@ -229,6 +229,8 @@ export function bar(o) {
     const brand = html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
     return html `<header class="bar"><div class="wrap bar-inner">${brand}${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
 }
+/** All or none per group (D-39 point 6): icons only when every item has one and no two match. */
+const groupIcons = (items) => items.length > 0 && items.every((i) => i.icon !== undefined) && new Set(items.map((i) => i.icon)).size === items.length;
 const signalMark = (s) => html `<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
 /** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
 export function menuBody(m) {
@@ -239,12 +241,15 @@ export function menuBody(m) {
         : others.length > 1
             ? html `<details class="menu-context"><summary><span class="menu-label">${ctx.label}</span><span class="menu-context-name">${ctx.name}</span></summary><ul>${others.map((i) => html `<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="true"' : "")}>${i.label}</a></li>`)}</ul></details>`
             : html `<div class="menu-context"><span class="menu-label">${ctx.label}</span><span class="menu-context-name">${ctx.name}</span></div>`;
-    const groups = m.groups.map((g) => html `<div class="menu-group">${g.label ? html `<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
-        const badge = i.badge
-            ? html `<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html `<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
-            : "";
-        return html `<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}><span class="menu-text">${i.label}</span>${badge}</a></li>`;
-    })}</ul></div>`);
+    const groups = m.groups.map((g) => {
+        const icons = groupIcons(g.items);
+        return html `<div class="menu-group">${g.label ? html `<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
+            const badge = i.badge
+                ? html `<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html `<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
+                : "";
+            return html `<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}>${icons ? icon(i.icon) : ""}<span class="menu-text">${i.label}</span>${badge}</a></li>`;
+        })}</ul></div>`;
+    });
     return html `${context}${groups}`;
 }
 /** The current item's label, for the phone's fold. */

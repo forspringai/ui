@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import * as perName from "../src/icons.ts";
 import { describe, expect, test } from "vitest";
 import { button, field, html, icon, ICON_NAMES, TOAST_SCRIPT, toast, toastRegion, toastScript, tooltip, type IconName, type ToastOptions, type ToastTone } from "../src/html.ts";
 import { Icon, Toast, ToastRegion, Tooltip } from "../src/react.ts";
@@ -182,6 +183,17 @@ describe("icon()", () => {
     clean(String(icon("trash", { label: evil })));
   });
 
+  test("@forspring/ui/icons has one export per name, drawn byte for byte like icon() (D-40)", () => {
+    const camel = (n: string) => `icon${n.split("-").map((p) => p[0]!.toUpperCase() + p.slice(1)).join("")}`;
+    const exported = Object.keys(perName).filter((k) => k.startsWith("icon") && k !== "iconSvg");
+    expect(exported.sort()).toEqual(ICON_NAMES.map(camel).sort());
+    for (const n of ICON_NAMES) {
+      const paths = (perName as unknown as Record<string, string>)[camel(n)]!;
+      expect(perName.iconSvg(paths)).toBe(String(icon(n)));
+      expect(perName.iconSvg(paths, { label: `A "${n}" & co` })).toBe(String(icon(n, { label: `A "${n}" & co` })));
+    }
+  });
+
   test("an unknown name throws rather than drawing nothing", () => {
     expect(() => icon("nope" as IconName)).toThrow(/no icon named "nope"/);
     expect(() => icon("constructor" as IconName)).toThrow();
@@ -216,7 +228,9 @@ describe("icon()", () => {
     expect(lic).toContain("ISC License");
     expect(lic).toContain("Lucide Icons and Contributors");
     expect(lic).toContain("Cole Bemis");
-    expect(readFileSync(join(import.meta.dirname, "../src/icons/lucide.ts"), "utf8")).toContain("/*! @license\nISC License");
+    // The paths live in paths.ts (D-40), so the legal comment does too, in the source and the build.
+    expect(readFileSync(join(import.meta.dirname, "../src/icons/paths.ts"), "utf8")).toContain("/*! @license\nISC License");
+    expect(readFileSync(join(import.meta.dirname, "../dist/icons/paths.js"), "utf8")).toContain("/*! @license\nISC License");
   });
 });
 

@@ -178,6 +178,12 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   takes no label; standing alone (a toolbar button) it needs words, through the button's `ariaLabel`
   or `icon(name, { label })`. An icon never carries meaning the words beside it lack, and a new icon is
   Lucide's own drawing added to `src/icons/`, not one drawn here.
+- **`@forspring/ui/icons`** is for a client bundle that draws a few fixed icons (D-40): import the
+  ones you draw (`iconChevronLeft`, `iconCalendar`, … one per name, prefixed `icon`) and draw them with
+  `iconSvg(paths, { label? })`, which writes the same bytes as `icon()`. A bundler leaves the rest
+  out. A name known only at run time (an app's nav) needs `icon(name)` and the whole table: draw that
+  where the HTML is made, not in the client. Keep the Lucide notice: let the bundler move legal
+  comments to a file of their own if they weigh too much inline.
 - **In a menu,** an icon sits before the item's words and never replaces them; the menu works with
   every icon removed. An app's pages take the kernel's default for their kind (file-text, kanban,
   chart-gantt, calendar-days, calendar-range, square-pen, file-diff, paperclip, chart-column, list,
@@ -190,6 +196,8 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   match; otherwise the whole group is words only. A column where some items have a glyph and some
   don't reads as a mistake. An authored icon draws as written; a duplicate turns its group to words
   only, and the screens check flags it so the author sees why.
+- **`MenuItem.icon`** draws that rule for you (D-40): give each item an `icon` and `menuBody()` /
+  `shell()` apply all or none per group. Resolve a kernel default to a name before you pass it.
 
 ### Brand
 

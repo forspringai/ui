@@ -12,6 +12,7 @@
   "include": [],
   "files": [
     "src/html.ts",
+    "src/icons.ts",
     "src/refusals.ts",
     "src/pages.ts",
     "src/connect.ts",
