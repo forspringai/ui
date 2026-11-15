@@ -62,8 +62,14 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   that looks like a button) and leave it out for a form's submit.
 - Easy to get wrong: a button's label is a verb that says what happens ("Gem ændringer", "Send
   invitation"), never "OK", "Submit" or "Klik her" (voice §6). An icon-only button needs `ariaLabel`.
-  Don't pass `disabled`: it stays only so the account's markup keeps working (D-5); section 3 has
+  Don't pass `disabled`: it stays only so the account's markup keeps working (D-5); section 4 has
   what to do instead.
+- **`actions()`** is the row under a form or a card: `primary` (one, first), then `secondary` (ghost
+  actions, Annuller as a link back), and `destructive` (a danger button or a `dialogTrigger()` to a
+  confirm) apart at the far end (D-41). It keeps one height and the `--rhythm-actions` gap, and on a
+  phone turns into a column of full-width buttons. Use it wherever two or more buttons sit together,
+  never a row of your own; a dialog's footer is `dialog()`'s own, safe action first (D-23). Two buttons
+  with no row around them still keep the gap, but they never get the order or the phone column.
 - **`dialogTrigger()`** opens a `dialog()` with script and is a link to the same confirm as a page
   without it. Use it only to open a dialog; a plain action is a `button()`.
 - **`switchButton()`** turns one thing on or off at once, a POST the server answers by redrawing the
@@ -74,9 +80,9 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 
 - **`field()`** is every labelled input, select and textarea: the label, the control, the `hint` and
   the `error`, wired for a screen reader, and "påkrævet" or "valgfri" in the label from `required` or
-  `optional` (pass the page's `lang`). Never write a bare `<input>` in a form. Section 3 has the rules.
+  `optional` (pass the page's `lang`). Never write a bare `<input>` in a form. Section 4 has the rules.
 - **`errorSummary()`** is the summary at the top of a form that failed: a heading and one link per
-  error to its field, taking focus. Only on the page that answers a failed submit; section 3.
+  error to its field, taking focus. Only on the page that answers a failed submit; section 4.
 - **`tooltip()`** is a short explanation for the curious, beside a label or a value (`field()`'s
   `help`). It never holds the only copy of something a person needs to act: what a field needs is its
   `hint`, always shown; what a button does is its label; what went wrong is a notice (D-26). If you
@@ -97,7 +103,7 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 - **`notice()`** tones are `info`, `success`, `warning` and `error`. Warnings and errors are alerts,
   read out at once, so use them for what needs attention, not for decoration. A notice is never the
   report of a save; that is a toast, and a form's errors are `errorSummary()`, the error notice made
-  for them. A platform error passes its `ref` (section 4).
+  for them. A platform error passes its `ref` (section 5).
 - **`errorRef()`** is the ref line alone ("Fejlkode: 4bf92f35", and to quote it to support), for an
   error drawn without `notice()`, `state()` or `refusedPage()`, which take `ref` and draw it themselves.
 - **`toast()`** reports the result of the request the page is answering, drawn at the start of `main`.
@@ -106,7 +112,7 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   **`TOAST_SCRIPT`** as a file under a strict CSP) for instant dismiss and the 8 second hide; without it
   Dismiss is a link and still works. A warning or danger toast never hides itself.
 - **`state()`** with `kind: "empty"` says there is nothing and offers the action that fills it; by a
-  filter, it says so and offers to clear it. `"loading"` is a skeleton (section 5). `"failed"` says the
+  filter, it says so and offers to clear it. `"loading"` is a skeleton (section 6). `"failed"` says the
   read failed and never claims there is nothing.
 - **`signal()`** is a monitored thing's state: a check, a site, a job, up, late, down or not judged
   (D-13, hub D-95). Not for an outcome or a category, and never `--danger` or the accent for "down".
@@ -211,7 +217,30 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   don't use `shell()` (a React app's `index.html`). **`DEFAULT_BRAND_BASE`** is where `shell()` expects
   the brand files, under the package's version.
 
-## 3. Forms
+## 3. Spacing and surfaces
+
+The defaults carry the rhythm, so markup with no class comes out right (D-41). Don't add margins of
+your own between blocks; if a screen needs a different gap, it is a token and a decision first.
+
+- **The rhythm tokens:** `--rhythm-field` (a label to its control), `--rhythm-help` (a control to its
+  hint or error), `--rhythm-stack` (between fields, and the parts of a form), `--rhythm-flow` (between
+  blocks in `main`, a section, a card or a dialog body), `--rhythm-section` (between a page's
+  sections) and `--rhythm-actions` (inside a button row, and the least gap two controls may have).
+  In code they are `rhythm` in `@forspring/ui`.
+- **What they space with no class:** the children of `main`, a plain `section`, `.card` and a dialog's
+  body sit `flow` apart; the parts of a bare `form` sit `stack` apart; `field()` puts `field` under
+  its label and `help` over its hint. Paragraph to paragraph keeps the paragraph's own margin, and a
+  heading binds to what follows. A class of your own on the container takes it out of the defaults.
+- **Surfaces:** the page is the paper; panes (the bar, the sidebar, cards, lists, tables, dialogs,
+  popovers) are the card surface on it, a visible step lighter in light and darker in dark. Soft
+  (`--muted`) is an inset on a pane: a table head, a hover row, a disabled field. Put a block that
+  reads as a unit in a `card()`, never a bare `section` with a background of its own.
+- **Menus and popovers** open next to their trigger, below it or above when there is no room, inside
+  the window, with no script: use the bar's menus and `tooltip()`, never a panel positioned by hand.
+- `ui-audit` checks all of it (D-41): `control-gap`, `control-text-centre`, `stack-rhythm`,
+  `popover-anchor` and `surface-distinct`, warnings for now.
+
+## 4. Forms
 
 A form is server-rendered, posts, and the server decides. The browser's checks are a courtesy.
 
@@ -246,7 +275,7 @@ A form is server-rendered, posts, and the server decides. The browser's checks a
   er gemt."), from a flash parameter or a one-time cookie. Never answer a POST with a page directly: a
   reload would post again.
 - **One primary action,** after the fields, first in the row; a ghost "Annuller" after it, as a link
-  back. A form with two primary buttons has two jobs; split it. (In a destructive confirm the safe
+  back: `actions()` draws that order. A form with two primary buttons has two jobs; split it. (In a destructive confirm the safe
   action comes first instead, D-23.)
 - **No disabled buttons.** A disabled button cannot be focused, says nothing about why, and would need
   script to enable again (D-23). `button()` still takes `disabled`, for the account's old markup (D-5);
@@ -257,7 +286,7 @@ A form is server-rendered, posts, and the server decides. The browser's checks a
   and English; an error says what to do, without blame ("Skriv en hel mailadresse, fx navn@firma.dk.",
   not "Ugyldig mail" or "Du har skrevet forkert").
 
-## 4. Errors and refusals
+## 5. Errors and refusals
 
 Every error has three parts, as the refusals do: a **title** (what happened, in a few words), **what it
 means** (a sentence or two), and **what to do** (the fix, with the one action that does it). "Du er ikke
@@ -268,7 +297,7 @@ tilbage hertil." (voice §6).
 |---|---|---|
 | The whole request is refused (sign-in, org, role, product off, suspended) | `refusedPage()` with its reason | The reason's |
 | The account does not answer | `accountUnavailablePage()` | 503 |
-| A field or the form is wrong | `field({ error })` and `errorSummary()` (section 3) | 4xx |
+| A field or the form is wrong | `field({ error })` and `errorSummary()` (section 4) | 4xx |
 | Something on this page needs attention while it lasts | `notice()` | 200 |
 | The last action failed elsewhere (a send, a sync) | `toast({ tone: "danger" })` after the 303 | 200 |
 | One block's data could not be read | `state({ kind: "failed" })`, the rest of the page as usual | 200 |
@@ -291,7 +320,7 @@ tilbage hertil." (voice §6).
 - **Don't guess.** When the account or a backend does not answer, say that it did not answer ("Intet er
   gået tabt; prøv igen om et minut"), never that there is nothing or that the person lacks access.
 
-## 5. States
+## 6. States
 
 - **Empty:** `state({ kind: "empty" })` in place of the list, with the action that fills it
   ("Opret kunde"). Empty by a search or filter says so and offers to clear it ("Ingen kunder matcher
@@ -308,7 +337,7 @@ tilbage hertil." (voice §6).
   own dependency down is a `notice({ signal: "down" })` or a failed `state()` where its data would be,
   saying what still works.
 
-## 6. Language
+## 7. Language
 
 - **One language per page,** set by `shell({ lang })` and passed to every helper that takes `lang`.
   Customer screens are Danish first with English available (hub D-7); the user menu's `languages`
@@ -326,7 +355,7 @@ tilbage hertil." (voice §6).
   Danish, 1,248 and "4 Nov 2026, 10:41" in English (`Intl`, as the helpers do).
 - **Chrome copy:** plain words, no em dashes, no exclamation marks, no emoji (voice §6).
 
-## 7. Before a screen ships
+## 8. Before a screen ships
 
 - [ ] It uses the smallest surface that works (section 1), and works with script off.
 - [ ] One primary button per view; danger only where something is lost; no `disabled` buttons.
@@ -343,4 +372,7 @@ tilbage hertil." (voice §6).
 - [ ] Nothing a person needs lives only in a tooltip; every icon, tag and signal has its word.
 - [ ] One language on the page, every string from the catalog, product names as written, "du" to the
       person.
-- [ ] `ui-audit` exits 0 at 1280 and 380 px, light and dark, with axe finding nothing (brand §9).
+- [ ] Buttons together are an `actions()` row; no margins of your own between blocks; a pane is a card.
+- [ ] `ui-audit` exits 0 at 1280 and 380 px, light and dark, with axe finding nothing (brand §9), and
+      no `control-gap`, `control-text-centre`, `stack-rhythm`, `popover-anchor` or `surface-distinct`
+      warnings.

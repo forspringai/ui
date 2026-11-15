@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Layout rules (D-41)</title>
+<!-- Broken on purpose, for the five layout rules (test/audit.test.ts). Inline styles only, so the
+     measurements do not depend on components.css. Each case has an id the test names. -->
+<style>
+  body { margin: 0; background: #ffffff; color: #14151a; font: 15px/1.5 Archivo, Arial, sans-serif; }
+  .page { padding: 16px; }
+  button { font: 600 14px/18px Arial, sans-serif; min-height: 44px; padding: 12px 20px; border: 1px solid #14151a; background: #ffffff; color: #14151a; }
+  .card { background: #ffffff; padding: 16px; margin: 0 0 16px; }
+  .fill { background: #ebebe6; }
+</style>
+</head>
+<body>
+<div class="page">
+  <!-- control-gap: Save directly on Remove, in different containers. -->
+  <div><button id="save" type="button">Save</button></div>
+  <div><button id="remove" type="button">Remove</button></div>
+  <!-- control-text-centre: padding instead of the control's line box. -->
+  <div style="margin-top: 16px"><a id="offcentre" class="button" href="#" style="display: inline-block; min-height: 44px; padding: 4px 20px; border: 1px solid #14151a; font: 600 14px/18px Arial, sans-serif; color: #14151a">Off</a></div>
+  <!-- control-text-centre: a glyph with a visually hidden label is measured by the glyph, which is centred. -->
+  <div style="margin-top: 16px"><button id="iconbtn" type="button" style="display: inline-flex; align-items: center; justify-content: center; padding: 0 12px"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; top: 0">More actions</span></button></div>
+  <!-- stack-rhythm: 8, 12 between three children of one column. -->
+  <div id="stack" style="display: flex; flex-direction: column; margin-top: 16px">
+    <p style="margin: 0">One</p>
+    <p style="margin: 8px 0 0">Two</p>
+    <p style="margin: 12px 0 0">Three</p>
+  </div>
+  <!-- surface-distinct: (3) a white card on a white page, and a transparent one whose child paints. -->
+  <div class="card" id="flat"><p>White on white.</p></div>
+  <div class="card" id="clear" style="background: transparent"><p class="fill">The child paints, the card does not.</p></div>
+  <!-- (2) a bottom rule is a divider, not a pane; four sides at 0.04 L pass. -->
+  <aside id="divider" style="border-bottom: 1px solid #c6c8c2; margin-bottom: 16px">A rule under it.</aside>
+  <aside id="bordered" style="border: 1px solid #c6c8c2; margin-bottom: 16px">Four sides.</aside>
+  <!-- (4) a card inside a filled card is the nested-card rule's, not this one's. -->
+  <div class="card fill" id="outer"><div class="card" id="inner" style="background: #ebebe6"><p>Nested.</p></div></div>
+  <!-- A plain section with a heading is a part of the page, not a pane; a painted one is a region. -->
+  <section id="plain"><h2>Plain</h2><p>Flow content.</p></section>
+  <section id="painted" style="background: #fcfcfa"><h2>Painted</h2><p>Nearly the page.</p></section>
+  <!-- (1) the surface behind is the nearest painted ancestor: a pane on the grey fill reads. -->
+  <div class="fill" style="padding: 16px"><div class="card" id="onfill"><p>White on the soft grey.</p></div></div>
+  <!-- popover-anchor: a menu that opens far from its trigger. -->
+  <details id="far" style="position: relative"><summary style="display: inline-flex; align-items: center; min-height: 24px">Menu</summary><div style="position: absolute; top: 300px; left: 0; background: #ffffff; padding: 8px">Far away</div></details>
+</div>
+</body>
+</html>

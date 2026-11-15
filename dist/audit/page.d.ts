@@ -60,3 +60,77 @@ export type Observations = {
     slots: SlotObservation[];
 };
 export declare function collect(): Observations;
+/** A border box in page coordinates (viewport ones for popovers), px. */
+export type Box = {
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+};
+export type ControlBox = {
+    selector: string;
+    box: Box;
+};
+export type ControlText = {
+    selector: string;
+    /** The union of the label's line boxes, top and bottom. */
+    textTop: number;
+    textBottom: number;
+    lines: number;
+    /** The content box: the border box less borders and padding. */
+    contentTop: number;
+    contentBottom: number;
+};
+export type StackChild = {
+    selector: string;
+    box: Box;
+    /** An auto margin on the start side of the stack axis: a deliberate separation (an action row's far end). */
+    autoBefore: boolean;
+    autoAfter: boolean;
+};
+export type StackObservation = {
+    selector: string;
+    axis: "block" | "inline";
+    children: StackChild[];
+};
+export type PopoverObservation = {
+    selector: string;
+    trigger: string;
+    /** Viewport coordinates, measured with the trigger in view. */
+    box: Box;
+    triggerBox: Box;
+    viewport: {
+        w: number;
+        h: number;
+    };
+};
+export type RegionObservation = {
+    selector: string;
+    /** The region's own fill composited on the surface behind it, or null when it paints none. */
+    fill: [number, number, number] | null;
+    /** The nearest painted ancestor ground, composited; the page's when none paints. */
+    behind: [number, number, number];
+    /** The border colour composited on the surface behind, when all four sides show; else null. */
+    border: [number, number, number] | null;
+};
+export type LayoutObservations = {
+    controls: ControlBox[];
+    /** Index pairs into controls that are one composite control and never measured against each other. */
+    composite: [number, number][];
+    texts: ControlText[];
+    stacks: StackObservation[];
+    regions: RegionObservation[];
+};
+/**
+ * The layout measurements (D-41), as collect(): one self-contained function sent to Chromium as
+ * source, measuring only. The controls and composites are lead-bench's definitions
+ * (D-41); audit.ts holds the thresholds.
+ */
+export declare function collectLayout(): LayoutObservations;
+/**
+ * The open popovers and menus, each with its trigger, in viewport coordinates (D-41): a details
+ * element's positioned panel, and a native popover with the button that opens it. Self-contained,
+ * like collect(). probePopovers() in audit.ts opens each trigger and calls it; a probe of its own
+ * (the screens bench's) can do the same.
+ */
+export declare function collectPopovers(): PopoverObservation[];

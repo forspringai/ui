@@ -81,14 +81,14 @@ the raw names (`--background`, not `--paper`).
 
 | Palette | Role | Light | Dark | Use |
 |---|---|---|---|---|
-| paper | `background` | `#FCFCFA` | `#111215` | The page ground |
-| soft | `muted` | `#F1F1EC` | `#202126` | A quiet surface: table heads, hover rows, alternating sections |
-| card | `card` | `#FFFFFF` | `#17181C` | Cards, fields, popovers |
+| paper | `background` | `#F6F6F4` | `#111215` | The page ground, a step under the card so panes read as panes (D-41) |
+| soft | `muted` | `#F1F1EC` | `#212227` | A quiet inset on the card: table heads, hover rows, disabled fields |
+| card | `card` | `#FFFFFF` | `#1A1B1F` | Panes on the page: the bar, the sidebar, cards, dialogs, fields, popovers |
 | ink | `foreground` | `#14151A` | `#EDEDEA` | Headings, strong text, the wordmark, Forspring's doll |
 | body | `body-foreground` | `#3C3E46` | `#C8C9CE` | Running text |
 | muted | `muted-foreground` | `#5B5E68` | `#9D9FA8` | Secondary text |
 | faint | (no role yet) | `#6A6D76` | `#8B8E97` | Tertiary text, still 4.5:1 on paper |
-| line | `border` | `#E4E5E1` | `#2A2C32` | Hairlines between things |
+| line | `border` | `#E4E5E1` | `#2C2E34` | Hairlines between things, and the edge of a pane |
 | line-strong | `input` | `#C6C8C2` | `#42454D` | Field borders, ghost buttons, tags |
 
 ### Product accents

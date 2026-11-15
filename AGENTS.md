@@ -48,6 +48,7 @@ src/audit/         the design audit, ui-audit (D-8 to D-10): cli.ts (bin), args.
                    the cookie redactor), audit.ts (rules, Playwright runs), page.ts
                    (measurements inside Chromium)
 demo/index.ts      the demo page and the standard pages, drawn with src/html.ts and src/pages.ts
+                   (and pages/lead.en.html, the founder's spacing case, D-41)
 demo/account-home.html  parity fixture: the account's home markup on this package's CSS
 scripts/build.ts   pnpm build: tokens/, css/, src/html.ts -> dist/; brand files to dist/brand/ and brand/
 scripts/brand-png.ts  renders the brand PNGs from the SVGs in Chromium (Playwright)
@@ -69,7 +70,7 @@ dist/              committed build output (D-2)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
                    rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
-                   (demo passes, test/fixtures/broken.html fails; shadcn.html passes --rich-app,
+                   (demo passes, test/fixtures/broken.html fails; layout.html breaks the five layout rules, D-41; shadcn.html passes --rich-app,
                    shadcn-drift.html fails it), the brand templates (templates.test.ts),
                    visual regression over the demo (visual.test.ts, baselines in test/visual/, D-32),
                    customer themes (theme.test.ts: every refusal code, its fix, the schema, the CSS)
@@ -119,7 +120,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.26.0"
+"@forspring/ui": "github:forspringai/ui#v0.27.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

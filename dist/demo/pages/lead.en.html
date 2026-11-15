@@ -1,0 +1,25 @@
+<!doctype html><html lang="en" data-product="appspring"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lead</title><link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css"></head><body><main id="main" class="wrap"><h1>Lead</h1><nav aria-label="Products"><details class="switcher bar-menu product-switcher"><summary>Products</summary><div class="bar-panel"><p class="bar-panel-label">Noon has</p><ul><li><a href="#" aria-current="true"><span class="bar-item-name">AppSpring</span></a></li><li><a href="#"><span class="bar-item-name">SiteSpring</span></a></li><li><a href="#"><span class="bar-item-name">DataSpring</span></a></li></ul></div></details></nav>
+<form><div class="field"><label for="stage">Stage</label><select id="stage" name="stage" aria-describedby="stage-hint"><option value="open">Open</option><option value="won" selected>Won</option><option value="lost">Lost</option></select><p class="hint" id="stage-hint">Where the lead stands.</p></div>
+<div class="field"><label for="owner">Owner</label><select id="owner" name="owner"><option value="a" selected>Anna</option></select></div><button type="submit" class="ghost">Save</button></form>
+<p><a class="button ghost" href="#remove" data-dialog-open="remove">Remove lead</a></p>
+<dialog class="dialog" id="remove" role="alertdialog" aria-labelledby="remove-title" aria-describedby="remove-body"><h2 class="dialog-title" id="remove-title">Remove the lead?</h2><form class="dialog-form" method="post" action="#"><div class="dialog-body" id="remove-body">This removes the lead and its notes.</div><div class="dialog-actions"><button type="submit" class="ghost" form="remove-close" value="close" autofocus>Keep</button><button type="submit" class="danger">Remove</button></div></form><form method="dialog" id="remove-close"></form></dialog>
+<section><h2>With actions()</h2>
+<form><div class="field"><label for="stage2">Stage</label><select id="stage2" name="stage2" aria-describedby="stage2-hint"><option value="open">Open</option><option value="won" selected>Won</option><option value="lost">Lost</option></select><p class="hint" id="stage2-hint">Where the lead stands.</p></div>
+<div class="field"><label for="owner2">Owner</label><select id="owner2" name="owner2"><option value="a" selected>Anna</option></select></div>
+<div class="actions"><button type="submit">Save</button><a class="button ghost" href="#">Cancel</a><div class="actions-end"><a class="button danger" href="#remove" data-dialog-open="remove">Remove lead</a></div></div></form>
+</section></main><script>(() => {
+  if (typeof HTMLDialogElement !== "function") return;
+  document.addEventListener("click", (e) => {
+    const t = e.target instanceof Element ? e.target.closest("[data-dialog-open]") : null;
+    if (!t || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const d = document.getElementById(t.getAttribute("data-dialog-open"));
+    if (!(d instanceof HTMLDialogElement) || d.open) return;
+    e.preventDefault();
+    d.addEventListener("close", () => {
+      d.querySelectorAll("form").forEach((f) => f.reset());
+      t.focus();
+    }, { once: true });
+    d.showModal();
+  });
+})();</script>
+<script>if (new URLSearchParams(location.search).get("open") === "products") document.querySelector("details.product-switcher").open = true;</script></body></html>

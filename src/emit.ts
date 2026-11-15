@@ -31,6 +31,8 @@ export type Model = {
   control: Record<string, number>;
   // fixed widths of the page frame (D-38): the menu column
   layout: Record<string, number>;
+  // the named vertical gaps (D-41), each a step of the space scale
+  rhythm: Record<string, number>;
   text: Record<string, Record<string, number>>;
   // line-height per ladder step (D-27), unitless, plus solid (1) for one line in its own box
   leading: { solid: number } & Record<string, Record<string, number>>;
@@ -118,6 +120,7 @@ export function model(dir: string): Model {
     space: record("space"),
     control: record("control"),
     layout: record("layout"),
+    rhythm: record("rhythm"),
     text: Object.fromEntries(ladders.map((ladder) => [ladder, record(`text.${ladder}`)])),
     leading: leading as Model["leading"],
     breakpoint: record("breakpoint"),
@@ -161,6 +164,7 @@ function geometry(m: Model): string[] {
     ...Object.entries(m.space).map(([k, v]) => `--space-${k}: ${v}px;`),
     ...Object.entries(m.control).map(([k, v]) => `--control-${k}: ${v}px;`),
     ...Object.entries(m.layout).map(([k, v]) => `--layout-${k}: ${v}px;`),
+    ...Object.entries(m.rhythm).map(([k, v]) => `--rhythm-${k}: ${v}px;`),
     ...Object.entries(m.text).flatMap(([ladder, steps]) => Object.entries(steps).map(([k, v]) => `--text-${ladder}-${k}: ${v}px;`)),
     `--leading-solid: ${m.leading.solid};`,
     ...ladderSteps(m).map(([ladder, k, v]) => `--leading-${ladder}-${k}: ${v};`),
@@ -259,6 +263,7 @@ function values(m: Model) {
     space: m.space,
     control: m.control,
     layout: m.layout,
+    rhythm: m.rhythm,
     text: m.text,
     leading: m.leading,
     breakpoint: m.breakpoint,
@@ -311,6 +316,8 @@ export declare const space: Deep<${JSON.stringify(v.space)}>;
 export declare const control: Deep<${JSON.stringify(v.control)}>;
 /** Fixed widths of the page frame in px (D-38): menu, the sidebar's column. */
 export declare const layout: Deep<${JSON.stringify(v.layout)}>;
+/** The named vertical gaps in px (D-41): field (label to control), help (control to hint), stack (between fields), flow (between blocks), section, actions (inside a button row). */
+export declare const rhythm: Deep<${JSON.stringify(v.rhythm)}>;
 /** Font sizes in px: chrome (dense UI), content (pages) and marketing (landing pages, D-22). */
 export declare const text: Deep<${JSON.stringify(v.text)}>;
 /** Line-height per ladder step, unitless (D-27), and solid (1) for one line in a box of its own. */

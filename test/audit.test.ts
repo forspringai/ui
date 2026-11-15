@@ -14,7 +14,8 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, marketingLadder, primitives, RICH_SLOTS } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, RICH_SLOTS } from "../src/audit/audit.ts";
+import type { LayoutObservations } from "../src/audit/page.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
 
@@ -117,6 +118,20 @@ describe("the demo page", () => {
     expect(r.pages).toHaveLength(8);
     expect(all(r)).toEqual([]);
     expect(r.ok).toBe(true);
+  }, 120_000);
+
+  // The founder's case (D-41): his markup with no class, and the same lead with actions(). No finding
+  // at all, the five layout rules' warnings included.
+  test("the regression page passes, layout rules too, both widths and themes", async () => {
+    const r = await audit(options([`${base}/dist/demo/pages/lead.en.html`], { product: "appspring" }), browser);
+    expect(r.pages).toHaveLength(4);
+    expect(all(r)).toEqual([]);
+  }, 120_000);
+
+  // The confirm page with no script (D-23), and the dialog open over the demo.
+  test("the confirm page and the open dialog pass", async () => {
+    const r = await audit(options([`${base}/dist/demo/pages/delete-site.en.html`, `${base}/dist/demo/?product=sitespring&open=delete-site`], { product: "sitespring", themes: ["light"] }), browser);
+    expect(all(r).filter((f) => f.severity !== "review")).toEqual([]);
   }, 120_000);
 
   // Connect an agent (D-19), in SiteSpring's bar, with the copy buttons' script run.
@@ -270,6 +285,40 @@ describe("the broken fixture", () => {
 });
 
 // A marketing page on text.marketing (D-22): on scale only when the run asks for that ladder (D-29).
+describe("the layout rules in a browser (D-41)", () => {
+  let found: Finding[];
+  beforeAll(async () => {
+    const r = await audit(options([`${base}/test/fixtures/layout.html`], { widths: [1280], themes: ["light"] }), browser);
+    found = all(r).filter((f) => ["control-gap", "control-text-centre", "stack-rhythm", "popover-anchor", "surface-distinct"].includes(f.rule));
+  }, 60_000);
+  const of = (rule: string) => found.filter((f) => f.rule === rule).map((f) => f.selector);
+
+  test("they are warnings, so a product's build does not fail on landing", () => {
+    expect(found.length).toBeGreaterThan(0);
+    expect(found.every((f) => f.severity === "warning")).toBe(true);
+  });
+
+  test("control-gap: Save on Remove in different containers", () => {
+    expect(of("control-gap")).toEqual(["button#save | button#remove"]);
+  });
+
+  test("control-text-centre: a label at the top of its box; an icon with a hidden label is measured by its glyph", () => {
+    expect(of("control-text-centre")).toEqual(["a#offcentre"]);
+  });
+
+  test("stack-rhythm: the odd gap of three", () => {
+    expect(found.filter((f) => f.rule === "stack-rhythm").map((f) => [f.selector, f.value])).toEqual([["div#stack", "12px between div#stack > p and div#stack > p"]]);
+  });
+
+  test("surface-distinct: (1) the nearest painted ground, (2) four sides or nothing, (3) a pane paints, (4) nested cards skipped; a plain section is no region", () => {
+    expect(of("surface-distinct").sort()).toEqual(["aside#divider", "div#clear", "div#flat", "section#painted"]);
+  });
+
+  test("popover-anchor: the probe opens the menu and finds it far from its trigger", () => {
+    expect(found.filter((f) => f.rule === "popover-anchor").map((f) => f.selector)).toEqual(["details#far > div (trigger details#far > summary)"]);
+  });
+});
+
 describe("the marketing ladder", () => {
   const url = () => `${base}/test/fixtures/marketing.html`;
 
@@ -401,6 +450,96 @@ describe("rules on measurements", () => {
   test("dedupe counts repeats and puts errors first", () => {
     const f = (severity: Finding["severity"]): Finding => ({ rule: "spacing", severity, selector: "li", value: "6px", expected: "", note: "" });
     expect(dedupe([f("review"), f("error"), f("error")])).toEqual([{ ...f("error"), count: 2 }, f("review")]);
+  });
+});
+
+describe("layout rules on measurements (D-41)", () => {
+  const t = layoutScale(tokens.rhythm);
+  const none: LayoutObservations = { controls: [], composite: [], texts: [], stacks: [], regions: [] };
+  const run = (o: Partial<LayoutObservations>) => layoutFindings({ ...none, ...o }, t);
+  const b = (x: number, y: number, w: number, h: number) => ({ x, y, w, h });
+
+  test("the thresholds come from the rhythm tokens", () => {
+    expect(t.rhythm).toEqual([4, 8, 16, 24, 48]);
+    expect(t.minGap).toBe(8);
+    expect([t.anchorGap, t.fillStep, t.borderStep]).toEqual([8, 0.02, 0.04]);
+  });
+
+  test("control-gap: 8px apart passes, side by side or stacked; touching, overlapping and 4px fail, one finding per pair", () => {
+    const pair = (second: ReturnType<typeof b>) => run({ controls: [{ selector: "button.a", box: b(0, 0, 80, 44) }, { selector: "button.b", box: second }] });
+    expect(pair(b(88, 0, 80, 44))).toEqual([]);
+    expect(pair(b(0, 52, 80, 44))).toEqual([]);
+    // Saves in different containers count too: only the boxes matter.
+    expect(pair(b(0, 44, 120, 44)).map((f) => [f.rule, f.selector, f.value])).toEqual([["control-gap", "button.a | button.b", "touching (0px, one above the other)"]]);
+    expect(pair(b(84, 0, 80, 44)).map((f) => f.value)).toEqual(["4px apart, side by side"]);
+    expect(pair(b(70, 10, 80, 44)).map((f) => f.value)).toEqual(["overlapping (-10px, overlapping)"]);
+    // Diagonal neighbours overlap on neither axis.
+    expect(pair(b(82, 46, 80, 44))).toEqual([]);
+  });
+
+  test("control-gap: a composite's parts are one control", () => {
+    const controls = [{ selector: "input", box: b(0, 0, 200, 44) }, { selector: "button.clear", box: b(160, 6, 32, 32) }];
+    expect(run({ controls }).length).toBe(1);
+    expect(run({ controls, composite: [[0, 1]] })).toEqual([]);
+  });
+
+  test("control-text-centre: within 1px passes; 2px off fails; several lines use their union", () => {
+    const text = (top: number, bottom: number, lines = 1) => ({ selector: "summary", textTop: top, textBottom: bottom, lines, contentTop: 5, contentBottom: 27 });
+    expect(run({ texts: [text(8, 24)] })).toEqual([]);
+    expect(run({ texts: [text(9, 24.8)] })).toEqual([]);
+    expect(run({ texts: [text(10, 26)] }).map((f) => f.value)).toEqual(["text 2px below the middle"]);
+    expect(run({ texts: [text(3, 23, 2)] }).map((f) => f.value)).toEqual(["text 3px above the middle (2 lines)"]);
+  });
+
+  test("stack-rhythm: equal gaps pass, rhythm tokens pass, one odd gap fails naming both neighbours", () => {
+    const stack = (...ys: [number, number][]) => ({ selector: "main", axis: "block" as const, children: ys.map(([y, h], i) => ({ selector: `p${i}`, box: b(0, y, 300, h), autoBefore: false, autoAfter: false })) });
+    expect(run({ stacks: [stack([0, 20], [32, 20], [64, 20])] })).toEqual([]);
+    expect(run({ stacks: [stack([0, 40], [56, 20], [100, 20], [144, 30])] })).toEqual([]);
+    expect(run({ stacks: [stack([0, 40], [56, 20], [88, 20])] }).map((f) => f.value)).toEqual(["12px between p1 and p2"]);
+  });
+
+  test("stack-rhythm: an auto margin's far end and another line of a wrapped row are not rhythm gaps", () => {
+    const row = { selector: "div.actions", axis: "inline" as const, children: [
+      { selector: "a", box: b(0, 0, 80, 44), autoBefore: false, autoAfter: false },
+      { selector: "b", box: b(88, 0, 80, 44), autoBefore: false, autoAfter: false },
+      { selector: "c", box: b(600, 0, 80, 44), autoBefore: true, autoAfter: false },
+      { selector: "d", box: b(0, 52, 80, 44), autoBefore: false, autoAfter: false },
+    ] };
+    expect(run({ stacks: [row] })).toEqual([]);
+  });
+
+  describe("surface-distinct", () => {
+    const paper: [number, number, number] = [246, 246, 244];
+    const region = (o: object) => ({ selector: "div.card", fill: null, behind: paper, border: null, ...o });
+
+    test("a fill 0.02 L from the surface behind passes; today's white on the old paper fails without its border", () => {
+      expect(oklabL([255, 255, 255]) - oklabL(paper)).toBeGreaterThan(0.025);
+      expect(run({ regions: [region({ fill: [255, 255, 255] })] })).toEqual([]);
+      const old: [number, number, number] = [252, 252, 250];
+      expect(run({ regions: [region({ fill: [255, 255, 255], behind: old })] }).map((f) => f.rule)).toEqual(["surface-distinct"]);
+    });
+
+    test("(1) the surface behind is what the page measured: a card on a card's ground is measured against it", () => {
+      expect(run({ regions: [region({ fill: [255, 255, 255], behind: [255, 255, 255] })] }).map((f) => f.value)).toEqual(["fill 0.000 L, no four-sided border from the surface behind (#ffffff)"]);
+    });
+
+    test("(2) a border counts when all four sides show at 0.04 L; the page reports none for a single side", () => {
+      expect(run({ regions: [region({ fill: [252, 252, 250], border: [210, 212, 206] })] })).toEqual([]);
+      expect(run({ regions: [region({ fill: [252, 252, 250], border: [236, 236, 234] })] }).length).toBe(1);
+      expect(run({ regions: [region({ fill: [247, 247, 245], border: null })] }).length).toBe(1);
+    });
+
+    test("(3) a region that paints nothing fails", () => {
+      expect(run({ regions: [region({})] }).map((f) => f.value)).toEqual(["no fill, no four-sided border from the surface behind (#f6f6f4)"]);
+    });
+  });
+
+  test("popover-anchor: next to its trigger, across its span, inside the window; flipped up is fine", () => {
+    const pop = (box: ReturnType<typeof b>, trigger = b(16, 100, 100, 32)) => popoverFindings([{ selector: "div.bar-panel", trigger: "summary", box, triggerBox: trigger, viewport: { w: 390, h: 800 } }], t);
+    expect(pop(b(16, 136, 288, 200))).toEqual([]);
+    expect(pop(b(16, 300, 288, 200), b(16, 504, 100, 32))).toEqual([]);
+    expect(pop(b(16, 700, 288, 200)).map((f) => f.value)).toEqual(["568px below its trigger; past the window's bottom"]);
+    expect(pop(b(200, 136, 288, 200)).map((f) => f.value)).toEqual(["outside its trigger's inline span; past the window's end"]);
   });
 });
 

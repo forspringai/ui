@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.26.0";
+export declare const VERSION = "0.27.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.26.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.27.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -246,13 +246,28 @@ export type ButtonOptions = {
     ariaLabel?: string;
     /** Kept for the account's markup (D-5), but don't use it: a disabled button cannot be focused, says
      *  nothing about why, and needs script to come back (D-23). Keep the button live and let the submit
-     *  say what is missing, or leave it out and say why in words (docs/usage.md section 3). */
+     *  say what is missing, or leave it out and say why in words (docs/usage.md section 4). */
     disabled?: boolean;
     /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
      *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
     icon?: IconName;
 };
 export declare function button(o: ButtonOptions): Html;
+export type ActionsOptions = {
+    /** The one primary action, first in the row: a button(), usually the form's submit. */
+    primary?: Content;
+    /** Ghost actions after it: Annuller as a link back, a secondary step. */
+    secondary?: Content;
+    /** What loses something (a danger button(), a dialogTrigger() to a confirm), apart at the far end. */
+    destructive?: Content;
+};
+/**
+ * A row of actions (D-41): one height and the actions gap, the primary first, then the secondary
+ * ones, and the destructive one apart at the far end. On a phone it is a column of full-width
+ * buttons with the same gap. The order is the helper's, so a page cannot get it wrong. (A
+ * destructive confirm puts the safe action first instead: that is dialog()'s own row, D-23.)
+ */
+export declare function actions(o: ActionsOptions): Html;
 export type FieldOptions = {
     label: Content;
     name: string;
@@ -337,7 +352,7 @@ export type ErrorSummaryOptions = {
     id?: string;
 };
 /**
- * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 4): the error
  * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
  * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
  * Nothing when there are no errors.

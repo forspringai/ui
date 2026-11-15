@@ -261,3 +261,329 @@ export function collect(): Observations {
   const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
   return { texts, boxes, smallTargets, primaries, fonts, slots };
 }
+
+// --- Layout: the spacing, alignment, popover and surface checks (D-41) ----------------------------
+
+/** A border box in page coordinates (viewport ones for popovers), px. */
+export type Box = { x: number; y: number; w: number; h: number };
+
+export type ControlBox = {
+  selector: string;
+  box: Box;
+};
+
+export type ControlText = {
+  selector: string;
+  /** The union of the label's line boxes, top and bottom. */
+  textTop: number;
+  textBottom: number;
+  lines: number;
+  /** The content box: the border box less borders and padding. */
+  contentTop: number;
+  contentBottom: number;
+};
+
+export type StackChild = {
+  selector: string;
+  box: Box;
+  /** An auto margin on the start side of the stack axis: a deliberate separation (an action row's far end). */
+  autoBefore: boolean;
+  autoAfter: boolean;
+};
+
+export type StackObservation = {
+  selector: string;
+  axis: "block" | "inline";
+  children: StackChild[];
+};
+
+export type PopoverObservation = {
+  selector: string;
+  trigger: string;
+  /** Viewport coordinates, measured with the trigger in view. */
+  box: Box;
+  triggerBox: Box;
+  viewport: { w: number; h: number };
+};
+
+export type RegionObservation = {
+  selector: string;
+  /** The region's own fill composited on the surface behind it, or null when it paints none. */
+  fill: [number, number, number] | null;
+  /** The nearest painted ancestor ground, composited; the page's when none paints. */
+  behind: [number, number, number];
+  /** The border colour composited on the surface behind, when all four sides show; else null. */
+  border: [number, number, number] | null;
+};
+
+export type LayoutObservations = {
+  controls: ControlBox[];
+  /** Index pairs into controls that are one composite control and never measured against each other. */
+  composite: [number, number][];
+  texts: ControlText[];
+  stacks: StackObservation[];
+  regions: RegionObservation[];
+};
+
+/**
+ * The layout measurements (D-41), as collect(): one self-contained function sent to Chromium as
+ * source, measuring only. The controls and composites are lead-bench's definitions
+ * (D-41); audit.ts holds the thresholds.
+ */
+export function collectLayout(): LayoutObservations {
+  const selector = (el: Element): string => {
+    const parts: string[] = [];
+    for (let n: Element | null = el; n && n !== document.documentElement && parts.length < 3; n = n.parentElement) {
+      let seg = n.tagName.toLowerCase();
+      if (n.id) {
+        parts.unshift(`${seg}#${n.id}`);
+        break;
+      }
+      const classes = [...n.classList].slice(0, 2);
+      if (classes.length) seg += "." + classes.join(".");
+      parts.unshift(seg);
+    }
+    return parts.join(" > ");
+  };
+  const page = (r: DOMRect): Box => ({ x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height });
+  const view = (r: DOMRect): Box => ({ x: r.left, y: r.top, w: r.width, h: r.height });
+  const visible = (el: Element): boolean => {
+    if (!el.checkVisibility({ visibilityProperty: true, opacityProperty: true })) return false;
+    if (el.closest("[inert], [aria-hidden='true']")) return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 1 && r.height > 1;
+  };
+  // The part of a box that shows: clipped by every ancestor that clips its overflow.
+  const shown = (el: Element): DOMRect | null => {
+    const r = el.getBoundingClientRect();
+    let [l, t, rt, b] = [r.left, r.top, r.right, r.bottom];
+    for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+      const s = getComputedStyle(n);
+      if (s.overflowX === "visible" && s.overflowY === "visible" && s.clipPath === "none") continue;
+      const c = n.getBoundingClientRect();
+      if (s.overflowX !== "visible" || s.clipPath !== "none") [l, rt] = [Math.max(l, c.left), Math.min(rt, c.right)];
+      if (s.overflowY !== "visible" || s.clipPath !== "none") [t, b] = [Math.max(t, c.top), Math.min(b, c.bottom)];
+    }
+    // Off the page sideways (the skip link at -9999px) or clipped to nothing.
+    if (rt - l < 2 || b - t < 2 || rt + scrollX <= 0 || l >= document.documentElement.clientWidth) return null;
+    return new DOMRect(l, t, rt - l, b - t);
+  };
+
+  // Controls. A checkbox or radio with its own label is one control, measured by its label.
+  const CONTROL = 'button, a[href].button, a[href][role="button"], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="combobox"], [role="switch"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"]';
+  const labelOf = (el: Element): Element | null => {
+    if (!(el instanceof HTMLInputElement) || !["checkbox", "radio"].includes(el.type)) return null;
+    return el.closest("label") ?? (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null);
+  };
+  const els: Element[] = [];
+  const controls: ControlBox[] = [];
+  for (const el of document.querySelectorAll(CONTROL)) {
+    if (el.parentElement?.closest(CONTROL) && el.parentElement.closest(CONTROL) !== el) {
+      // A control inside another (an input's own clear button) is part of it.
+      if (!labelOf(el)) continue;
+    }
+    const target = labelOf(el) ?? el;
+    if (!visible(el) && !(target !== el && visible(target))) continue;
+    const r = shown(target);
+    if (!r) continue;
+    els.push(el);
+    controls.push({ selector: selector(target), box: page(r) });
+  }
+  const composite: [number, number][] = [];
+  for (let i = 0; i < els.length; i++)
+    for (let j = i + 1; j < els.length; j++) {
+      const [a, b] = [els[i]!, els[j]!];
+      const [la, lb] = [labelOf(a) ?? a, labelOf(b) ?? b];
+      const tabs = a.getAttribute("role") === "tab" && b.getAttribute("role") === "tab" && a.closest('[role="tablist"]') !== null && a.closest('[role="tablist"]') === b.closest('[role="tablist"]');
+      // Radios of one name are one choice, a segmented control when drawn as one box.
+      const radios = a instanceof HTMLInputElement && b instanceof HTMLInputElement && a.type === "radio" && b.type === "radio" && a.name !== "" && a.name === b.name && a.form === b.form;
+      if (la.contains(lb) || lb.contains(la) || tabs || radios) composite.push([i, j]);
+    }
+
+  // The label's text box in each button-like control: buttons, links drawn as buttons, summaries, tabs.
+  const texts: ControlText[] = [];
+  for (const el of document.querySelectorAll('button, a[href].button, a[href][role="button"], summary, [role="button"], [role="tab"], [role="menuitem"]')) {
+    if (!visible(el) || !shown(el)) continue;
+    // Only what shows: words for a screen reader alone (a visually-hidden span, clipped to nothing),
+    // zero-size, invisible or aria-hidden text are not the label. When no words show, the glyph
+    // (an icon's svg) is the visible content and is measured instead.
+    const hidden = (n: Element): boolean => {
+      for (let e: Element | null = n; e && e !== el.parentElement; e = e.parentElement) {
+        if (!e.checkVisibility({ visibilityProperty: true, opacityProperty: true })) return true;
+        if (e !== el && e.getAttribute("aria-hidden") === "true") return true;
+        const es = getComputedStyle(e);
+        if (/inset\(50%/.test(es.clipPath) || (es.clip !== "auto" && es.clip !== "")) return true;
+        const er = e.getBoundingClientRect();
+        if (er.width <= 1 || er.height <= 1) return true;
+      }
+      return false;
+    };
+    const rects: DOMRect[] = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      if (!(n.textContent ?? "").trim() || hidden(n.parentElement!)) continue;
+      const range = document.createRange();
+      range.selectNodeContents(n);
+      for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) rects.push(r);
+    }
+    if (!rects.length)
+      for (const svg of el.querySelectorAll("svg")) {
+        const r = svg.getBoundingClientRect();
+        // An aria-hidden icon is still what the eye sees; only an invisible or clipped one is not.
+        const p = svg.parentElement === el ? null : svg.parentElement;
+        if (r.width > 1 && r.height > 1 && svg.checkVisibility({ visibilityProperty: true }) && !(p && hidden(p))) rects.push(r);
+      }
+    if (!rects.length) continue;
+    const tops = [...new Set(rects.map((r) => Math.round(r.top)))];
+    const s = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    texts.push({
+      selector: selector(el),
+      textTop: Math.min(...rects.map((x) => x.top)),
+      textBottom: Math.max(...rects.map((x) => x.bottom)),
+      lines: tops.length,
+      contentTop: r.top + parseFloat(s.borderTopWidth) + parseFloat(s.paddingTop),
+      contentBottom: r.bottom - parseFloat(s.borderBottomWidth) - parseFloat(s.paddingBottom),
+    });
+  }
+
+  // Stacks: one-axis flex and grid containers, and ui's flow and stack containers (components.css).
+  const FLOW = "main, section:not([class]), .card, .dialog-body, form:not([class]), .stack";
+  const stacks: StackObservation[] = [];
+  for (const el of document.body.querySelectorAll("*")) {
+    if (!visible(el)) continue;
+    const s = getComputedStyle(el);
+    let axis: "block" | "inline" | null = null;
+    if (/flex/.test(s.display)) axis = s.flexDirection.startsWith("column") ? "block" : "inline";
+    else if (/grid/.test(s.display)) {
+      const cols = s.gridTemplateColumns.split(" ").filter(Boolean).length;
+      const rows = s.gridTemplateRows.split(" ").filter(Boolean).length;
+      axis = cols <= 1 ? "block" : rows <= 1 ? "inline" : null;
+    } else if (el.matches(FLOW)) axis = "block";
+    if (!axis) continue;
+    const kids: Element[] = [];
+    const take = (p: Element) => {
+      for (const c of p.children) {
+        if (getComputedStyle(c).display === "contents") take(c);
+        else kids.push(c);
+      }
+    };
+    take(el);
+    const children: StackChild[] = [];
+    // An empty child that grows (the bar's spacer) parts its neighbours on purpose, as an auto margin does.
+    let spacer = false;
+    for (const c of kids) {
+      if (["SCRIPT", "STYLE", "TEMPLATE", "DIALOG"].includes(c.tagName)) continue;
+      const cs = getComputedStyle(c);
+      if (!visible(c)) {
+        if (/flex/.test(s.display) && parseFloat(cs.flexGrow) > 0 && cs.display !== "none") spacer = true;
+        continue;
+      }
+      if (cs.position === "absolute" || cs.position === "fixed") continue;
+      const map = c.computedStyleMap();
+      const auto = (prop: string) => String(map.get(prop)) === "auto";
+      children.push({
+        selector: selector(c),
+        box: page(c.getBoundingClientRect()),
+        autoBefore: spacer || (axis === "inline" ? auto("margin-left") : auto("margin-top")),
+        autoAfter: axis === "inline" ? auto("margin-right") : auto("margin-bottom"),
+      });
+      spacer = false;
+    }
+    if (children.length >= 3) stacks.push({ selector: selector(el), axis, children });
+  }
+
+  // Regions: panes that must read apart from the ground behind them.
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 1;
+  const ctx = canvas.getContext("2d", { willReadFrequently: true })!;
+  const rgba = (c: string): [number, number, number, number] => {
+    ctx.clearRect(0, 0, 1, 1);
+    ctx.fillStyle = "#000";
+    ctx.fillStyle = c;
+    ctx.fillRect(0, 0, 1, 1);
+    const d = ctx.getImageData(0, 0, 1, 1).data;
+    return [d[0]!, d[1]!, d[2]!, d[3]! / 255];
+  };
+  const over = (top: [number, number, number, number], under: [number, number, number]): [number, number, number] => {
+    const a = top[3];
+    return [top[0] * a + under[0] * (1 - a), top[1] * a + under[1] * (1 - a), top[2] * a + under[2] * (1 - a)];
+  };
+  const dark = matchMedia("(prefers-color-scheme: dark)").matches && getComputedStyle(document.documentElement).colorScheme !== "light";
+  const ground = (el: Element | null): [number, number, number] => {
+    const layers: [number, number, number, number][] = [];
+    for (let n = el; n; n = n.parentElement) {
+      const c = rgba(getComputedStyle(n).backgroundColor);
+      if (c[3] > 0) {
+        layers.push(c);
+        if (c[3] >= 1) break;
+      }
+    }
+    let out: [number, number, number] = dark ? [18, 18, 18] : [255, 255, 255];
+    for (const l of layers.reverse()) out = over(l, out);
+    return out;
+  };
+  // A section is a region only when it paints a fill or a border of its own: a plain section with a
+  // heading and flow content is a part of the page, not a pane.
+  const REGION = '.card, .panel, aside, [role="region"], dialog, section';
+  const regions: RegionObservation[] = [];
+  for (const el of document.querySelectorAll(REGION)) {
+    if (!visible(el)) continue;
+    // A region inside a region card is the nested-card rule's: the fix there is to flatten it.
+    let outer = el.parentElement?.closest(REGION) ?? null;
+    while (outer && outer.tagName === "SECTION" && !outer.matches('.card, .panel, [role="region"]') && rgba(getComputedStyle(outer).backgroundColor)[3] === 0 && parseFloat(getComputedStyle(outer).borderTopWidth) === 0) outer = outer.parentElement?.closest(REGION) ?? null;
+    if (outer && rgba(getComputedStyle(outer).backgroundColor)[3] > 0) continue;
+    const s = getComputedStyle(el);
+    // An open modal dialog sits over the page; the page's ground is behind it.
+    const behind = ground(el instanceof HTMLDialogElement ? document.body : el.parentElement);
+    const own = rgba(s.backgroundColor);
+    const sides = ["top", "right", "bottom", "left"].map((side) => ({ w: parseFloat(s.getPropertyValue(`border-${side}-width`)), style: s.getPropertyValue(`border-${side}-style`), c: rgba(s.getPropertyValue(`border-${side}-color`)) }));
+    const all = sides.every((x) => x.w >= 1 && x.style !== "none" && x.style !== "hidden" && x.c[3] > 0);
+    const anyBorder = sides.some((x) => x.w >= 1 && x.style !== "none" && x.style !== "hidden" && x.c[3] > 0);
+    if (el.tagName === "SECTION" && !el.matches('.card, .panel, [role="region"]') && own[3] === 0 && !anyBorder) continue;
+    regions.push({ selector: selector(el), fill: own[3] > 0 ? over(own, behind) : null, behind, border: all ? over(sides[0]!.c, behind) : null });
+  }
+
+  return { controls, composite, texts, stacks, regions };
+}
+
+/**
+ * The open popovers and menus, each with its trigger, in viewport coordinates (D-41): a details
+ * element's positioned panel, and a native popover with the button that opens it. Self-contained,
+ * like collect(). probePopovers() in audit.ts opens each trigger and calls it; a probe of its own
+ * (the screens bench's) can do the same.
+ */
+export function collectPopovers(): PopoverObservation[] {
+  const selector = (el: Element): string => {
+    const parts: string[] = [];
+    for (let n: Element | null = el; n && n !== document.documentElement && parts.length < 3; n = n.parentElement) {
+      let seg = n.tagName.toLowerCase();
+      if (n.id) {
+        parts.unshift(`${seg}#${n.id}`);
+        break;
+      }
+      const classes = [...n.classList].slice(0, 2);
+      if (classes.length) seg += "." + classes.join(".");
+      parts.unshift(seg);
+    }
+    return parts.join(" > ");
+  };
+  const box = (r: DOMRect): Box => ({ x: r.left, y: r.top, w: r.width, h: r.height });
+  const visible = (el: Element) => el.checkVisibility({ visibilityProperty: true }) && el.getBoundingClientRect().width > 1;
+  const vp = { w: document.documentElement.clientWidth, h: innerHeight };
+  const panels: [Element, Element][] = [];
+  for (const d of document.querySelectorAll("details[open]")) {
+    const summary = d.querySelector(":scope > summary");
+    if (!summary) continue;
+    for (const c of d.children) {
+      if (c === summary) continue;
+      const pos = getComputedStyle(c).position;
+      if ((pos === "absolute" || pos === "fixed") && visible(c)) panels.push([c, summary]);
+    }
+  }
+  for (const p of document.querySelectorAll(":popover-open")) {
+    const trigger = p.id ? document.querySelector(`[popovertarget="${CSS.escape(p.id)}"]`) : null;
+    if (trigger && visible(p)) panels.push([p, trigger]);
+  }
+  return panels.map(([p, t]) => ({ selector: selector(p), trigger: selector(t), box: box(p.getBoundingClientRect()), triggerBox: box(t.getBoundingClientRect()), viewport: vp }));
+}

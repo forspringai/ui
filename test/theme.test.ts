@@ -242,10 +242,10 @@ describe("the CSS", () => {
         --primary-foreground: light-dark(#ffffff, #111215);
         --ring: light-dark(#0f5132, #5f9c78);
         --mark: light-dark(#0f5132, #5f9c78);
-        --background: light-dark(#fefffe, #0e1410);
-        --muted: light-dark(#eef6f0, #1d231f);
-        --secondary: light-dark(#eef6f0, #1d231f);
-        --accent: light-dark(#eef6f0, #1d231f);
+        --background: light-dark(#f3fbf5, #0e1410);
+        --muted: light-dark(#eef6f0, #1e2420);
+        --secondary: light-dark(#eef6f0, #1e2420);
+        --accent: light-dark(#eef6f0, #1e2420);
         --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
         --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
         --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
