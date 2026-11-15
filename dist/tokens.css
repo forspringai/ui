@@ -10,11 +10,11 @@
   --card-foreground: light-dark(#14151a, #ededea);
   --popover: light-dark(#ffffff, #1a1b1f);
   --popover-foreground: light-dark(#14151a, #ededea);
-  --muted: light-dark(#f1f1ec, #212227);
+  --muted: light-dark(#ecece7, #212227);
   --muted-foreground: light-dark(#5b5e68, #9d9fa8);
-  --secondary: light-dark(#f1f1ec, #212227);
+  --secondary: light-dark(#ecece7, #212227);
   --secondary-foreground: light-dark(#14151a, #ededea);
-  --accent: light-dark(#f1f1ec, #212227);
+  --accent: light-dark(#ecece7, #212227);
   --accent-foreground: light-dark(#14151a, #ededea);
   --border: light-dark(#e4e5e1, #2c2e34);
   --input: light-dark(#c6c8c2, #42454d);
@@ -25,7 +25,7 @@
   --warning: light-dark(#7a5200, #f2c14e);
   --danger: light-dark(#9b1020, #ff3d5a);
   --destructive: light-dark(#9b1020, #ff3d5a);
-  --signal-ok: light-dark(#1e9e48, #3dd06a);
+  --signal-ok: light-dark(#199b46, #3dd06a);
   --signal-warn: light-dark(#b87503, #f5b830);
   --signal-down: light-dark(#ee0a32, #ff2d3f);
   --signal-off: light-dark(#7d808a, #7c7f88);
@@ -165,10 +165,10 @@
 }
 
 [data-product="dataspring"] {
-  --primary: light-dark(#0b7a7f, #2ba7ad);
+  --primary: light-dark(#01767c, #2ba7ad);
   --primary-foreground: light-dark(#ffffff, #111215);
-  --ring: light-dark(#0b7a7f, #2ba7ad);
-  --mark: light-dark(#0b7a7f, #2ba7ad);
+  --ring: light-dark(#01767c, #2ba7ad);
+  --mark: light-dark(#01767c, #2ba7ad);
 }
 
 [data-product="appspring"] {

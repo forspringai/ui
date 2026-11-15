@@ -82,7 +82,7 @@ the raw names (`--background`, not `--paper`).
 | Palette | Role | Light | Dark | Use |
 |---|---|---|---|---|
 | paper | `background` | `#F6F6F4` | `#111215` | The page ground, a step under the card so panes read as panes (D-41) |
-| soft | `muted` | `#F1F1EC` | `#212227` | A quiet inset on the card: table heads, hover rows, disabled fields |
+| soft | `muted` | `#ECECE7` | `#212227` | A quiet inset on the card: table heads, hover rows, disabled fields |
 | card | `card` | `#FFFFFF` | `#1A1B1F` | Panes on the page: the bar, the sidebar, cards, dialogs, fields, popovers |
 | ink | `foreground` | `#14151A` | `#EDEDEA` | Headings, strong text, the wordmark, Forspring's doll |
 | body | `body-foreground` | `#3C3E46` | `#C8C9CE` | Running text |
@@ -100,7 +100,7 @@ One accent per product, the only value that varies between products (`tokens/acc
 | Forspring and the account (buttons, links, focus; the doll is ink) | `#2244FF` | `#6B83FF` |
 | Spring (and BrainSpring) | `#2244FF` | `#6B83FF` |
 | SiteSpring, terracotta | `#B8442A` | `#E0714F` |
-| DataSpring, deep teal | `#0B7A7F` | `#2BA7AD` |
+| DataSpring, deep teal | `#01767C` | `#2BA7AD` |
 | AppSpring, violet | `#5D2EB8` | `#B09AF5` |
 | PulseSpring, magenta | `#A3237A` | `#E06DBA` |
 
@@ -127,7 +127,7 @@ PulseSpring's magenta.
 | `success` | `#26700F` | `#62D162` | An outcome went well |
 | `warning` | `#7A5200` | `#F2C14E` | Something needs care |
 | `danger` (`destructive`) | `#9B1020` | `#FF3D5A` | An error or a destructive action |
-| `signal-ok`, a dot | `#1E9E48` | `#3DD06A` | A monitored thing is up |
+| `signal-ok`, a dot | `#199B46` | `#3DD06A` | A monitored thing is up |
 | `signal-warn`, a triangle | `#B87503` | `#F5B830` | Late or degraded |
 | `signal-down`, a diamond | `#EE0A32` | `#FF2D3F` | Down, needs action now |
 | `signal-off`, a hollow ring | `#7D808A` | `#7C7F88` | Paused, new or not judged |

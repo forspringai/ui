@@ -89,16 +89,14 @@ describe.each(MODES)("%s theme", (mode) => {
 
   // The soft grey is a surface you can see: a table head or a disabled field on a card, a hover row on
   // the page. Until 0.22.0 dark soft was 0.013 from the card, a box on a card read as nothing (D-36).
-  // Since D-41 the light page sits close to soft, so soft is an inset on the card, where every pane puts
-  // it (a table head in its wrap, a disabled field): there it keeps the step, and on the page in dark.
-  // In light, DataSpring's teal holds soft where it is (4.52:1, D-20), so the page side is 0.015.
+  // Since D-41 the light page is grey, so soft moved down with it to stay 0.03 under the page, and
+  // DataSpring's teal and the ok signal were darkened by the least that keeps their contrast on it.
   test("muted is a visible step on the card (OKLab L at least 0.03)", () => {
     expect(Math.abs(oklab(c("muted"))[0] - oklab(c("card"))[0])).toBeGreaterThanOrEqual(0.03);
   });
 
-  test("muted is a step on the page: at least 0.03 in dark, and below it in light", () => {
-    const step = oklab(c("background"))[0] - oklab(c("muted"))[0];
-    expect(Math.abs(step)).toBeGreaterThanOrEqual(mode === "dark" ? 0.03 : 0.015);
+  test("muted is a visible step on the page (OKLab L at least 0.03)", () => {
+    expect(Math.abs(oklab(c("background"))[0] - oklab(c("muted"))[0])).toBeGreaterThanOrEqual(0.03);
   });
 
   // Panes read as panes (D-41, Peter: "areas floating together"): the card a visible step off the page.
@@ -118,7 +116,7 @@ test("the D-90 accents, exactly, and Spring on Forspring's blue (hub D-101)", ()
     forspring: { light: "#2244ff", dark: "#6b83ff" },
     spring: { light: "#2244ff", dark: "#6b83ff" },
     sitespring: { light: "#b8442a", dark: "#e0714f" },
-    dataspring: { light: "#0b7a7f", dark: "#2ba7ad" },
+    dataspring: { light: "#01767c", dark: "#2ba7ad" }, // #0b7a7f until 0.27.0 (D-41)
     appspring: { light: "#5d2eb8", dark: "#b09af5" },
     pulsespring: { light: "#a3237a", dark: "#e06dba" },
   });

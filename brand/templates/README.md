@@ -23,7 +23,7 @@ Figures are placeholders on purpose: every number needs a source (voice.md secti
 - **`logo_url`** is an absolute URL to the product's `logo-1200x300.png`, which every product serves from
   `dist/brand/<product>/` (Forspring's own mail uses `forspring`). An email can't load a relative path.
 - **`accent`** is the product's light accent from `tokens/accent.json` (Forspring and Spring `#2244ff`,
-  SiteSpring `#b8442a`, DataSpring `#0b7a7f`, AppSpring `#5d2eb8`, PulseSpring `#a3237a`). The button's
+  SiteSpring `#b8442a`, DataSpring `#01767c`, AppSpring `#5d2eb8`, PulseSpring `#a3237a`). The button's
   text stays white, which is at least 4.5:1 on every light accent.
   Until it is filled, a browser reads the literal `{{accent}}` in `bgcolor` as a stray green; that is expected.
 - **Fill it with a template engine** that escapes what it inserts (the product's own, or `@forspring/ui/html`

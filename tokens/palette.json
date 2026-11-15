@@ -21,11 +21,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.9451,
-            0.9451,
-            0.9255
+            0.9255,
+            0.9255,
+            0.9059
           ],
-          "hex": "#f1f1ec"
+          "hex": "#ecece7"
         },
         "$description": "A quiet surface: table heads, hover rows."
       },

@@ -10,11 +10,11 @@ export const ROLES = {
         "card-foreground": "#14151a",
         "popover": "#ffffff",
         "popover-foreground": "#14151a",
-        "muted": "#f1f1ec",
+        "muted": "#ecece7",
         "muted-foreground": "#5b5e68",
-        "secondary": "#f1f1ec",
+        "secondary": "#ecece7",
         "secondary-foreground": "#14151a",
-        "accent": "#f1f1ec",
+        "accent": "#ecece7",
         "accent-foreground": "#14151a",
         "border": "#e4e5e1",
         "input": "#c6c8c2",
@@ -25,7 +25,7 @@ export const ROLES = {
         "warning": "#7a5200",
         "danger": "#9b1020",
         "destructive": "#9b1020",
-        "signal-ok": "#1e9e48",
+        "signal-ok": "#199b46",
         "signal-warn": "#b87503",
         "signal-down": "#ee0a32",
         "signal-off": "#7d808a",
@@ -150,7 +150,7 @@ export const PRODUCTS = {
     },
     "dataspring": {
         "primary": {
-            "light": "#0b7a7f",
+            "light": "#01767c",
             "dark": "#2ba7ad"
         },
         "primary-foreground": {
@@ -158,11 +158,11 @@ export const PRODUCTS = {
             "dark": "#111215"
         },
         "ring": {
-            "light": "#0b7a7f",
+            "light": "#01767c",
             "dark": "#2ba7ad"
         },
         "mark": {
-            "light": "#0b7a7f",
+            "light": "#01767c",
             "dark": "#2ba7ad"
         }
     },

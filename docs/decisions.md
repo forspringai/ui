@@ -1577,12 +1577,13 @@ lead-brand set the design; lead-bench defined the checks and wires them into the
    `test/contrast.test.ts` holds the card 0.025 L off the page in light and 0.035 in dark, and a border
    0.02 off soft and 0.04 off the page. Customer themes follow the family's paper (D-34): the example's
    tinted light page goes from `#fefffe` to `#f3fbf5`.
-   - **Light soft stays `#f1f1ec`.** The brief moved it to L 0.94, but DataSpring's teal is 4.52:1 on
-     the old soft (tuned there in D-20) and 4.28 on the new, and signal-ok's mark 3.07 and 2.91; an
-     accent is a hub decision. So soft is now 0.016 under the light page, and D-36's page-side step
-     holds in dark only (0.03); in light the test asks for 0.015. Soft is an inset on a pane (a table
-     head, a hover row, a disabled field), where it keeps 0.043 from the card. The way back to 0.03 on
-     the page is a slightly darker teal, which is lead-brand's and the hub's call.
+   - **Light soft moves to `#ecece7` (L 0.942), 0.031 under the grey page,** so D-36's rule holds
+     without exceptions: soft is at least 0.03 from the page and from the card in both themes. Two
+     colours that sat on the old soft were darkened by the least that keeps their contrast on the
+     new one, keeping their hue (cos, 2026-11-15: "Peter's whole point is visible delineation"):
+     DataSpring's light teal `#0b7a7f` to `#01767c` (4.56:1 on soft, hue within 1 degree, 1.3 apart
+     in OKLab x100), and signal-ok `#1e9e48` to `#199b46` (3.05:1, 0.9 apart). DataSpring's dolls,
+     favicons and logo are regenerated from the token.
    - **Three chart slots move by about 0.005 L** so every mark keeps 3:1 on the new surfaces
      (WCAG 1.4.11): light chart-2 `#eb681d` to `#e9661a` and chart-5 `#d868ab` to `#d666a9` on the
      darker page, dark chart-5 `#924d7d` to `#955080` on the lighter card. Their tints (D-37) follow.
