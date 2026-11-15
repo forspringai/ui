@@ -42,6 +42,20 @@
   <section id="painted" style="background: #fcfcfa"><h2>Painted</h2><p>Nearly the page.</p></section>
   <!-- (1) the surface behind is the nearest painted ancestor: a pane on the grey fill reads. -->
   <div class="fill" style="padding: 16px"><div class="card" id="onfill"><p>White on the soft grey.</p></div></div>
+  <!-- Composites, never measured against each other (lead-bench's review of #31): an input with its
+       clear button beside it in the DOM but inside its box; an icon button in a combobox's wrapper;
+       a segmented group drawn as one framed box with nothing between its buttons. -->
+  <div style="position: relative; width: 240px; margin-top: 16px"><input id="q" aria-label="Search" style="display: block; width: 240px; height: 44px; box-sizing: border-box; padding: 0 44px 0 12px; border: 1px solid #c6c8c2"><button id="clearq" type="button" aria-label="Clear" style="position: absolute; right: 6px; top: 6px; min-height: 32px; height: 32px; width: 32px; padding: 0">x</button></div>
+  <div style="position: relative; width: 240px; margin-top: 16px"><input id="combo" role="combobox" aria-label="Owner" aria-expanded="false" style="display: block; width: 240px; height: 44px; box-sizing: border-box; padding: 0 44px 0 12px; border: 1px solid #c6c8c2"><div class="adornment" style="position: absolute; right: 6px; top: 6px"><button id="comboopen" type="button" aria-label="Open" style="display: block; min-height: 32px; height: 32px; width: 32px; padding: 0">v</button></div></div>
+  <div id="seg" style="display: inline-flex; margin-top: 16px; border: 1px solid #c6c8c2; border-radius: 3px"><button type="button" style="border: 0">Day</button><button type="button" style="border: 0">Week</button><button type="button" style="border: 0">Month</button></div>
+  <!-- surface-distinct: a section with a rule under it is divided, not a pane, so it is no region. -->
+  <section id="divided" style="border-bottom: 1px solid #c6c8c2; margin-top: 16px"><h2>Divided</h2><p>A rule under it.</p></section>
+  <!-- popover-anchor: a script-driven menu found by aria-controls, opened away from its button; and a
+       popover a script opened at rest with nothing that names it. -->
+  <div style="margin: 16px 0"><button id="ctrl" type="button" aria-haspopup="menu" aria-controls="menu2" onclick="document.getElementById('menu2').togglePopover()">Actions</button></div>
+  <div id="menu2" popover="manual" style="margin: 0; inset: auto 16px 16px auto; padding: 8px; border: 1px solid #c6c8c2">Script menu</div>
+  <div id="orphan" popover="manual" style="margin: 0; inset: 16px 16px auto auto; padding: 8px; border: 1px solid #c6c8c2">Opened by a script</div>
+  <script>document.getElementById("orphan").showPopover();</script>
   <!-- popover-anchor: a menu that opens far from its trigger. -->
   <details id="far" style="position: relative"><summary style="display: inline-flex; align-items: center; min-height: 24px">Menu</summary><div style="position: absolute; top: 300px; left: 0; background: #ffffff; padding: 8px">Far away</div></details>
 </div>

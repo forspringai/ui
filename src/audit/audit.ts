@@ -475,11 +475,20 @@ export function layoutFindings(obs: LayoutObservations, t: LayoutScale): Finding
   return out;
 }
 
-/** popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the window. */
+/**
+ * popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the
+ * window. Past the window's bottom is how a menu that should have flipped up shows: lead-bench's rule
+ * is that with no room below it opens upward, so inside the window is the whole of that check. An open
+ * popover with no trigger to measure against is a finding of its own, never skipped.
+ */
 export function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[] {
   const out: Finding[] = [];
   const edge = (b: Box) => ({ l: b.x, r: b.x + b.w, t: b.y, b: b.y + b.h });
   for (const p of list) {
+    if (!p.triggerBox || !p.trigger) {
+      out.push({ rule: "popover-anchor", severity: "warning", selector: p.selector, value: "no trigger found", expected: "a trigger that names it (popovertarget, aria-controls, a summary) or an anchor", note: "open a popover from the button it belongs to, so it can be anchored to it (D-41)" });
+      continue;
+    }
     const [o, g] = [edge(p.box), edge(p.triggerBox)];
     const problems: string[] = [];
     const below = o.t >= g.t;
@@ -499,29 +508,40 @@ export function popoverFindings(list: PopoverObservation[], t: LayoutScale): Fin
  * Exported for a probe of its own (the screens bench): call it on a loaded page.
  */
 export async function probePopovers(page: Page, t: LayoutScale): Promise<Finding[]> {
+  const t0 = popoverFindings(await page.evaluate(collectPopovers), t);
   const count = await page.evaluate(() => {
-    const triggers = [...document.querySelectorAll("details:not([open]) > summary, [popovertarget]")].filter((e) => e.checkVisibility({ visibilityProperty: true }) && e.getBoundingClientRect().width > 1);
+    // Summaries, popover buttons, and script-driven menu buttons (aria-haspopup with aria-controls).
+    const triggers = [...document.querySelectorAll("details:not([open]) > summary, [popovertarget], [aria-controls][aria-haspopup]:not([aria-haspopup='false'])")].filter((e) => e.checkVisibility({ visibilityProperty: true }) && e.getBoundingClientRect().width > 1);
     triggers.forEach((e, i) => e.setAttribute("data-ui-audit-trigger", String(i)));
     return triggers.length;
   });
-  const out: Finding[] = [];
+  // What is open at rest is measured first: a popover a script opened, with or without a trigger.
+  const out: Finding[] = [...t0];
   for (let i = 0; i < count; i++) {
     const opened = await page.evaluate(async (i) => {
       const e = document.querySelector(`[data-ui-audit-trigger="${i}"]`);
       if (!e) return false;
       e.scrollIntoView({ block: "center", inline: "nearest" });
       if (e.tagName === "SUMMARY") (e.parentElement as HTMLDetailsElement).open = true;
-      // A popover opened by its button takes the button as its implicit anchor, as a press does.
+      // Already open (a script opened it at rest): measured above, and a press would close it.
+      else if ((e as HTMLButtonElement).popoverTargetElement?.matches(":popover-open") || document.getElementById(e.getAttribute("aria-controls") ?? "")?.matches(":popover-open")) return false;
+      // A popover opened by its button takes the button as its implicit anchor, as a press does; a
+      // script-driven menu button runs its own script.
       else (e as HTMLElement).click();
       await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
       return true;
     }, i);
     if (!opened) continue;
     out.push(...popoverFindings(await page.evaluate(collectPopovers), t));
+    // Close as a person would (Escape), then make sure: a details element and a native popover by the DOM.
+    await page.keyboard.press("Escape");
     await page.evaluate((i) => {
       const e = document.querySelector(`[data-ui-audit-trigger="${i}"]`);
       if (e?.tagName === "SUMMARY") (e.parentElement as HTMLDetailsElement).open = false;
-      else if (e) (document.getElementById(e.getAttribute("popovertarget") ?? "") as HTMLElement | null)?.hidePopover?.();
+      else if (e) {
+        const target = document.getElementById(e.getAttribute("popovertarget") ?? e.getAttribute("aria-controls") ?? "");
+        if (target?.matches(":popover-open")) target.hidePopover();
+      }
     }, i);
   }
   await page.evaluate(() => document.querySelectorAll("[data-ui-audit-trigger]").forEach((e) => e.removeAttribute("data-ui-audit-trigger")));

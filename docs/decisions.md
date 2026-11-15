@@ -1594,22 +1594,31 @@ lead-brand set the design; lead-bench defined the checks and wires them into the
    - `control-gap`: two controls (buttons, button links, inputs, selects, textareas, summaries, the
      ARIA control roles) whose border boxes overlap by 1 px or more on one axis and are under 8 px apart
      on the other (or touch, or overlap), in any containers. A composite's parts are skipped: a control
-     inside another, tabs of one tablist, radios of one name (one choice), a checkbox or radio
+     inside another in the DOM, or whose box lies inside another control's box wherever it sits in the
+     DOM (an input's clear or reveal button, a date field's calendar button, an icon button in a
+     combobox's wrapper); siblings in one parent framed on all four sides with nothing between them (a
+     segmented group); tabs of one tablist; radios of one name (one choice); a checkbox or radio
      measured by its own label. Boxes are clipped by overflowing ancestors; off-page ones are skipped.
    - `control-text-centre`: the union of a button-like control's visible text boxes (a Range over
-     its text nodes; visually-hidden words left out) against its content box, within 1 px.
+     its text nodes; visually-hidden, clipped, zero-size, invisible and aria-hidden words left out)
+     against its content box, within 1 px; with no visible words, its glyph (the icon's svg).
    - `stack-rhythm`: a one-axis flex or grid container, or one of the default flow containers, with
      three or more visible in-flow children: the gaps between neighbours equal within 1 px, or each a
      rhythm token within 1 px; one finding per gap that is neither. A gap after an auto margin or a
      growing empty spacer (the bar's) is deliberate and skipped, as are neighbours on another line of
      a wrapped row and two blocks side by side on one line of a flow.
-   - `popover-anchor`: the audit opens each menu (a closed `details` whose panel is positioned) and
-     each `[popovertarget]` button in turn, scrolled into view, waits two frames, measures and closes
-     it. The panel's near edge within 8 px of its trigger, overlapping its inline span, inside the
-     window. `probePopovers(page, layoutScale(rhythm))` is exported for the bench's own probe.
+   - `popover-anchor`: the audit measures what is open at rest, then opens each menu (a closed
+     `details` whose panel is positioned), each `[popovertarget]` button and each script-driven menu
+     button (`aria-haspopup` with `aria-controls`) in turn, scrolled into view, waits two frames,
+     measures and closes it (Escape, then the DOM). A popover's trigger is the button that names it
+     (`popovertarget`, `aria-controls`), else the element its `position-anchor` names; an open popover
+     with none is a finding of its own, "no trigger found". The panel's near edge within 8 px of its
+     trigger, overlapping its inline span, inside the window: past the window's bottom is the menu
+     that should have flipped up. `probePopovers(page, layoutScale(rhythm))` is exported for the bench's own probe.
    - `surface-distinct` (lead-brand and lead-bench's edge cases): a region is `.card`, `.panel`,
-     `aside`, `[role=region]`, `dialog`, or a `section` only when it paints a fill or border of its
-     own (a plain section with a heading is part of the page). Its fill at least 0.02 OKLab L from the
+     `aside`, `[role=region]`, `dialog`, or a `section` only when it paints a fill or a border on
+     all four sides of its own (a plain section with a heading is part of the page, and one with a rule
+     on one side is divided, not framed). Its fill at least 0.02 OKLab L from the
      nearest painted ancestor (composited; the page when none paints), or a border on all four sides at
      least 0.04 L from it. A transparent region with no border fails. A region inside a filled region
      card is skipped: that is the nested-card rule's, and the fix there is to flatten it.

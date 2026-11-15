@@ -299,10 +299,11 @@ export type StackObservation = {
 
 export type PopoverObservation = {
   selector: string;
-  trigger: string;
+  /** null when no trigger was found: no popovertarget, aria-controls, summary or anchor names it. */
+  trigger: string | null;
   /** Viewport coordinates, measured with the trigger in view. */
   box: Box;
-  triggerBox: Box;
+  triggerBox: Box | null;
   viewport: { w: number; h: number };
 };
 
@@ -389,15 +390,29 @@ export function collectLayout(): LayoutObservations {
     els.push(el);
     controls.push({ selector: selector(target), box: page(r) });
   }
+  // A parent that draws one frame round its controls (a segmented group): a border on all four sides.
+  const framed = (el: Element | null): boolean => {
+    if (!el) return false;
+    const fs = getComputedStyle(el);
+    return ["top", "right", "bottom", "left"].every((side) => parseFloat(fs.getPropertyValue(`border-${side}-width`)) >= 1 && !["none", "hidden"].includes(fs.getPropertyValue(`border-${side}-style`)) && !fs.getPropertyValue(`border-${side}-color`).endsWith(", 0)") && fs.getPropertyValue(`border-${side}-color`) !== "transparent");
+  };
+  const inside = (a: Box, b: Box) => a.x >= b.x - 1 && a.y >= b.y - 1 && a.x + a.w <= b.x + b.w + 1 && a.y + a.h <= b.y + b.h + 1;
+  const gapOf = (a: Box, b: Box) => Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w), b.y - (a.y + a.h), a.y - (b.y + b.h));
   const composite: [number, number][] = [];
   for (let i = 0; i < els.length; i++)
     for (let j = i + 1; j < els.length; j++) {
       const [a, b] = [els[i]!, els[j]!];
       const [la, lb] = [labelOf(a) ?? a, labelOf(b) ?? b];
+      const [ba, bb] = [controls[i]!.box, controls[j]!.box];
       const tabs = a.getAttribute("role") === "tab" && b.getAttribute("role") === "tab" && a.closest('[role="tablist"]') !== null && a.closest('[role="tablist"]') === b.closest('[role="tablist"]');
       // Radios of one name are one choice, a segmented control when drawn as one box.
       const radios = a instanceof HTMLInputElement && b instanceof HTMLInputElement && a.type === "radio" && b.type === "radio" && a.name !== "" && a.name === b.name && a.form === b.form;
-      if (la.contains(lb) || lb.contains(la) || tabs || radios) composite.push([i, j]);
+      // One control drawn inside another's box (an input's clear or reveal button, a date field's
+      // calendar button, an icon button in a combobox's wrapper), wherever it sits in the DOM.
+      const within = inside(ba, bb) || inside(bb, ba);
+      // Siblings in one framed group with nothing between them: a segmented control.
+      const group = la.parentElement !== null && la.parentElement === lb.parentElement && framed(la.parentElement) && gapOf(ba, bb) < 1;
+      if (la.contains(lb) || lb.contains(la) || tabs || radios || within || group) composite.push([i, j]);
     }
 
   // The label's text box in each button-like control: buttons, links drawn as buttons, summaries, tabs.
@@ -531,7 +546,7 @@ export function collectLayout(): LayoutObservations {
     if (!visible(el)) continue;
     // A region inside a region card is the nested-card rule's: the fix there is to flatten it.
     let outer = el.parentElement?.closest(REGION) ?? null;
-    while (outer && outer.tagName === "SECTION" && !outer.matches('.card, .panel, [role="region"]') && rgba(getComputedStyle(outer).backgroundColor)[3] === 0 && parseFloat(getComputedStyle(outer).borderTopWidth) === 0) outer = outer.parentElement?.closest(REGION) ?? null;
+    while (outer && outer.tagName === "SECTION" && !outer.matches('.card, .panel, [role="region"]') && rgba(getComputedStyle(outer).backgroundColor)[3] === 0 && !framed(outer)) outer = outer.parentElement?.closest(REGION) ?? null;
     if (outer && rgba(getComputedStyle(outer).backgroundColor)[3] > 0) continue;
     const s = getComputedStyle(el);
     // An open modal dialog sits over the page; the page's ground is behind it.
@@ -539,8 +554,9 @@ export function collectLayout(): LayoutObservations {
     const own = rgba(s.backgroundColor);
     const sides = ["top", "right", "bottom", "left"].map((side) => ({ w: parseFloat(s.getPropertyValue(`border-${side}-width`)), style: s.getPropertyValue(`border-${side}-style`), c: rgba(s.getPropertyValue(`border-${side}-color`)) }));
     const all = sides.every((x) => x.w >= 1 && x.style !== "none" && x.style !== "hidden" && x.c[3] > 0);
-    const anyBorder = sides.some((x) => x.w >= 1 && x.style !== "none" && x.style !== "hidden" && x.c[3] > 0);
-    if (el.tagName === "SECTION" && !el.matches('.card, .panel, [role="region"]') && own[3] === 0 && !anyBorder) continue;
+    // A section with a rule on one side is divided, not framed: it is a region only with a fill or a
+    // border on all four sides.
+    if (el.tagName === "SECTION" && !el.matches('.card, .panel, [role="region"]') && own[3] === 0 && !all) continue;
     regions.push({ selector: selector(el), fill: own[3] > 0 ? over(own, behind) : null, behind, border: all ? over(sides[0]!.c, behind) : null });
   }
 
@@ -581,9 +597,20 @@ export function collectPopovers(): PopoverObservation[] {
       if ((pos === "absolute" || pos === "fixed") && visible(c)) panels.push([c, summary]);
     }
   }
-  for (const p of document.querySelectorAll(":popover-open")) {
-    const trigger = p.id ? document.querySelector(`[popovertarget="${CSS.escape(p.id)}"]`) : null;
-    if (trigger && visible(p)) panels.push([p, trigger]);
-  }
-  return panels.map(([p, t]) => ({ selector: selector(p), trigger: selector(t), box: box(p.getBoundingClientRect()), triggerBox: box(t.getBoundingClientRect()), viewport: vp }));
+  // A popover's trigger: the button that names it (popovertarget, or aria-controls on a script-driven
+  // menu), else the element its CSS anchors it to (position-anchor's anchor-name).
+  const triggerOf = (p: Element): Element | null => {
+    if (p.id) {
+      const id = CSS.escape(p.id);
+      const named = document.querySelector(`[popovertarget="${id}"], [aria-controls~="${id}"]`);
+      if (named) return named;
+    }
+    const anchor = getComputedStyle(p).getPropertyValue("position-anchor").trim();
+    if (anchor && anchor !== "auto" && anchor !== "none")
+      for (const e of document.querySelectorAll("*")) if (e !== p && getComputedStyle(e).getPropertyValue("anchor-name").split(",").map((n) => n.trim()).includes(anchor)) return e;
+    return null;
+  };
+  const panels2: [Element, Element | null][] = [...panels];
+  for (const p of document.querySelectorAll(":popover-open")) if (visible(p)) panels2.push([p, triggerOf(p)]);
+  return panels2.map(([p, t]) => ({ selector: selector(p), trigger: t ? selector(t) : null, box: box(p.getBoundingClientRect()), triggerBox: t ? box(t.getBoundingClientRect()) : null, viewport: vp }));
 }

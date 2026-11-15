@@ -314,8 +314,16 @@ describe("the layout rules in a browser (D-41)", () => {
     expect(of("surface-distinct").sort()).toEqual(["aside#divider", "div#clear", "div#flat", "section#painted"]);
   });
 
-  test("popover-anchor: the probe opens the menu and finds it far from its trigger", () => {
-    expect(found.filter((f) => f.rule === "popover-anchor").map((f) => f.selector)).toEqual(["details#far > div (trigger details#far > summary)"]);
+  test("popover-anchor: the probe opens each menu, a script-driven one found by aria-controls, and reports a popover with no trigger", () => {
+    expect(found.filter((f) => f.rule === "popover-anchor").map((f) => [f.selector, f.value.split(";")[0]]).sort()).toEqual([
+      ["details#far > div (trigger details#far > summary)", expect.stringMatching(/^\d+(\.\d)?px below its trigger$/)],
+      ["div#menu2 (trigger button#ctrl)", expect.stringMatching(/px (below|above) its trigger|outside its trigger's inline span/)],
+      ["div#orphan", "no trigger found"],
+    ]);
+  });
+
+  test("composites: a clear button in an input's box, an icon button in a combobox's wrapper, a framed segmented group", () => {
+    expect(found.filter((f) => f.rule === "control-gap" && /#(q|clearq|combo|comboopen)\b|#seg/.test(f.selector))).toEqual([]);
   });
 });
 
@@ -540,6 +548,9 @@ describe("layout rules on measurements (D-41)", () => {
     expect(pop(b(16, 300, 288, 200), b(16, 504, 100, 32))).toEqual([]);
     expect(pop(b(16, 700, 288, 200)).map((f) => f.value)).toEqual(["568px below its trigger; past the window's bottom"]);
     expect(pop(b(200, 136, 288, 200)).map((f) => f.value)).toEqual(["outside its trigger's inline span; past the window's end"]);
+    // An open popover with nothing that names it is a finding, not nothing.
+    const orphan = popoverFindings([{ selector: "div#menu", trigger: null, box: b(16, 136, 288, 200), triggerBox: null, viewport: { w: 390, h: 800 } }], t);
+    expect(orphan.map((f) => [f.rule, f.selector, f.value])).toEqual([["popover-anchor", "div#menu", "no trigger found"]]);
   });
 });
 

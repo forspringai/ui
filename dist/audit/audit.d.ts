@@ -107,7 +107,12 @@ export declare function oklabL([r, g, b]: readonly number[]): number;
  * hold the demo to none.
  */
 export declare function layoutFindings(obs: LayoutObservations, t: LayoutScale): Finding[];
-/** popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the window. */
+/**
+ * popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the
+ * window. Past the window's bottom is how a menu that should have flipped up shows: lead-bench's rule
+ * is that with no room below it opens upward, so inside the window is the whole of that check. An open
+ * popover with no trigger to measure against is a finding of its own, never skipped.
+ */
 export declare function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[];
 /**
  * Opens every menu and popover trigger on the page in turn, measures it open, and closes it (D-41).

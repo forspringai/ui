@@ -95,10 +95,11 @@ export type StackObservation = {
 };
 export type PopoverObservation = {
     selector: string;
-    trigger: string;
+    /** null when no trigger was found: no popovertarget, aria-controls, summary or anchor names it. */
+    trigger: string | null;
     /** Viewport coordinates, measured with the trigger in view. */
     box: Box;
-    triggerBox: Box;
+    triggerBox: Box | null;
     viewport: {
         w: number;
         h: number;
