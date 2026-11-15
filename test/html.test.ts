@@ -148,6 +148,20 @@ describe("menu, crumbs and signals (D-13)", () => {
     expect(String(menuBody(menu))).toContain('<div class="menu-group">');
   });
 
+  test("menu icons are all or none per group (D-39 point 6, D-40)", () => {
+    const g = (items: Menu["groups"][number]["items"]): string => String(menuBody({ label: "Main menu", toggle: "Menu", groups: [{ items }] }));
+    const all = g([{ label: "Leads", href: "/l", icon: "users-round" }, { label: "Orders", href: "/o", icon: "package" }]);
+    expect(all).toContain('<a href="/l"><svg class="icon"');
+    expect(all).toMatch(/aria-hidden="true" focusable="false">.*?<\/svg><span class="menu-text">Leads<\/span>/);
+    expect(all.match(/<svg /g)).toHaveLength(2);
+    // One without an icon, or two alike: the whole group is words only.
+    expect(g([{ label: "Leads", href: "/l", icon: "users-round" }, { label: "Orders", href: "/o" }])).not.toContain("<svg");
+    expect(g([{ label: "Leads", href: "/l", icon: "list" }, { label: "Orders", href: "/o", icon: "list" }])).not.toContain("<svg");
+    // Groups decide alone.
+    const two = String(menuBody({ label: "M", toggle: "Menu", groups: [{ items: [{ label: "A", href: "/a", icon: "house" }] }, { items: [{ label: "B", href: "/b" }] }] }));
+    expect(two.match(/<svg /g)).toHaveLength(1);
+  });
+
   test("the context is a switcher with more than one org, and plain text with one", () => {
     expect(page).toContain('<details class="menu-context"><summary><span class="menu-label">Organization</span><span class="menu-context-name">Ops</span></summary>');
     expect(page).toContain('<a href="/o/ops" aria-current="true">Ops</a>');

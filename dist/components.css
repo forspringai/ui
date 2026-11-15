@@ -761,6 +761,11 @@
     box-shadow: inset 2px 0 0 var(--primary);
   }
 
+  /* A menu item's icon (D-40): before the words, never shrunk, in the item's own colour. */
+  .menu-group a > .icon {
+    flex: none;
+  }
+
   .menu-text {
     flex: 1;
     min-width: 0;

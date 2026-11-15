@@ -1497,3 +1497,25 @@ none of its 11 names were in `ICON_NAMES`, so `icon()` threw and AppSpring's ren
 6. **All or none per menu group** (settled with lead-ui after the tag, AppSpring 7xb): a group draws
    icons only when every item resolves to one and no two match; otherwise it is words only. Two pages
    of the same kind share a default, so their group goes words only unless the author picks icons.
+
+## D-40 — A menu item has an icon, drawn by ui with the all-or-none rule; 0.26.0 (2026-11-15)
+
+From lead-ui's nav PR (AppSpring #1474, on 0.25.0), which inserted `icon()` before `.menu-text` in
+its own copy of each item.
+
+1. **`MenuItem.icon?: IconName`.** `menuBody()` (so `menuFrame()` and `shell()`) draws it before the
+   label, `aria-hidden`, in the item's colour, never shrunk. The words stay the item's name.
+2. **All or none per group, in ui** (D-39 point 6): a group draws icons only when every item has one
+   and no two match; otherwise the whole group is words only. Groups decide alone. A product resolves
+   a kernel default to a name before it passes the item; the rule then holds without its own code.
+3. **`@forspring/ui/icons`: one export per icon and `iconSvg()`.** lead-ui first asked for this to
+   cut the 2.8 KB the full table adds to AppSpring's client; the first answer was no, since run-time
+   names need the whole table. Then lead-ui named the client's real uses, all fixed at build time:
+   the honest-state marks (eye-off, alert) and the pager's chevrons and calendar; the nav is already
+   drawn on the server. So the paths moved to `src/icons/paths.ts`, one `iconX` export per name
+   (`icon` plus the name in camel case, which also keeps `package` from being a reserved word), with
+   the licence comment; `src/icons/lucide.ts` builds `ICON_NAMES` and `ICON_PATHS` from them, and
+   `icon()` draws through the same `iconSvg()`, so both write the same bytes (a test holds every name
+   to it). Measured with bun's bundler, minified: five icons from `@forspring/ui/icons` are 586 B
+   gzip without the licence comment (2.1 KB with it inline); the same five through `icon()` from
+   `@forspring/ui/html` are 5.9 KB.

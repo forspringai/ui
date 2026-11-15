@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.25.0
+pnpm add github:forspringai/ui#v0.26.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -497,7 +497,9 @@ field({
 (ISC; its Feather-derived icons MIT) vendored into `src/icons/` with the licence beside it
 (`dist/icons/LICENSE`). Inline SVG on a 24 grid, one stroke weight, `currentColor`, 1em of the text it
 sits in (`.icon`). Without a label it is `aria-hidden` decoration, and the words beside it carry the
-meaning; with one it is `role="img"` with that `aria-label`. Nothing is fetched.
+meaning; with one it is `role="img"` with that `aria-label`. Nothing is fetched. A client that draws a few
+fixed icons imports them from `@forspring/ui/icons` (`iconChevronLeft`, …) and draws them with
+`iconSvg()`, so its bundle carries only those.
 
 ```ts
 import { button, html, icon, ICON_NAMES, type IconName } from "@forspring/ui/html";

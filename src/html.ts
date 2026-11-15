@@ -7,6 +7,7 @@
 // string as markup, for a stylesheet or markup the caller built and escaped itself. String(h) or
 // `${h}` gives the HTML.
 
+import { iconSvg } from "./icons.ts";
 import { ICON_NAMES, ICON_PATHS, type IconName } from "./icons/lucide.ts";
 
 export { ICON_NAMES, type IconName };
@@ -87,7 +88,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.25.0";
+export const VERSION = "0.26.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -148,8 +149,7 @@ export const MARK_PATHS = MARK_SVG.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/
  */
 export function icon(name: IconName, o: { label?: string } = {}): Html {
   if (!Object.hasOwn(ICON_PATHS, name)) throw new Error(`icon: no icon named ${JSON.stringify(name)}`);
-  const a = o.label ? `role="img" aria-label="${esc(o.label)}"` : 'aria-hidden="true"';
-  return raw(`<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" ${a} focusable="false">${ICON_PATHS[name]}</svg>`);
+  return raw(iconSvg(ICON_PATHS[name], o));
 }
 
 // --- Favicons ---------------------------------------------------------------------------------------
@@ -390,7 +390,14 @@ export type MenuItem = Link & {
   current?: boolean | "parent" | undefined;
   /** A short badge after the label ("2"), with a signal mark before it and words for a screen reader. */
   badge?: { text: string; signal?: Signal | undefined; label?: string | undefined } | undefined;
+  /** An icon before the label, decoration only (D-40). A group draws icons only when every item has one
+   *  and no two match; otherwise the whole group is words only (D-39 point 6). */
+  icon?: IconName | undefined;
 };
+
+/** All or none per group (D-39 point 6): icons only when every item has one and no two match. */
+const groupIcons = (items: MenuItem[]): boolean =>
+  items.length > 0 && items.every((i) => i.icon !== undefined) && new Set(items.map((i) => i.icon)).size === items.length;
 
 export type MenuGroup = { label?: string; items: MenuItem[] };
 
@@ -417,14 +424,15 @@ export function menuBody(m: Menu): Html {
           (i) => html`<li><a href="${safeHref(i.href)}"${raw(i.current ? ' aria-current="true"' : "")}>${i.label}</a></li>`,
         )}</ul></details>`
       : html`<div class="menu-context"><span class="menu-label">${ctx.label}</span><span class="menu-context-name">${ctx.name}</span></div>`;
-  const groups = m.groups.map(
-    (g) => html`<div class="menu-group">${g.label ? html`<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
+  const groups = m.groups.map((g) => {
+    const icons = groupIcons(g.items);
+    return html`<div class="menu-group">${g.label ? html`<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
       const badge = i.badge
         ? html`<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html`<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
         : "";
-      return html`<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}><span class="menu-text">${i.label}</span>${badge}</a></li>`;
-    })}</ul></div>`,
-  );
+      return html`<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}>${icons ? icon(i.icon!) : ""}<span class="menu-text">${i.label}</span>${badge}</a></li>`;
+    })}</ul></div>`;
+  });
   return html`${context}${groups}`;
 }
 
