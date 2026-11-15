@@ -220,3 +220,16 @@ test("shadcn.css sets on each slot exactly what the audit's RICH_SLOTS checks", 
   const set = all.filter((r) => ["border-radius", "min-height", "font-size"].some((k) => r.decls.has(k))).flatMap((r) => r.selectors.map((x) => /^\[data-slot="([^"]+)"\]/.exec(x)?.[1]));
   expect(set.filter((x) => x !== undefined && !(x in RICH_SLOTS))).toEqual([]);
 });
+
+// The anchored menus and their fallback key on one exact condition (D-41), which the audit's
+// withoutAnchorPositioning() rewrites to show the fallback in a Chromium. If the CSS's wording drifts,
+// the rewrite would silently miss and the fallback test would audit the anchored menus instead.
+test("the anchor condition appears exactly twice in components.css, and the rewrite removes both", async () => {
+  const { ANCHOR_SUPPORTS, withoutAnchorPositioning } = await import("../src/audit/audit.ts");
+  const css = readFileSync(new URL("../css/components.css", import.meta.url), "utf8");
+  expect(css.split(ANCHOR_SUPPORTS).length - 1).toBe(2);
+  expect(css).toContain(`@supports not (${ANCHOR_SUPPORTS})`);
+  const without = withoutAnchorPositioning(css);
+  expect(without).not.toContain(ANCHOR_SUPPORTS);
+  expect(without).toContain("@supports not ((--forspring-no-anchor: 1))");
+});

@@ -6,7 +6,7 @@
 
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { createReadStream, statSync } from "node:fs";
+import { createReadStream, readFileSync, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { extname, join, normalize } from "node:path";
@@ -14,7 +14,7 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, RICH_SLOTS } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
 import type { LayoutObservations } from "../src/audit/page.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
@@ -51,6 +51,15 @@ beforeAll(async () => {
     } else if (path === "/hop-page") {
       res.writeHead(200, { "content-type": TYPES[".html"] });
       return void res.end(`<!doctype html><html lang="en"><head><title>hop</title></head><body><main><img alt="" src="/hop"></main></body></html>`);
+    } else if (path.startsWith("/no-anchor/")) {
+      // The same files, with the stylesheet as a browser without anchor positioning applies it (D-41).
+      path = path.slice("/no-anchor".length);
+      if (path.endsWith(".css")) {
+        const file = normalize(join(root, path));
+        if (!file.startsWith(root)) return void res.writeHead(403).end();
+        res.writeHead(200, { "content-type": TYPES[".css"] });
+        return void res.end(withoutAnchorPositioning(readFileSync(file, "utf8")));
+      }
     } else if (path.startsWith("/status/403/")) {
       // The document only: a stylesheet answered 403 would not apply.
       if (path.endsWith("/")) status = 403;
@@ -127,6 +136,16 @@ describe("the demo page", () => {
     expect(r.pages).toHaveLength(4);
     expect(all(r)).toEqual([]);
   }, 120_000);
+
+  // Without anchor positioning (Firefox today) the menus take the fallback; the probe opens each one
+  // and popover-anchor still finds nothing: next to its trigger, inside the window (D-41).
+  test("without anchor positioning the menus still open at their trigger", async () => {
+    const r = await audit(options([`${base}/no-anchor/dist/demo/pages/lead.en.html`, `${base}/no-anchor/dist/demo/?product=appspring`], { product: "appspring" }), browser);
+    expect(r.pages).toHaveLength(8);
+    // As on the demo test: only the tables' edge shadows, for review. No layout finding, popover-anchor included.
+    expect(all(r).filter((f) => f.severity !== "review")).toEqual([]);
+    expect(r.ok).toBe(true);
+  }, 180_000);
 
   // The confirm page with no script (D-23), and the dialog open over the demo.
   test("the confirm page and the open dialog pass", async () => {

@@ -20,6 +20,16 @@ export const DEFAULT_THEMES: Theme[] = ["light", "dark"];
  * breakpoint.phone token since D-27; test/components.test.ts holds the two equal). */
 export const PHONE_WIDTH = 560;
 
+/**
+ * The condition components.css draws anchored menus under (D-41). Without it the menus take the
+ * fallback: absolute under the trigger, clamped to the viewport (Firefox today). A Chromium cannot be
+ * told to drop anchor positioning, so a test sees the fallback by rewriting the stylesheet instead.
+ */
+export const ANCHOR_SUPPORTS = "(position-area: block-end) and (anchor-scope: all)";
+
+/** The stylesheet as a browser without anchor positioning applies it: the anchored block never, the fallback always. */
+export const withoutAnchorPositioning = (css: string): string => css.split(ANCHOR_SUPPORTS).join("(--forspring-no-anchor: 1)");
+
 export const FAMILIES = ["Archivo", "Archivo Condensed", "Space Mono"];
 // Google's button sets its own Roboto, by Google's branding guidelines (D-7).
 const GOOGLE_FAMILIES = ["Roboto GSI", "Roboto"];
