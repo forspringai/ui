@@ -1494,3 +1494,6 @@ none of its 11 names were in `ICON_NAMES`, so `icon()` threw and AppSpring's ren
    Every icon is held to the same test as the first 32 (24 grid, `currentColor`, one stroke, nothing
    fetched).
 5. **In a menu** an icon sits before the words and never replaces them (docs/usage.md, Icons).
+6. **All or none per menu group** (settled with lead-ui after the tag, AppSpring 7xb): a group draws
+   icons only when every item resolves to one and no two match; otherwise it is words only. Two pages
+   of the same kind share a default, so their group goes words only unless the author picks icons.
