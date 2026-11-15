@@ -1634,3 +1634,14 @@ lead-brand set the design; lead-bench defined the checks and wires them into the
 Not chosen: a gap-based flow (`display: flex` on main and cards), which would stretch or reflow inline
 content and add to every container's own gap; a script to place menus (they are details elements and
 must work without one); new spacing values (every rhythm step is a space step).
+
+**0.27.1 (2026-11-15): the fallback is tested.** A Chromium cannot be told to drop anchor positioning
+(the blink flag leaves `CSS.supports('position-area: block-end')` true), and WebKit doesn't run on the
+build box, so the menus' fallback (Firefox today) went untested. ui-audit now exports
+`ANCHOR_SUPPORTS` (the exact condition both `@supports` blocks key on) and
+`withoutAnchorPositioning(css)`, which rewrites it to a never-true condition, so the stylesheet
+applies as it would in a browser without anchor positioning. `test/audit.test.ts` serves the
+regression and demo pages under `/no-anchor/` with that rewrite. The probe opens each menu, and
+popover-anchor finds nothing at 1280 and 380, light and dark. A unit test fails if the condition's
+wording drifts, so the rewrite can't silently miss. The screens bench uses the same helper for its
+second probe pass.
