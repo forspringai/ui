@@ -13,6 +13,11 @@ export declare const PHONE_WIDTH = 560;
  * told to drop anchor positioning, so a test sees the fallback by rewriting the stylesheet instead.
  */
 export declare const ANCHOR_SUPPORTS = "(position-area: block-end) and (anchor-scope: all)";
+/**
+ * A condition no browser supports. Not a custom property: `(--x: 1)` is a valid declaration for any
+ * value, so @supports would be true (0.27.1 had that bug, found by lead-bench).
+ */
+export declare const NO_ANCHOR = "(forspring-no-anchor: 1)";
 /** The stylesheet as a browser without anchor positioning applies it: the anchored block never, the fallback always. */
 export declare const withoutAnchorPositioning: (css: string) => string;
 export declare const FAMILIES: string[];

@@ -27,8 +27,17 @@ export const PHONE_WIDTH = 560;
  */
 export const ANCHOR_SUPPORTS = "(position-area: block-end) and (anchor-scope: all)";
 
+/**
+ * A condition no browser supports. Not a custom property: `(--x: 1)` is a valid declaration for any
+ * value, so @supports would be true (0.27.1 had that bug, found by lead-bench).
+ */
+export const NO_ANCHOR = "(forspring-no-anchor: 1)";
+
+// ANCHOR_SUPPORTS with any whitespace, so a minified build matches too ("(position-area:block-end) and(anchor-scope:all)").
+const ANCHOR_SUPPORTS_ANY = /\(\s*position-area\s*:\s*block-end\s*\)\s*and\s*\(\s*anchor-scope\s*:\s*all\s*\)/g;
+
 /** The stylesheet as a browser without anchor positioning applies it: the anchored block never, the fallback always. */
-export const withoutAnchorPositioning = (css: string): string => css.split(ANCHOR_SUPPORTS).join("(--forspring-no-anchor: 1)");
+export const withoutAnchorPositioning = (css: string): string => css.replace(ANCHOR_SUPPORTS_ANY, NO_ANCHOR);
 
 export const FAMILIES = ["Archivo", "Archivo Condensed", "Space Mono"];
 // Google's button sets its own Roboto, by Google's branding guidelines (D-7).

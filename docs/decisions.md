@@ -1645,3 +1645,17 @@ regression and demo pages under `/no-anchor/` with that rewrite. The probe opens
 popover-anchor finds nothing at 1280 and 380, light and dark. A unit test fails if the condition's
 wording drifts, so the rewrite can't silently miss. The screens bench uses the same helper for its
 second probe pass.
+
+**0.27.2 (2026-11-15): 0.27.1's fallback test measured the anchored menus.** lead-bench's per-page
+proof found two faults in `withoutAnchorPositioning()`:
+- It joined with `(--forspring-no-anchor: 1)`. A custom property is valid with any value, so that
+  @supports was true and the fallback never applied. The test passed on the anchored layout.
+- It split on the exact spaced string, so minified CSS (apps/shell's client.css) got no rewrite.
+
+Now it joins with `NO_ANCHOR`, `(forspring-no-anchor: 1)`, which no browser supports, and it matches
+the condition with any whitespace. The audit test proves the fallback is in force before it measures:
+`CSS.supports(NO_ANCHOR)` is false, and an opened menu's `position-area` is `none` under the rewrite
+(and not `none` without it). With the fallback really applied, it found a real fault: at 380 the org
+switcher's panel ran 51 px past the window (Firefox today). Without anchor positioning nothing can
+measure the trigger, so at phone width the org switcher's panel now hangs from its end edge, as the
+user menu's always has. popover-anchor is 0 under the fallback on the lead and demo pages.
