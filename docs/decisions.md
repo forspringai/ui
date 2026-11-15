@@ -1474,3 +1474,23 @@ guard the copy), and copied the sidebar's 13.5rem into their own page widths.
    `components.css` draws the sidebar column from it; a product's own widths read it, never a copy.
 4. **Copies:** products whose frame still has the old markup keep working (the `nav.menu` rules
    stay), but lose point 2 until they call `menuFrame()`.
+
+## D-39 — Icons for the kernel's pages and a pinned set for app nav; 0.25.0 (2026-11-15)
+
+From lead-ui's nav review (AppSpring tick 1j7): the kernel gives each page kind a default icon, and
+none of its 11 names were in `ICON_NAMES`, so `icon()` threw and AppSpring's renderer drew no glyph.
+
+1. **The kernel's defaults are vendored:** file-text, kanban, chart-gantt, calendar-days,
+   calendar-range, square-pen, file-diff, paperclip, chart-column, list, layout-dashboard.
+2. **A pinned set for an app author's own nav,** 16 names: building-2, users-round, calendar-heart,
+   wine, shirt, truck, package, receipt, house, store, briefcase, wallet, shopping-cart, map-pin,
+   inbox, clipboard-list. lead-ui's eight, plus the places, money and work a small business's apps
+   are about. A name outside the set is a request to add it here, never a drawing in a product.
+3. **Same source and terms as D-26:** Lucide's own paths from lucide-react 1.46.0, unchanged. The
+   names are Lucide's, except building-2, which 1.46.0 keeps as an alias of building-complex (the
+   comment beside it says so). The licence text in `src/icons/LICENSE` is unchanged: the upstream
+   notice, Feather list included, is the same file.
+4. **59 icons, capped at 64** in `test/toast.test.ts`: the set grows by decision, not by the hundred.
+   Every icon is held to the same test as the first 32 (24 grid, `currentColor`, one stroke, nothing
+   fetched).
+5. **In a menu** an icon sits before the words and never replaces them (docs/usage.md, Icons).

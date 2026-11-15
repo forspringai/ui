@@ -187,11 +187,16 @@ describe("icon()", () => {
     expect(() => icon("constructor" as IconName)).toThrow();
   });
 
-  test("the set covers the suite's screens, about 30 icons", () => {
+  test("the set covers the suite's screens, the kernel's pages and app nav (D-39)", () => {
     for (const n of ["check", "x", "alert-triangle", "info", "chevron-left", "chevron-right", "chevron-down", "chevron-up", "arrow-up", "arrow-down", "search", "filter", "plus", "minus", "edit", "trash", "external-link", "copy", "download", "upload", "settings", "user", "users", "log-out", "eye", "eye-off", "clock", "calendar", "mail", "more-horizontal"])
       expect(ICON_NAMES).toContain(n);
-    expect(ICON_NAMES.length).toBeGreaterThanOrEqual(24);
-    expect(ICON_NAMES.length).toBeLessThanOrEqual(32);
+    // The kernel's default page icons and the pinned author set for app nav (D-39).
+    for (const n of ["file-text", "kanban", "chart-gantt", "calendar-days", "calendar-range", "square-pen", "file-diff", "paperclip", "chart-column", "list", "layout-dashboard"])
+      expect(ICON_NAMES).toContain(n);
+    for (const n of ["building-2", "users-round", "calendar-heart", "wine", "shirt", "truck", "package", "receipt", "house", "store", "briefcase", "wallet", "shopping-cart", "map-pin", "inbox", "clipboard-list"])
+      expect(ICON_NAMES).toContain(n);
+    // A pinned set, not the library: grow it on purpose (a decision), never by the hundred.
+    expect(ICON_NAMES.length).toBeLessThanOrEqual(64);
     expect(new Set(ICON_NAMES).size).toBe(ICON_NAMES.length);
   });
 

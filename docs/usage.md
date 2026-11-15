@@ -178,6 +178,13 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   takes no label; standing alone (a toolbar button) it needs words, through the button's `ariaLabel`
   or `icon(name, { label })`. An icon never carries meaning the words beside it lack, and a new icon is
   Lucide's own drawing added to `src/icons/`, not one drawn here.
+- **In a menu,** an icon sits before the item's words and never replaces them; the menu works with
+  every icon removed. An app's pages take the kernel's default for their kind (file-text, kanban,
+  chart-gantt, calendar-days, calendar-range, square-pen, file-diff, paperclip, chart-column, list,
+  layout-dashboard). An author who picks one picks from the pinned set (building-2, users-round,
+  calendar-heart, wine, shirt, truck, package, receipt, house, store, briefcase, wallet,
+  shopping-cart, map-pin, inbox, clipboard-list), one per item and no two items alike. A name
+  outside the set is a request to add it here (D-39), not a reason to draw one.
 
 ### Brand
 
