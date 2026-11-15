@@ -606,6 +606,16 @@
     .switcher > :is(ul, .bar-panel) {
       max-width: min(24rem, calc(100vw - 2 * var(--space-4)));
     }
+
+    /* Without anchor positioning nothing can measure where the trigger sits, so a phone's bar menus
+       align by where the bar puts them: the org switcher sits in the right half there, so its panel
+       hangs from its end edge, as the user menu's always does (D-41; Firefox today). */
+    @media (max-width: 560px) {
+      .org-switcher > .bar-panel {
+        left: auto;
+        right: 0;
+      }
+    }
   }
 
   .user-menu > summary {

@@ -14,7 +14,7 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, NO_ANCHOR, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
 import type { LayoutObservations } from "../src/audit/page.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
@@ -139,6 +139,28 @@ describe("the demo page", () => {
 
   // Without anchor positioning (Firefox today) the menus take the fallback; the probe opens each one
   // and popover-anchor still finds nothing: next to its trigger, inside the window (D-41).
+  // The rewrite must really drop the anchored block: in the browser the replacement is unsupported, and
+  // an opened menu has no position-area (0.27.1's custom-property condition was true, so this measured
+  // the anchored menus; lead-bench found it). The served page is checked against the plain one.
+  test("the forced fallback is in force: the condition is unsupported and an open menu has no position-area", async () => {
+    const page = await browser.newPage({ viewport: { width: 380, height: 800 } });
+    try {
+      const area = async (url: string) => {
+        await page.goto(url);
+        return page.evaluate(() => {
+          const d = document.querySelector<HTMLDetailsElement>("details.product-switcher")!;
+          d.open = true;
+          return getComputedStyle(d.querySelector(".bar-panel")!).getPropertyValue("position-area");
+        });
+      };
+      expect(await page.evaluate((c) => CSS.supports(c), NO_ANCHOR)).toBe(false);
+      expect(await area(`${base}/dist/demo/pages/lead.en.html`)).not.toBe("none");
+      expect(await area(`${base}/no-anchor/dist/demo/pages/lead.en.html`)).toBe("none");
+    } finally {
+      await page.close();
+    }
+  });
+
   test("without anchor positioning the menus still open at their trigger", async () => {
     const r = await audit(options([`${base}/no-anchor/dist/demo/pages/lead.en.html`, `${base}/no-anchor/dist/demo/?product=appspring`], { product: "appspring" }), browser);
     expect(r.pages).toHaveLength(8);

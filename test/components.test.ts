@@ -231,5 +231,8 @@ test("the anchor condition appears exactly twice in components.css, and the rewr
   expect(css).toContain(`@supports not (${ANCHOR_SUPPORTS})`);
   const without = withoutAnchorPositioning(css);
   expect(without).not.toContain(ANCHOR_SUPPORTS);
-  expect(without).toContain("@supports not ((--forspring-no-anchor: 1))");
+  expect(without).toContain("@supports not ((forspring-no-anchor: 1))");
+  // A minified build drops the spaces; the rewrite still finds both (lead-bench, apps/shell's client.css).
+  const min = "@supports (position-area:block-end) and (anchor-scope:all){a{b:c}}@supports not ((position-area:block-end)and (anchor-scope:all)){d{e:f}}";
+  expect(withoutAnchorPositioning(min)).toBe("@supports (forspring-no-anchor: 1){a{b:c}}@supports not ((forspring-no-anchor: 1)){d{e:f}}");
 });
