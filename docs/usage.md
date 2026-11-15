@@ -185,6 +185,11 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   calendar-heart, wine, shirt, truck, package, receipt, house, store, briefcase, wallet,
   shopping-cart, map-pin, inbox, clipboard-list), one per item and no two items alike. A name
   outside the set is a request to add it here (D-39), not a reason to draw one.
+- **Icons are all or none per menu group.** A group draws icons only when every item in it has one
+  (authored, or a default whose page kind is the only one of its kind in the group) and no two
+  match; otherwise the whole group is words only. A column where some items have a glyph and some
+  don't reads as a mistake. An authored icon draws as written; a duplicate turns its group to words
+  only, and the screens check flags it so the author sees why.
 
 ### Brand
 
