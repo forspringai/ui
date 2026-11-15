@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@ui-sdk/core':
+        specifier: 0.1.0-beta.4
+        version: 0.1.0-beta.4
+      '@ui-sdk/web':
+        specifier: 0.1.0-beta.4
+        version: 0.1.0-beta.4(@ui-sdk/core@0.1.0-beta.4)
       axe-core:
         specifier: 4.14.0
         version: 4.14.0
@@ -284,6 +290,14 @@ packages:
     engines: {node: '>=16.20.0'}
     cpu: [x64]
     os: [win32]
+
+  '@ui-sdk/core@0.1.0-beta.4':
+    resolution: {integrity: sha512-yUtuFpodT9wjb29qdbmomRpnsMxoqf5SraPX2LYihC8v9povcoEQbfHwVo0KazOWLNspr7k2c2ub7mDXKaiBcQ==}
+
+  '@ui-sdk/web@0.1.0-beta.4':
+    resolution: {integrity: sha512-dA2d8zg5tt79MIUQHkwFoIAR/9WRzKErhJHC54Em5m+BGgHXODEkeWrLZyvzoW48eCLtac6pGw0f2MQ6R2kQnw==}
+    peerDependencies:
+      '@ui-sdk/core': ^0.1.0-beta.4
 
   '@vitest/mocker@5.0.3':
     resolution: {integrity: sha512-T8sWAIbkSyAjkwTcaEc3Iu0o9A27X1/kdXrizhZkGuSKScRQtRzclfAMpOTcGdXCsqxeWlpGy3XjqaW8CpLORg==}
@@ -718,6 +732,12 @@ snapshots:
 
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
+
+  '@ui-sdk/core@0.1.0-beta.4': {}
+
+  '@ui-sdk/web@0.1.0-beta.4(@ui-sdk/core@0.1.0-beta.4)':
+    dependencies:
+      '@ui-sdk/core': 0.1.0-beta.4
 
   '@vitest/mocker@5.0.3(vite@8.3.4(@types/node@24.19.1))':
     dependencies:

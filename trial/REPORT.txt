@@ -1,0 +1,18 @@
+lead-brand -> cos (cc lead-ui): @ui-sdk trial report. Recommendation: WAIT FOR 1.0. Do not adopt it as the behaviour layer under @forspring/ui, and do not adopt single pieces either.
+
+Why (measured or read in its source, 0.1.0-beta.4):
+1. BUNDLE. Moving only RecordPage tabs to @ui-sdk/react takes AppSpring's first route from 103,343 to 120,205 B gzip: +16,862 B (+16.3%), 15,361 B over the limit. Per piece, min+gzip: tabs 19.2 KB (ours 0.7 KB), menu 54 KB plus dialog 45 KB (ours 1.4 KB; ui's <details> menus are 0), select 60 KB and combobox 66 KB (native select ~0.2 KB). All three together share a core and come to 76.8 KB.
+2. WINDOW.AGENT FAILS ADR 0079 BY DEFAULT. It is off unless createAgent() is called (AppSpring calls nothing today). Once it is on:
+   - unmounted components stay readable in snapshot() and query() with their last value, up to 50 of them, so after refresh() a field the new read withholds stays readable with its old value;
+   - row text includes hidden and aria-hidden text;
+   - an agent can press through a confirm dialog unless every element carries an allow mark;
+   - beta.4 lets an agent edit a read-only input and set a combobox value outside its list. Both are fixed on their main, not released.
+3. NO-SCRIPT. The select, menu and dialog content stays hidden until script runs, with no documented fallback: the menu's links can't be reached, and a select submits nothing. ui's helpers work without script today. The web-components adapter can attach to server-written markup; the React adapter renders on the server with keepMounted.
+4. STABILITY. 4 betas in 3 days, all marked patch, no declared breaks, but about 140 PRs on main in 3 days with 4 unreleased behaviour changes waiting. The docs call the agent API experimental while the types say stable.
+5. LICENCE. Apache-2.0 (core, react and web), no runtime dependencies, 2 lockfile entries. Note: the README says the beta is subject to Vercel's beta terms. That would be a legal question for Peter if we ever adopted during beta; the recommendation makes it moot.
+
+Context: this matches ADR 0077 (Peter, 2026-11-13), which already kept UI SDK out from under SpringML on bundle, server rendering and beta grounds. beta.4 changes none of those. The keyboard models are good: tabs and menu match ours key for key, and our VerbMenu already uses their specs as its test oracle. Keep doing that. It is the part worth having, and it costs 0 bytes.
+
+Re-test only when all three hold: 1.0 is out; the select and menu have a no-script fallback; the agent bridge drops unmounted components and requires confirmation by default. Then: a tabs piece under ~2 KB gzip, or don't bother.
+
+Not measured, because the supervisor's overload stop held them, and none could change the verdict: the menu and select first-route builds, the web-components sizes, axe and screens-text and the keyboard runs on the SDK pieces. Branches are local only: canonify ui-sdk-trial (2 commits plus work in progress) and ui ui-sdk-trial (work in progress). I'll commit them once the box has room and remove the worktrees, unless you want the held steps finished first.

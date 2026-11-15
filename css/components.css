@@ -2778,4 +2778,182 @@
       line-height: calc(var(--control-touch) - 2 * var(--space-3) - 2px);
     }
   }
+
+  /* --- ui-sdk trial (never lands): src/sdk.ts's custom-element markup on the roles only ------- */
+
+  /* The custom elements are inline by default; the parts that hold blocks are blocks. */
+  :is(ui-tabs, ui-tabs-panel, ui-select, ui-alert-dialog) {
+    display: block;
+  }
+
+  :is(ui-tabs-tab, ui-menu-trigger, ui-select-trigger, ui-alert-dialog-trigger, ui-alert-dialog-close) {
+    display: contents;
+  }
+
+  .sdk-tablist {
+    display: flex;
+    gap: var(--space-1);
+    border-block-end: 1px solid var(--border);
+    margin-block-end: var(--space-4);
+  }
+
+  .sdk-tablist button {
+    min-height: var(--control-height-small);
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    border-block-end: 2px solid transparent;
+    border-radius: 0;
+    background: none;
+    color: var(--muted-foreground);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
+  }
+
+  .sdk-tablist button:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  /* Selected: ink and a rule in the accent, and the weight, so the state is not the hue alone. */
+  .sdk-tablist button[aria-selected="true"] {
+    color: var(--foreground);
+    font-weight: 600;
+    border-block-end-color: var(--primary);
+  }
+
+  .sdk-tablist button:focus-visible,
+  .sdk-menu-trigger:focus-visible,
+  .sdk-select-trigger:focus-visible,
+  .sdk-menu-item:focus-visible,
+  .sdk-select-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -2px;
+  }
+
+  .sdk-menu {
+    position: relative;
+    display: inline-block;
+  }
+
+  .sdk-menu-trigger {
+    min-height: var(--control-height-small);
+    padding: 0 var(--space-3);
+    border: 1px solid transparent;
+    background: none;
+    color: var(--foreground);
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
+  }
+
+  .sdk-menu-trigger:hover,
+  .sdk-menu-trigger[aria-expanded="true"] {
+    background: var(--muted);
+    border-color: var(--muted);
+    color: var(--foreground);
+  }
+
+  /* The library positions the popup (inline top/left); the panel is the bar's. */
+  .sdk-menu-content:not([hidden]) {
+    display: block;
+    margin: 0;
+  }
+
+  .sdk-menu-item {
+    display: flex;
+    align-items: center;
+    min-height: var(--space-10);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-button);
+    color: var(--foreground);
+    text-decoration: none;
+  }
+
+  .sdk-menu-item[data-highlighted],
+  .sdk-menu-item:hover {
+    background: var(--muted);
+  }
+
+  .sdk-menu-item[aria-current] {
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  /* The select's trigger is a button drawn as field()'s select: the input's box and the same chevron. */
+  .sdk-select-trigger {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-3) var(--space-8) var(--space-3) var(--space-3);
+    border: 1px solid var(--input);
+    border-radius: var(--radius-input);
+    background-color: var(--card);
+    color: var(--foreground);
+    font: 400 var(--text-content-body)/var(--_control-line) var(--font-sans);
+    text-align: start;
+    background-image:
+      linear-gradient(45deg, transparent calc(50% - 1.25px), var(--muted-foreground) calc(50% - 0.5px), var(--muted-foreground) calc(50% + 0.5px), transparent calc(50% + 1.25px)),
+      linear-gradient(135deg, transparent calc(50% - 1.25px), var(--muted-foreground) calc(50% - 0.5px), var(--muted-foreground) calc(50% + 0.5px), transparent calc(50% + 1.25px));
+    background-size: 5px 5px;
+    background-position:
+      right calc(var(--space-3) + 5px) center,
+      right var(--space-3) center;
+    background-repeat: no-repeat;
+  }
+
+  .sdk-select-trigger:hover {
+    background-color: var(--card);
+    border-color: var(--input);
+    color: var(--foreground);
+  }
+
+  .sdk-select-trigger:disabled {
+    background-color: var(--muted);
+    color: var(--muted-foreground);
+    border-color: var(--border);
+    cursor: not-allowed;
+  }
+
+  .sdk-select-content:not([hidden]) {
+    display: block;
+    min-width: var(--anchor-width);
+    max-height: var(--available-height);
+    overflow: auto;
+    padding: var(--space-1);
+    background: var(--popover);
+    color: var(--popover-foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-overlay);
+  }
+
+  .sdk-select-item {
+    display: flex;
+    align-items: center;
+    min-height: var(--space-10);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-button);
+    font: 400 var(--text-content-body)/var(--leading-content-body) var(--font-sans);
+    cursor: pointer;
+  }
+
+  .sdk-select-item[data-highlighted] {
+    background: var(--muted);
+  }
+
+  .sdk-select-item[data-selected] {
+    font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--primary);
+  }
+
+  .sdk-dialog-content:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+  }
+
+  .sdk-dialog-backdrop:not([hidden]) {
+    position: fixed;
+    inset: 0;
+    background: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 45%, transparent);
+  }
 }
