@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.24.0
+pnpm add github:forspringai/ui#v0.25.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -493,7 +493,7 @@ field({
 - With anchor positioning (Baseline 2026) it opens above its button, or below when there is no room;
   an older browser shows it where it centres a popover.
 
-**Icons:** `icon(name, { label? })` draws one of 32 icons, a subset of [Lucide](https://lucide.dev)
+**Icons:** `icon(name, { label? })` draws one of 59 icons, a subset of [Lucide](https://lucide.dev)
 (ISC; its Feather-derived icons MIT) vendored into `src/icons/` with the licence beside it
 (`dist/icons/LICENSE`). Inline SVG on a 24 grid, one stroke weight, `currentColor`, 1em of the text it
 sits in (`.icon`). Without a label it is `aria-hidden` decoration, and the words beside it carry the

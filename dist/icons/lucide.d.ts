@@ -44,7 +44,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 /** Every icon this package draws, by the name icon() takes. */
-export declare const ICON_NAMES: readonly ["check", "x", "alert-triangle", "alert-octagon", "info", "help-circle", "chevron-left", "chevron-right", "chevron-up", "chevron-down", "arrow-up", "arrow-down", "search", "filter", "plus", "minus", "edit", "trash", "external-link", "copy", "download", "upload", "settings", "user", "users", "log-out", "eye", "eye-off", "clock", "calendar", "mail", "more-horizontal"];
+export declare const ICON_NAMES: readonly ["check", "x", "alert-triangle", "alert-octagon", "info", "help-circle", "chevron-left", "chevron-right", "chevron-up", "chevron-down", "arrow-up", "arrow-down", "search", "filter", "plus", "minus", "edit", "trash", "external-link", "copy", "download", "upload", "settings", "user", "users", "log-out", "eye", "eye-off", "clock", "calendar", "mail", "more-horizontal", "file-text", "kanban", "chart-gantt", "calendar-days", "calendar-range", "square-pen", "file-diff", "paperclip", "chart-column", "list", "layout-dashboard", "building-2", "users-round", "calendar-heart", "wine", "shirt", "truck", "package", "receipt", "house", "store", "briefcase", "wallet", "shopping-cart", "map-pin", "inbox", "clipboard-list"];
 export type IconName = (typeof ICON_NAMES)[number];
 /** Each icon's inner markup: paths, circles and rects on the 24 by 24 grid, nothing that loads. */
 export declare const ICON_PATHS: Record<IconName, string>;
