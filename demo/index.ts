@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { approval, button, card, confirmDestructive, crumbs, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { actions, approval, button, card, confirmDestructive, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -68,7 +68,8 @@ const SCRIPT = `<script>
 
 const head = raw(`<link rel="stylesheet" href="../tokens.css"><link rel="stylesheet" href="../fonts.css"><link rel="stylesheet" href="../components.css"><link rel="stylesheet" href="../google-button.css">
 <style>
-.demo-controls { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8); padding: var(--space-4) var(--space-5); margin-bottom: var(--space-8); }
+.demo-controls { display: flex; flex-wrap: wrap; gap: var(--space-4) var(--space-8); padding: var(--space-4) var(--space-5); margin-bottom: var(--rhythm-flow); }
+.demo-controls > * { margin: 0; }
 .demo-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
 .demo-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .demo-grid > * { margin: 0; }
@@ -352,7 +353,7 @@ ${field({ label: "Mail", name: "email", type: "email", value: "mette@eksempel", 
 ${field({ label: "Rolle", name: "role", control: "select", required: true, hint: "Administratorer kan slå produkter til og fra for andre.", error: "Vælg, hvad Mette skal kunne.", options: [{ value: "", label: "Vælg en rolle", selected: true }, { value: "member", label: "Medlem" }, { value: "admin", label: "Administrator" }] })}
 ${field({ label: "Besked til Mette", name: "note", control: "textarea" })}
 <fieldset><legend>Produkter at slå til</legend><label><input type="checkbox" name="p" value="site" checked> SiteSpring</label><label><input type="checkbox" name="p" value="data"> DataSpring</label></fieldset>
-<p>${button({ label: "Send invitation" })}</p>
+${actions({ primary: button({ label: "Send invitation" }), secondary: button({ label: "Annuller", variant: "ghost", href: "#" }) })}
 </form>`)}
 </section>
 
@@ -367,7 +368,7 @@ ${state({ kind: "failed", title: "Kunderne kunne ikke hentes", text: "Vi ved ikk
 
 <section><h2>Dialog og bekræftelse før sletning</h2>
 <p>Noget, der ikke kan fortrydes, sker aldrig med ét klik. Dialogen siger, hvad der går tabt, beder om navnet og har det sikre valg først. Uden script fører knappen til <a href="pages/delete-site.da.html">en side med det samme spørgsmål</a>.</p>
-<div class="demo-row">${button({ label: "Udgiv ændringer", type: "button" })}${dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" })}</div>
+${actions({ primary: button({ label: "Udgiv ændringer", type: "button" }), secondary: button({ label: "Se ændringerne", variant: "ghost", href: "#" }), destructive: dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" }) })}
 ${confirmDestructive(DELETE_SITE("da"))}
 </section>
 
@@ -399,7 +400,7 @@ ${card(html`<form class="form" method="post" action="#">${field({ label: "Firman
 <p>En agent spørger, før den gør noget, der rækker ud over den selv: hvem der spørger, hvorfor, hvad der ændres, og hvad det gør. Siden siger det samme som kortet i Slack, og når nogen har besluttet, viser hver kopi beslutningen.</p>
 ${REMINDERS}
 ${REMINDERS_DONE}
-<h3 style="margin-top: var(--space-8)">Før og efter</h3>
+<h3>Før og efter</h3>
 ${BRIEF_DIFF}
 </section>
 
@@ -542,6 +543,43 @@ function confirmPages(out: Record<string, string>) {
   }
 }
 
+// The founder's case (D-41): the page from the ui-sdk-trial (trial/pages.ts, "ours") as he saw it, on
+// 0.26.0: bar()'s product switcher in a page's own nav, two field() selects and a Save in a bare form,
+// and a dialogTrigger() in a paragraph, all with no class of their own. Then the same lead drawn with
+// actions(). dist/demo/pages/lead.en.html; the visual test and the four layout checks run on it.
+const LEAD_PRODUCTS = [
+  { name: "AppSpring", href: "#", current: true },
+  { name: "SiteSpring", href: "#" },
+  { name: "DataSpring", href: "#" },
+];
+const STAGES = [
+  { value: "open", label: "Open" },
+  { value: "won", label: "Won", selected: true },
+  { value: "lost", label: "Lost" },
+];
+
+function leadPage(): string {
+  const switcher = html`<nav aria-label="Products"><details class="switcher bar-menu product-switcher"><summary>Products</summary><div class="bar-panel"><p class="bar-panel-label">Noon has</p><ul>${LEAD_PRODUCTS.map(
+    (p) => html`<li><a href="${p.href}"${raw(p.current ? ' aria-current="true"' : "")}><span class="bar-item-name">${p.name}</span></a></li>`,
+  )}</ul></div></details></nav>`;
+  const ours = html`${switcher}
+<form>${field({ name: "stage", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
+${field({ name: "owner", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}<button type="submit" class="ghost">Save</button></form>
+<p>${dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "ghost" })}</p>
+${dialog({ id: "remove", title: "Remove the lead?", body: "This removes the lead and its notes.", close: "Keep", alert: true, actions: html`<button type="submit" class="danger">Remove</button>`, form: { action: "#" } })}`;
+  const withActions = html`<section><h2>With actions()</h2>
+<form>${field({ name: "stage2", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
+${field({ name: "owner2", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}
+${actions({ primary: button({ label: "Save" }), secondary: button({ label: "Cancel", variant: "ghost", href: "#" }), destructive: dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "danger" }) })}</form>
+</section>`;
+  const css = raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`);
+  return String(
+    html`<!doctype html><html lang="en" data-product="appspring"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lead</title>${css}</head><body><main id="main" class="wrap"><h1>Lead</h1>${ours}
+${withActions}</main>${dialogScript()}
+<script>if (new URLSearchParams(location.search).get("open") === "products") document.querySelector("details.product-switcher").open = true;</script></body></html>`,
+  ) + "\n";
+}
+
 /** dist/demo/pages/<name>.<lang>.html: every standard page, in DataSpring's bar. */
 export function standardPages(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -569,5 +607,6 @@ export function standardPages(): Record<string, string> {
     }
   connectPages(out);
   confirmPages(out);
+  out["pages/lead.en.html"] = leadPage();
   return out;
 }

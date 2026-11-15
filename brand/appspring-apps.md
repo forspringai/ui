@@ -116,7 +116,7 @@ folded at the end; each card the company's name, the contact, the next meeting a
 
 A `Form` is the screen whose job is one action's input (a booking, a new case); an `Action` elsewhere opens
 the same inputs in a generated dialog. The model owns each input's label, help and whether it is required;
-the renderer draws them by docs/usage.md section 3.
+the renderer draws them by docs/usage.md section 4.
 
 - **Every label is visible,** from the model's label. A placeholder is at most an example of the format.
 - **Required or optional is said in words,** "(påkrævet)" / "(required)" or "(valgfri)" / "(optional)",
@@ -180,7 +180,7 @@ them all; both draw `approval()` with the package's words (D-24).
 - **A column or fact the reader may not read is left out with a note,** never guessed and never an error.
   A whole request refused is the package's refused page, in its words.
 - **Every error has three parts:** what happened, what it means, what to do, and blames nobody
-  (docs/usage.md section 4).
+  (docs/usage.md section 5).
 
 ## 3. Agents in the app
 

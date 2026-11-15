@@ -7,7 +7,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
-import { collect } from "./page.js";
+import { collect, collectLayout, collectPopovers } from "./page.js";
 export const DEFAULT_WIDTHS = [1280, 380];
 export const DEFAULT_THEMES = ["light", "dark"];
 /** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint, the
@@ -188,6 +188,7 @@ export async function scale(browser, opts, root = packageRoot()) {
         palette: await palette(browser, tokens, root, opts.product),
         allowSpacing: opts.allowSpacing,
         rich: opts.richApp ? { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text } : undefined,
+        layout: layoutScale(tokens.rhythm),
     };
 }
 // --- Rules ---------------------------------------------------------------------------------------
@@ -326,6 +327,174 @@ export function primitives(slots, t, width) {
                 add(`font-size ${px(o.fontSize)}`, `${s.px}px (${s.token})`);
         }
     }
+    return out;
+}
+export function layoutScale(rhythm) {
+    const steps = [...new Set(Object.values(rhythm))].sort((a, b) => a - b);
+    return { rhythm: steps, minGap: Math.max(8, steps[0] ?? 0), anchorGap: 8, fillStep: 0.02, borderStep: 0.04 };
+}
+/** OKLab lightness of an sRGB colour (0 to 255 per channel), 0 to 1. */
+export function oklabL([r, g, b]) {
+    const [lr, lg, lb] = [lin(r), lin(g), lin(b)];
+    const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+    const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+    const s2 = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+    return 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s2;
+}
+const overlap = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0);
+const r1 = (n) => Math.round(n * 10) / 10;
+/**
+ * The layout rules (D-41), written once here so the screens bench runs the same ones (lead-bench's
+ * definitions, D-41). Warnings: they are taste-class and land warn-first; ui's own tests
+ * hold the demo to none.
+ */
+export function layoutFindings(obs, t) {
+    const out = [];
+    const warn = (rule, selector, value, expected, note) => out.push({ rule, severity: "warning", selector, value, expected, note });
+    // control-gap: two controls whose boxes overlap by 1 px or more on one axis need minGap on the other.
+    const skip = new Set(obs.composite.map(([i, j]) => `${i} ${j}`));
+    for (let i = 0; i < obs.controls.length; i++)
+        for (let j = i + 1; j < obs.controls.length; j++) {
+            if (skip.has(`${i} ${j}`))
+                continue;
+            const [a, b] = [obs.controls[i].box, obs.controls[j].box];
+            const ox = overlap(a.x, a.x + a.w, b.x, b.x + b.w);
+            const oy = overlap(a.y, a.y + a.h, b.y, b.y + b.h);
+            let gap = null;
+            let axis = "";
+            if (ox >= 1 && oy >= 1)
+                [gap, axis] = [-Math.min(ox, oy), "overlapping"];
+            else if (ox >= 1)
+                [gap, axis] = [-oy, "one above the other"];
+            else if (oy >= 1)
+                [gap, axis] = [-ox, "side by side"];
+            if (gap === null || gap >= t.minGap - 0.01)
+                continue;
+            const names = `${obs.controls[i].selector} | ${obs.controls[j].selector}`;
+            warn("control-gap", names, gap <= 0 ? `${gap < 0 ? "overlapping" : "touching"} (${r1(gap)}px, ${axis})` : `${r1(gap)}px apart, ${axis}`, `at least ${t.minGap}px between two controls (--rhythm-actions)`, "space controls on the rhythm: put buttons in actions(), or let the container's rhythm part them (D-41)");
+        }
+    // control-text-centre: the label's line boxes in the middle of the content box, within 1 px.
+    for (const c of obs.texts) {
+        const off = (c.textTop + c.textBottom) / 2 - (c.contentTop + c.contentBottom) / 2;
+        if (Math.abs(off) > 1)
+            warn("control-text-centre", c.selector, `text ${r1(Math.abs(off))}px ${off > 0 ? "below" : "above"} the middle${c.lines > 1 ? ` (${c.lines} lines)` : ""}`, "the label centred in the control within 1px", "size the control from --control-height and its line box from --_control-line, never with padding alone (D-14, D-41)");
+    }
+    // stack-rhythm: the gaps between a stack's children equal (within 1 px), or each a rhythm token.
+    for (const st of obs.stacks) {
+        const gaps = [];
+        for (let i = 1; i < st.children.length; i++) {
+            const [p, c] = [st.children[i - 1], st.children[i]];
+            // Deliberately apart (an auto margin), or on another line of a wrapped row: not a rhythm gap.
+            if (p.autoAfter || c.autoBefore)
+                continue;
+            const cross = st.axis === "block" ? overlap(p.box.x, p.box.x + p.box.w, c.box.x, c.box.x + c.box.w) : overlap(p.box.y, p.box.y + p.box.h, c.box.y, c.box.y + c.box.h);
+            if (cross < 1)
+                continue;
+            const gap = st.axis === "block" ? c.box.y - (p.box.y + p.box.h) : c.box.x - (p.box.x + p.box.w);
+            // Side by side in a block flow (two buttons on one line) is not a step down the stack.
+            if (st.axis === "block" && c.box.y < p.box.y + p.box.h - 1 && overlap(p.box.y, p.box.y + p.box.h, c.box.y, c.box.y + c.box.h) >= 1)
+                continue;
+            gaps.push({ gap, a: p.selector, b: c.selector });
+        }
+        if (gaps.length < 2)
+            continue;
+        const vals = gaps.map((g) => g.gap);
+        if (Math.max(...vals) - Math.min(...vals) <= 1)
+            continue;
+        const onRhythm = (g) => t.rhythm.some((r) => Math.abs(r - g) <= 1);
+        for (const g of gaps.filter((x) => !onRhythm(x.gap)))
+            warn("stack-rhythm", st.selector, `${r1(g.gap)}px between ${g.a} and ${g.b}`, `equal gaps, or each a rhythm token (${t.rhythm.join(", ")} px)`, "space a stack's children with --rhythm-* (D-41)");
+    }
+    for (const r of obs.regions) {
+        const behind = oklabL(r.behind);
+        const fill = r.fill ? Math.abs(oklabL(r.fill) - behind) : 0;
+        const border = r.border ? Math.abs(oklabL(r.border) - behind) : 0;
+        if (fill >= t.fillStep - 1e-4 || border >= t.borderStep - 1e-4)
+            continue;
+        const what = `${r.fill ? `fill ${fill.toFixed(3)} L` : "no fill"}, ${r.border ? `border ${border.toFixed(3)} L` : "no four-sided border"} from the surface behind (${toHex(r.behind)})`;
+        warn("surface-distinct", r.selector, what, `a fill at least ${t.fillStep} L, or a border on all four sides at least ${t.borderStep} L, from the surface behind`, "a pane reads as a pane: the card surface on the page, or a border (D-41)");
+    }
+    return out;
+}
+/**
+ * popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the
+ * window. Past the window's bottom is how a menu that should have flipped up shows: lead-bench's rule
+ * is that with no room below it opens upward, so inside the window is the whole of that check. An open
+ * popover with no trigger to measure against is a finding of its own, never skipped.
+ */
+export function popoverFindings(list, t) {
+    const out = [];
+    const edge = (b) => ({ l: b.x, r: b.x + b.w, t: b.y, b: b.y + b.h });
+    for (const p of list) {
+        if (!p.triggerBox || !p.trigger) {
+            out.push({ rule: "popover-anchor", severity: "warning", selector: p.selector, value: "no trigger found", expected: "a trigger that names it (popovertarget, aria-controls, a summary) or an anchor", note: "open a popover from the button it belongs to, so it can be anchored to it (D-41)" });
+            continue;
+        }
+        const [o, g] = [edge(p.box), edge(p.triggerBox)];
+        const problems = [];
+        const below = o.t >= g.t;
+        const dist = below ? o.t - g.b : g.t - o.b;
+        if (dist > t.anchorGap + 0.5)
+            problems.push(`${r1(dist)}px ${below ? "below" : "above"} its trigger`);
+        if (overlap(o.l, o.r, g.l, g.r) < 1)
+            problems.push("outside its trigger's inline span");
+        const outside = [o.l < -0.5 && "start", o.r > p.viewport.w + 0.5 && "end", o.t < -0.5 && "top", o.b > p.viewport.h + 0.5 && "bottom"].filter(Boolean);
+        if (outside.length)
+            problems.push(`past the window's ${outside.join(", ")}`);
+        if (problems.length)
+            out.push({ rule: "popover-anchor", severity: "warning", selector: `${p.selector} (trigger ${p.trigger})`, value: problems.join("; "), expected: `within ${t.anchorGap}px of its trigger, across its inline span, inside the window`, note: "anchor a menu to its trigger: ui's details menus and tooltips do (D-41)" });
+    }
+    return out;
+}
+/**
+ * Opens every menu and popover trigger on the page in turn, measures it open, and closes it (D-41).
+ * Exported for a probe of its own (the screens bench): call it on a loaded page.
+ */
+export async function probePopovers(page, t) {
+    const t0 = popoverFindings(await page.evaluate(collectPopovers), t);
+    const count = await page.evaluate(() => {
+        // Summaries, popover buttons, and script-driven menu buttons (aria-haspopup with aria-controls).
+        const triggers = [...document.querySelectorAll("details:not([open]) > summary, [popovertarget], [aria-controls][aria-haspopup]:not([aria-haspopup='false'])")].filter((e) => e.checkVisibility({ visibilityProperty: true }) && e.getBoundingClientRect().width > 1);
+        triggers.forEach((e, i) => e.setAttribute("data-ui-audit-trigger", String(i)));
+        return triggers.length;
+    });
+    // What is open at rest is measured first: a popover a script opened, with or without a trigger.
+    const out = [...t0];
+    for (let i = 0; i < count; i++) {
+        const opened = await page.evaluate(async (i) => {
+            const e = document.querySelector(`[data-ui-audit-trigger="${i}"]`);
+            if (!e)
+                return false;
+            e.scrollIntoView({ block: "center", inline: "nearest" });
+            if (e.tagName === "SUMMARY")
+                e.parentElement.open = true;
+            // Already open (a script opened it at rest): measured above, and a press would close it.
+            else if (e.popoverTargetElement?.matches(":popover-open") || document.getElementById(e.getAttribute("aria-controls") ?? "")?.matches(":popover-open"))
+                return false;
+            // A popover opened by its button takes the button as its implicit anchor, as a press does; a
+            // script-driven menu button runs its own script.
+            else
+                e.click();
+            await new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok)));
+            return true;
+        }, i);
+        if (!opened)
+            continue;
+        out.push(...popoverFindings(await page.evaluate(collectPopovers), t));
+        // Close as a person would (Escape), then make sure: a details element and a native popover by the DOM.
+        await page.keyboard.press("Escape");
+        await page.evaluate((i) => {
+            const e = document.querySelector(`[data-ui-audit-trigger="${i}"]`);
+            if (e?.tagName === "SUMMARY")
+                e.parentElement.open = false;
+            else if (e) {
+                const target = document.getElementById(e.getAttribute("popovertarget") ?? e.getAttribute("aria-controls") ?? "");
+                if (target?.matches(":popover-open"))
+                    target.hidePopover();
+            }
+        }, i);
+    }
+    await page.evaluate(() => document.querySelectorAll("[data-ui-audit-trigger]").forEach((e) => e.removeAttribute("data-ui-audit-trigger")));
     return out;
 }
 /** One finding per distinct (rule, selector, value), with a count, errors first. */
@@ -498,6 +667,7 @@ async function auditPage(browser, url, width, theme, sc, opts, axe) {
         await page.evaluate(() => document.fonts.ready.then(() => undefined));
         const obs = await page.evaluate(collect);
         found.push(...findings(obs, sc, width));
+        found.push(...layoutFindings(await page.evaluate(collectLayout), sc.layout));
         await page.addScriptTag({ content: axe });
         const violations = await page.evaluate(async (tags) => {
             const r = await window.axe.run(document, { runOnly: { type: "tag", values: tags }, resultTypes: ["violations"] });
@@ -508,6 +678,8 @@ async function auditPage(browser, url, width, theme, sc, opts, axe) {
         for (const v of violations)
             for (const target of v.targets)
                 found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
+        // Last, since it opens things: every menu and popover, one at a time (D-41).
+        found.push(...(await probePopovers(page, sc.layout)));
         for (const [u, { type, fetched }] of offOrigin)
             found.push({ rule: "third-party", severity: "error", selector: type, value: u, expected: `same origin as the page (${origin})${own.size > 1 ? ` or ${[...own].filter((o) => o !== origin).join(", ")} (--allow-origin)` : ""}`, note: `no fonts, analytics or CDN requests (ui-standard §3); ${fetched ? "reached through a same-origin redirect, which the browser followed" : "the audit answered it empty"}` });
         const bytes = (await Promise.all(scripts)).reduce((a, b) => a + b, 0);

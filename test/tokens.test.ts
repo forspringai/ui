@@ -63,6 +63,19 @@ test("the menu column is a token every output carries (D-38)", () => {
   expect(out["tokens.d.ts"]).toContain('export declare const layout: Deep<{"menu":216}>;');
 });
 
+test("the rhythm is named steps of the space scale, and every output carries it (D-41)", () => {
+  const m = model(dir);
+  expect(m.rhythm).toEqual({ field: 8, help: 4, stack: 16, flow: 24, section: 48, actions: 8 });
+  // Each is an alias of a space step, so the rhythm can never leave the 4px grid.
+  for (const v of Object.values(m.rhythm)) expect(Object.values(m.space)).toContain(v);
+  const json = JSON.parse(readFileSync(join(dir, "geometry.json"), "utf8"));
+  for (const [k, t] of Object.entries(json.rhythm).filter(([k]) => !k.startsWith("$"))) expect((t as { $value: unknown }).$value, k).toMatch(/^\{space\.\d+\}$/);
+  const out = build(dir);
+  for (const [k, v] of Object.entries(m.rhythm)) expect(out["tokens.css"]).toContain(`--rhythm-${k}: ${v}px;`);
+  expect(out["tokens.js"]).toMatch(/export const rhythm = Object\.freeze\(\{\s*"field": 8,\s*"help": 4,\s*"stack": 16,\s*"flow": 24,\s*"section": 48,\s*"actions": 8\s*\}\);/);
+  expect(out["tokens.d.ts"]).toContain('export declare const rhythm: Deep<{"field":8,"help":4,"stack":16,"flow":24,"section":48,"actions":8}>;');
+});
+
 test("control heights are steps of the space scale, and every output carries them (D-14)", () => {
   const m = model(dir);
   expect(m.control).toEqual({ height: 44, "height-small": 32, touch: 44 });

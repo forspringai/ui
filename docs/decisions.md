@@ -1519,3 +1519,118 @@ its own copy of each item.
    to it). Measured with bun's bundler, minified: five icons from `@forspring/ui/icons` are 586 B
    gzip without the licence comment (2.1 KB with it inline); the same five through `icon()` from
    `@forspring/ui/html` are 5.9 KB.
+
+## D-41 — Rhythm tokens, an action row, one button face, anchored menus, panes on a grey page, and five layout rules; 0.27.0 (2026-11-15)
+
+From Peter on a test page drawn with this package's helpers (the ui-sdk-trial's "ours": bar()'s product
+switcher, two field() selects and a Save in a bare form, a dialogTrigger() "Remove lead"): "Spacing.
+Esp buttons look completely off", and on SpringML's screens: "all white on white, areas floating
+together". The page had no vertical rhythm (Products touched the Stage label, Save sat on Remove lead),
+buttons stacked in a column with no row, the Products trigger in the mono face, and at 390 px the open
+menu at the foot of the page. The founder's rule (hub ADR 0077) is that an agent cannot build a screen
+that is not correctly designed, so the defaults carry the fix: markup with no class comes out right.
+lead-brand set the design; lead-bench defined the checks and wires them into the screens bench.
+
+1. **Rhythm tokens.** `rhythm` in `tokens/geometry.json`, each an alias of a space step: `field` 8
+   (label to control), `help` 4 (control to hint or error), `stack` 16 (between fields), `flow` 24
+   (between blocks in main, a card, a dialog body), `section` 48 (between page sections), `actions` 8
+   (inside a button row, and the least gap two controls may have). Emitted as `--rhythm-*` in
+   tokens.css and `rhythm` in tokens.js and tokens.d.ts, the way D-38's `layout` is.
+2. **Defaults with no class**, in `:where()` so they weigh nothing and any class wins, in the
+   components layer so they win over the base layer's element margins. The children of `main`, a
+   classless `section`, `.card` and `.dialog-body` sit `flow` apart; a classless `form`'s sit `stack`
+   apart. Margins, not gap, so the containers keep block layout (an inline form, a button beside a
+   link) and nothing doubles a container's own gap; a hidden input, script or template is not "the
+   block before", and a dialog or popover keeps the margins that centre it. Text keeps its measure:
+   paragraph to paragraph is the paragraph's 16, and a heading, crumbs, kicker, label or legend binds
+   to what follows by its own margin. Two controls side by side in a flow keep the actions gap.
+   `.form` and `.stack` take `stack`; `field()` takes `field` and `help`. The base margins move onto
+   rhythm steps, so a page's gaps are tokens: h1 16 (was 12), h2 8 (12), the kicker and crumbs 8 (12),
+   the lede 24 (28), sections 48 (40), `.or` 24 (20), the standard pages' meta line 16 (12), the
+   toast's action gap 8 (4); the approval's draft link goes to the row's far end (an auto margin).
+3. **`actions()` and `.actions`.** `actions({ primary, secondary, destructive })`: the primary first,
+   the secondary after it, the destructive in `.actions-end` at the far end (`margin-inline-start:
+   auto`); one height (the row stretches), the actions gap; at 560 px and under a column of full-width
+   buttons with the same gap. `.actions` was an inline-flex row already (the standard pages); it is a
+   block row now, and `span.actions` (a pair of links in a list row) stays inline. React: `Actions`.
+   A dialog's footer stays `dialog()`'s own, safe action first (D-23).
+4. **One face.** Buttons and `.button` links are Archivo 600 at the chrome body size (14, was 15),
+   small ones at 13 as before; the bar's menus (`.switcher > summary`) are the small button's face,
+   600 at 13 on the small control's line box, in ink (they were Space Mono 12 in muted). The org
+   switcher's name follows (13, was 14), like the bar's selects. The phone fold's summary was already
+   600 at 14. Each control's line box is what its height leaves (D-14), so its words sit in the middle.
+5. **Menus anchored at every width, no script.** With anchor positioning (`position-area` and
+   `anchor-scope`), every `.switcher` panel (the bar's org, product and user menus, the legacy
+   switcher) is fixed against its own summary: below it along its start edge, its end edge when that
+   would overflow, above it when there is no room below, and across the window under or over it when
+   neither edge fits. The margins (4 px from the trigger, 16 px from the window on the far sides) are
+   inside each try, and the flips swap them. The phone rule that hung the panels full width under
+   `.bar-inner` (`.bar-menu { position: static }`) is gone: outside the bar it anchored to the page,
+   which put Peter's open menu at the foot of it. Without anchor positioning a panel opens below its
+   trigger as before, never wider than the window. The tooltip kept its D-26 anchoring.
+6. **Panes on a grey page.** The prototypes Peter compared with put white panes on a page about 0.03
+   OKLab L darker; ours were 0.0095 apart in light. Light paper goes to `#f6f6f4` (L 0.973, was
+   `#fcfcfa`), card stays white (step 0.027); dark card goes to `#1a1b1f` (L 0.223, step 0.040 from the
+   paper), dark soft to `#212227` (0.253) and dark line to `#2c2e34` (0.302). The bar and the sidebar
+   take the card surface (the sidebar a bordered pane, `--radius-card`, its top level with main's
+   first line); main stays on the page and its cards, lists, tables and dialogs carry the panes.
+   `test/contrast.test.ts` holds the card 0.025 L off the page in light and 0.035 in dark, and a border
+   0.02 off soft and 0.04 off the page. Customer themes follow the family's paper (D-34): the example's
+   tinted light page goes from `#fefffe` to `#f3fbf5`.
+   - **Light soft moves to `#ecece7` (L 0.942), 0.031 under the grey page,** so D-36's rule holds
+     without exceptions: soft is at least 0.03 from the page and from the card in both themes. Two
+     colours that sat on the old soft were darkened by the least that keeps their contrast on the
+     new one, keeping their hue (cos, 2026-11-15: "Peter's whole point is visible delineation"):
+     DataSpring's light teal `#0b7a7f` to `#01767c` (4.56:1 on soft, hue within 1 degree, 1.3 apart
+     in OKLab x100), and signal-ok `#1e9e48` to `#199b46` (3.05:1, 0.9 apart). DataSpring's dolls,
+     favicons and logo are regenerated from the token.
+   - **Three chart slots move by about 0.005 L** so every mark keeps 3:1 on the new surfaces
+     (WCAG 1.4.11): light chart-2 `#eb681d` to `#e9661a` and chart-5 `#d868ab` to `#d666a9` on the
+     darker page, dark chart-5 `#924d7d` to `#955080` on the lighter card. Their tints (D-37) follow.
+7. **Five layout rules in ui-audit, written once** (the screens bench runs ui-audit, so these are the
+   suite's), on lead-bench's definitions. All five are **warnings**: taste-class, landing warn-first
+   (lead-bench's warnSince), so a product's build does not fail on the upgrade; ui's own tests hold
+   the demo, the standard pages, the connect and confirm pages and the regression page to none.
+   - `control-gap`: two controls (buttons, button links, inputs, selects, textareas, summaries, the
+     ARIA control roles) whose border boxes overlap by 1 px or more on one axis and are under 8 px apart
+     on the other (or touch, or overlap), in any containers. A composite's parts are skipped: a control
+     inside another in the DOM, or whose box lies inside another control's box wherever it sits in the
+     DOM (an input's clear or reveal button, a date field's calendar button, an icon button in a
+     combobox's wrapper); siblings in one parent framed on all four sides with nothing between them (a
+     segmented group); tabs of one tablist; radios of one name (one choice); a checkbox or radio
+     measured by its own label. Boxes are clipped by overflowing ancestors; off-page ones are skipped.
+   - `control-text-centre`: the union of a button-like control's visible text boxes (a Range over
+     its text nodes; visually-hidden, clipped, zero-size, invisible and aria-hidden words left out)
+     against its content box, within 1 px; with no visible words, its glyph (the icon's svg).
+   - `stack-rhythm`: a one-axis flex or grid container, or one of the default flow containers, with
+     three or more visible in-flow children: the gaps between neighbours equal within 1 px, or each a
+     rhythm token within 1 px; one finding per gap that is neither. A gap after an auto margin or a
+     growing empty spacer (the bar's) is deliberate and skipped, as are neighbours on another line of
+     a wrapped row and two blocks side by side on one line of a flow.
+   - `popover-anchor`: the audit measures what is open at rest, then opens each menu (a closed
+     `details` whose panel is positioned), each `[popovertarget]` button and each script-driven menu
+     button (`aria-haspopup` with `aria-controls`) in turn, scrolled into view, waits two frames,
+     measures and closes it (Escape, then the DOM). A popover's trigger is the button that names it
+     (`popovertarget`, `aria-controls`), else the element its `position-anchor` names; an open popover
+     with none is a finding of its own, "no trigger found". The panel's near edge within 8 px of its
+     trigger, overlapping its inline span, inside the window: past the window's bottom is the menu
+     that should have flipped up. `probePopovers(page, layoutScale(rhythm))` is exported for the bench's own probe.
+   - `surface-distinct` (lead-brand and lead-bench's edge cases): a region is `.card`, `.panel`,
+     `aside`, `[role=region]`, `dialog`, or a `section` only when it paints a fill or a border on
+     all four sides of its own (a plain section with a heading is part of the page, and one with a rule
+     on one side is divided, not framed). Its fill at least 0.02 OKLab L from the
+     nearest painted ancestor (composited; the page when none paints), or a border on all four sides at
+     least 0.04 L from it. A transparent region with no border fails. A region inside a filled region
+     card is skipped: that is the nested-card rule's, and the fix there is to flatten it.
+8. **A regression page** (`dist/demo/pages/lead.en.html`): Peter's markup as he drew it, then the same
+   lead with `actions()`. The visual test shoots it at rest and with the product menu open; the
+   audit tests run all five rules over it.
+9. **Baselines.** Every one of the 144 changed, for causes this decision names: the page's ground
+   (every shot shows it), the bar and sidebar on the card surface, the button face (15 to 14 px), the
+   headings' and sections' rhythm steps (most sections a few px shorter), field() help 4 px under its
+   control, the demo's form and dialog rows drawn with `actions()`, the approval's draft link at the
+   row's far end and the dark card and soft. Sixteen are new: the lead page at rest and open.
+
+Not chosen: a gap-based flow (`display: flex` on main and cards), which would stretch or reflow inline
+content and add to every container's own gap; a script to place menus (they are details elements and
+must work without one); new spacing values (every rhythm step is a space step).

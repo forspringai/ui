@@ -8,11 +8,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.9882,
-            0.9882,
-            0.9804
+            0.9647,
+            0.9647,
+            0.9569
           ],
-          "hex": "#fcfcfa"
+          "hex": "#f6f6f4"
         },
         "$description": "The page ground."
       },
@@ -21,11 +21,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.9451,
-            0.9451,
-            0.9255
+            0.9255,
+            0.9255,
+            0.9059
           ],
-          "hex": "#f1f1ec"
+          "hex": "#ecece7"
         },
         "$description": "A quiet surface: table heads, hover rows."
       },
@@ -152,11 +152,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.1255,
             0.1294,
-            0.149
+            0.1333,
+            0.1529
           ],
-          "hex": "#202126"
+          "hex": "#212227"
         }
       },
       "card": {
@@ -164,11 +164,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.0902,
-            0.0941,
-            0.1098
+            0.102,
+            0.1059,
+            0.1216
           ],
-          "hex": "#17181c"
+          "hex": "#1a1b1f"
         }
       },
       "ink": {
@@ -224,11 +224,11 @@
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.1647,
             0.1725,
-            0.1961
+            0.1804,
+            0.2039
           ],
-          "hex": "#2a2c32"
+          "hex": "#2c2e34"
         }
       },
       "line-strong": {

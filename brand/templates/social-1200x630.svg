@@ -4,7 +4,7 @@
     Replace the headline (the tspans; one line each, at most about 33 characters) and the domain.
     For a product: paste the paths of brand/<product>/logo.svg in place of the lockup below and set
     .fill and .coil to the product's light accent (tokens/accent.json); Forspring's doll is ink (hub D-101).
-    Colours: paper #fcfcfa (background), ink #14151a (foreground), muted #5b5e68 (muted-foreground).
+    Colours: paper #f6f6f4 (background), ink #14151a (foreground), muted #5b5e68 (muted-foreground).
     Sizes: the headline is text.marketing.h1 (72 px, line 76), the domain text.marketing.h3 (24 px).
     The fonts load from the package's fonts/ when the file is opened from brand/templates/; render the
     PNG in a browser that way. Nothing loads from another origin.
@@ -19,7 +19,7 @@
     .coil { stroke: #14151a; }
     .word { fill: #14151a; }
   </style>
-  <rect width="1200" height="630" fill="#fcfcfa"/>
+  <rect width="1200" height="630" fill="#f6f6f4"/>
   <text class="headline">
     <tspan x="64" y="176">Et sandt billede af forretningen</tspan>
     <tspan x="64" y="252">og mindre manuelt arbejde.</tspan>

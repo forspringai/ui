@@ -67,17 +67,17 @@
       }
     },
     "dataspring": {
-      "$description": "DataSpring, deep teal. Light was #0b7c82 until 0.10.1: 4.39:1 on the soft grey (brand review 2026-11-11), so it was darkened by the least that passes, 0.7 apart in OKLab x100, too little to see (D-20).",
+      "$description": "DataSpring, deep teal. Light was #0b7c82 until 0.10.1: 4.39:1 on the soft grey (brand review 2026-11-11), so it was darkened by the least that passes, 0.7 apart in OKLab x100, too little to see (D-20). #0b7a7f until 0.27.0: the soft grey moved to stay 0.03 L under the grey page, and the teal was darkened by the least that keeps 4.5:1 on it (#01767c, 4.56:1, hue within 1 degree, D-41).",
       "light": {
         "$type": "color",
         "$value": {
           "colorSpace": "srgb",
           "components": [
-            0.0431,
-            0.4784,
-            0.498
+            0.0039,
+            0.4627,
+            0.4863
           ],
-          "hex": "#0b7a7f"
+          "hex": "#01767c"
         }
       },
       "dark": {

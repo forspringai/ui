@@ -50,7 +50,7 @@ test("fonts.css points at the package's fonts/ folder, swaps, and covers the fil
 test("tokens.css: roles pair light and dark, the theme override sets color-scheme, every product swaps primary", () => {
   const css = files["tokens.css"]!;
   expect(css).toMatch(/:root \{\n {2}color-scheme: light dark;/);
-  expect(css).toContain("--background: light-dark(#fcfcfa, #111215);");
+  expect(css).toContain("--background: light-dark(#f6f6f4, #111215);");
   expect(css).toContain('[data-theme="dark"] {\n  color-scheme: dark;\n}');
   expect(css).toContain('[data-theme="light"] {\n  color-scheme: light;\n}');
   for (const p of tokens.products) expect(css).toContain(`[data-product="${p}"] {\n  --primary: light-dark(${tokens.accents[p].light}, ${tokens.accents[p].dark});`);

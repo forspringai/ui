@@ -88,7 +88,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.26.0";
+export const VERSION = "0.27.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -485,7 +485,7 @@ export type ButtonOptions = {
   ariaLabel?: string;
   /** Kept for the account's markup (D-5), but don't use it: a disabled button cannot be focused, says
    *  nothing about why, and needs script to come back (D-23). Keep the button live and let the submit
-   *  say what is missing, or leave it out and say why in words (docs/usage.md section 3). */
+   *  say what is missing, or leave it out and say why in words (docs/usage.md section 4). */
   disabled?: boolean;
   /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
    *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
@@ -500,6 +500,26 @@ export function button(o: ButtonOptions): Html {
   }
   const a = { class: cls(variant, o.small && "small", o.wide && "wide"), type: o.type ?? "submit", name: o.name, value: o.value, "aria-label": o.ariaLabel, disabled: o.disabled };
   return html`<button${raw(attrs(a))}>${label}</button>`;
+}
+
+export type ActionsOptions = {
+  /** The one primary action, first in the row: a button(), usually the form's submit. */
+  primary?: Content;
+  /** Ghost actions after it: Annuller as a link back, a secondary step. */
+  secondary?: Content;
+  /** What loses something (a danger button(), a dialogTrigger() to a confirm), apart at the far end. */
+  destructive?: Content;
+};
+
+/**
+ * A row of actions (D-41): one height and the actions gap, the primary first, then the secondary
+ * ones, and the destructive one apart at the far end. On a phone it is a column of full-width
+ * buttons with the same gap. The order is the helper's, so a page cannot get it wrong. (A
+ * destructive confirm puts the safe action first instead: that is dialog()'s own row, D-23.)
+ */
+export function actions(o: ActionsOptions): Html {
+  const end = o.destructive ? html`<div class="actions-end">${o.destructive}</div>` : "";
+  return html`<div class="actions">${o.primary ?? ""}${o.secondary ?? ""}${end}</div>`;
 }
 
 export type FieldOptions = {
@@ -629,7 +649,7 @@ export type ErrorSummaryOptions = {
 };
 
 /**
- * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 4): the error
  * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
  * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
  * Nothing when there are no errors.

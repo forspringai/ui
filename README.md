@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.26.0
+pnpm add github:forspringai/ui#v0.27.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -92,6 +92,33 @@ the package does it now, and a smaller padding than the package's moves the text
 Expect small shifts: inputs are 44px (were 46), the switch's track 40 by 24 (was 38 by 22), list
 rows 16/20 padding (were 14/18), paragraphs 16px apart (were 14) and h1 and h2 12px above what
 follows (were 10 and 14).
+
+### Rhythm, action rows, anchored menus and panes (0.27.0, D-41)
+
+The defaults space a page with no class: blocks in `main`, a plain `section`, a `.card` and a dialog
+body sit `--rhythm-flow` (24px) apart, the parts of a bare `form` `--rhythm-stack` (16px), a field's
+label `--rhythm-field` (8px) over its control and its hint `--rhythm-help` (4px) under it, and a
+page's sections `--rhythm-section` (48px). Code gets `rhythm`. Buttons together go in `actions()`:
+
+```ts
+actions({
+  primary: button({ label: "Gem" }),
+  secondary: button({ label: "Annuller", variant: "ghost", href: "/o/acme/leads" }),
+  destructive: dialogTrigger({ dialog: "remove", href: "/o/acme/leads/7/remove", label: "Fjern", variant: "danger" }),
+});
+```
+
+One height and the 8px gap, the primary first, the destructive one at the far end, and a column of
+full-width buttons on a phone. Every button-like control (buttons, `.button` links, the bar's menus)
+is Archivo 600, its words in the middle of its box. The bar's menus open against their trigger at
+every width, flip up when there is no room below and stay 16px inside the window, with no script.
+The page is a step under the card, so the bar, the sidebar, cards and dialogs read as panes.
+
+**Upgrading from 0.26.x.** Remove margins of your own between blocks: the defaults now give them, and
+a class on the container takes it out of the defaults. Expect the bar and sidebar on the card
+surface, h2 8px over its content (was 12), sections 48px apart (were 40) and button text at 14px
+(was 15). `ui-audit` adds `control-gap`, `control-text-centre`, `stack-rhythm`, `popover-anchor` and
+`surface-distinct`, warnings for now: fix what they find before they block.
 
 ### A console's menu, crumbs and signals (D-13)
 
@@ -699,6 +726,12 @@ so the customer's views could read as the product's chrome).
 `ui-audit` opens each page in Chromium at 1280 and 380 px wide, in light and dark, and checks it
 against the tokens: contrast, type sizes and families, radii, spacing on the 4 px grid, colours,
 touch targets, axe-core, third-party requests and the script budget (rules and severities: D-8).
+Five layout rules (D-41) warn: `control-gap` (two controls under 8px apart, in any containers),
+`control-text-centre` (a button's words off its middle by more than 1px), `stack-rhythm` (a stack's
+gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every menu and popover and
+finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
+apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
+from `@forspring/ui/audit` after it opens a state.
 It prints JSON (`--format text` for people) and exits 0 when there are no errors, 1 when there
 are, 2 on an invalid value, 5 when Playwright or its browser is missing, 64 on a usage error.
 

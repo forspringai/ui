@@ -17,7 +17,12 @@ export type Rule =
   | "primitive"
   | "axe"
   | "third-party"
-  | "js-budget";
+  | "js-budget"
+  | "control-gap"
+  | "control-text-centre"
+  | "stack-rhythm"
+  | "popover-anchor"
+  | "surface-distinct";
 
 export type Finding = {
   rule: Rule;

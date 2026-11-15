@@ -1,5 +1,5 @@
-import type { Browser } from "playwright";
-import { type Observations, type SlotObservation } from "./page.js";
+import type { Browser, Page } from "playwright";
+import { type LayoutObservations, type Observations, type PopoverObservation, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, Theme } from "./types.js";
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 export declare const DEFAULT_WIDTHS: number[];
@@ -22,6 +22,7 @@ type Tokens = {
     radius: Record<string, number>;
     control: Record<string, number>;
     space: Record<string, number>;
+    rhythm: Record<string, number>;
     text: {
         chrome: Record<string, number>;
         content: Record<string, number>;
@@ -62,6 +63,8 @@ type Scale = {
     allowSpacing: number[];
     /** The token values RICH_SLOTS names, under --rich-app only (D-33). */
     rich?: Pick<Tokens, "radius" | "control" | "space" | "text">;
+    /** The layout rules' thresholds (D-41); scale() always sets them. */
+    layout?: LayoutScale;
 };
 /** The colours a page may use: every token value, and the shades components.css mixes from roles. */
 export declare function palette(browser: Browser, tokens: Tokens, root: string, product?: string): Promise<[number, number, number][]>;
@@ -82,6 +85,40 @@ export declare function findings(obs: Observations, sc: Scale, width: number): F
  * text); this one knows which token each part takes.
  */
 export declare function primitives(slots: SlotObservation[], t: NonNullable<Scale["rich"]>, width: number): Finding[];
+/** The thresholds the layout rules read: the rhythm tokens, and the surface steps in OKLab L. */
+export type LayoutScale = {
+    /** The rhythm tokens in px (tokens.rhythm); a stack whose every gap is one of them is on the rhythm. */
+    rhythm: number[];
+    /** The least gap two controls may have: 8 px, or the smallest rhythm token if that is larger. */
+    minGap: number;
+    /** A popover's nearest edge from its trigger, at most (px). */
+    anchorGap: number;
+    /** A region's fill from the surface behind it, at least (OKLab L). */
+    fillStep: number;
+    /** A region's four-sided border from the surface behind it, at least (OKLab L). */
+    borderStep: number;
+};
+export declare function layoutScale(rhythm: Record<string, number>): LayoutScale;
+/** OKLab lightness of an sRGB colour (0 to 255 per channel), 0 to 1. */
+export declare function oklabL([r, g, b]: readonly number[]): number;
+/**
+ * The layout rules (D-41), written once here so the screens bench runs the same ones (lead-bench's
+ * definitions, D-41). Warnings: they are taste-class and land warn-first; ui's own tests
+ * hold the demo to none.
+ */
+export declare function layoutFindings(obs: LayoutObservations, t: LayoutScale): Finding[];
+/**
+ * popover-anchor: an open popover within anchorGap of its trigger, across its inline span, inside the
+ * window. Past the window's bottom is how a menu that should have flipped up shows: lead-bench's rule
+ * is that with no room below it opens upward, so inside the window is the whole of that check. An open
+ * popover with no trigger to measure against is a finding of its own, never skipped.
+ */
+export declare function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[];
+/**
+ * Opens every menu and popover trigger on the page in turn, measures it open, and closes it (D-41).
+ * Exported for a probe of its own (the screens bench): call it on a loaded page.
+ */
+export declare function probePopovers(page: Page, t: LayoutScale): Promise<Finding[]>;
 /** One finding per distinct (rule, selector, value), with a count, errors first. */
 export declare function dedupe(list: Finding[]): Finding[];
 /** --format text: one line per page, one per finding. */

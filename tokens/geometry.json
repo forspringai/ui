@@ -146,6 +146,39 @@
       "$description": "The sidebar menu's column (13.5rem at the 16px root)."
     }
   },
+  "rhythm": {
+    "$description": "Vertical rhythm (D-41): the named gaps between the things on a page, each a step of the space scale. components.css spaces bare forms, main, cards, panels and dialog bodies on them, so markup with no class comes out right; ui-audit's stack-rhythm and control-gap rules read them.",
+    "field": {
+      "$type": "dimension",
+      "$value": "{space.2}",
+      "$description": "A field's label to its control."
+    },
+    "help": {
+      "$type": "dimension",
+      "$value": "{space.1}",
+      "$description": "A control to its hint or error under it."
+    },
+    "stack": {
+      "$type": "dimension",
+      "$value": "{space.4}",
+      "$description": "Between fields, and between the blocks of a form."
+    },
+    "flow": {
+      "$type": "dimension",
+      "$value": "{space.6}",
+      "$description": "Between the blocks in main, a card, a panel or a dialog body."
+    },
+    "section": {
+      "$type": "dimension",
+      "$value": "{space.12}",
+      "$description": "Between a page's sections."
+    },
+    "actions": {
+      "$type": "dimension",
+      "$value": "{space.2}",
+      "$description": "The gap between the buttons of one action row. Also the smallest gap two controls may have."
+    }
+  },
   "breakpoint": {
     "$description": "Viewport widths where layout changes (D-27). A media query cannot read a custom property, so these reach tokens.js (breakpoint) and Tailwind's @theme (--breakpoint-*, as phone:, max-phone: and so on), and components.css writes them as px literals that test/components.test.ts holds to these values. Each is the largest width that still counts as the smaller layout: write @media (max-width: <value>px) for 'on a phone'.",
     "phone": {

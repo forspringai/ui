@@ -57,22 +57,22 @@
   h1 {
     font: 800 clamp(var(--text-content-h1-min), 4.4vw, var(--text-content-h1))/var(--leading-content-h1) var(--font-display);
     letter-spacing: -0.02em;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--rhythm-stack);
   }
 
   h2 {
     font: 800 var(--text-content-h2)/var(--leading-content-h2) var(--font-display);
     letter-spacing: -0.01em;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--rhythm-field);
   }
 
   h3 {
     font: 600 var(--text-content-h3)/var(--leading-content-h3) var(--font-sans);
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--rhythm-field);
   }
 
   p {
-    margin: 0 0 var(--space-4);
+    margin: 0 0 var(--rhythm-stack);
   }
 
   b,
@@ -82,7 +82,7 @@
   }
 
   section {
-    margin-top: var(--space-10);
+    margin-top: var(--rhythm-section);
   }
 
   a {
@@ -111,7 +111,7 @@
 
   /* A bare button is the primary action, as in the account. */
   button {
-    font: 600 var(--text-content-body)/var(--_control-line) var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--_control-line) var(--font-sans);
     cursor: pointer;
     border-radius: var(--radius-button);
     min-height: var(--control-height);
@@ -331,9 +331,11 @@
 
   /* --- Shell: the bar with the mark, "Forspring", the product, a switcher and the person -------- */
 
+  /* The bar is a strip of the card surface over the page's ground (D-41), so the chrome reads as a
+     pane, as main's cards do. */
   .bar {
     border-bottom: 1px solid var(--border);
-    background: var(--background);
+    background: var(--card);
   }
 
   .bar-inner {
@@ -426,8 +428,10 @@
     padding: var(--space-1) var(--space-3);
     border: 1px solid var(--input);
     border-radius: var(--radius-button);
-    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
-    color: var(--muted-foreground);
+    /* The small button's face (D-41): sans 600 at the small size, on the small control's line, so
+       the words sit in the middle of the 32px box as a small button's do. */
+    font: 600 var(--text-content-small)/var(--_control-line-small) var(--font-sans);
+    color: var(--foreground);
     cursor: pointer;
   }
 
@@ -504,9 +508,6 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     color: var(--foreground);
-    font-weight: 600;
-    font-family: var(--font-sans);
-    font-size: var(--text-chrome-body);
   }
 
   .bar-panel {
@@ -569,6 +570,42 @@
   .user-menu > .bar-panel {
     left: auto;
     right: 0;
+  }
+
+  /* Anchored to the trigger at every width (D-41), with no script: below it, along its start edge,
+     or its end edge when that would run off the window; above it when there is no room below; and
+     when neither edge fits, across the window under it. The margins keep the panel 4px from its
+     trigger and 16px inside the window: a try only fits when the margin box does, and the flips
+     swap the margins with the sides. Fixed, so the window is what it must fit, wherever the menu
+     sits (the bar, a page's own nav, a card). anchor-scope gives every menu its own anchor. */
+  @supports (position-area: block-end) and (anchor-scope: all) {
+    .switcher {
+      anchor-scope: --forspring-menu;
+    }
+
+    .switcher > summary {
+      anchor-name: --forspring-menu;
+    }
+
+    .switcher > :is(ul, .bar-panel),
+    .user-menu > .bar-panel {
+      position: fixed;
+      position-anchor: --forspring-menu;
+      inset: auto;
+      position-area: block-end span-inline-end;
+      margin-block: var(--space-1) var(--space-4);
+      margin-inline: 0 var(--space-4);
+      max-width: min(24rem, calc(100vw - 2 * var(--space-4)));
+      position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline, --forspring-menu-across, --forspring-menu-across-up;
+    }
+  }
+
+  /* Without anchor positioning a menu opens under its trigger, along its start edge (above), and
+     never wider than the window. */
+  @supports not ((position-area: block-end) and (anchor-scope: all)) {
+    .switcher > :is(ul, .bar-panel) {
+      max-width: min(24rem, calc(100vw - 2 * var(--space-4)));
+    }
   }
 
   .user-menu > summary {
@@ -660,7 +697,7 @@
   }
 
   .std-page .meta {
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--rhythm-stack);
   }
 
   .std-page .name .tag {
@@ -695,10 +732,17 @@
     max-width: 760px;
   }
 
+  /* The sidebar is a pane beside main (D-41): the card surface, a border and the card radius on the
+     page's ground, its top level with main's first line. The fold on a narrow screen is the same
+     surface. */
   .menu-side {
     position: sticky;
-    top: 0;
-    padding-block: var(--space-11) var(--space-8);
+    top: var(--space-4);
+    margin-block: var(--space-11) var(--space-8);
+    padding: var(--space-4) var(--space-2);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
   }
 
   /* The narrow fold sits inside its own nav (D-38), so landmark navigation finds the menu while the
@@ -882,7 +926,7 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-2);
-    margin: 0 0 var(--space-3);
+    margin: 0 0 var(--rhythm-field);
     padding: 0;
     font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-mono);
   }
@@ -988,13 +1032,13 @@
   .kicker {
     font: 400 var(--text-content-small)/var(--leading-content-small) var(--font-mono);
     color: var(--primary);
-    margin: 0 0 var(--space-3);
+    margin: 0 0 var(--rhythm-field);
   }
 
   .lede {
     font-size: var(--text-content-lede);
     color: var(--muted-foreground);
-    margin-bottom: var(--space-7);
+    margin-bottom: var(--rhythm-flow);
   }
 
   .muted {
@@ -1045,7 +1089,42 @@
   }
 
   .stack > * + * {
-    margin-top: var(--space-3);
+    margin-top: var(--rhythm-stack);
+  }
+
+  /* --- Rhythm: the space between blocks, with no class (D-41) ------------------------------- */
+
+  /* Markup with no class comes out spaced: the blocks in main, a section, a card or a dialog body
+     sit the flow apart, and the parts of a bare form the stack apart. Each selector is inside
+     :where(), so it weighs nothing and any class rule wins; it sits in this layer, so it wins over
+     the base layer's element margins. Margins rather than gap, so the containers keep block layout
+     (an inline form, a button beside a link) and add nothing to a container's own gap. Hidden
+     inputs, scripts and templates do not count as the block before; a dialog and a popover keep
+     the browser's own margins, which centre them. */
+  :where(main, section:not([class]), .card, .dialog-body) > :where(:not([hidden], [type="hidden"], script, style, template)) ~ :where(:not(dialog, [popover])) {
+    margin-block-start: var(--rhythm-flow);
+  }
+
+  :where(form:not([class])) > :where(:not([hidden], [type="hidden"], script, style, template)) ~ :where(:not(dialog, [popover])) {
+    margin-block-start: var(--rhythm-stack);
+  }
+
+  /* Text keeps its own measure: paragraph to paragraph is the paragraph's margin, and a heading or a
+     label binds to what follows by its own (h2 the field step, h1 the stack step). */
+  :where(main, section:not([class]), .card, .dialog-body, form:not([class])) > :where(p, ul:not([class]), ol:not([class]), blockquote) + :where(p, ul:not([class]), ol:not([class]), blockquote),
+  :where(main, section:not([class]), .card, .dialog-body, form:not([class])) > :where(h1, h2, h3, h4, .crumbs, .kicker, .back, .std-label, legend, label) + :where(*) {
+    margin-block-start: 0;
+  }
+
+  /* A page's sections stand the section step apart. */
+  :where(main, section:not([class])) > :where(* ~ section) {
+    margin-block-start: var(--rhythm-section);
+  }
+
+  /* Two controls side by side in a flow (a Save and a Cancel with no row around them) keep the
+     actions gap; in a row of its own (.actions, .toolbar) the row's gap does it instead. */
+  :where(main, section:not([class]), .card, .dialog-body, form:not([class]), p) > :where(button, .button, input:not([type="hidden"]), select) + :where(button, .button) {
+    margin-inline-start: var(--rhythm-actions);
   }
 
   /* --- Card and list -------------------------------------------------------------------------- */
@@ -1112,7 +1191,7 @@
   /* --- Buttons -------------------------------------------------------------------------------- */
 
   .button {
-    font: 600 var(--text-content-body)/var(--_control-line) var(--font-sans);
+    font: 600 var(--text-chrome-body)/var(--_control-line) var(--font-sans);
     cursor: pointer;
     border-radius: var(--radius-button);
     min-height: var(--control-height);
@@ -1197,10 +1276,35 @@
     vertical-align: middle;
   }
 
+  /* An action row (D-41, actions()): one height, the actions gap, the primary first, then the
+     secondary ones, and a destructive action apart at the far end. On a phone it is a column of
+     full-width buttons with the same gap (below). A span.actions is the inline pair of links in a
+     list row, and stays inline. */
   .actions {
-    display: inline-flex;
-    gap: var(--space-2);
+    display: flex;
     flex-wrap: wrap;
+    align-items: stretch;
+    gap: var(--rhythm-actions);
+  }
+
+  span.actions {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .actions > :is(button, .button, form) {
+    margin: 0;
+  }
+
+  .actions > form {
+    display: flex;
+  }
+
+  .actions-end {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--rhythm-actions);
+    margin-inline-start: auto;
   }
 
   /* Controls in a row: a search, a filter, its buttons. They share a height, so they share a line;
@@ -1224,7 +1328,7 @@
 
   .form {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--rhythm-stack);
     max-width: 30rem;
   }
 
@@ -1232,9 +1336,11 @@
     margin: 0;
   }
 
+  /* A field's parts on the rhythm (D-41): the label field above its control, a hint or an error
+     help under it. Margins rather than one gap, since the two steps differ. */
   .field {
     display: grid;
-    gap: var(--space-2);
+    gap: 0;
     font-size: var(--text-chrome-body);
     font-weight: 600;
     color: var(--foreground);
@@ -1254,8 +1360,12 @@
     color: var(--danger);
   }
 
-  .field > .field-error {
-    margin: 0;
+  .field > * + * {
+    margin-top: var(--rhythm-field);
+  }
+
+  .field > * + :is(.hint, .field-error) {
+    margin-top: var(--rhythm-help);
   }
 
   /* "påkrævet" / "valgfri" in the label (D-30): in its accessible name, quieter than the label. */
@@ -1734,7 +1844,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    margin: var(--space-5) 0;
+    margin: var(--rhythm-flow) 0;
     font: 400 var(--text-chrome-meta)/var(--leading-solid) var(--font-mono);
     color: var(--muted-foreground);
   }
@@ -1995,10 +2105,6 @@
     margin-bottom: 0;
   }
 
-  .dialog-body .field {
-    margin-top: var(--space-5);
-  }
-
   .dialog-losses {
     margin: 0 0 var(--space-4);
     padding-inline-start: var(--space-6);
@@ -2125,7 +2231,7 @@
   .toast-actions {
     display: flex;
     flex: none;
-    gap: var(--space-1);
+    gap: var(--rhythm-actions);
     margin-inline-start: auto;
   }
 
@@ -2358,8 +2464,9 @@
     margin: 0;
   }
 
+  /* The draft link stands apart from the decision at the row's far end (D-41). */
   .approval-actions > .go {
-    margin-inline-start: var(--space-3);
+    margin-inline-start: auto;
   }
 
   /* Decided: the outcome in place of the buttons, under a rule, wrapping on a phone. */
@@ -2588,6 +2695,24 @@
     }
   }
 
+  /* The last tries of an anchored menu (D-41): across the window under its trigger, or over it,
+     16px inside each edge. */
+  @position-try --forspring-menu-across {
+    position-area: block-end span-all;
+    justify-self: stretch;
+    margin: var(--space-1) var(--space-4) var(--space-4);
+    min-width: 0;
+    max-width: none;
+  }
+
+  @position-try --forspring-menu-across-up {
+    position-area: block-start span-all;
+    justify-self: stretch;
+    margin: var(--space-4) var(--space-4) var(--space-1);
+    min-width: 0;
+    max-width: none;
+  }
+
   /* --- Phone ---------------------------------------------------------------------------------- */
 
   /* On a phone the primary controls grow to 44px, the person's address leaves the bar, and tables
@@ -2605,18 +2730,21 @@
       display: none;
     }
 
-    /* The bar's panels open full width under the bar, so none runs off a 380px screen. */
-    .bar-menu {
-      position: static;
+    /* A menu stays anchored to its trigger on a phone too (above, D-41); its least width gives way
+       so it fits a 380px window. */
+    .bar-panel {
+      min-width: min(18rem, calc(100vw - 2 * var(--space-4)));
     }
 
-    .bar-panel,
-    .user-menu > .bar-panel {
-      left: var(--space-4);
-      right: var(--space-4);
-      top: calc(100% - var(--space-1));
-      min-width: 0;
-      max-width: none;
+    /* An action row is a column of full-width buttons, the same gap apart, the destructive one
+       last (D-41). */
+    .actions:not(span),
+    .actions-end {
+      flex-direction: column;
+    }
+
+    .actions-end {
+      margin-inline-start: 0;
     }
 
     .bar-menu > summary {

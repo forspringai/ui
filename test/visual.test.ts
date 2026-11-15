@@ -1,6 +1,6 @@
 // Visual regression (ui D-32, hub tick 860): the audit checks every value against the tokens, but
 // not whether a layout broke. This test screenshots each section of the built demo, the bar, the
-// open dialog and the open explain fold, at 1280 and 380 px, light and dark, for Forspring and
+// open dialog, the open explain fold and the founder's lead page (D-41), at 1280 and 380 px, light and dark, for Forspring and
 // SiteSpring (the ink mark and a coloured accent), and compares each with its baseline in
 // test/visual/<shot>-<product>-<width>-<theme>.png.
 //
@@ -100,13 +100,13 @@ afterAll(async () => {
   await browser?.close();
   await new Promise((ok) => server?.close(ok));
   // A full update run owns the folder: drop baselines for shots that no longer exist.
-  if (UPDATE && written.size === PRODUCTS.length * WIDTHS.length * THEMES.length * (Object.keys(SECTIONS).length + 3)) {
+  if (UPDATE && written.size === PRODUCTS.length * WIDTHS.length * THEMES.length * (Object.keys(SECTIONS).length + 5)) {
     for (const f of readdirSync(dir)) if (f.endsWith(".png") && !written.has(f)) rmSync(join(dir, f));
     writeFileSync(metaFile, JSON.stringify(meta, null, 2) + "\n");
   }
 });
 
-async function open(product: string, width: number, theme: string, extra = ""): Promise<Page> {
+async function open(product: string, width: number, theme: string, extra = "", path = "/dist/demo/"): Promise<Page> {
   const context = await browser.newContext({
     viewport: { width, height: 800 },
     deviceScaleFactor: 1,
@@ -116,7 +116,7 @@ async function open(product: string, width: number, theme: string, extra = ""): 
     timezoneId: "Europe/Copenhagen",
   });
   const page = await context.newPage();
-  await page.goto(`${base}/dist/demo/?product=${product}${extra}`, { waitUntil: "load" });
+  await page.goto(`${base}${path}?product=${product}${extra}`, { waitUntil: "load" });
   await page.evaluate(() => document.fonts.ready.then(() => undefined));
   return page;
 }
@@ -151,6 +151,16 @@ describe.each(PRODUCTS)("the demo as %s", (product) => {
       expect(await dialog.locator("#delete-site").evaluate((d) => (d as HTMLDialogElement).open)).toBe(true);
       shots.push([name("dialog-open"), await dialog.screenshot(SHOT)]);
       await dialog.context().close();
+
+      // The founder's case (D-41): the lead page at rest, and with the product menu open, as the
+      // window shows it (the menu is anchored to its trigger at every width).
+      const lead = await open(product, width, theme, "", "/dist/demo/pages/lead.en.html");
+      shots.push([name("lead"), await lead.locator("main").screenshot(SHOT)]);
+      await lead.context().close();
+      const leadOpen = await open(product, width, theme, "&open=products", "/dist/demo/pages/lead.en.html");
+      expect(await leadOpen.locator("details.product-switcher").getAttribute("open")).not.toBeNull();
+      shots.push([name("lead-open"), await leadOpen.screenshot(SHOT)]);
+      await leadOpen.context().close();
 
       if (UPDATE) {
         mkdirSync(dir, { recursive: true });

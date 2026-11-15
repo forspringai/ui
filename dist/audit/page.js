@@ -211,3 +211,334 @@ export function collect() {
     const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
     return { texts, boxes, smallTargets, primaries, fonts, slots };
 }
+/**
+ * The layout measurements (D-41), as collect(): one self-contained function sent to Chromium as
+ * source, measuring only. The controls and composites are lead-bench's definitions
+ * (D-41); audit.ts holds the thresholds.
+ */
+export function collectLayout() {
+    const selector = (el) => {
+        const parts = [];
+        for (let n = el; n && n !== document.documentElement && parts.length < 3; n = n.parentElement) {
+            let seg = n.tagName.toLowerCase();
+            if (n.id) {
+                parts.unshift(`${seg}#${n.id}`);
+                break;
+            }
+            const classes = [...n.classList].slice(0, 2);
+            if (classes.length)
+                seg += "." + classes.join(".");
+            parts.unshift(seg);
+        }
+        return parts.join(" > ");
+    };
+    const page = (r) => ({ x: r.left + scrollX, y: r.top + scrollY, w: r.width, h: r.height });
+    const view = (r) => ({ x: r.left, y: r.top, w: r.width, h: r.height });
+    const visible = (el) => {
+        if (!el.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
+            return false;
+        if (el.closest("[inert], [aria-hidden='true']"))
+            return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 1 && r.height > 1;
+    };
+    // The part of a box that shows: clipped by every ancestor that clips its overflow.
+    const shown = (el) => {
+        const r = el.getBoundingClientRect();
+        let [l, t, rt, b] = [r.left, r.top, r.right, r.bottom];
+        for (let n = el.parentElement; n && n !== document.body; n = n.parentElement) {
+            const s = getComputedStyle(n);
+            if (s.overflowX === "visible" && s.overflowY === "visible" && s.clipPath === "none")
+                continue;
+            const c = n.getBoundingClientRect();
+            if (s.overflowX !== "visible" || s.clipPath !== "none")
+                [l, rt] = [Math.max(l, c.left), Math.min(rt, c.right)];
+            if (s.overflowY !== "visible" || s.clipPath !== "none")
+                [t, b] = [Math.max(t, c.top), Math.min(b, c.bottom)];
+        }
+        // Off the page sideways (the skip link at -9999px) or clipped to nothing.
+        if (rt - l < 2 || b - t < 2 || rt + scrollX <= 0 || l >= document.documentElement.clientWidth)
+            return null;
+        return new DOMRect(l, t, rt - l, b - t);
+    };
+    // Controls. A checkbox or radio with its own label is one control, measured by its label.
+    const CONTROL = 'button, a[href].button, a[href][role="button"], input:not([type="hidden"]), select, textarea, summary, [role="button"], [role="combobox"], [role="switch"], [role="checkbox"], [role="radio"], [role="tab"], [role="menuitem"]';
+    const labelOf = (el) => {
+        if (!(el instanceof HTMLInputElement) || !["checkbox", "radio"].includes(el.type))
+            return null;
+        return el.closest("label") ?? (el.id ? document.querySelector(`label[for="${CSS.escape(el.id)}"]`) : null);
+    };
+    const els = [];
+    const controls = [];
+    for (const el of document.querySelectorAll(CONTROL)) {
+        if (el.parentElement?.closest(CONTROL) && el.parentElement.closest(CONTROL) !== el) {
+            // A control inside another (an input's own clear button) is part of it.
+            if (!labelOf(el))
+                continue;
+        }
+        const target = labelOf(el) ?? el;
+        if (!visible(el) && !(target !== el && visible(target)))
+            continue;
+        const r = shown(target);
+        if (!r)
+            continue;
+        els.push(el);
+        controls.push({ selector: selector(target), box: page(r) });
+    }
+    // A parent that draws one frame round its controls (a segmented group): a border on all four sides.
+    const framed = (el) => {
+        if (!el)
+            return false;
+        const fs = getComputedStyle(el);
+        return ["top", "right", "bottom", "left"].every((side) => parseFloat(fs.getPropertyValue(`border-${side}-width`)) >= 1 && !["none", "hidden"].includes(fs.getPropertyValue(`border-${side}-style`)) && !fs.getPropertyValue(`border-${side}-color`).endsWith(", 0)") && fs.getPropertyValue(`border-${side}-color`) !== "transparent");
+    };
+    const inside = (a, b) => a.x >= b.x - 1 && a.y >= b.y - 1 && a.x + a.w <= b.x + b.w + 1 && a.y + a.h <= b.y + b.h + 1;
+    const gapOf = (a, b) => Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w), b.y - (a.y + a.h), a.y - (b.y + b.h));
+    const composite = [];
+    for (let i = 0; i < els.length; i++)
+        for (let j = i + 1; j < els.length; j++) {
+            const [a, b] = [els[i], els[j]];
+            const [la, lb] = [labelOf(a) ?? a, labelOf(b) ?? b];
+            const [ba, bb] = [controls[i].box, controls[j].box];
+            const tabs = a.getAttribute("role") === "tab" && b.getAttribute("role") === "tab" && a.closest('[role="tablist"]') !== null && a.closest('[role="tablist"]') === b.closest('[role="tablist"]');
+            // Radios of one name are one choice, a segmented control when drawn as one box.
+            const radios = a instanceof HTMLInputElement && b instanceof HTMLInputElement && a.type === "radio" && b.type === "radio" && a.name !== "" && a.name === b.name && a.form === b.form;
+            // One control drawn inside another's box (an input's clear or reveal button, a date field's
+            // calendar button, an icon button in a combobox's wrapper), wherever it sits in the DOM.
+            const within = inside(ba, bb) || inside(bb, ba);
+            // Siblings in one framed group with nothing between them: a segmented control.
+            const group = la.parentElement !== null && la.parentElement === lb.parentElement && framed(la.parentElement) && gapOf(ba, bb) < 1;
+            if (la.contains(lb) || lb.contains(la) || tabs || radios || within || group)
+                composite.push([i, j]);
+        }
+    // The label's text box in each button-like control: buttons, links drawn as buttons, summaries, tabs.
+    const texts = [];
+    for (const el of document.querySelectorAll('button, a[href].button, a[href][role="button"], summary, [role="button"], [role="tab"], [role="menuitem"]')) {
+        if (!visible(el) || !shown(el))
+            continue;
+        // Only what shows: words for a screen reader alone (a visually-hidden span, clipped to nothing),
+        // zero-size, invisible or aria-hidden text are not the label. When no words show, the glyph
+        // (an icon's svg) is the visible content and is measured instead.
+        const hidden = (n) => {
+            for (let e = n; e && e !== el.parentElement; e = e.parentElement) {
+                if (!e.checkVisibility({ visibilityProperty: true, opacityProperty: true }))
+                    return true;
+                if (e !== el && e.getAttribute("aria-hidden") === "true")
+                    return true;
+                const es = getComputedStyle(e);
+                if (/inset\(50%/.test(es.clipPath) || (es.clip !== "auto" && es.clip !== ""))
+                    return true;
+                const er = e.getBoundingClientRect();
+                if (er.width <= 1 || er.height <= 1)
+                    return true;
+            }
+            return false;
+        };
+        const rects = [];
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+            if (!(n.textContent ?? "").trim() || hidden(n.parentElement))
+                continue;
+            const range = document.createRange();
+            range.selectNodeContents(n);
+            for (const r of range.getClientRects())
+                if (r.width > 0 && r.height > 0)
+                    rects.push(r);
+        }
+        if (!rects.length)
+            for (const svg of el.querySelectorAll("svg")) {
+                const r = svg.getBoundingClientRect();
+                // An aria-hidden icon is still what the eye sees; only an invisible or clipped one is not.
+                const p = svg.parentElement === el ? null : svg.parentElement;
+                if (r.width > 1 && r.height > 1 && svg.checkVisibility({ visibilityProperty: true }) && !(p && hidden(p)))
+                    rects.push(r);
+            }
+        if (!rects.length)
+            continue;
+        const tops = [...new Set(rects.map((r) => Math.round(r.top)))];
+        const s = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        texts.push({
+            selector: selector(el),
+            textTop: Math.min(...rects.map((x) => x.top)),
+            textBottom: Math.max(...rects.map((x) => x.bottom)),
+            lines: tops.length,
+            contentTop: r.top + parseFloat(s.borderTopWidth) + parseFloat(s.paddingTop),
+            contentBottom: r.bottom - parseFloat(s.borderBottomWidth) - parseFloat(s.paddingBottom),
+        });
+    }
+    // Stacks: one-axis flex and grid containers, and ui's flow and stack containers (components.css).
+    const FLOW = "main, section:not([class]), .card, .dialog-body, form:not([class]), .stack";
+    const stacks = [];
+    for (const el of document.body.querySelectorAll("*")) {
+        if (!visible(el))
+            continue;
+        const s = getComputedStyle(el);
+        let axis = null;
+        if (/flex/.test(s.display))
+            axis = s.flexDirection.startsWith("column") ? "block" : "inline";
+        else if (/grid/.test(s.display)) {
+            const cols = s.gridTemplateColumns.split(" ").filter(Boolean).length;
+            const rows = s.gridTemplateRows.split(" ").filter(Boolean).length;
+            axis = cols <= 1 ? "block" : rows <= 1 ? "inline" : null;
+        }
+        else if (el.matches(FLOW))
+            axis = "block";
+        if (!axis)
+            continue;
+        const kids = [];
+        const take = (p) => {
+            for (const c of p.children) {
+                if (getComputedStyle(c).display === "contents")
+                    take(c);
+                else
+                    kids.push(c);
+            }
+        };
+        take(el);
+        const children = [];
+        // An empty child that grows (the bar's spacer) parts its neighbours on purpose, as an auto margin does.
+        let spacer = false;
+        for (const c of kids) {
+            if (["SCRIPT", "STYLE", "TEMPLATE", "DIALOG"].includes(c.tagName))
+                continue;
+            const cs = getComputedStyle(c);
+            if (!visible(c)) {
+                if (/flex/.test(s.display) && parseFloat(cs.flexGrow) > 0 && cs.display !== "none")
+                    spacer = true;
+                continue;
+            }
+            if (cs.position === "absolute" || cs.position === "fixed")
+                continue;
+            const map = c.computedStyleMap();
+            const auto = (prop) => String(map.get(prop)) === "auto";
+            children.push({
+                selector: selector(c),
+                box: page(c.getBoundingClientRect()),
+                autoBefore: spacer || (axis === "inline" ? auto("margin-left") : auto("margin-top")),
+                autoAfter: axis === "inline" ? auto("margin-right") : auto("margin-bottom"),
+            });
+            spacer = false;
+        }
+        if (children.length >= 3)
+            stacks.push({ selector: selector(el), axis, children });
+    }
+    // Regions: panes that must read apart from the ground behind them.
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 1;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const rgba = (c) => {
+        ctx.clearRect(0, 0, 1, 1);
+        ctx.fillStyle = "#000";
+        ctx.fillStyle = c;
+        ctx.fillRect(0, 0, 1, 1);
+        const d = ctx.getImageData(0, 0, 1, 1).data;
+        return [d[0], d[1], d[2], d[3] / 255];
+    };
+    const over = (top, under) => {
+        const a = top[3];
+        return [top[0] * a + under[0] * (1 - a), top[1] * a + under[1] * (1 - a), top[2] * a + under[2] * (1 - a)];
+    };
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches && getComputedStyle(document.documentElement).colorScheme !== "light";
+    const ground = (el) => {
+        const layers = [];
+        for (let n = el; n; n = n.parentElement) {
+            const c = rgba(getComputedStyle(n).backgroundColor);
+            if (c[3] > 0) {
+                layers.push(c);
+                if (c[3] >= 1)
+                    break;
+            }
+        }
+        let out = dark ? [18, 18, 18] : [255, 255, 255];
+        for (const l of layers.reverse())
+            out = over(l, out);
+        return out;
+    };
+    // A section is a region only when it paints a fill or a border of its own: a plain section with a
+    // heading and flow content is a part of the page, not a pane.
+    const REGION = '.card, .panel, aside, [role="region"], dialog, section';
+    const regions = [];
+    for (const el of document.querySelectorAll(REGION)) {
+        if (!visible(el))
+            continue;
+        // A region inside a region card is the nested-card rule's: the fix there is to flatten it.
+        let outer = el.parentElement?.closest(REGION) ?? null;
+        while (outer && outer.tagName === "SECTION" && !outer.matches('.card, .panel, [role="region"]') && rgba(getComputedStyle(outer).backgroundColor)[3] === 0 && !framed(outer))
+            outer = outer.parentElement?.closest(REGION) ?? null;
+        if (outer && rgba(getComputedStyle(outer).backgroundColor)[3] > 0)
+            continue;
+        const s = getComputedStyle(el);
+        // An open modal dialog sits over the page; the page's ground is behind it.
+        const behind = ground(el instanceof HTMLDialogElement ? document.body : el.parentElement);
+        const own = rgba(s.backgroundColor);
+        const sides = ["top", "right", "bottom", "left"].map((side) => ({ w: parseFloat(s.getPropertyValue(`border-${side}-width`)), style: s.getPropertyValue(`border-${side}-style`), c: rgba(s.getPropertyValue(`border-${side}-color`)) }));
+        const all = sides.every((x) => x.w >= 1 && x.style !== "none" && x.style !== "hidden" && x.c[3] > 0);
+        // A section with a rule on one side is divided, not framed: it is a region only with a fill or a
+        // border on all four sides.
+        if (el.tagName === "SECTION" && !el.matches('.card, .panel, [role="region"]') && own[3] === 0 && !all)
+            continue;
+        regions.push({ selector: selector(el), fill: own[3] > 0 ? over(own, behind) : null, behind, border: all ? over(sides[0].c, behind) : null });
+    }
+    return { controls, composite, texts, stacks, regions };
+}
+/**
+ * The open popovers and menus, each with its trigger, in viewport coordinates (D-41): a details
+ * element's positioned panel, and a native popover with the button that opens it. Self-contained,
+ * like collect(). probePopovers() in audit.ts opens each trigger and calls it; a probe of its own
+ * (the screens bench's) can do the same.
+ */
+export function collectPopovers() {
+    const selector = (el) => {
+        const parts = [];
+        for (let n = el; n && n !== document.documentElement && parts.length < 3; n = n.parentElement) {
+            let seg = n.tagName.toLowerCase();
+            if (n.id) {
+                parts.unshift(`${seg}#${n.id}`);
+                break;
+            }
+            const classes = [...n.classList].slice(0, 2);
+            if (classes.length)
+                seg += "." + classes.join(".");
+            parts.unshift(seg);
+        }
+        return parts.join(" > ");
+    };
+    const box = (r) => ({ x: r.left, y: r.top, w: r.width, h: r.height });
+    const visible = (el) => el.checkVisibility({ visibilityProperty: true }) && el.getBoundingClientRect().width > 1;
+    const vp = { w: document.documentElement.clientWidth, h: innerHeight };
+    const panels = [];
+    for (const d of document.querySelectorAll("details[open]")) {
+        const summary = d.querySelector(":scope > summary");
+        if (!summary)
+            continue;
+        for (const c of d.children) {
+            if (c === summary)
+                continue;
+            const pos = getComputedStyle(c).position;
+            if ((pos === "absolute" || pos === "fixed") && visible(c))
+                panels.push([c, summary]);
+        }
+    }
+    // A popover's trigger: the button that names it (popovertarget, or aria-controls on a script-driven
+    // menu), else the element its CSS anchors it to (position-anchor's anchor-name).
+    const triggerOf = (p) => {
+        if (p.id) {
+            const id = CSS.escape(p.id);
+            const named = document.querySelector(`[popovertarget="${id}"], [aria-controls~="${id}"]`);
+            if (named)
+                return named;
+        }
+        const anchor = getComputedStyle(p).getPropertyValue("position-anchor").trim();
+        if (anchor && anchor !== "auto" && anchor !== "none")
+            for (const e of document.querySelectorAll("*"))
+                if (e !== p && getComputedStyle(e).getPropertyValue("anchor-name").split(",").map((n) => n.trim()).includes(anchor))
+                    return e;
+        return null;
+    };
+    const panels2 = [...panels];
+    for (const p of document.querySelectorAll(":popover-open"))
+        if (visible(p))
+            panels2.push([p, triggerOf(p)]);
+    return panels2.map(([p, t]) => ({ selector: selector(p), trigger: t ? selector(t) : null, box: box(p.getBoundingClientRect()), triggerBox: t ? box(t.getBoundingClientRect()) : null, viewport: vp }));
+}

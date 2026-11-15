@@ -150,7 +150,7 @@ const CASES: { code: Code; path: string; file: unknown }[] = [
   { code: "theme.accent.status_clash", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "#257012" } } } },
   { code: "theme.tint.text_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#b0b8c8" } } } },
   { code: "theme.tint.text_contrast", path: "brand.tint.dark", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#eef6f0", dark: "#d0e0ff" } } } },
-  { code: "theme.tint.mark_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#e3eee6" } } } },
+  { code: "theme.tint.mark_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#dcebe0" } } } },
   { code: "theme.logo.alt_missing", path: "brand.logo.alt", file: { level: "brand", brand: { accent: { light: "#0f5132" }, logo: { light: "logo.svg", alt: "  " } } } },
   { code: "theme.logo.unsafe_url", path: "brand.logo.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, logo: { light: "javascript:alert(1)", alt: "Acme" } } } },
   { code: "theme.guideline.unavailable", path: "level", file: { level: "guideline", brand: { accent: { light: "#0f5132" } }, guideline: { radius: "round" } } },
@@ -242,10 +242,10 @@ describe("the CSS", () => {
         --primary-foreground: light-dark(#ffffff, #111215);
         --ring: light-dark(#0f5132, #5f9c78);
         --mark: light-dark(#0f5132, #5f9c78);
-        --background: light-dark(#fefffe, #0e1410);
-        --muted: light-dark(#eef6f0, #1d231f);
-        --secondary: light-dark(#eef6f0, #1d231f);
-        --accent: light-dark(#eef6f0, #1d231f);
+        --background: light-dark(#fbfffc, #0e1410);
+        --muted: light-dark(#eef6f0, #1e2420);
+        --secondary: light-dark(#eef6f0, #1e2420);
+        --accent: light-dark(#eef6f0, #1e2420);
         --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
         --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
         --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);

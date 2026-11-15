@@ -69,7 +69,7 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.26.0";
+export const VERSION = "0.27.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -291,6 +291,16 @@ export function button(o) {
     const a = { class: cls(variant, o.small && "small", o.wide && "wide"), type: o.type ?? "submit", name: o.name, value: o.value, "aria-label": o.ariaLabel, disabled: o.disabled };
     return html `<button${raw(attrs(a))}>${label}</button>`;
 }
+/**
+ * A row of actions (D-41): one height and the actions gap, the primary first, then the secondary
+ * ones, and the destructive one apart at the far end. On a phone it is a column of full-width
+ * buttons with the same gap. The order is the helper's, so a page cannot get it wrong. (A
+ * destructive confirm puts the safe action first instead: that is dialog()'s own row, D-23.)
+ */
+export function actions(o) {
+    const end = o.destructive ? html `<div class="actions-end">${o.destructive}</div>` : "";
+    return html `<div class="actions">${o.primary ?? ""}${o.secondary ?? ""}${end}</div>`;
+}
 /** A label, its control, a hint and an error, wired with aria-describedby and aria-invalid. */
 export function field(o) {
     const id = o.id ?? o.name;
@@ -349,7 +359,7 @@ export function notice(o) {
     return html `<div class="${cls("notice", tone !== "info" && tone)}" role="${role}">${title}${o.text}${ref}</div>`;
 }
 /**
- * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 3): the error
+ * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 4): the error
  * notice with a heading and one link per error to its field. It takes focus (tabindex="-1" and
  * autofocus, so a full page load lands on it) and is an alert, so a screen reader reads it first.
  * Nothing when there are no errors.
