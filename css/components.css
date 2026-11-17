@@ -849,8 +849,11 @@
     padding: 0;
   }
 
+  /* The name binds tight under its label (1.15, a heading's leading): at the body's 1.3 the switcher's
+     words sat 1.2px nearer its top than its bottom (control-text-centre, D-42). */
   .menu-context-name {
     font-weight: 600;
+    line-height: var(--leading-content-h2);
     color: var(--foreground);
     overflow-wrap: anywhere;
   }
@@ -1127,6 +1130,12 @@
   /* A page's sections stand the section step apart. */
   :where(main, section:not([class])) > :where(* ~ section) {
     margin-block-start: var(--rhythm-section);
+  }
+
+  /* A back link binds to what follows by its own margin, a section too. It is inline-block, so its
+     margin never collapses: with the section step on top it made 72px (off-scale, D-42). */
+  :where(main, section:not([class])) > :where(.back) + :where(section) {
+    margin-block-start: 0;
   }
 
   /* Two controls side by side in a flow (a Save and a Cancel with no row around them) keep the
