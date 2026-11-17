@@ -448,10 +448,11 @@ describe("the layout rules in a browser (D-41, D-42)", () => {
     expect(of("off-scale").sort()).toEqual(["div#offscale", "section#divided", "section#painted", "section#plain"]);
   });
 
-  test("clip: cut across and down, out of a painted box, past the window; not an ellipsis, a scroller or a line clamp", () => {
+  test("clip: cut across and down, out of a painted box, past the window, a scroller with more below and no cue; not an ellipsis, a line clamp, a scroller with a local shadow or one sideways", () => {
     expect(found.filter((f) => f.rule === "clip").map((f) => [f.selector, f.value]).sort()).toEqual([
       ["div#cut", expect.stringMatching(/^"A label far too long for its box" cut by [\d.]+px at the end$/)],
       ["div#cutdown", expect.stringMatching(/cut by [\d.]+px at the bottom$/)],
+      ["div#scrolly", expect.stringMatching(/^[\d.]+px more below, and nothing shows it$/)],
       ["div#wide", expect.stringMatching(/^1\d\d(\.\d)?px past the window's end$/)],
       ["span#spill", expect.stringMatching(/^"Overflowing chip" out of its box by [\d.]+px at the end$/)],
     ]);
@@ -678,11 +679,13 @@ describe("layout rules on measurements (D-41, D-42)", () => {
       { selector: "div.name", kind: "cut", by: 12.5, sides: ["end"], text: "Bager Hansen ApS" },
       { selector: "a.chip", kind: "spill", by: 3, sides: ["bottom"], text: "Mon 17" },
       { selector: "div.table", kind: "viewport", by: 40, sides: ["end"], text: "" },
+      { selector: "div.day-grid", kind: "scroll", by: 212, sides: ["bottom"], text: "" },
     ] });
     expect(f.map((x) => [x.rule, x.severity, x.selector, x.value])).toEqual([
       ["clip", "error", "div.name", '"Bager Hansen ApS" cut by 12.5px at the end'],
       ["clip", "error", "a.chip", '"Mon 17" out of its box by 3px at the bottom'],
       ["clip", "error", "div.table", "40px past the window's end"],
+      ["clip", "error", "div.day-grid", "212px more below, and nothing shows it"],
     ]);
   });
 

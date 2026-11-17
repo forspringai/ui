@@ -450,9 +450,10 @@ export function layoutFindings(obs, t) {
     // clip (D-42): text cut by its box with no ellipsis or clamp, text out of the box it is written in,
     // and anything past the window's sides.
     for (const c of obs.clips) {
-        const what = c.kind === "viewport" ? `${c.by}px past the window's ${c.sides.join(" and ")}` : `"${c.text}" ${c.kind === "cut" ? "cut" : "out of its box"} by ${c.by}px at the ${c.sides.join(", ")}`;
-        const fix = { cut: "let it wrap, or say the cut is meant: text-overflow: ellipsis across, a line clamp down, or a scroller", spill: "let the box grow with its words (min-height, not height; no fixed width on a label), or wrap them", viewport: "keep the page inside the window at every width: let it wrap, or give the wide part a scroller of its own" }[c.kind];
-        out.push({ rule: "clip", severity: "error", selector: c.selector, value: what, expected: c.kind === "viewport" ? "nothing past the window's sides" : "every word inside the box it is written in", note: `${fix} (D-42)` });
+        const what = c.kind === "viewport" ? `${c.by}px past the window's ${c.sides.join(" and ")}` : c.kind === "scroll" ? `${c.by}px more below, and nothing shows it` : `"${c.text}" ${c.kind === "cut" ? "cut" : "out of its box"} by ${c.by}px at the ${c.sides.join(", ")}`;
+        const fix = { cut: "let it wrap, or say the cut is meant: text-overflow: ellipsis across, a line clamp down, or a scroller", spill: "let the box grow with its words (min-height, not height; no fixed width on a label), or wrap them", viewport: "keep the page inside the window at every width: let it wrap, or give the wide part a scroller of its own", scroll: "let the box grow to its content, or show there is more: a shadow that scrolls with it (background-attachment: local, as .table-wrap); a scrollbar is no cue, an overlay one is not drawn until the reader scrolls" }[c.kind];
+        const expected = { cut: "every word inside the box it is written in", spill: "every word inside the box it is written in", viewport: "nothing past the window's sides", scroll: "a scroller with more below shows it" }[c.kind];
+        out.push({ rule: "clip", severity: "error", selector: c.selector, value: what, expected, note: `${fix} (D-42)` });
     }
     for (const r of obs.regions) {
         const behind = oklabL(r.behind);

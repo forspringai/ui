@@ -86,11 +86,12 @@ export type ControlText = {
 };
 /**
  * Something cut or out of place (D-42): text cut by a box that clips it with no ellipsis or line
- * clamp, text spilling out of the painted box it belongs to, or a box past the window's sides.
+ * clamp, text spilling out of the painted box it belongs to, a box past the window's sides, or a
+ * scroller with more below and nothing that shows it.
  */
 export type ClipObservation = {
     selector: string;
-    kind: "cut" | "spill" | "viewport";
+    kind: "cut" | "spill" | "viewport" | "scroll";
     /** px past the edge, at most. */
     by: number;
     /** The sides it crosses. */

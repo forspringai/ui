@@ -1728,3 +1728,13 @@ gallery, CI test and its own rules in apps/shell.
 `test/fixtures/basics.html` holds both on ui's CSS. The audit test fails on 0.28.0's CSS and passes on
 this one.
 
+**0.28.2 (2026-11-17): a scroller with no cue is a cut.** lead-ui's basics worker (kw55-c2fix) found
+a false negative. A day grid capped at 80vh ended at its last visible row at 1440 x 900, and `clip`
+passed it, because a scroller counted as showing the rest. It shows the rest only to a reader who
+knows to scroll. An overlay scrollbar (macOS, phones) is not drawn until they do. `clip` now also
+finds a box that scrolls down (overflow-y auto or scroll) with more than 1px below and no background
+layer that scrolls with its content (`background-attachment: local`, `.table-wrap`'s shadows). A
+platform scrollbar is no cue. Sideways scrollers are not counted, because a cut column reads as
+more. The audit's window is 900px tall, so a box capped in vh is measured as a reader sees it. ui's
+own pages have none.
+
