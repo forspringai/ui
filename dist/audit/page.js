@@ -584,6 +584,19 @@ export function collectLayout() {
                 add({ selector: selector(box), kind: "spill", ...spill, text });
         }
     }
+    // A scroller with more below it and no cue (kw55-c2fix's case, 0.28.2): the reader sees a box that
+    // ends. A cue is a background layer that scrolls with the content (background-attachment: local),
+    // as .table-wrap's shadows do. The platform's scrollbar is no cue: an overlay scrollbar (macOS,
+    // phones) is not drawn until the reader scrolls. Sideways is not counted: a cut column reads as more.
+    for (const el of document.body.querySelectorAll("*")) {
+        const es = getComputedStyle(el);
+        if (!scrolls(es.overflowY) || !visible(el))
+            continue;
+        const more = el.scrollHeight - el.clientHeight - el.scrollTop;
+        if (more <= 1 || /\blocal\b/.test(es.backgroundAttachment))
+            continue;
+        add({ selector: selector(el), kind: "scroll", by: Math.round(more * 10) / 10, sides: ["bottom"], text: "" });
+    }
     // Past the window's sides: the outermost visible box that crosses, unless a clipping box holds it.
     const W = document.documentElement.clientWidth;
     if (document.documentElement.scrollWidth > W + 1 || [...document.body.children].some((e) => e.getBoundingClientRect().left < -1))

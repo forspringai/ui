@@ -75,6 +75,11 @@
   <!-- clip: words out of the painted box they are written in, and a box past the window's end. -->
   <span id="spill" style="display: inline-block; width: 60px; height: 24px; background: #ebebe6; white-space: nowrap">Overflowing chip</span>
   <div id="wide" style="width: 1400px; height: 8px"></div>
+  <!-- clip (0.28.2): a scroller with more below and no cue; with a shadow that scrolls with it (local)
+       it shows there is more; one that scrolls sideways reads as more by its cut column. -->
+  <div id="scrolly" style="height: 60px; overflow-y: auto"><p style="margin: 0">One</p><p style="margin: 0">Two</p><p style="margin: 0">Three</p><p style="margin: 0">Four</p><p style="margin: 0">Five</p></div>
+  <div id="scrollcue" style="height: 60px; overflow-y: auto; background: linear-gradient(#ffffff 30%, transparent) top / 100% 24px no-repeat local, #ffffff"><p style="margin: 0">One</p><p style="margin: 0">Two</p><p style="margin: 0">Three</p><p style="margin: 0">Four</p><p style="margin: 0">Five</p></div>
+  <div id="scrollx" style="width: 120px; overflow-x: auto; white-space: nowrap">A row far wider than its box, scrolled sideways</div>
 </div>
 </body>
 </html>

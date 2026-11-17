@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.28.1
+pnpm add github:forspringai/ui#v0.28.2
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -131,7 +131,8 @@ writes its own `@font-face` for Archivo takes the three override lines from `fon
 - `control-text-centre` now measures the ink, not the line box (which passed labels 2px high).
 - `off-scale`: the room between two siblings is a step of the space scale (within 1px), or none.
 - `clip`: words cut by their box with no ellipsis, line clamp or scroller; words out of the painted
-  box they are written in; anything past the window's sides.
+  box they are written in; anything past the window's sides; a scroller with more below and nothing
+  that shows it (a shadow that scrolls with it, as `.table-wrap`'s; a scrollbar is no cue).
 
 **Upgrading from 0.27.x.** Serve ui's `fonts.css` (or `fontFaces()`), then run `ui-audit`: what the
 three rules find now fails the build. Text everywhere moves down by up to a pixel inside its line.
@@ -744,8 +745,8 @@ against the tokens: contrast, type sizes and families, radii, spacing on the 4 p
 touch targets, axe-core, third-party requests and the script budget (rules and severities: D-8).
 Three basics (D-42) are errors: `control-text-centre` (a control's words, cap top to baseline, more
 than 1px further from one edge than the other), `off-scale` (the room between two siblings no step of
-the space scale) and `clip` (words cut by their box, out of the box they are written in, or anything
-past the window's sides). Four layout rules (D-41) warn: `control-gap` (two controls under 8px apart,
+the space scale) and `clip` (words cut by their box, out of the box they are written in, anything
+past the window's sides, or a scroller with more below and no cue). Four layout rules (D-41) warn: `control-gap` (two controls under 8px apart,
 in any containers), `stack-rhythm` (a stack's
 gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every menu and popover and
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
