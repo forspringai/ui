@@ -69,13 +69,19 @@ export const PRODUCT_NAMES = {
     pulsespring: "PulseSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.27.2";
+export const VERSION = "0.28.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
 const LATIN = "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212, U+2215, U+2248, U+FEFF, U+FFFD";
+// Archivo's own metrics (ascent 87.8%, descent 21%) put its cap band in the middle of the line, but
+// the browser rounds ascent and descent to whole pixels apart and floors half a pixel of leading, so
+// a label sat up to 1.5 px high in its control (D-42). These overrides keep their sum (108.8%: a
+// line-height: normal is unchanged) and move the split, so cap-top to baseline sits within 0.5 px of
+// the line's middle at every size from 11 to 24 px on every line from 1 to 1.7 (test/audit.test.ts).
+const ARCHIVO_METRICS = "ascent-override: 90.5%;\n  descent-override: 18.3%;\n  line-gap-override: 0%;";
 const FACES = [
-    { family: "Archivo", file: "archivo.woff2", weight: "100 900", range: LATIN },
+    { family: "Archivo", file: "archivo.woff2", weight: "100 900", range: LATIN, metrics: ARCHIVO_METRICS },
     { family: "Archivo Condensed", file: "archivo-condensed.woff2", weight: "700 900", range: LATIN },
     { family: "Space Mono", file: "space-mono.woff2", weight: "400", range: LATIN },
 ];
@@ -85,7 +91,7 @@ const GOOGLE_FACE = { family: "Roboto GSI", file: "roboto-medium.woff2", weight:
  * package's fonts/ there, "../fonts/" for dist/fonts.css). `google: true` adds Roboto Medium for the
  * Google button.
  */
-const face = (f, base) => `@font-face {\n  font-family: "${f.family}";\n  src: url("${base}${f.file}") format("woff2");\n  font-weight: ${f.weight};\n  font-style: normal;\n  font-display: swap;\n  unicode-range: ${f.range};\n}\n`;
+const face = (f, base) => `@font-face {\n  font-family: "${f.family}";\n  src: url("${base}${f.file}") format("woff2");\n  font-weight: ${f.weight};\n  font-style: normal;\n  font-display: swap;\n${f.metrics ? `  ${f.metrics}\n` : ""}  unicode-range: ${f.range};\n}\n`;
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
  * package's fonts/ there, "../fonts/" for dist/fonts.css). `google: true` adds Roboto Medium for the

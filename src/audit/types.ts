@@ -22,7 +22,9 @@ export type Rule =
   | "control-text-centre"
   | "stack-rhythm"
   | "popover-anchor"
-  | "surface-distinct";
+  | "surface-distinct"
+  | "off-scale"
+  | "clip";
 
 export type Finding = {
   rule: Rule;

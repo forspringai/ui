@@ -1659,3 +1659,59 @@ the condition with any whitespace. The audit test proves the fallback is in forc
 switcher's panel ran 51 px past the window (Firefox today). Without anchor positioning nothing can
 measure the trigger, so at phone width the org switcher's panel now hangs from its end edge, as the
 user menu's always has. popover-anchor is 0 under the fallback on the lead and demo pages.
+
+## D-42: Labels centred by their ink; off-scale and clip; the basics fail CI (0.28.0, 2026-11-17)
+
+**Why.** Peter found day chips in the b4 schedule with their words 2px high (8px above, 12px below in
+a 31px box) and "Book" 1.5px high. `control-text-centre` passed them: it centred the line boxes, and a
+line box can be centred while the letters in it sit high. cos asked for a basics check that fails CI,
+fixed at token and component level.
+
+**The measure.** `control-text-centre` now takes a control's label from the first line's cap top to
+the last line's baseline, against the padding box (the border box less its borders). The baseline is
+the text's content-area top plus the font's ascent, both whole pixels as the browser lays them out;
+the cap height is the font's H. A descender, an accent or a lowercase word doesn't move it. It fails
+when one side has more than 1px more room than the other (centre off by more than half a pixel), as
+an error. `test/audit.test.ts` holds the band to a screenshot's ink rows within a pixel on ui's own
+controls (`test/fixtures/ink.html`). Chips (`a.chip`) and menu item roles are measured now too.
+
+**The fix is in the font, not the controls.** Archivo's metrics centre its cap band in the line
+(ascent 87.8%, descent 21%: off by 0.009em). But the browser rounds ascent and descent to whole
+pixels separately and floors half a pixel of leading, so ui's 44px controls had 15px above the cap
+band and 17px below, and the chips were a pixel high. `fontFaces()` (and `fonts.css`) now give
+Archivo `ascent-override: 90.5%; descent-override: 18.3%; line-gap-override: 0%`. The sum is the
+same, so `line-height: normal` is unchanged. Across 11 to 24px on every line height from 1 to 1.7,
+the cap band now sits within 0.5px of a centred line's middle (the old metrics: up to 1.5px). A test
+sweeps all 192 cases. Every control in every product that serves ui's font faces is centred, with no
+change to its CSS. Text everywhere moves down by up to a pixel inside its line box; the visual
+baselines are re-recorded.
+
+Not chosen:
+- `text-box: trim-both cap alphabetic`. It trims block containers, but ui's controls are inline-flex,
+  and a flex container's text sits in an anonymous item it never reaches. It fixed bare `<button>`
+  only.
+- A 1px padding nudge. It is off the 4px grid (the `spacing` rule), right for one size and font only,
+  and every product would have to copy it.
+
+**off-scale** (error). The room between two siblings, edge to edge along a stack (block flow in ui's
+flow containers, flex rows and columns), is a step of `space.*` within 1px, or none. Not measured: a
+grid's gaps (its tracks set them, and the `spacing` rule checks the declared gap), space a flex
+container shares out (`justify-content: space-*`), and gaps across an auto margin or a wrap. A
+browser's own heading margin (18.7px under an h2) is a finding: ui's CSS sets them. The declared
+`spacing` rule (a multiple of 4px) stays as it was.
+
+**clip** (error). Three findings:
+- `cut`: words cut by the nearest box that clips them, against its padding box. It is not a cut when
+  the box means it: `text-overflow: ellipsis` across, a line clamp down, or a scroller.
+- `spill`: words out of the painted box they are written in (a fill or a four-sided border), when
+  nothing between them clips.
+- `viewport`: the outermost box past the window's start or end, unless a box that clips or scrolls
+  holds it. A skip link parked off-screen is not counted.
+
+**Severity.** D-41's four (`control-gap`, `stack-rhythm`, `popover-anchor`, `surface-distinct`) stay
+warnings. The three basics are errors: `ui-audit` exits 1. A product finds them on its next bump. ui's
+demo, standard pages, lead, connect and confirm pages have none.
+
+**Who.** Split with lead-ui (kw55-c2fix): ui-audit's three rules and the font fix here; the renderer's
+gallery, CI test and its own rules in apps/shell.
+

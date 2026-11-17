@@ -73,13 +73,30 @@ export type ControlBox = {
 };
 export type ControlText = {
     selector: string;
-    /** The union of the label's line boxes, top and bottom. */
-    textTop: number;
-    textBottom: number;
+    /**
+     * What the eye centres (D-42): from the first line's cap top to the last line's baseline, so a
+     * descender, an accent or a lowercase-only word does not move it. An icon with no words: its glyph.
+     */
+    inkTop: number;
+    inkBottom: number;
     lines: number;
-    /** The content box: the border box less borders and padding. */
-    contentTop: number;
-    contentBottom: number;
+    /** The padding box: the border box less its borders. */
+    boxTop: number;
+    boxBottom: number;
+};
+/**
+ * Something cut or out of place (D-42): text cut by a box that clips it with no ellipsis or line
+ * clamp, text spilling out of the painted box it belongs to, or a box past the window's sides.
+ */
+export type ClipObservation = {
+    selector: string;
+    kind: "cut" | "spill" | "viewport";
+    /** px past the edge, at most. */
+    by: number;
+    /** The sides it crosses. */
+    sides: string[];
+    /** The text concerned, shortened, when there is one. */
+    text: string;
 };
 export type StackChild = {
     selector: string;
@@ -92,6 +109,11 @@ export type StackObservation = {
     selector: string;
     axis: "block" | "inline";
     children: StackChild[];
+    /**
+     * The gaps are not the author's spacing as such: a grid's tracks set them, or a flex container
+     * shares out its free space (justify-content: space-*). off-scale skips these (D-42).
+     */
+    laidOut: boolean;
 };
 export type PopoverObservation = {
     selector: string;
@@ -121,6 +143,7 @@ export type LayoutObservations = {
     texts: ControlText[];
     stacks: StackObservation[];
     regions: RegionObservation[];
+    clips: ClipObservation[];
 };
 /**
  * The layout measurements (D-41), as collect(): one self-contained function sent to Chromium as

@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.27.2
+pnpm add github:forspringai/ui#v0.28.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -119,6 +119,22 @@ a class on the container takes it out of the defaults. Expect the bar and sideba
 surface, h2 8px over its content (was 12), sections 48px apart (were 40) and button text at 14px
 (was 15). `ui-audit` adds `control-gap`, `control-text-centre`, `stack-rhythm`, `popover-anchor` and
 `surface-distinct`, warnings for now: fix what they find before they block.
+
+### Labels in the middle, nothing cut (D-42)
+
+A control's words now sit in its middle by their ink, cap top to baseline: as much room above them as
+below, to 1px, at every size. That comes from ui's font faces: `fonts.css` and `fontFaces()` give
+Archivo ascent and descent overrides that the browser rounds to a centred cap band. A product that
+writes its own `@font-face` for Archivo takes the three override lines from `fontFaces()`.
+
+`ui-audit` gains three basics, as **errors**:
+- `control-text-centre` now measures the ink, not the line box (which passed labels 2px high).
+- `off-scale`: the room between two siblings is a step of the space scale (within 1px), or none.
+- `clip`: words cut by their box with no ellipsis, line clamp or scroller; words out of the painted
+  box they are written in; anything past the window's sides.
+
+**Upgrading from 0.27.x.** Serve ui's `fonts.css` (or `fontFaces()`), then run `ui-audit`: what the
+three rules find now fails the build. Text everywhere moves down by up to a pixel inside its line.
 
 ### A console's menu, crumbs and signals (D-13)
 
@@ -726,8 +742,11 @@ so the customer's views could read as the product's chrome).
 `ui-audit` opens each page in Chromium at 1280 and 380 px wide, in light and dark, and checks it
 against the tokens: contrast, type sizes and families, radii, spacing on the 4 px grid, colours,
 touch targets, axe-core, third-party requests and the script budget (rules and severities: D-8).
-Five layout rules (D-41) warn: `control-gap` (two controls under 8px apart, in any containers),
-`control-text-centre` (a button's words off its middle by more than 1px), `stack-rhythm` (a stack's
+Three basics (D-42) are errors: `control-text-centre` (a control's words, cap top to baseline, more
+than 1px further from one edge than the other), `off-scale` (the room between two siblings no step of
+the space scale) and `clip` (words cut by their box, out of the box they are written in, or anything
+past the window's sides). Four layout rules (D-41) warn: `control-gap` (two controls under 8px apart,
+in any containers), `stack-rhythm` (a stack's
 gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every menu and popover and
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
 apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
