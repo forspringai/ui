@@ -1715,3 +1715,16 @@ demo, standard pages, lead, connect and confirm pages have none.
 **Who.** Split with lead-ui (kw55-c2fix): ui-audit's three rules and the font fix here; the renderer's
 gallery, CI test and its own rules in apps/shell.
 
+**0.28.1 (2026-11-17): two the account found in ui's own CSS.** Bumping the account to 0.28.0, its
+`audit:ui` failed on two, both ui's:
+- `control-text-centre`: the side menu's org switcher (a two-line summary: a mono label over the
+  name) had 11px above its ink and 12.2px below. The name's body leading (1.3) left the extra room
+  under its baseline. The name now takes a heading's leading (1.15): 11 and 11.1. ui's demo has only
+  the single-org context, a div, so its tests never measured the summary.
+- `off-scale`: a back link straight over a section stood 72px apart. `.back` is inline-block, so its
+  24px margin adds to the section step (48px) rather than collapsing. A section after a back link now
+  takes no margin of its own, as a heading after one does: 24px.
+
+`test/fixtures/basics.html` holds both on ui's CSS. The audit test fails on 0.28.0's CSS and passes on
+this one.
+

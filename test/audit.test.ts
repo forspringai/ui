@@ -391,6 +391,13 @@ describe("the label's ink (D-42)", () => {
     }
   });
 
+  // 0.28.1: the account's pages on 0.28.0 found two in ui's own CSS: the org switcher's two-line
+  // summary 1.2px nearer its top, and a back link over a section 72px apart (inline-block margins add).
+  test("ui's org switcher and a back link over a section pass the basics, light and dark", async () => {
+    const r = await audit(options([`${base}/test/fixtures/basics.html`], { widths: [1280] }), browser);
+    expect(all(r).filter((f) => ["control-text-centre", "off-scale", "clip"].includes(f.rule))).toEqual([]);
+  }, 60_000);
+
   test("with fontFaces' metrics Archivo's cap band sits within half a pixel of a centred line, 11 to 24 px on lines of 1 to 1.7", async () => {
     const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
     try {

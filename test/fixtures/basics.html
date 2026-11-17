@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Basics on ui's CSS (D-42)</title>
+<!-- What the account's pages found on 0.28.0 (test/audit.test.ts): the side menu's org switcher, a
+     two-line summary, and a back link straight over a section. ui's own CSS, no styles of its own. -->
+<link rel="stylesheet" href="../../dist/tokens.css">
+<link rel="stylesheet" href="../../dist/fonts.css">
+<link rel="stylesheet" href="../../dist/components.css">
+</head>
+<body>
+<nav class="menu menu-side" aria-label="Menu"><details class="menu-context"><summary><span class="menu-label">Organisation</span><span class="menu-context-name">Blåbær ApS</span></summary><ul><li><a href="#" aria-current="true">Blåbær ApS</a></li><li><a href="#">Nordlys</a></li></ul></details></nav>
+<main id="main">
+  <a class="back" href="#">‹ Personer</a>
+  <section><h2>Anne Hansen</h2><p>anne@example.com</p></section>
+</main>
+</body>
+</html>
