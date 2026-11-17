@@ -15,7 +15,8 @@ import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
 import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, NO_ANCHOR, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
-import type { LayoutObservations } from "../src/audit/page.ts";
+import { collectLayout, type LayoutObservations } from "../src/audit/page.ts";
+import { fontFaces } from "../src/html.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
 
@@ -325,25 +326,135 @@ describe("the broken fixture", () => {
   });
 });
 
+// The label's ink (D-42). Peter found day chips with the words 2 px high that the old line-box measure
+// passed. The measure (cap top to baseline, from the DOM) must be what a screenshot shows, and ui's
+// fonts must centre it.
+describe("the label's ink (D-42)", () => {
+  test("control-text-centre's band is the screenshot's ink rows, within a pixel, and ui's controls pass", async () => {
+    const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 1 });
+    try {
+      await page.goto(`${base}/test/fixtures/ink.html`);
+      await page.evaluate(() => document.fonts.ready.then(() => undefined));
+      const { texts } = await page.evaluate(collectLayout);
+      // Each label's text span across, so a chevron or an icon beside it is not counted.
+      const spans = await page.evaluate(() =>
+        [...document.querySelectorAll("main button, main a.button, main a.chip, main summary")].map((el) => {
+          const n = [...el.childNodes].find((c) => c.nodeType === 3 && (c.textContent ?? "").trim())!;
+          const r = document.createRange();
+          r.selectNodeContents(n);
+          const q = r.getBoundingClientRect();
+          return { x0: Math.ceil(q.left), x1: Math.floor(q.right), y0: Math.floor(el.getBoundingClientRect().top), y1: Math.ceil(el.getBoundingClientRect().bottom) };
+        }),
+      );
+      expect(texts).toHaveLength(spans.length);
+      // Ink is what changes when the words go transparent.
+      const shot = async () => (await page.screenshot()).toString("base64");
+      const before = await shot();
+      await page.addStyleTag({ content: "main * { color: transparent !important; }" });
+      const after = await shot();
+      const rows = await page.evaluate(
+        async ({ before, after, spans }) => {
+          const load = async (b64: string) => {
+            const img = new Image();
+            img.src = `data:image/png;base64,${b64}`;
+            await img.decode();
+            const c = document.createElement("canvas");
+            [c.width, c.height] = [img.width, img.height];
+            const g = c.getContext("2d")!;
+            g.drawImage(img, 0, 0);
+            return g.getImageData(0, 0, img.width, img.height);
+          };
+          const [a, b] = [await load(before), await load(after)];
+          return spans.map(({ x0, x1, y0, y1 }) => {
+            let [top, bottom] = [-1, -1];
+            for (let y = y0; y < y1; y++)
+              for (let x = x0; x < x1; x++) {
+                const o = (y * a.width + x) * 4;
+                if (Math.abs(a.data[o]! - b.data[o]!) + Math.abs(a.data[o + 1]! - b.data[o + 1]!) + Math.abs(a.data[o + 2]! - b.data[o + 2]!) > 96) {
+                  if (top < 0) top = y;
+                  bottom = y + 1;
+                  break;
+                }
+              }
+            return { top, bottom };
+          });
+        },
+        { before, after, spans },
+      );
+      texts.forEach((t, i) => {
+        expect(Math.abs(rows[i]!.top - t.inkTop), `${t.selector} top`).toBeLessThanOrEqual(1);
+        expect(Math.abs(rows[i]!.bottom - t.inkBottom), `${t.selector} baseline`).toBeLessThanOrEqual(1);
+      });
+      expect(layoutFindings({ controls: [], composite: [], texts, stacks: [], regions: [], clips: [] }, layoutScale(tokens.rhythm, tokens.space))).toEqual([]);
+    } finally {
+      await page.close();
+    }
+  });
+
+  test("with fontFaces' metrics Archivo's cap band sits within half a pixel of a centred line, 11 to 24 px on lines of 1 to 1.7", async () => {
+    const page = await browser.newPage({ viewport: { width: 1200, height: 800 } });
+    try {
+      await page.goto(`${base}/test/fixtures/ink.html`);
+      const offs = await page.evaluate(async (faces) => {
+        document.head.innerHTML = `<style>${faces} body { margin: 0; } div { display: inline-flex; align-items: center; padding: 8px 6px; border: 1px solid; margin: 2px; font-family: Archivo; font-weight: 600; }</style>`;
+        const cases: [number, number][] = [];
+        for (let s = 11; s <= 24; s++) for (let l = s; l <= Math.ceil(s * 1.7); l++) cases.push([s, l]);
+        document.body.innerHTML = cases.map(([s, l]) => `<div style="font-size: ${s}px; line-height: ${l}px">Hb ${s}/${l}</div>`).join("");
+        await document.fonts.load("600 14px Archivo");
+        await document.fonts.ready;
+        const g = document.createElement("canvas").getContext("2d")!;
+        return [...document.querySelectorAll("div")].map((d, i) => {
+          g.font = `600 ${cases[i]![0]}px Archivo`;
+          const m = g.measureText("H");
+          const r = document.createRange();
+          r.selectNodeContents(d.firstChild!);
+          const base = r.getClientRects()[0]!.top + m.fontBoundingBoxAscent;
+          const box = d.getBoundingClientRect();
+          return { c: cases[i]!.join("/"), off: base - m.actualBoundingBoxAscent / 2 - (box.top + box.bottom) / 2 };
+        });
+      }, fontFaces("/fonts/"));
+      expect(offs).toHaveLength(192);
+      expect(offs.filter((o) => Math.abs(o.off) > 0.51)).toEqual([]);
+    } finally {
+      await page.close();
+    }
+  });
+});
+
 // A marketing page on text.marketing (D-22): on scale only when the run asks for that ladder (D-29).
-describe("the layout rules in a browser (D-41)", () => {
+describe("the layout rules in a browser (D-41, D-42)", () => {
   let found: Finding[];
   beforeAll(async () => {
     const r = await audit(options([`${base}/test/fixtures/layout.html`], { widths: [1280], themes: ["light"] }), browser);
-    found = all(r).filter((f) => ["control-gap", "control-text-centre", "stack-rhythm", "popover-anchor", "surface-distinct"].includes(f.rule));
+    found = all(r).filter((f) => ["control-gap", "control-text-centre", "stack-rhythm", "popover-anchor", "surface-distinct", "off-scale", "clip"].includes(f.rule));
   }, 60_000);
   const of = (rule: string) => found.filter((f) => f.rule === rule).map((f) => f.selector);
 
-  test("they are warnings, so a product's build does not fail on landing", () => {
-    expect(found.length).toBeGreaterThan(0);
-    expect(found.every((f) => f.severity === "warning")).toBe(true);
+  test("D-41's taste rules are warnings; D-42's basics (centred labels, the space scale, nothing cut) are errors", () => {
+    const by = (rules: string[]) => found.filter((f) => rules.includes(f.rule));
+    expect(by(["control-gap", "stack-rhythm", "popover-anchor", "surface-distinct"]).every((f) => f.severity === "warning")).toBe(true);
+    expect(by(["control-text-centre", "off-scale", "clip"]).length).toBeGreaterThan(0);
+    expect(by(["control-text-centre", "off-scale", "clip"]).every((f) => f.severity === "error")).toBe(true);
+  });
+
+  test("off-scale: 36px between two siblings; a browser's own heading margin (18.7px) in a section; not space shared out", () => {
+    expect(of("off-scale").sort()).toEqual(["div#offscale", "section#divided", "section#painted", "section#plain"]);
+  });
+
+  test("clip: cut across and down, out of a painted box, past the window; not an ellipsis, a scroller or a line clamp", () => {
+    expect(found.filter((f) => f.rule === "clip").map((f) => [f.selector, f.value]).sort()).toEqual([
+      ["div#cut", expect.stringMatching(/^"A label far too long for its box" cut by [\d.]+px at the end$/)],
+      ["div#cutdown", expect.stringMatching(/cut by [\d.]+px at the bottom$/)],
+      ["div#wide", expect.stringMatching(/^1\d\d(\.\d)?px past the window's end$/)],
+      ["span#spill", expect.stringMatching(/^"Overflowing chip" out of its box by [\d.]+px at the end$/)],
+    ]);
   });
 
   test("control-gap: Save on Remove in different containers", () => {
     expect(of("control-gap")).toEqual(["button#save | button#remove"]);
   });
 
-  test("control-text-centre: a label at the top of its box; an icon with a hidden label is measured by its glyph", () => {
+  test("control-text-centre: a label at the top of its box; an icon with a hidden label is measured by its glyph; descenders do not count", () => {
     expect(of("control-text-centre")).toEqual(["a#offcentre"]);
   });
 
@@ -502,14 +613,15 @@ describe("rules on measurements", () => {
   });
 });
 
-describe("layout rules on measurements (D-41)", () => {
-  const t = layoutScale(tokens.rhythm);
-  const none: LayoutObservations = { controls: [], composite: [], texts: [], stacks: [], regions: [] };
+describe("layout rules on measurements (D-41, D-42)", () => {
+  const t = layoutScale(tokens.rhythm, tokens.space);
+  const none: LayoutObservations = { controls: [], composite: [], texts: [], stacks: [], regions: [], clips: [] };
   const run = (o: Partial<LayoutObservations>) => layoutFindings({ ...none, ...o }, t);
   const b = (x: number, y: number, w: number, h: number) => ({ x, y, w, h });
 
-  test("the thresholds come from the rhythm tokens", () => {
+  test("the thresholds come from the rhythm and space tokens", () => {
     expect(t.rhythm).toEqual([4, 8, 16, 24, 48]);
+    expect(t.space).toEqual([4, 8, 12, 16, 20, 24, 28, 32, 40, 44, 48, 64]);
     expect(t.minGap).toBe(8);
     expect([t.anchorGap, t.fillStep, t.borderStep]).toEqual([8, 0.02, 0.04]);
   });
@@ -532,23 +644,50 @@ describe("layout rules on measurements (D-41)", () => {
     expect(run({ controls, composite: [[0, 1]] })).toEqual([]);
   });
 
-  test("control-text-centre: within 1px passes; 2px off fails; several lines use their union", () => {
-    const text = (top: number, bottom: number, lines = 1) => ({ selector: "summary", textTop: top, textBottom: bottom, lines, contentTop: 5, contentBottom: 27 });
-    expect(run({ texts: [text(8, 24)] })).toEqual([]);
-    expect(run({ texts: [text(9, 24.8)] })).toEqual([]);
-    expect(run({ texts: [text(10, 26)] }).map((f) => f.value)).toEqual(["text 2px below the middle"]);
-    expect(run({ texts: [text(3, 23, 2)] }).map((f) => f.value)).toEqual(["text 3px above the middle (2 lines)"]);
+  test("control-text-centre: the ink (cap top to baseline) in the middle of the padding box; above and below within 1px; several lines use their union; an error", () => {
+    const text = (top: number, bottom: number, lines = 1) => ({ selector: "summary", inkTop: top, inkBottom: bottom, lines, boxTop: 1, boxBottom: 31 });
+    // 11 above, 10 below: half a pixel off, the closest whole pixels allow.
+    expect(run({ texts: [text(12, 21)] })).toEqual([]);
+    expect(run({ texts: [text(11, 21)] })).toEqual([]);
+    // Peter's day chip (D-42): 8 above, 12 below in a 31px box.
+    const chip = run({ texts: [{ selector: "a.chip", inkTop: 8, inkBottom: 19, lines: 1, boxTop: 0, boxBottom: 31 }] });
+    expect(chip.map((f) => [f.severity, f.value])).toEqual([["error", "8px above the label, 12px below"]]);
+    expect(run({ texts: [text(10, 20)] }).map((f) => f.value)).toEqual(["9px above the label, 11px below"]);
+    expect(run({ texts: [text(4, 22, 2)] }).map((f) => f.value)).toEqual(["3px above the label, 9px below (2 lines)"]);
+  });
+
+  test("off-scale: a gap on the space scale (within 1px) or none passes; 36px fails; a grid's or shared-out gaps are not measured; an error", () => {
+    const pair = (gap: number, laidOut = false, axis: "block" | "inline" = "block") => run({ stacks: [{ selector: "div.s", axis, laidOut, children: [{ selector: "a", box: b(0, 0, 100, 20), autoBefore: false, autoAfter: false }, axis === "block" ? { selector: "b", box: b(0, 20 + gap, 100, 20), autoBefore: false, autoAfter: false } : { selector: "b", box: b(100 + gap, 0, 100, 20), autoBefore: false, autoAfter: false }] }] }).filter((f) => f.rule === "off-scale");
+    expect(pair(0)).toEqual([]);
+    expect(pair(16)).toEqual([]);
+    expect(pair(16.8)).toEqual([]);
+    expect(pair(17.2, false, "inline").map((f) => [f.severity, f.value])).toEqual([["error", "17.2px between a and b"]]);
+    expect(pair(36).map((f) => f.value)).toEqual(["36px between a and b"]);
+    expect(pair(36, true)).toEqual([]);
+  });
+
+  test("clip: cut, spill and viewport findings say what and where; errors", () => {
+    const f = run({ clips: [
+      { selector: "div.name", kind: "cut", by: 12.5, sides: ["end"], text: "Bager Hansen ApS" },
+      { selector: "a.chip", kind: "spill", by: 3, sides: ["bottom"], text: "Mon 17" },
+      { selector: "div.table", kind: "viewport", by: 40, sides: ["end"], text: "" },
+    ] });
+    expect(f.map((x) => [x.rule, x.severity, x.selector, x.value])).toEqual([
+      ["clip", "error", "div.name", '"Bager Hansen ApS" cut by 12.5px at the end'],
+      ["clip", "error", "a.chip", '"Mon 17" out of its box by 3px at the bottom'],
+      ["clip", "error", "div.table", "40px past the window's end"],
+    ]);
   });
 
   test("stack-rhythm: equal gaps pass, rhythm tokens pass, one odd gap fails naming both neighbours", () => {
-    const stack = (...ys: [number, number][]) => ({ selector: "main", axis: "block" as const, children: ys.map(([y, h], i) => ({ selector: `p${i}`, box: b(0, y, 300, h), autoBefore: false, autoAfter: false })) });
+    const stack = (...ys: [number, number][]) => ({ selector: "main", axis: "block" as const, laidOut: false, children: ys.map(([y, h], i) => ({ selector: `p${i}`, box: b(0, y, 300, h), autoBefore: false, autoAfter: false })) });
     expect(run({ stacks: [stack([0, 20], [32, 20], [64, 20])] })).toEqual([]);
     expect(run({ stacks: [stack([0, 40], [56, 20], [100, 20], [144, 30])] })).toEqual([]);
     expect(run({ stacks: [stack([0, 40], [56, 20], [88, 20])] }).map((f) => f.value)).toEqual(["12px between p1 and p2"]);
   });
 
   test("stack-rhythm: an auto margin's far end and another line of a wrapped row are not rhythm gaps", () => {
-    const row = { selector: "div.actions", axis: "inline" as const, children: [
+    const row = { selector: "div.actions", axis: "inline" as const, laidOut: false, children: [
       { selector: "a", box: b(0, 0, 80, 44), autoBefore: false, autoAfter: false },
       { selector: "b", box: b(88, 0, 80, 44), autoBefore: false, autoAfter: false },
       { selector: "c", box: b(600, 0, 80, 44), autoBefore: true, autoAfter: false },

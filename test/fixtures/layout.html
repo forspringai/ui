@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Layout rules (D-41)</title>
+<title>Layout rules (D-41, D-42)</title>
 <!-- Broken on purpose, for the five layout rules (test/audit.test.ts). Inline styles only, so the
      measurements do not depend on components.css. Each case has an id the test names. -->
 <style>
@@ -58,6 +58,23 @@
   <script>document.getElementById("orphan").showPopover();</script>
   <!-- popover-anchor: a menu that opens far from its trigger. -->
   <details id="far" style="position: relative"><summary style="display: inline-flex; align-items: center; min-height: 24px">Menu</summary><div style="position: absolute; top: 300px; left: 0; background: #ffffff; padding: 8px">Far away</div></details>
+  <!-- D-42. control-text-centre: descenders and a lowercase word do not move the measure (cap top to
+       baseline), so a centred label with them passes. -->
+  <div style="margin-top: 16px"><button id="descend" type="button">gyp jog</button></div>
+  <!-- off-scale: 36px between two siblings is on the 4px grid but no step of the scale; space shared
+       out by justify-content is not the author's gap. -->
+  <div id="offscale" style="display: flex; flex-direction: column; gap: 36px; margin-top: 16px"><p style="margin: 0">A</p><p style="margin: 0">B</p></div>
+  <div id="between" style="display: flex; justify-content: space-between; width: 300px"><span>A</span><span>B</span></div>
+  <!-- clip: cut across with no ellipsis; with an ellipsis it is meant, and a scroller shows the rest. -->
+  <div id="cut" style="width: 80px; overflow: hidden; white-space: nowrap; margin-top: 16px">A label far too long for its box</div>
+  <div id="ellipsis" style="width: 80px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis">A label far too long for its box</div>
+  <div id="scroller" style="width: 80px; overflow-x: auto; white-space: nowrap">A label far too long for its box</div>
+  <!-- clip: a line clamp is meant; a fixed height that hides the second line is not. -->
+  <div id="clamp" style="width: 120px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden">Two lines of words in a narrow box</div>
+  <div id="cutdown" style="width: 120px; height: 20px; overflow: hidden; line-height: 20px">Two lines of words in a narrow box</div>
+  <!-- clip: words out of the painted box they are written in, and a box past the window's end. -->
+  <span id="spill" style="display: inline-block; width: 60px; height: 24px; background: #ebebe6; white-space: nowrap">Overflowing chip</span>
+  <div id="wide" style="width: 1400px; height: 8px"></div>
 </div>
 </body>
 </html>

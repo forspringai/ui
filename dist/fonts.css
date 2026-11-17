@@ -6,6 +6,9 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  ascent-override: 90.5%;
+  descent-override: 18.3%;
+  line-gap-override: 0%;
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+2000-206F, U+20AC, U+2122, U+2190-2193, U+2212, U+2215, U+2248, U+FEFF, U+FFFD;
 }
 

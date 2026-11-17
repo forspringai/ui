@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Label ink (D-42)</title>
+<!-- ui's own controls with labels whose ink is cap top to baseline (capitals, digits and x-height
+     letters only), so a screenshot's ink rows are the band control-text-centre measures
+     (test/audit.test.ts). -->
+<link rel="stylesheet" href="../../dist/fonts.css">
+<link rel="stylesheet" href="../../dist/tokens.css">
+<link rel="stylesheet" href="../../dist/components.css">
+</head>
+<body>
+<main id="main">
+  <div class="actions">
+    <button type="button">Save</button>
+    <a class="button ghost" href="#">Remove</a>
+    <button type="button" class="danger">OK</button>
+  </div>
+  <div class="actions">
+    <button type="button" class="small">Mon 17</button>
+    <a class="button ghost small" href="#">Save</a>
+    <a class="chip" href="#">Mon 17</a>
+    <a class="chip" href="#" aria-current="true">Over 30</a>
+  </div>
+  <details class="explain"><summary>Remove</summary><p>More.</p></details>
+</main>
+</body>
+</html>

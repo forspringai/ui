@@ -203,7 +203,7 @@ export async function scale(browser, opts, root = packageRoot()) {
         palette: await palette(browser, tokens, root, opts.product),
         allowSpacing: opts.allowSpacing,
         rich: opts.richApp ? { radius: tokens.radius, control: tokens.control, space: tokens.space, text: tokens.text } : undefined,
-        layout: layoutScale(tokens.rhythm),
+        layout: layoutScale(tokens.rhythm, tokens.space),
     };
 }
 // --- Rules ---------------------------------------------------------------------------------------
@@ -344,9 +344,10 @@ export function primitives(slots, t, width) {
     }
     return out;
 }
-export function layoutScale(rhythm) {
+export function layoutScale(rhythm, space = {}) {
     const steps = [...new Set(Object.values(rhythm))].sort((a, b) => a - b);
-    return { rhythm: steps, minGap: Math.max(8, steps[0] ?? 0), anchorGap: 8, fillStep: 0.02, borderStep: 0.04 };
+    const scale = [...new Set(Object.values(space))].sort((a, b) => a - b);
+    return { rhythm: steps, minGap: Math.max(8, steps[0] ?? 0), anchorGap: 8, fillStep: 0.02, borderStep: 0.04, space: scale };
 }
 /** OKLab lightness of an sRGB colour (0 to 255 per channel), 0 to 1. */
 export function oklabL([r, g, b]) {
@@ -359,9 +360,10 @@ export function oklabL([r, g, b]) {
 const overlap = (a0, a1, b0, b1) => Math.min(a1, b1) - Math.max(a0, b0);
 const r1 = (n) => Math.round(n * 10) / 10;
 /**
- * The layout rules (D-41), written once here so the screens bench runs the same ones (lead-bench's
- * definitions, D-41). Warnings: they are taste-class and land warn-first; ui's own tests
- * hold the demo to none.
+ * The layout rules (D-41, D-42), written once here so the screens bench runs the same ones
+ * (lead-bench's definitions, D-41). control-gap, stack-rhythm and surface-distinct are taste-class
+ * warnings; control-text-centre, off-scale and clip are basics and errors (D-42). ui's own tests hold
+ * the demo to none of either.
  */
 export function layoutFindings(obs, t) {
     const out = [];
@@ -388,11 +390,15 @@ export function layoutFindings(obs, t) {
             const names = `${obs.controls[i].selector} | ${obs.controls[j].selector}`;
             warn("control-gap", names, gap <= 0 ? `${gap < 0 ? "overlapping" : "touching"} (${r1(gap)}px, ${axis})` : `${r1(gap)}px apart, ${axis}`, `at least ${t.minGap}px between two controls (--rhythm-actions)`, "space controls on the rhythm: put buttons in actions(), or let the container's rhythm part them (D-41)");
         }
-    // control-text-centre: the label's line boxes in the middle of the content box, within 1 px.
+    // control-text-centre (D-42): the label's ink, cap top to baseline, in the middle of the padding
+    // box: as much room above it as below, to 1 px. Measured on the ink, not the line box, which a font
+    // with more ascent than descent centres while its letters sit high.
     for (const c of obs.texts) {
-        const off = (c.textTop + c.textBottom) / 2 - (c.contentTop + c.contentBottom) / 2;
-        if (Math.abs(off) > 1)
-            warn("control-text-centre", c.selector, `text ${r1(Math.abs(off))}px ${off > 0 ? "below" : "above"} the middle${c.lines > 1 ? ` (${c.lines} lines)` : ""}`, "the label centred in the control within 1px", "size the control from --control-height and its line box from --_control-line, never with padding alone (D-14, D-41)");
+        const off = (c.inkTop + c.inkBottom) / 2 - (c.boxTop + c.boxBottom) / 2;
+        if (Math.abs(off) <= 0.51)
+            continue;
+        const [above, below] = [c.inkTop - c.boxTop, c.boxBottom - c.inkBottom];
+        out.push({ rule: "control-text-centre", severity: "error", selector: c.selector, value: `${r1(above)}px above the label, ${r1(below)}px below${c.lines > 1 ? ` (${c.lines} lines)` : ""}`, expected: "the label's ink (cap top to baseline) in the middle of the control: above and below within 1px", note: "size the control from --control-height with ui's font faces (fonts.css or fontFaces()), whose metrics centre the cap band; never nudge with padding alone (D-14, D-42)" });
     }
     // stack-rhythm: the gaps between a stack's children equal (within 1 px), or each a rhythm token.
     for (const st of obs.stacks) {
@@ -419,6 +425,34 @@ export function layoutFindings(obs, t) {
         const onRhythm = (g) => t.rhythm.some((r) => Math.abs(r - g) <= 1);
         for (const g of gaps.filter((x) => !onRhythm(x.gap)))
             warn("stack-rhythm", st.selector, `${r1(g.gap)}px between ${g.a} and ${g.b}`, `equal gaps, or each a rhythm token (${t.rhythm.join(", ")} px)`, "space a stack's children with --rhythm-* (D-41)");
+    }
+    // off-scale (D-42): the room between two siblings, edge to edge along the stack, is a step of the
+    // space scale (within 1 px) or none. Not where a grid's tracks or shared-out free space set it,
+    // nor across an auto margin or a wrap.
+    for (const st of obs.stacks) {
+        if (st.laidOut)
+            continue;
+        for (let i = 1; i < st.children.length; i++) {
+            const [p, c] = [st.children[i - 1], st.children[i]];
+            if (p.autoAfter || c.autoBefore)
+                continue;
+            const cross = st.axis === "block" ? overlap(p.box.x, p.box.x + p.box.w, c.box.x, c.box.x + c.box.w) : overlap(p.box.y, p.box.y + p.box.h, c.box.y, c.box.y + c.box.h);
+            if (cross < 1)
+                continue;
+            if (st.axis === "block" && c.box.y < p.box.y + p.box.h - 1 && overlap(p.box.y, p.box.y + p.box.h, c.box.y, c.box.y + c.box.h) >= 1)
+                continue;
+            const gap = st.axis === "block" ? c.box.y - (p.box.y + p.box.h) : c.box.x - (p.box.x + p.box.w);
+            if (gap <= 1 || t.space.some((v) => Math.abs(v - gap) <= 1))
+                continue;
+            out.push({ rule: "off-scale", severity: "error", selector: st.selector, value: `${r1(gap)}px between ${p.selector} and ${c.selector}`, expected: `a step of the space scale (${t.space.join(", ")} px), within 1px, or none`, note: "space siblings with gap or margin on --space-* or --rhythm-*; a gap no token makes reads as a mistake (D-42)" });
+        }
+    }
+    // clip (D-42): text cut by its box with no ellipsis or clamp, text out of the box it is written in,
+    // and anything past the window's sides.
+    for (const c of obs.clips) {
+        const what = c.kind === "viewport" ? `${c.by}px past the window's ${c.sides.join(" and ")}` : `"${c.text}" ${c.kind === "cut" ? "cut" : "out of its box"} by ${c.by}px at the ${c.sides.join(", ")}`;
+        const fix = { cut: "let it wrap, or say the cut is meant: text-overflow: ellipsis across, a line clamp down, or a scroller", spill: "let the box grow with its words (min-height, not height; no fixed width on a label), or wrap them", viewport: "keep the page inside the window at every width: let it wrap, or give the wide part a scroller of its own" }[c.kind];
+        out.push({ rule: "clip", severity: "error", selector: c.selector, value: what, expected: c.kind === "viewport" ? "nothing past the window's sides" : "every word inside the box it is written in", note: `${fix} (D-42)` });
     }
     for (const r of obs.regions) {
         const behind = oklabL(r.behind);

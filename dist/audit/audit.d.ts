@@ -110,14 +110,17 @@ export type LayoutScale = {
     fillStep: number;
     /** A region's four-sided border from the surface behind it, at least (OKLab L). */
     borderStep: number;
+    /** The space scale in px (tokens.space): a gap between two siblings is one of them, or none (D-42). */
+    space: number[];
 };
-export declare function layoutScale(rhythm: Record<string, number>): LayoutScale;
+export declare function layoutScale(rhythm: Record<string, number>, space?: Record<string, number>): LayoutScale;
 /** OKLab lightness of an sRGB colour (0 to 255 per channel), 0 to 1. */
 export declare function oklabL([r, g, b]: readonly number[]): number;
 /**
- * The layout rules (D-41), written once here so the screens bench runs the same ones (lead-bench's
- * definitions, D-41). Warnings: they are taste-class and land warn-first; ui's own tests
- * hold the demo to none.
+ * The layout rules (D-41, D-42), written once here so the screens bench runs the same ones
+ * (lead-bench's definitions, D-41). control-gap, stack-rhythm and surface-distinct are taste-class
+ * warnings; control-text-centre, off-scale and clip are basics and errors (D-42). ui's own tests hold
+ * the demo to none of either.
  */
 export declare function layoutFindings(obs: LayoutObservations, t: LayoutScale): Finding[];
 /**

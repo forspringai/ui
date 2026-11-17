@@ -311,9 +311,18 @@ export function collectLayout() {
             if (la.contains(lb) || lb.contains(la) || tabs || radios || within || group)
                 composite.push([i, j]);
         }
-    // The label's text box in each button-like control: buttons, links drawn as buttons, summaries, tabs.
+    // The label's ink in each button-like control: buttons, links drawn as buttons, chips, summaries,
+    // tabs and menu items (D-42). The baseline is the text's content area top plus the font's ascent,
+    // as the browser lays it out (both whole pixels); the cap height is the font's H. Measured so, it
+    // matches a screenshot's ink rows within half a pixel (test/audit.test.ts).
+    const metrics = document.createElement("canvas").getContext("2d");
+    const fontOf = (e) => {
+        const fs = getComputedStyle(e);
+        metrics.font = `${fs.fontStyle} ${fs.fontWeight} ${fs.fontSize} ${fs.fontFamily}`;
+        return { ascent: metrics.measureText("H").fontBoundingBoxAscent, cap: metrics.measureText("H").actualBoundingBoxAscent };
+    };
     const texts = [];
-    for (const el of document.querySelectorAll('button, a[href].button, a[href][role="button"], summary, [role="button"], [role="tab"], [role="menuitem"]')) {
+    for (const el of document.querySelectorAll('button, a[href].button, a[href][role="button"], a[href].chip, summary, [role="button"], [role="tab"], [role="menuitem"], [role="menuitemradio"], [role="menuitemcheckbox"]')) {
         if (!visible(el) || !shown(el))
             continue;
         // Only what shows: words for a screen reader alone (a visually-hidden span, clipped to nothing),
@@ -334,37 +343,37 @@ export function collectLayout() {
             }
             return false;
         };
-        const rects = [];
+        const bands = [];
         const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
         for (let n = walker.nextNode(); n; n = walker.nextNode()) {
             if (!(n.textContent ?? "").trim() || hidden(n.parentElement))
                 continue;
+            const f = fontOf(n.parentElement);
             const range = document.createRange();
             range.selectNodeContents(n);
             for (const r of range.getClientRects())
                 if (r.width > 0 && r.height > 0)
-                    rects.push(r);
+                    bands.push({ top: r.top + f.ascent - f.cap, bottom: r.top + f.ascent });
         }
-        if (!rects.length)
+        if (!bands.length)
             for (const svg of el.querySelectorAll("svg")) {
                 const r = svg.getBoundingClientRect();
                 // An aria-hidden icon is still what the eye sees; only an invisible or clipped one is not.
                 const p = svg.parentElement === el ? null : svg.parentElement;
                 if (r.width > 1 && r.height > 1 && svg.checkVisibility({ visibilityProperty: true }) && !(p && hidden(p)))
-                    rects.push(r);
+                    bands.push({ top: r.top, bottom: r.bottom });
             }
-        if (!rects.length)
+        if (!bands.length)
             continue;
-        const tops = [...new Set(rects.map((r) => Math.round(r.top)))];
         const s = getComputedStyle(el);
         const r = el.getBoundingClientRect();
         texts.push({
             selector: selector(el),
-            textTop: Math.min(...rects.map((x) => x.top)),
-            textBottom: Math.max(...rects.map((x) => x.bottom)),
-            lines: tops.length,
-            contentTop: r.top + parseFloat(s.borderTopWidth) + parseFloat(s.paddingTop),
-            contentBottom: r.bottom - parseFloat(s.borderBottomWidth) - parseFloat(s.paddingBottom),
+            inkTop: Math.min(...bands.map((x) => x.top)),
+            inkBottom: Math.max(...bands.map((x) => x.bottom)),
+            lines: new Set(bands.map((x) => Math.round(x.bottom))).size,
+            boxTop: r.top + parseFloat(s.borderTopWidth),
+            boxBottom: r.bottom - parseFloat(s.borderBottomWidth),
         });
     }
     // Stacks: one-axis flex and grid containers, and ui's flow and stack containers (components.css).
@@ -420,8 +429,9 @@ export function collectLayout() {
             });
             spacer = false;
         }
-        if (children.length >= 3)
-            stacks.push({ selector: selector(el), axis, children });
+        const laidOut = /grid/.test(s.display) || /space-/.test(s.justifyContent);
+        if (children.length >= 2)
+            stacks.push({ selector: selector(el), axis, children, laidOut });
     }
     // Regions: panes that must read apart from the ground behind them.
     const canvas = document.createElement("canvas");
@@ -480,7 +490,123 @@ export function collectLayout() {
             continue;
         regions.push({ selector: selector(el), fill: own[3] > 0 ? over(own, behind) : null, behind, border: all ? over(sides[0].c, behind) : null });
     }
-    return { controls, composite, texts, stacks, regions };
+    // Clipping (D-42). Text cut by the nearest box that clips it, unless that box says it means to (an
+    // ellipsis across, a line clamp down); text out of the painted box it is written in; and what
+    // pushes the page past the window's sides.
+    const clips = [];
+    const short = (t) => (t.trim().replace(/\s+/g, " ").length > 32 ? `${t.trim().replace(/\s+/g, " ").slice(0, 31)}…` : t.trim().replace(/\s+/g, " "));
+    const srOnly = (e) => {
+        for (let n = e; n && n !== document.body; n = n.parentElement) {
+            const ns = getComputedStyle(n);
+            if (/inset\(50%/.test(ns.clipPath) || (ns.clip !== "auto" && ns.clip !== ""))
+                return true;
+            const nr = n.getBoundingClientRect();
+            if (nr.width <= 1 || nr.height <= 1)
+                return true;
+        }
+        return false;
+    };
+    const clipper = (e) => {
+        for (let n = e; n && n !== document.documentElement; n = n.parentElement) {
+            const ns = getComputedStyle(n);
+            if (ns.overflowX !== "visible" || ns.overflowY !== "visible")
+                return n;
+        }
+        return null;
+    };
+    const painted = (e) => rgba(getComputedStyle(e).backgroundColor)[3] > 0 || framed(e);
+    const seen = new Set();
+    const add = (o) => {
+        const key = `${o.kind} ${o.selector}`;
+        if (seen.has(key))
+            return;
+        seen.add(key);
+        clips.push(o);
+    };
+    // Which sides of [l, t, r, b] the rects cross by more than 1 px, and by how much at most.
+    const cross = (rects, [l, t, r, b], x, y) => {
+        const sides = new Set();
+        let by = 0;
+        const past = (side, d) => {
+            if (d <= 1)
+                return;
+            sides.add(side);
+            by = Math.max(by, d);
+        };
+        for (const q of rects) {
+            if (x)
+                past("start", l - q.left);
+            if (x)
+                past("end", q.right - r);
+            if (y)
+                past("top", t - q.top);
+            if (y)
+                past("bottom", q.bottom - b);
+        }
+        return { sides: [...sides], by: Math.round(by * 10) / 10 };
+    };
+    const scrolls = (o) => o === "auto" || o === "scroll";
+    const textWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let n = textWalker.nextNode(); n; n = textWalker.nextNode()) {
+        const host = n.parentElement;
+        if (!host || !(n.textContent ?? "").trim() || ["SCRIPT", "STYLE", "TEMPLATE", "TITLE", "OPTION"].includes(host.tagName))
+            continue;
+        if (!host.checkVisibility({ visibilityProperty: true, opacityProperty: true }) || host.closest("[inert], [aria-hidden='true'], select") || srOnly(host))
+            continue;
+        const range = document.createRange();
+        range.selectNodeContents(n);
+        const rects = [...range.getClientRects()].filter((q) => q.width > 0 && q.height > 0);
+        if (!rects.length)
+            continue;
+        const text = short(n.textContent ?? "");
+        // Cut: by the nearest box that clips, against its padding box. A scroller shows the rest on
+        // scrolling; an ellipsis is meant across, a line clamp down.
+        const c = clipper(host);
+        if (c && c !== document.body) {
+            const cs = getComputedStyle(c);
+            const cr = c.getBoundingClientRect();
+            const pad = [cr.left + parseFloat(cs.borderLeftWidth), cr.top + parseFloat(cs.borderTopWidth), cr.right - parseFloat(cs.borderRightWidth), cr.bottom - parseFloat(cs.borderBottomWidth)];
+            const ellipsis = cs.textOverflow === "ellipsis" || getComputedStyle(host).textOverflow === "ellipsis";
+            const clamp = (cs.getPropertyValue("-webkit-line-clamp") || "none") !== "none";
+            const cut = cross(rects, pad, !scrolls(cs.overflowX) && cs.overflowX !== "visible" && !ellipsis, !scrolls(cs.overflowY) && cs.overflowY !== "visible" && !clamp);
+            if (cut.sides.length)
+                add({ selector: selector(c), kind: "cut", ...cut, text });
+        }
+        // Spill: out of the painted box the words are written in (a button, a chip, a badge, a card), when
+        // nothing between clips them (what a box clips is the cut check's).
+        let box = host;
+        while (box && box !== document.body && !painted(box))
+            box = box.parentElement;
+        if (box && box !== document.body && !(c && box.contains(c))) {
+            const br = box.getBoundingClientRect();
+            const spill = cross(rects, [br.left, br.top, br.right, br.bottom], true, true);
+            if (spill.sides.length)
+                add({ selector: selector(box), kind: "spill", ...spill, text });
+        }
+    }
+    // Past the window's sides: the outermost visible box that crosses, unless a clipping box holds it.
+    const W = document.documentElement.clientWidth;
+    if (document.documentElement.scrollWidth > W + 1 || [...document.body.children].some((e) => e.getBoundingClientRect().left < -1))
+        for (const el of document.body.querySelectorAll("*")) {
+            if (!visible(el) || srOnly(el))
+                continue;
+            const er = el.getBoundingClientRect();
+            if (er.right - W <= 1 && -er.left <= 1)
+                continue;
+            // Held inside something that clips or scrolls: that box is what shows.
+            const holder = clipper(el.parentElement);
+            if (holder && holder !== document.body && holder !== document.documentElement)
+                continue;
+            // Only the outermost box that crosses; its children cross because it does.
+            const p = el.parentElement.getBoundingClientRect();
+            if (el.parentElement !== document.body && (p.right - W > 1 || -p.left > 1))
+                continue;
+            // Parked off-screen on purpose (a skip link at -9999px until it is focused).
+            if (er.right <= 0 || er.left >= W)
+                continue;
+            add({ selector: selector(el), kind: "viewport", ...cross([er], [0, 0, W, 0], true, false), text: "" });
+        }
+    return { controls, composite, texts, stacks, regions, clips };
 }
 /**
  * The open popovers and menus, each with its trigger, in viewport coordinates (D-41): a details
