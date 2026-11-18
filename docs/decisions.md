@@ -1805,3 +1805,38 @@ is still loaded for code. Not changed: marketing.md's eyebrow (a marketing page,
 the red outline and still means destructive. Decision: Peter, via lead-brand (brand-22). The test
 `critical is filled and never looks like .danger` holds the label at 4.5:1 and above on the fill and on
 its hover, both themes.
+
+## D-45: An app palette: its own states and chart slots; contrast refuses, taste warns (0.31.0, 2026-11-18)
+
+Peter adopted the Fable memo on 2026-11-18 (hub coordinator/areas/ui/springml-fundamentals-fable.md,
+via cos). Its change 2 lets an app declare its own colours, and its principle decides what blocks:
+the platform owns what must be true (who reads which value, the legal actions, the writes), the
+author owns what is seen. lead-brand's condition: Forspring's look stays the library's default.
+
+- **One theme file, one validator.** The app palette is D-34's Brand level, extended. `brand` takes
+  `charts` (chart-1 onward, up to eight; `chart-N-tint` derived as D-37 does) and `states` (the app's
+  own state keys, `^[a-z][a-z0-9_]{0,39}$`, up to 24, each to a colour). The accent is no longer
+  required: a brand block sets at least one of accent, tint, charts or states. AppSpring's kernel calls
+  `validateTheme()` on the theme built from an app's `settings.json` palette, so this package and the
+  kernel cannot disagree.
+- **What an app may set.** The accent, the tint, the chart slots and its state keys. Everything else
+  stays the library's: the grounds and surfaces (except through the tint), the inks, borders, the
+  status tones and the signals. The platform's own notices and refusals keep their meaning; an app
+  shows its states through state keys, not by repainting danger. Forspring's chrome (the shell bar,
+  the account, sign-in) never takes an app's colours.
+- **States.** `customerTheme()` writes `--state-<key>`, `--state-<key>-foreground` (the family's label
+  or the ink, whichever reaches 4.5:1) and `--state-<key>-soft` (the hue at the notice shares on the
+  card, 14% light and 9% dark) per theme, and returns them in `t.states`.
+- **Contrast refuses.** `theme.state.mark_contrast` (3:1 on background, card and muted),
+  `theme.state.label_contrast` (4.5:1 on the fill) and `theme.chart.mark_contrast` (3:1 on the page
+  and the card, the family's own chart rule), each with a fix at the same hue. The accent and tint
+  contrast refusals stay.
+- **Taste warns.** `theme.accent.status_clash` moves from refusal to warning: same code, same meaning.
+  New warnings: `theme.state.status_clash`, `theme.state.close` and `theme.chart.close` (normal vision
+  and simulated deficiencies; the chart thresholds are the family's own, 15 and 8),
+  `theme.state.dark_derived` and `theme.chart.dark_derived`.
+- **No soft-fill check.** At the notice shares the ink keeps 4.5:1 on a soft fill for every hue; a
+  test sweeps the wheel and the extremes instead of a code that cannot fire.
+- **Not changed.** The Default level is the family's look and writes no CSS. Products, the shell and
+  the account are untouched.
+

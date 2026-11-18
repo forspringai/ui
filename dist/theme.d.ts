@@ -70,7 +70,7 @@ export type ThemeFile = {
     };
 };
 /** Stable refusal and warning codes; AppSpring's compiler maps them, so they never change meaning. */
-export declare const CODES: readonly ["theme.schema", "theme.color.format", "theme.level.mismatch", "theme.accent.contrast", "theme.accent.label_contrast", "theme.accent.status_clash", "theme.tint.text_contrast", "theme.tint.mark_contrast", "theme.logo.alt_missing", "theme.logo.unsafe_url", "theme.guideline.unavailable", "theme.accent.dark_derived", "theme.tint.dark_derived", "theme.accent.product_close"];
+export declare const CODES: readonly ["theme.schema", "theme.color.format", "theme.level.mismatch", "theme.accent.contrast", "theme.accent.label_contrast", "theme.tint.text_contrast", "theme.tint.mark_contrast", "theme.logo.alt_missing", "theme.logo.unsafe_url", "theme.guideline.unavailable", "theme.state.mark_contrast", "theme.state.label_contrast", "theme.chart.mark_contrast", "theme.accent.dark_derived", "theme.tint.dark_derived", "theme.accent.product_close", "theme.accent.status_clash", "theme.state.dark_derived", "theme.state.close", "theme.state.status_clash", "theme.chart.dark_derived", "theme.chart.close"];
 export type Code = (typeof CODES)[number];
 /** path is dotted ("brand.accent.light", "" for the file); fix, when given, is a value that passes there. */
 export type Problem = {
@@ -105,6 +105,17 @@ export type CustomerTheme = {
         dark: string;
         alt: string;
     } | null;
+    /** The app's own state hues (ui D-45), per key and theme: the hue, the label on it and the soft fill.
+     *  The CSS names are --state-<key>, --state-<key>-foreground and --state-<key>-soft. */
+    states: Record<string, {
+        light: StateColors;
+        dark: StateColors;
+    }>;
+};
+export type StateColors = {
+    hue: string;
+    foreground: string;
+    soft: string;
 };
 export type CustomerThemeOptions = ValidateOptions & {
     selector?: string;
@@ -113,6 +124,9 @@ export declare class ThemeRefused extends Error {
     readonly errors: Problem[];
     constructor(errors: Problem[]);
 }
+export declare const STATE_KEY: RegExp;
+export declare const MAX_STATES = 24;
+export declare const SOFT_SHARE: Record<Mode, number>;
 export declare const COMPONENT_MIXES: readonly ["--_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));", "--_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));", "--_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);"];
 /** Check a theme file (parsed, or its JSON text). ok when there are no errors; warnings never refuse. */
 export declare function validateTheme(file: unknown, options?: ValidateOptions): Validation;

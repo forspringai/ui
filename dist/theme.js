@@ -6,9 +6,13 @@
 // validateTheme() says what is wrong, with a stable code and, for a colour, the nearest value that
 // passes. customerTheme() turns a valid file into values on this package's roles, never geometry:
 // the accent (primary, its label, the ring and the doll), the surface tint (background and the soft
-// surface) and the logo. Pure functions over src/family.ts, so they run in a Worker, a browser or a
+// surface), the chart slots, the app's own state hues and the logo.
+//
+// Errors are accessibility (contrast) and safety (schema, logo URLs): they refuse. Taste (a colour
+// near a status, two states alike) is a warning and never refuses (ui D-45, the adopted rule "the
+// platform owns what must be true, the author owns what is seen"). Pure functions over src/family.ts, so they run in a Worker, a browser or a
 // compiler with no file access.
-import { contrast, distance, fromOklch, luminance, oklab, oklch } from "./color.js";
+import { contrast, distance, fromOklch, luminance, mix, oklab, oklch } from "./color.js";
 import { PRODUCTS, ROLES } from "./family.js";
 const MODES = ["light", "dark"];
 /** The three levels (hub D-117): Forspring's look, the customer's brand, and later the Guideline level. */
@@ -39,16 +43,25 @@ export const CODES = [
     "theme.level.mismatch",
     "theme.accent.contrast",
     "theme.accent.label_contrast",
-    "theme.accent.status_clash",
     "theme.tint.text_contrast",
     "theme.tint.mark_contrast",
     "theme.logo.alt_missing",
     "theme.logo.unsafe_url",
     "theme.guideline.unavailable",
+    "theme.state.mark_contrast",
+    "theme.state.label_contrast",
+    "theme.chart.mark_contrast",
     // warnings
     "theme.accent.dark_derived",
     "theme.tint.dark_derived",
     "theme.accent.product_close",
+    // a warning since ui D-45 (an error before): taste, not access
+    "theme.accent.status_clash",
+    "theme.state.dark_derived",
+    "theme.state.close",
+    "theme.state.status_clash",
+    "theme.chart.dark_derived",
+    "theme.chart.close",
 ];
 export class ThemeRefused extends Error {
     errors;
@@ -72,6 +85,21 @@ const TINT_ROLES = { background: ["background"], muted: ["muted", "secondary", "
 // A dark surface derived from a light tint keeps its hue at the family's dark lightness, its chroma
 // capped so it stays a surface (AppSpring's derive-org-tokens.ts, MAX_SURFACE_CHROMA).
 const MAX_DARK_TINT_CHROMA = 0.05;
+// The app's own states (ui D-45): a key is an enum or lifecycle value, at most 24 of them. The soft
+// fill is the hue on the card at the notice tints' shares (css/components.css .notice).
+export const STATE_KEY = /^[a-z][a-z0-9_]{0,39}$/;
+export const MAX_STATES = 24;
+export const SOFT_SHARE = { light: 0.14, dark: 0.09 };
+// The chart slots an app may set (ui D-45), judged as the family's own are (tokens/chart.json, D-37):
+// 3:1 on the page and the card, neighbours 15 apart and 8 under colour-vision simulation, the tint
+// the slot at this share on the card.
+const MAX_CHARTS = 8;
+const CHART_TINT = 0.2;
+const CHART_APART = 15;
+const CHART_CVD_APART = 8;
+const VISIONS = ["protan", "deutan", "tritan"];
+// Statuses a state hue may be mistaken for (a warning only).
+const STATE_CLASH_ROLES = ["success", "warning", "danger"];
 // The component layer's shades of the accent (css/components.css, its forspring.base block). A custom
 // property resolves its var()s where it is declared, so they are declared again under the theme's
 // selector; test/theme.test.ts holds them equal to components.css.
@@ -128,6 +156,12 @@ function pair(v, path, s) {
     if (v.light === undefined)
         return null;
     return { light: color(v.light, join(path, "light"), s), dark: v.dark === undefined ? undefined : color(v.dark, join(path, "dark"), s) };
+}
+// A state or chart colour is a bare colour (the light value; dark derived) or { light, dark? }.
+function colorOrPair(v, path, s) {
+    if (typeof v === "string" || (isObj(v) && v.colorSpace !== undefined))
+        return { light: color(v, path, s), dark: undefined };
+    return pair(v, path, s);
 }
 // A logo is an https: URL, a data:image/ URL of a raster or SVG type (an <img> runs no script from
 // either), or a relative path in the app's bundle. Nothing that can leave an attribute or name
@@ -209,6 +243,38 @@ function tintRule(mode) {
     };
     return { findings, passes };
 }
+// A state hue is a mark on the surfaces (3:1) and carries a readable label when filled (4.5:1 with
+// one of the two labels). Its soft fill needs no check: at the notice shares on the card the ink
+// stays above 4.5:1 for every hue (test/theme.test.ts sweeps it).
+function stateRule(mode, s) {
+    const ground = SURFACES.map((name) => ({ name, lum: luminance(s[name]) }));
+    const poles = labels(mode).map((hex) => ({ hex, lum: luminance(hex) }));
+    const findings = (hex) => {
+        const lum = luminance(hex);
+        return {
+            marks: ground.map(({ name, lum: g }) => ({ name, r: ratio(lum, g) })).filter((x) => x.r < NON_TEXT),
+            label: poles.find((p) => ratio(p.lum, lum) >= AA)?.hex ?? null,
+        };
+    };
+    const passes = (hex) => {
+        const f = findings(hex);
+        return !f.marks.length && f.label !== null;
+    };
+    return { findings, passes };
+}
+// A chart slot is a mark on the page and the card (3:1), as the family's slots are.
+function chartRule(mode, s) {
+    const ground = ["background", "card"].map((name) => ({ name, lum: luminance(s[name]) }));
+    const findings = (hex) => {
+        const lum = luminance(hex);
+        return { marks: ground.map(({ name, lum: g }) => ({ name, r: ratio(lum, g) })).filter((x) => x.r < NON_TEXT) };
+    };
+    return { findings, passes: (hex) => !findings(hex).marks.length };
+}
+// The least distance between two colours, in normal vision and under each simulated deficiency.
+function closest(a, b) {
+    return { normal: distance(a, b), cvd: Math.min(...VISIONS.map((v) => distance(a, b, v))) };
+}
 // The nearest colour that passes, at the same hue: every lightness on a 0.002 grid at the colour's own
 // chroma and every step down to grey, the one with the least OKLab distance from the original wins.
 // The way D-20 fixed DataSpring's teal (the smallest darkening that passes), searched instead of by
@@ -241,7 +307,7 @@ function nearestPassing(hex, passes) {
 const ratios = (xs) => xs.map((x) => `${x.r.toFixed(2)}:1`);
 function check(file, options) {
     const s = { errors: [], warnings: [] };
-    const resolved = { level: "default", accent: null, tint: null, logo: null };
+    const resolved = { level: "default", accent: null, tint: null, charts: null, states: {}, logo: null };
     if (options.product !== undefined && !Object.hasOwn(PRODUCTS, options.product))
         throw new TypeError(`unknown product: ${String(options.product)}`);
     if (typeof file === "string") {
@@ -269,7 +335,7 @@ function check(file, options) {
     if (level === "default" && file.brand !== undefined)
         s.errors.push({ path: "level", code: "theme.level.mismatch", message: "the Default level is Forspring's look and takes no brand values; set level to brand", fix: "brand" });
     if ((level === "brand" || level === "guideline") && file.brand === undefined)
-        s.errors.push({ path: "brand", code: "theme.level.mismatch", message: `the ${level === "brand" ? "Brand" : "Guideline"} level needs a brand block with an accent` });
+        s.errors.push({ path: "brand", code: "theme.level.mismatch", message: `the ${level === "brand" ? "Brand" : "Guideline"} level needs a brand block (an accent, a tint, chart slots or states)` });
     if (file.guideline !== undefined && level !== "guideline")
         s.errors.push({ path: "guideline", code: "theme.level.mismatch", message: "a guideline block belongs to the Guideline level only" });
     if (file.guideline !== undefined && keys(file.guideline, "guideline", ["font", "radius", "density"], [], s, "{ font?, radius?, density? }")) {
@@ -291,9 +357,12 @@ function check(file, options) {
             ...(level === "guideline" ? { fix: "brand" } : {}),
         });
     }
-    if (file.brand === undefined || !keys(file.brand, "brand", ["accent", "tint", "logo"], ["accent"], s, "{ accent, tint?, logo? }"))
+    if (file.brand === undefined || !keys(file.brand, "brand", ["accent", "tint", "charts", "states", "logo"], [], s, "{ accent?, tint?, charts?, states?, logo? }"))
         return { ...s, resolved };
     const brand = file.brand;
+    if (!["accent", "tint", "charts", "states"].some((k) => brand[k] !== undefined)) {
+        s.errors.push({ path: "brand", code: "theme.schema", message: "a brand block sets at least one of accent, tint, charts or states" });
+    }
     const accent = brand.accent === undefined ? null : pair(brand.accent, "brand.accent", s);
     const tint = brand.tint === undefined ? null : pair(brand.tint, "brand.tint", s);
     // The tint first: the accent is then checked on the surfaces the theme makes.
@@ -349,6 +418,7 @@ function check(file, options) {
             else {
                 const f = rule.findings(hex);
                 const fix = f.contrast.length || !f.label || f.clashes.length ? nearestPassing(hex, rule.passes) : null;
+                // The clash is taste since ui D-45: a warning, so the colour stays the author's.
                 const tail = fix ? `; ${fix} is the nearest that passes` : "";
                 const withFix = fix ? { fix } : {};
                 if (f.contrast.length) {
@@ -359,7 +429,7 @@ function check(file, options) {
                     s.errors.push({ path, code: "theme.accent.label_contrast", message: `text on a filled ${hex} in ${mode} is under 4.5:1 either way: ${a} ${ratios([{ r: contrast(a, hex) }])}, ${b} ${ratios([{ r: contrast(b, hex) }])}${tail}`, ...withFix });
                 }
                 if (f.clashes.length) {
-                    s.errors.push({ path, code: "theme.accent.status_clash", message: `${hex} is ${f.clashes.map((x) => `${x.d.toFixed(1)} from ${x.role} (${ROLES[mode][x.role]})`).join(", ")} in ${mode}; a brand colour stays at least 10 from every status and signal colour (OKLab x100) so it never reads as one${tail}`, ...withFix });
+                    s.warnings.push({ path, code: "theme.accent.status_clash", message: `${hex} is ${f.clashes.map((x) => `${x.d.toFixed(1)} from ${x.role} (${ROLES[mode][x.role]})`).join(", ")} in ${mode}; a brand colour stays at least 10 from every status and signal colour (OKLab x100) so it never reads as one${tail}`, ...withFix });
                 }
             }
             accents[mode] = hex;
@@ -372,6 +442,129 @@ function check(file, options) {
         }
         if (accents.light && accents.dark)
             resolved.accent = { light: accents.light, dark: accents.dark };
+    }
+    // Chart slots, in order: chart-1 first.
+    if (brand.charts !== undefined) {
+        if (!Array.isArray(brand.charts) || brand.charts.length === 0 || brand.charts.length > MAX_CHARTS) {
+            s.errors.push({ path: "brand.charts", code: "theme.schema", message: `brand.charts is a list of 1 to ${MAX_CHARTS} colours (chart-1 first)` });
+        }
+        else {
+            const charts = [];
+            brand.charts.forEach((v, i) => {
+                const base = `brand.charts.${i}`;
+                const c = colorOrPair(v, base, s);
+                if (!c?.light)
+                    return;
+                const got = {};
+                for (const mode of MODES) {
+                    const path = `${base}.${mode}`;
+                    const rule = chartRule(mode, surfaces(mode, tints[mode] ?? null));
+                    let hex = mode === "light" ? c.light : c.dark;
+                    if (hex === null)
+                        continue;
+                    if (hex === undefined) {
+                        const derived = nearestPassing(c.light, rule.passes);
+                        if (!derived)
+                            continue;
+                        hex = derived;
+                        if (hex !== c.light)
+                            s.warnings.push({ path, code: "theme.chart.dark_derived", message: `no dark value for chart-${i + 1}: derived ${hex}, the nearest to ${c.light} that is 3:1 on the dark page and card; write it to choose another`, fix: hex });
+                    }
+                    else {
+                        const f = rule.findings(hex);
+                        if (f.marks.length) {
+                            const fix = nearestPassing(hex, rule.passes);
+                            s.errors.push({ path, code: "theme.chart.mark_contrast", message: `chart-${i + 1} ${hex} is ${f.marks.map((x) => `${x.r.toFixed(2)}:1 on ${x.name}`).join(", ")} in ${mode}; a chart slot is at least 3:1 on the page and the card${fix ? `; ${fix} is the nearest that passes` : ""}`, ...(fix ? { fix } : {}) });
+                        }
+                    }
+                    got[mode] = hex;
+                }
+                if (got.light && got.dark)
+                    charts.push({ light: got.light, dark: got.dark });
+            });
+            if (charts.length === brand.charts.length) {
+                for (let i = 1; i < charts.length; i++) {
+                    for (const mode of MODES) {
+                        const d = closest(charts[i - 1][mode], charts[i][mode]);
+                        if (d.normal < CHART_APART || d.cvd < CHART_CVD_APART) {
+                            s.warnings.push({ path: `brand.charts.${i}`, code: "theme.chart.close", message: `chart-${i} and chart-${i + 1} are ${d.normal.toFixed(1)} apart (${d.cvd.toFixed(1)} under colour-vision simulation) in ${mode}; neighbours read apart at ${CHART_APART} (${CHART_CVD_APART})` });
+                            break;
+                        }
+                    }
+                }
+                resolved.charts = charts;
+            }
+        }
+    }
+    // The app's own states: key -> hue.
+    if (brand.states !== undefined) {
+        if (!isObj(brand.states)) {
+            s.errors.push({ path: "brand.states", code: "theme.schema", message: "brand.states is an object: a state key to its colour" });
+        }
+        else {
+            const entries = Object.entries(brand.states);
+            if (entries.length > MAX_STATES)
+                s.errors.push({ path: "brand.states", code: "theme.schema", message: `brand.states has at most ${MAX_STATES} keys, not ${entries.length}` });
+            for (const [key, v] of entries.slice(0, MAX_STATES)) {
+                const base = `brand.states.${key}`;
+                if (!STATE_KEY.test(key)) {
+                    s.errors.push({ path: base, code: "theme.schema", message: `${JSON.stringify(key)} is not a state key: lower case letters, digits and _, starting with a letter, at most 40` });
+                    continue;
+                }
+                const c = colorOrPair(v, base, s);
+                if (!c?.light)
+                    continue;
+                const got = {};
+                for (const mode of MODES) {
+                    const path = `${base}.${mode}`;
+                    const rule = stateRule(mode, surfaces(mode, tints[mode] ?? null));
+                    let hex = mode === "light" ? c.light : c.dark;
+                    if (hex === null)
+                        continue;
+                    if (hex === undefined) {
+                        const derived = nearestPassing(c.light, rule.passes);
+                        if (!derived)
+                            continue;
+                        hex = derived;
+                        if (hex !== c.light)
+                            s.warnings.push({ path, code: "theme.state.dark_derived", message: `no dark value for ${key}: derived ${hex}, the nearest to ${c.light} that passes on the dark surfaces; write it to choose another`, fix: hex });
+                    }
+                    else {
+                        const f = rule.findings(hex);
+                        const fix = rule.passes(hex) ? null : nearestPassing(hex, rule.passes);
+                        const tail = fix ? `; ${fix} is the nearest that passes` : "";
+                        const withFix = fix ? { fix } : {};
+                        if (f.marks.length)
+                            s.errors.push({ path, code: "theme.state.mark_contrast", message: `${key} ${hex} is ${f.marks.map((x) => `${x.r.toFixed(2)}:1 on ${x.name}`).join(", ")} in ${mode}; a state colour is at least 3:1 on background, card and muted${tail}`, ...withFix });
+                        if (!f.label) {
+                            const [a, b] = labels(mode);
+                            s.errors.push({ path, code: "theme.state.label_contrast", message: `text on a filled ${key} ${hex} in ${mode} is under 4.5:1 either way: ${a} ${ratios([{ r: contrast(a, hex) }])}, ${b} ${ratios([{ r: contrast(b, hex) }])}${tail}`, ...withFix });
+                        }
+                    }
+                    got[mode] = hex;
+                    for (const role of STATE_CLASH_ROLES) {
+                        const d = distance(hex, ROLES[mode][role]);
+                        if (d < APART)
+                            s.warnings.push({ path, code: "theme.state.status_clash", message: `${key} ${hex} is ${d.toFixed(1)} from ${role} (${ROLES[mode][role]}) in ${mode}; it may read as ${role}, which is fine only if it means that` });
+                    }
+                }
+                if (got.light && got.dark)
+                    resolved.states[key] = { light: got.light, dark: got.dark };
+            }
+            const keysOk = Object.keys(resolved.states);
+            for (let i = 0; i < keysOk.length; i++) {
+                for (let j = i + 1; j < keysOk.length; j++) {
+                    const [a, b] = [keysOk[i], keysOk[j]];
+                    for (const mode of MODES) {
+                        const d = closest(resolved.states[a][mode], resolved.states[b][mode]);
+                        if (d.normal < APART || d.cvd < APART) {
+                            s.warnings.push({ path: `brand.states.${b}`, code: "theme.state.close", message: `${a} and ${b} are ${d.normal.toFixed(1)} apart (${d.cvd.toFixed(1)} under colour-vision simulation) in ${mode}; they may read as one state` });
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
     if (brand.logo !== undefined && keys(brand.logo, "brand.logo", ["light", "dark", "alt"], ["light"], s, "{ light, dark?, alt }")) {
         const logo = brand.logo;
@@ -434,13 +627,27 @@ export function customerTheme(file, options = {}) {
         put(TINT_ROLES.background, { light: tintedPage(t.light, "light"), dark: tintedPage(t.dark, "dark") });
         put(TINT_ROLES.muted, t);
     }
-    const css = set.length
+    resolved.charts?.forEach((c, i) => {
+        put([`chart-${i + 1}`], c);
+        put([`chart-${i + 1}-tint`], { light: mix(c.light, roles.light.card, CHART_TINT), dark: mix(c.dark, roles.dark.card, CHART_TINT) });
+    });
+    const states = {};
+    const stateCss = [];
+    for (const [key, p] of Object.entries(resolved.states)) {
+        const colors = (mode) => ({ hue: p[mode], foreground: label(p[mode], mode), soft: mix(p[mode], roles[mode].card, SOFT_SHARE[mode]) });
+        const st = { light: colors("light"), dark: colors("dark") };
+        states[key] = st;
+        const pc = (k) => pairCss({ light: st.light[k], dark: st.dark[k] });
+        stateCss.push(`--state-${key}: ${pc("hue")};`, `--state-${key}-foreground: ${pc("foreground")};`, `--state-${key}-soft: ${pc("soft")};`);
+    }
+    const css = set.length || stateCss.length
         ? `/* A customer's theme (@forspring/ui customerTheme, ui D-34): values on the roles, never geometry. */\n${selector} {\n${[
             ...set.map(([r, p]) => `--${r}: ${pairCss(p)};`),
+            ...stateCss,
             ...COMPONENT_MIXES,
         ]
             .map((l) => `  ${l}`)
             .join("\n")}\n}\n`
         : "";
-    return { level: resolved.level === "brand" ? "brand" : "default", roles, css, logo: resolved.logo };
+    return { level: resolved.level === "brand" ? "brand" : "default", roles, css, logo: resolved.logo, states };
 }

@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "vitest";
-import { contrast, distance, fromOklch, oklch } from "../src/color.ts";
+import { contrast, distance, fromOklch, mix, oklch } from "../src/color.ts";
 import { PRODUCTS, ROLES } from "../src/family.ts";
 import {
   CODES,
@@ -12,6 +12,7 @@ import {
   DENSITY_PRESETS,
   LEVELS,
   RADIUS_PRESETS,
+  SOFT_SHARE,
   ThemeRefused,
   customerTheme,
   validateTheme,
@@ -44,7 +45,7 @@ function obeysTheRules(roles: Record<Mode, Record<string, string>>) {
     }
     expect(contrast(c["primary-foreground"]!, c.primary!), `${mode} label`).toBeGreaterThanOrEqual(4.5);
     expect(contrast(c.ring!, c.background!), `${mode} ring`).toBeGreaterThanOrEqual(3);
-    for (const r of ["success", "warning", "danger", "signal-ok", "signal-warn", "signal-down", "signal-off"]) expect(distance(c.primary!, c[r]!), `${mode} primary from ${r}`).toBeGreaterThanOrEqual(10);
+    // Distance from the status colours is taste since ui D-45: a warning (theme.accent.status_clash), not a rule.
   }
 }
 
@@ -120,7 +121,7 @@ describe("a good theme", () => {
 
   test("the Default level is the family's look and writes no CSS", () => {
     const t = customerTheme({ level: "default" });
-    expect(t).toEqual({ level: "default", roles: { light: { ...ROLES.light }, dark: { ...ROLES.dark } }, css: "", logo: null });
+    expect(t).toEqual({ level: "default", roles: { light: { ...ROLES.light }, dark: { ...ROLES.dark } }, css: "", logo: null, states: {} });
     expect(customerTheme({ level: "default" }, { product: "appspring" }).roles.light.primary).toBe(PRODUCTS.appspring.primary.light);
   });
 
@@ -132,12 +133,27 @@ describe("a good theme", () => {
   });
 });
 
+// The codes that warn and never refuse; every other code is a refusal.
+const WARNINGS: Code[] = [
+  "theme.accent.dark_derived",
+  "theme.tint.dark_derived",
+  "theme.accent.product_close",
+  "theme.accent.status_clash",
+  "theme.state.dark_derived",
+  "theme.state.close",
+  "theme.state.status_clash",
+  "theme.chart.dark_derived",
+  "theme.chart.close",
+];
+
 // One minimal failing file per refusal code. Where the error names a fix, writing it in at the path
 // clears that code there.
 const CASES: { code: Code; path: string; file: unknown }[] = [
   { code: "theme.schema", path: "colour", file: { level: "brand", brand: { accent: { light: "#0f5132" } }, colour: "red" } },
   { code: "theme.schema", path: "level", file: { level: "custom" } },
-  { code: "theme.schema", path: "brand.accent", file: { level: "brand", brand: { tint: { light: "#eef6f0" } } } },
+  { code: "theme.schema", path: "brand", file: { level: "brand", brand: {} } },
+  { code: "theme.schema", path: "brand.states.Open", file: { level: "brand", brand: { states: { Open: "#2f5bd3" } } } },
+  { code: "theme.schema", path: "brand.charts", file: { level: "brand", brand: { charts: Array(9).fill("#2f5bd3") } } },
   { code: "theme.schema", path: "", file: "{ not json" },
   { code: "theme.color.format", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "rebeccapurple" } } } },
   { code: "theme.color.format", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: { colorSpace: "srgb", components: [0, 0, 0], hex: "#0f5132" } } } } },
@@ -146,8 +162,9 @@ const CASES: { code: Code; path: string; file: unknown }[] = [
   { code: "theme.accent.contrast", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "#3d8bfd" } } } },
   { code: "theme.accent.contrast", path: "brand.accent.dark", file: { level: "brand", brand: { accent: { light: "#0f5132", dark: "#0f5132" } } } },
   { code: "theme.accent.label_contrast", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "#777777" } } } },
-  { code: "theme.accent.status_clash", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "#9a1a2a" } } } },
-  { code: "theme.accent.status_clash", path: "brand.accent.light", file: { level: "brand", brand: { accent: { light: "#257012" } } } },
+  { code: "theme.state.mark_contrast", path: "brand.states.open.light", file: { level: "brand", brand: { states: { open: { light: "#f0f0a0" } } } } },
+  { code: "theme.state.label_contrast", path: "brand.states.open.light", file: { level: "brand", brand: { states: { open: { light: "#777777" } } } } },
+  { code: "theme.chart.mark_contrast", path: "brand.charts.0.light", file: { level: "brand", brand: { charts: [{ light: "#f0f0a0" }] } } },
   { code: "theme.tint.text_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#b0b8c8" } } } },
   { code: "theme.tint.text_contrast", path: "brand.tint.dark", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#eef6f0", dark: "#d0e0ff" } } } },
   { code: "theme.tint.mark_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#dcebe0" } } } },
@@ -168,13 +185,14 @@ describe.each(CASES)("$code at $path", ({ code, path, file }) => {
     expect(() => customerTheme(file)).toThrow(code);
   });
 
-  if (code.startsWith("theme.accent.") || code.startsWith("theme.tint.") || code === "theme.level.mismatch" || code === "theme.guideline.unavailable") {
+  const colour = ["theme.accent.", "theme.tint.", "theme.state.", "theme.chart."].some((p) => code.startsWith(p));
+  if (colour || code === "theme.level.mismatch" || code === "theme.guideline.unavailable") {
     test("its fix clears it", () => {
       if (code === "theme.level.mismatch" && path === "brand") return expect(error!.fix).toBeUndefined();
       expect(error!.fix).toBeDefined();
       const fixed = validateTheme(at(file, path, error!.fix));
       expect(fixed.errors.filter((e) => e.path === path)).toEqual([]);
-      if (code.startsWith("theme.accent.") || code.startsWith("theme.tint.")) {
+      if (colour) {
         // A colour fix keeps the colour's hue: lightness and chroma move, the hue stays.
         const [[, c0, h0], [, c1, h1]] = [oklch(readColor(file, path)), oklch(error!.fix!)];
         if (c0 > 0.03 && c1 > 0.03) expect(Math.abs(((h1 - h0 + 540) % 360) - 180)).toBeLessThan(3);
@@ -184,7 +202,7 @@ describe.each(CASES)("$code at $path", ({ code, path, file }) => {
 });
 
 test("every refusal code has a case, and the codes are the documented list", () => {
-  const refusals = CODES.filter((c) => !["theme.accent.dark_derived", "theme.tint.dark_derived", "theme.accent.product_close"].includes(c));
+  const refusals = CODES.filter((c) => !WARNINGS.includes(c));
   expect(new Set(CASES.map((c) => c.code))).toEqual(new Set(refusals));
   const readme = readFileSync(join(root, "README.md"), "utf8");
   for (const c of CODES) expect(readme, c).toContain(`\`${c}\``);
@@ -259,6 +277,78 @@ describe("the CSS", () => {
   });
 });
 
+// The app palette (ui D-45, the Fable memo's change 2): the app's own states and chart slots, contrast
+// as errors, taste as warnings.
+describe("an app palette", () => {
+  const PALETTE = {
+    level: "brand",
+    brand: {
+      charts: ["#2f5bd3", { light: "#b35a1a", dark: "#e08a4a" }],
+      states: { confirmed: "#2f5bd3", tentative: { light: "#8a5a00" } },
+    },
+  };
+
+  test("needs no accent, keeps the Forspring accent, and its states and charts pass in both themes", () => {
+    const v = validateTheme(PALETTE);
+    expect(v.errors).toEqual([]);
+    const t = customerTheme(PALETTE);
+    expect(t.roles.light.primary).toBe(PRODUCTS.forspring.primary.light);
+    expect(t.roles.light["chart-1"]).toBe("#2f5bd3");
+    expect(t.roles.dark["chart-2"]).toBe("#e08a4a");
+    expect(t.roles.light["chart-1-tint"]).toBe(mix("#2f5bd3", ROLES.light.card, 0.2));
+    expect(t.roles.light["chart-3"]).toBe(ROLES.light["chart-3"]);
+    for (const mode of MODES) {
+      for (const [key, st] of Object.entries(t.states)) {
+        const c = st[mode];
+        for (const s of ["background", "card", "muted"] as const) expect(contrast(c.hue, t.roles[mode][s]), `${mode} ${key} on ${s}`).toBeGreaterThanOrEqual(3);
+        expect(contrast(c.foreground, c.hue), `${mode} ${key} label`).toBeGreaterThanOrEqual(4.5);
+        expect(contrast(t.roles[mode].foreground, c.soft), `${mode} ${key} soft`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+    expect(Object.keys(t.states)).toEqual(["confirmed", "tentative"]);
+    for (const name of ["--state-confirmed:", "--state-confirmed-foreground:", "--state-confirmed-soft:", "--state-tentative:", "--chart-1:", "--chart-2-tint:"]) expect(t.css).toContain(name);
+  });
+
+  test("a missing dark value is derived and warned, and written in it warns no more", () => {
+    const v = validateTheme(PALETTE);
+    const derived = v.warnings.find((w) => w.code === "theme.state.dark_derived" && w.path === "brand.states.tentative.dark");
+    if (derived) {
+      const pinned = structuredClone(PALETTE) as any;
+      pinned.brand.states.tentative.dark = derived.fix;
+      expect(validateTheme(pinned).warnings.filter((w) => w.path === "brand.states.tentative.dark")).toEqual([]);
+    }
+    expect(customerTheme(PALETTE).states.tentative!.dark.hue).toBe(derived?.fix ?? "#8a5a00");
+  });
+
+  test("taste warns and never refuses: an accent near a status, two states alike, a state near danger, chart neighbours alike", () => {
+    for (const accent of ["#9a1a2a", "#257012"]) {
+      const v = validateTheme({ level: "brand", brand: { accent: { light: accent } } });
+      expect(v.ok, accent).toBe(true);
+      expect(codes(v.warnings), accent).toContain("theme.accent.status_clash");
+    }
+    const alike = validateTheme({ level: "brand", brand: { states: { open: { light: "#2f5bd3", dark: "#7a9cf0" }, waiting: { light: "#3060d0", dark: "#7a9cf0" } } } });
+    expect(alike.ok).toBe(true);
+    expect(codes(alike.warnings)).toContain("theme.state.close");
+    const red = validateTheme({ level: "brand", brand: { states: { overdue: { light: ROLES.light.danger, dark: ROLES.dark.danger } } } });
+    expect(red.ok).toBe(true);
+    expect(codes(red.warnings)).toContain("theme.state.status_clash");
+    const charts = validateTheme({ level: "brand", brand: { charts: [{ light: "#2f5bd3", dark: "#7a9cf0" }, { light: "#3060d0", dark: "#7c9ef0" }] } });
+    expect(charts.ok).toBe(true);
+    expect(codes(charts.warnings)).toContain("theme.chart.close");
+  });
+
+  test("the soft fill keeps the ink readable for every hue, so it needs no check", () => {
+    const hues = ["#000000", "#ffffff", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#00ffff", "#ff00ff"];
+    for (let h = 0; h < 360; h += 15) for (const l of [0.2, 0.5, 0.8]) for (const c of [0.12, 0.05]) {
+      const hex = fromOklch(l, c, h);
+      if (hex) hues.push(hex);
+    }
+    for (const mode of MODES) {
+      for (const hex of hues) expect(contrast(ROLES[mode].foreground, mix(hex, ROLES[mode].card, SOFT_SHARE[mode])), `${mode} ${hex}`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+});
+
 // The schema, read by a small JSON Schema interpreter (the keywords the file uses), agrees with
 // validateTheme() on what is off-schema.
 type Schema = Record<string, any>;
@@ -285,9 +375,12 @@ function accepts(schema: Schema, v: unknown, rootSchema: Schema = schema): boole
     if (schema.items) checks.push(v.every((x) => accepts(schema.items, x, rootSchema)));
   }
   if (isObj) {
+    const patterns = Object.entries((schema.patternProperties ?? {}) as Record<string, Schema>).map(([re, s]) => [new RegExp(re, "u"), s] as const);
     if (schema.required) checks.push(schema.required.every((k: string) => k in o));
+    if (schema.maxProperties !== undefined) checks.push(Object.keys(o).length <= schema.maxProperties);
     if (schema.properties) checks.push(Object.entries(schema.properties).every(([k, s]) => !(k in o) || accepts(s as Schema, o[k], rootSchema)));
-    if (schema.additionalProperties === false) checks.push(Object.keys(o).every((k) => k in (schema.properties ?? {})));
+    for (const [re, s] of patterns) checks.push(Object.entries(o).every(([k, x]) => !re.test(k) || accepts(s, x, rootSchema)));
+    if (schema.additionalProperties === false) checks.push(Object.keys(o).every((k) => k in (schema.properties ?? {}) || patterns.some(([re]) => re.test(k))));
   }
   if (schema.allOf) checks.push(schema.allOf.every((s: Schema) => accepts(s, v, rootSchema)));
   if (schema.anyOf) checks.push(schema.anyOf.some((s: Schema) => accepts(s, v, rootSchema)));
@@ -318,6 +411,11 @@ describe("schema/customer-theme.schema.json", () => {
     { level: "guideline" },
     { level: "guideline", brand: { accent: { light: "#0f5132" } }, guideline: { density: "loose" } },
     { level: "brand", brand: { accent: { light: "#0f5132" } }, $schema: 3 },
+    { level: "brand", brand: { tint: { light: "#eef6f0" } } },
+    { level: "brand", brand: { charts: ["#2f5bd3", { light: "#b35a1a", dark: "#e08a4a" }], states: { confirmed: "#2f5bd3", tentative: { light: "#8a5a00" } } } },
+    { level: "brand", brand: { states: { confirmed: { light: "#2f5bd3", tone: "#000000" } } } },
+    { level: "brand", brand: { states: Object.fromEntries(Array.from({ length: 25 }, (_, i) => [`s${i}`, "#2f5bd3"])) } },
+    { level: "brand", brand: { charts: [] } },
   ];
 
   test.each(corpus.map((f, i) => [i, f] as const))("file %i: the schema and validateTheme() agree on its shape", (_, file) => {

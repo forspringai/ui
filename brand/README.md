@@ -157,8 +157,10 @@ tick sbb, ui D-27).
 
 Customer themes are the customer's brand on their own surfaces in AppSpring: hosted apps, forms, the
 e-sign portal and emails (hub D-103 item 4). Forspring's chrome, the bar, the console and the doll in
-it, never changes. A theme is an accent, a surface tint and a logo, values only, in a checked file
-that `validateTheme()` holds to the same rules as a product accent (hub D-117, ui D-34); the format,
+it, never changes. A theme is any of an accent, a surface tint, chart slots and the app's own state
+colours, plus a logo, values only, in a checked file (hub D-117, ui D-34, D-45). What it does not set
+stays Forspring's look. `validateTheme()` refuses on contrast (accessibility) and only warns on taste,
+such as a colour near a status or two states that look alike (D-45); the format,
 the refusals and `customerTheme()` are in the [README](../README.md#a-customers-theme), and what each
 level changes on screen in [appspring-apps.md](appspring-apps.md).
 
