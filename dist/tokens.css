@@ -178,6 +178,13 @@
   --mark: light-dark(#5d2eb8, #b09af5);
 }
 
+[data-product="flowspring"] {
+  --primary: light-dark(#3d4900, #9fab02);
+  --primary-foreground: light-dark(#ffffff, #111215);
+  --ring: light-dark(#3d4900, #9fab02);
+  --mark: light-dark(#3d4900, #9fab02);
+}
+
 [data-product="pulsespring"] {
   --primary: light-dark(#a3237a, #e06dba);
   --primary-foreground: light-dark(#ffffff, #111215);

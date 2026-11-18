@@ -184,6 +184,24 @@ export const PRODUCTS = {
             "dark": "#b09af5"
         }
     },
+    "flowspring": {
+        "primary": {
+            "light": "#3d4900",
+            "dark": "#9fab02"
+        },
+        "primary-foreground": {
+            "light": "#ffffff",
+            "dark": "#111215"
+        },
+        "ring": {
+            "light": "#3d4900",
+            "dark": "#9fab02"
+        },
+        "mark": {
+            "light": "#3d4900",
+            "dark": "#9fab02"
+        }
+    },
     "pulsespring": {
         "primary": {
             "light": "#a3237a",

@@ -47,6 +47,17 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
+  // FlowSpring's moss sits near the status greens and yellows, so hub D-120 (cos's requirement) fixes
+  // it at 10 or more from every status and signal in both themes, by name, so a later change to
+  // either side cannot lose it silently. The same checks are in the loops above and below; this one
+  // cannot be deleted with them.
+  test("FlowSpring's moss stays 10 from every status and signal", () => {
+    const moss = m.product["flowspring"]!.primary[mode];
+    for (const role of ["success", "warning", "danger", "signal-ok", "signal-warn", "signal-down", "signal-off"]) {
+      expect(distance(c(role), moss), `${role} in ${mode}`).toBeGreaterThanOrEqual(10);
+    }
+  });
+
   // Two products must never look alike: every pair of distinct accents at least 10 apart (OKLab x100),
   // the same bar as status against accent (D-20). Spring and Forspring share one blue on purpose (hub
   // D-101), so equal values are one accent, not a pair.
@@ -119,5 +130,6 @@ test("the D-90 accents, exactly, and Spring on Forspring's blue (hub D-101)", ()
     dataspring: { light: "#01767c", dark: "#2ba7ad" }, // #0b7a7f until 0.27.0 (D-41)
     appspring: { light: "#5d2eb8", dark: "#b09af5" },
     pulsespring: { light: "#a3237a", dark: "#e06dba" },
+    flowspring: { light: "#3d4900", dark: "#9fab02" },
   });
 });

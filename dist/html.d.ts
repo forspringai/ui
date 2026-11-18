@@ -18,11 +18,11 @@ export declare function html(strings: TemplateStringsArray, ...values: Content[]
 export declare function safeHref(href: string): string;
 export type Lang = "da" | "en";
 /** The suite's products (hub D-90, D-101); the same list as tokens.js's products, checked by a test. */
-export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "appspring" | "pulsespring";
+export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "appspring" | "pulsespring" | "flowspring";
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.28.2";
+export declare const VERSION = "0.29.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.28.2/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.29.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**

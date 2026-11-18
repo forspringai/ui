@@ -75,7 +75,7 @@ const cls = (...names: (string | false | null | undefined)[]) => names.filter(Bo
 
 export type Lang = "da" | "en";
 /** The suite's products (hub D-90, D-101); the same list as tokens.js's products, checked by a test. */
-export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "appspring" | "pulsespring";
+export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "appspring" | "pulsespring" | "flowspring";
 
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export const PRODUCT_NAMES: Record<Product, string> = {
@@ -85,10 +85,11 @@ export const PRODUCT_NAMES: Record<Product, string> = {
   dataspring: "DataSpring",
   appspring: "AppSpring",
   pulsespring: "PulseSpring",
+  flowspring: "FlowSpring",
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.28.2";
+export const VERSION = "0.29.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------

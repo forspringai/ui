@@ -115,7 +115,7 @@ describe("blocks", () => {
 });
 
 test("the Product type lists the same products as the tokens", () => {
-  const all: Record<Product, true> = { forspring: true, spring: true, sitespring: true, dataspring: true, appspring: true, pulsespring: true };
+  const all: Record<Product, true> = { forspring: true, spring: true, sitespring: true, dataspring: true, appspring: true, pulsespring: true, flowspring: true };
   expect(Object.keys(all).sort()).toEqual([...tokens.products].sort());
 });
 

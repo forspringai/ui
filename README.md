@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.28.2
+pnpm add github:forspringai/ui#v0.29.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -247,8 +247,8 @@ the ink doll (paper on dark), "Forspring" and the small label ("konto"). Nothing
 the doll's colour is the new `--mark` role, set by `data-product`. `spring` is a product key now
 (Forspring's blue, `#2244FF` / `#6B83FF`). The rules and the files are in [brand/README.md](brand/README.md).
 
-`pnpm build` generates, for each of `forspring`, `spring`, `sitespring`, `dataspring`, `appspring` and
-`pulsespring`, into `dist/brand/<product>/` (and `brand/<product>/`): `mark.svg`, `favicon.svg` (both
+`pnpm build` generates, for each of `forspring`, `spring`, `sitespring`, `dataspring`, `appspring`,
+`pulsespring` and `flowspring`, into `dist/brand/<product>/` (and `brand/<product>/`): `mark.svg`, `favicon.svg` (both
 with their dark variant inside), `favicon-32.png`, `favicon-16.png`, `apple-touch-icon-180.png`,
 `icon-512.png`, `logo.svg` (wordmark outlined, no font needed) and `logo-1200x300.png`.
 And `site.webmanifest` (D-28): the name and the two app icons, linked by `shell()` and `faviconLinks()`; serve it as `application/manifest+json`.
@@ -853,5 +853,5 @@ same options are `AuditOptions` fields: `cookie`, `allowOrigins`, `waitFor`, `wa
 (and `budgetJs`, `product`, `allowSpacing`, `allowStatus`, `widths`, `themes`). Launch the browser
 with `--host-resolver-rules` resolving only the audited and allowed hosts, as `cli.ts` does.
 
-Products: `forspring`, `spring`, `sitespring`, `dataspring`, `appspring`, `pulsespring` (BrainSpring uses `spring`, hub D-116).
+Products: `forspring`, `spring`, `sitespring`, `dataspring`, `appspring`, `pulsespring`, `flowspring` (BrainSpring uses `spring`, hub D-116).
 See [AGENTS.md](AGENTS.md) for the rules and [docs/decisions.md](docs/decisions.md) for why.

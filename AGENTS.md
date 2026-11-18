@@ -120,7 +120,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.28.2"
+"@forspring/ui": "github:forspringai/ui#v0.29.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -192,7 +192,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
   a colour pass.
 - **The audit is the standard made executable.** After a component or token change, `pnpm demo`
   and `pnpm audit http://127.0.0.1:4319/dist/demo/` must exit 0 with no `--allow-spacing`, for
-  every product (`?product=<key>` with `--product <key>`; test/audit.test.ts runs all six). Don't loosen a rule, add an allowlist value or demote a
+  every product (`?product=<key>` with `--product <key>`; test/audit.test.ts runs all seven). Don't loosen a rule, add an allowlist value or demote a
   severity to make a page pass; fix the page, or record the change as a decision (D-8).
 - **A session given to the audit stays a secret** (D-10): `--cookie-env` reads it from the
   environment only, sends it to the audited origins only, and everything the CLI prints passes the

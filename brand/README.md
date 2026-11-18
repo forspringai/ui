@@ -41,7 +41,7 @@ the doll, in each product's colour, with the wordmark always in ink (hub D-101).
 
 ### The files, in `brand/<product>/`
 
-`<product>` is `forspring`, `spring`, `sitespring`, `dataspring`, `appspring` or `pulsespring`. Products
+`<product>` is `forspring`, `spring`, `sitespring`, `dataspring`, `appspring`, `pulsespring` or `flowspring`. Products
 serve the same files from `dist/brand/` (see the package README, "Marks, wordmarks and favicons").
 
 | File | What | Use |
@@ -60,7 +60,7 @@ The PNGs are the light variant. On a dark ground use the SVG, which switches by 
 
 - **The wordmark is always ink** (the foreground colour), never the accent, never split by colour or
   weight (hub D-101 item 4).
-- **Archivo Condensed 900**, written Forspring, Spring, SiteSpring, DataSpring, AppSpring, PulseSpring
+- **Archivo Condensed 900**, written Forspring, Spring, SiteSpring, DataSpring, AppSpring, PulseSpring, FlowSpring
   (and BrainSpring in text). One word with a capital S in the middle; never lowercase, never another
   face. Lower case belongs only in repo names, domains and CLI commands (hub D-86).
 - **The lockup is the doll plus the wordmark** everywhere: console bars, marketing sites, the account,
@@ -103,10 +103,15 @@ One accent per product, the only value that varies between products (`tokens/acc
 | DataSpring, deep teal | `#01767C` | `#2BA7AD` |
 | AppSpring, violet | `#5D2EB8` | `#B09AF5` |
 | PulseSpring, magenta | `#A3237A` | `#E06DBA` |
+| FlowSpring, moss (hub D-120, ui D-43) | `#3D4900` | `#9FAB02` |
 
 DataSpring's light teal was `#0B7C82` until 0.10.1 (ui D-20). AppSpring's accent was plum (`#7B3F8C`)
 until 2026-11-11 (hub D-116, ui D-21, amending hub D-90 and D-101), because plum sat 8.8 from
 PulseSpring's magenta.
+
+- **Beside FlowSpring's moss a status is always a labelled pill** (word and colour), never a dot or a
+  tint alone (hub D-120). Moss sits 10 or more from every status and signal in both themes, but a
+  green-yellow hue is the one a bare dot would blur with success.
 
 - **One accent per product, one blue for the suite.** Spring shares Forspring's blue; the older
   forspring.ai blue is retired.
