@@ -1799,3 +1799,9 @@ ref, keys, a diff's sign). Every `var(--font-mono)` label in `css/components.css
 kicker and facts) moved to Archivo: 600 for the uppercase labels, tag and table head, 400 for meta
 lines, `tabular-nums` on counts. brand/README section 5 says so. Fonts stay self-hosted; Space Mono
 is still loaded for code. Not changed: marketing.md's eyebrow (a marketing page, not product UI).
+
+**Amended 0.30.1 (2026-11-18).** `.critical` is filled, not an outline: `--danger` background and edge, label
+`--primary-foreground`, hover an 85% mix with `--foreground`, like success and warning. `.danger` stays
+the red outline and still means destructive. Decision: Peter, via lead-brand (brand-22). The test
+`critical is filled and never looks like .danger` holds the label at 4.5:1 and above on the fill and on
+its hover, both themes.
