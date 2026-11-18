@@ -1285,17 +1285,19 @@
     color: var(--primary-foreground);
   }
 
-  /* Critical is the tone as an outline, not .danger: .danger means "this destroys something". */
+  /* Critical is the tone, filled (0.30.1, D-44; Peter via brand-22): danger background and edge, label
+     the primary-foreground role (white on the light theme, the dark ground on the dark one). It is not
+     .danger: .danger is the red outline and means "this destroys something". */
   :is(button, .button).critical {
-    background: transparent;
-    color: var(--danger);
+    background: var(--danger);
     border-color: var(--danger);
+    color: var(--primary-foreground);
   }
 
   :is(button, .button).critical:hover {
-    background: color-mix(in srgb, var(--danger) 8%, transparent);
-    color: var(--danger);
-    border-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 85%, var(--foreground));
+    border-color: color-mix(in srgb, var(--danger) 85%, var(--foreground));
+    color: var(--primary-foreground);
   }
 
   :is(button, .button).small {
@@ -1770,9 +1772,9 @@
     --_fill: var(--muted);
   }
 
-  /* The notice's action: a small button in the tone. Success and warning are filled (the label is
-     the primary-foreground role, white or the dark ground); critical is an outline, since a filled
-     danger button means destructive; info is the neutral ghost button. */
+  /* The notice's action: a small button in the tone. Success, warning and critical are filled (the
+     label is the primary-foreground role, white or the dark ground); .danger stays the red outline
+     that means destructive; info is the neutral ghost button. */
   .notice > .button {
     flex: none;
   }

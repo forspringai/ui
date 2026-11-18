@@ -124,9 +124,9 @@ describe.each(MODES)("%s theme", (mode) => {
       expect(bg).toBeGreaterThanOrEqual(PLAIN_FILL_APART);
     });
 
-    test("the tone buttons: filled success and warning keep their label readable, hover too", () => {
+    test("the tone buttons: filled success, warning and critical keep their label readable, hover too", () => {
       const pf = m.colors["primary-foreground"]![mode];
-      for (const tone of ["success", "warning"]) {
+      for (const tone of ["success", "warning", "danger"]) {
         const c = m.colors[tone]![mode];
         expect(contrast(pf, c)).toBeGreaterThanOrEqual(INK);
         const hover = resolve(`color-mix(in srgb, var(--${tone}) 85%, var(--foreground))`, mode, product);
@@ -157,12 +157,32 @@ test("no notice, toast or card takes a coloured edge (D-44)", () => {
   expect(css).not.toMatch(/\.notice[^{]*\{[^}]*border-(left|inline-start)/);
 });
 
-test("the tone buttons: success and warning are filled, critical is an outline and not .danger's", () => {
+test("the tone buttons: success and warning are filled", () => {
   const body = (sel: string) => new RegExp(`${sel.replace(/[.()[\]]/g, "\\$&")}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? "";
   expect(body(":is(button, .button).success")).toContain("background: var(--success)");
   expect(body(":is(button, .button).warning")).toContain("background: var(--warning)");
-  expect(body(":is(button, .button).critical")).toContain("background: transparent");
-  expect(body(":is(button, .button).critical")).toContain("color: var(--danger)");
+});
+
+test("critical is filled and never looks like .danger", () => {
+  // The selector holds a comma, so the rules map splits it: read the blocks by regex.
+  const decl = (sel: string) => {
+    const b = new RegExp(`${sel.replace(/[.()[\]]/g, "\\$&")}\\s*\\{([^}]*)\\}`).exec(css)?.[1] ?? "";
+    return Object.fromEntries(b.split(";").filter((d) => d.includes(":")).map((d) => [d.slice(0, d.indexOf(":")).trim(), d.slice(d.indexOf(":") + 1).trim()]));
+  };
+  const critical = decl(":is(button, .button).critical");
+  const danger = decl(":is(button, .button).danger");
+  expect(critical.background).toBe("var(--danger)");
+  expect(critical.background).not.toBe("transparent");
+  expect(critical.background).not.toBe(danger.background);
+  expect(critical.color).toBe("var(--primary-foreground)");
+  expect(danger.background).toBe("transparent");
+  for (const mode of MODES) {
+    const pf = m.colors["primary-foreground"]![mode];
+    const fill = m.colors.danger![mode];
+    const hover = resolve("color-mix(in srgb, var(--danger) 85%, var(--foreground))", mode, "forspring");
+    expect(contrast(pf, fill)).toBeGreaterThanOrEqual(INK);
+    expect(contrast(pf, hover)).toBeGreaterThanOrEqual(INK);
+  }
 });
 
 test("the label is real text of at least 11px with letter-spacing", () => {

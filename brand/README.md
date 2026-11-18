@@ -272,6 +272,8 @@ What exists, in this package:
   standard pages in `@forspring/ui/pages`; the refusal words in `@forspring/ui/refusals`; the
   "Connect an agent" panel in `@forspring/ui/connect`; React wrappers in `@forspring/ui/react` that
   draw the same markup.
+- **Tone buttons:** `.success`, `.warning` and `.critical` are filled (label `--primary-foreground`); `.danger` is
+  the red outline and means destructive (0.30.1, D-44).
 - **The CSS layer** `css/components.css`, on the roles only.
 - **The demo page:** `pnpm demo`, then http://127.0.0.1:4319/dist/demo/ shows every component, every
   product (`?product=<key>`), light and dark, and the standard pages under `dist/demo/pages/`.
