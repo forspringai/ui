@@ -164,12 +164,16 @@ level changes on screen in [appspring-apps.md](appspring-apps.md).
 
 ## 5. Type
 
-- **Three families, self-hosted** from `fonts/` (woff2, Latin subset, OFL; `tokens/geometry.json`
-  `font`): Archivo for text, Archivo Condensed for display, Space Mono for labels, meta and code. Never
-  from a font CDN or any third party.
+- **Two families in product UI, self-hosted** from `fonts/` (woff2, Latin subset, OFL;
+  `tokens/geometry.json` `font`): Archivo for text and labels, Archivo Condensed for display. Space
+  Mono is loaded too, but only for code and identifiers meant to be quoted or copied (`code`, `kbd`,
+  support refs and ids, keys). Never from a font CDN or any third party (ui D-44).
 - **Archivo Condensed is for display only:** headings at 700 to 900 and the wordmark at 900. Never
   running text.
-- **Space Mono is for small labels** (tags, meta lines, table heads). Never paragraphs.
+- **Labels are Archivo,** not a third face: tags, kickers, table heads, meta lines, chips and counts
+  (tabular figures where numbers line up), and the notice label (600, small caps, 11 px or more,
+  letter-spacing). Hierarchy comes from weight and the muted colour, not from the face. Space Mono is
+  for code and quoted identifiers only, never labels or paragraphs.
 - **Three ladders** (`tokens/geometry.json` `text`, ui D-4 and D-22): chrome and content below, and
   marketing for landing pages. Hierarchy comes from weight on these steps, not from colour.
 
@@ -254,7 +258,7 @@ The full voice and messaging guide, with the message, copy rules, before-and-aft
 What exists, in this package:
 
 - **Server-rendered helpers** in `@forspring/ui/html`: `shell()` (the bar with org, product and user
-  menus, the menu and favicons), `button`, `field`, `notice`, `signal`, `crumbs`, `tag`, `card`, `list`,
+  menus, the menu and favicons), `button`, `field`, `notice` (one tinted style, no coloured edge, D-44), `signal`, `crumbs`, `tag`, `card`, `list`,
   `table`, `switchButton`, `state` (empty states), `googleButton`, and `dialog` with the
   destructive-action confirm `confirmDestructive` (ui D-23: says what is lost, asks for the name, the
   safe action first and in focus), and the agent-interaction patterns `approval`, `diff` and `explain`

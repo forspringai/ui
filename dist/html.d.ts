@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.29.0";
+export declare const VERSION = "0.30.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.29.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.30.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -234,7 +234,7 @@ export declare function menuFrame(m: Menu, body: Content, narrow?: boolean): Htm
 export declare function shell(o: ShellOptions): Html;
 export type ButtonOptions = {
     label: Content;
-    variant?: "primary" | "ghost" | "danger";
+    variant?: "primary" | "ghost" | "danger" | "success" | "warning" | "critical";
     small?: boolean;
     wide?: boolean;
     /** A link styled as a button; otherwise a <button>. */
@@ -325,17 +325,27 @@ export declare function errorRef(o: {
 export type NoticeOptions = {
     tone?: Tone;
     signal?: Signal;
+    /** The label word in small caps: the tone's word by default ("Udført", "Done"); none for a signal. */
+    label?: string;
+    /** A content icon (clock, file-text) in place of the tone's own. The label still carries the meaning. */
+    icon?: IconName;
     title?: Content;
     text: Content;
+    /** One action, a link button in the tone: filled for success and warning, an outline for an error, ghost for info. */
+    action?: {
+        label: Content;
+        href: string;
+    };
     /** A platform error's short ref (hub D-88), shown under the text with errorRef(). */
     ref?: string;
-    /** The page's language, for the ref's words; Danish by default. */
+    /** The page's language, for the label and the ref's words; Danish by default. */
     lang?: Lang;
 };
 /**
  * What is true about this page, in words: errors and warnings are alerts, the rest polite status
- * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
- * signal's colour as its edge rule and its mark before the title.
+ * messages (D-44). One style: a tinted fill in the tone, the tone's icon, the label in small caps,
+ * and an optional action in the tone. Info is neutral. `signal` instead of `tone` reports a
+ * monitored state (D-13): the neutral fill with the signal's mark as its icon.
  */
 export declare function notice(o: NoticeOptions): Html;
 /** One error in a form, for errorSummary(): the field's id (its link target) and what to do. */

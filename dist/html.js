@@ -70,7 +70,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.29.0";
+export const VERSION = "0.30.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -348,22 +348,34 @@ export function errorRef(o) {
     const t = FORM[o.lang];
     return html `<p class="error-ref">${t.ref}: <code>${o.ref}</code><br>${t.refHint}</p>`;
 }
+// The kind of message in words, so the tone is never told by colour or icon alone (hub D-120).
+const NOTICE_LABEL = {
+    da: { info: "Bemærk", success: "Udført", warning: "Advarsel", error: "Fejl" },
+    en: { info: "Note", success: "Done", warning: "Warning", error: "Error" },
+};
+// One default icon per tone: an i, a tick, a triangle and an octagon.
+const NOTICE_ICON = { info: "info", success: "check", warning: "alert-triangle", error: "alert-octagon" };
+const NOTICE_BUTTON = { info: "ghost", success: "success", warning: "warning", error: "critical" };
 /**
  * What is true about this page, in words: errors and warnings are alerts, the rest polite status
- * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
- * signal's colour as its edge rule and its mark before the title.
+ * messages (D-44). One style: a tinted fill in the tone, the tone's icon, the label in small caps,
+ * and an optional action in the tone. Info is neutral. `signal` instead of `tone` reports a
+ * monitored state (D-13): the neutral fill with the signal's mark as its icon.
  */
 export function notice(o) {
-    const ref = o.ref ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : "";
+    const lang = o.lang ?? "da";
+    const ref = o.ref ? errorRef({ lang, ref: o.ref }) : "";
+    const title = o.title ? html `<strong class="notice-title">${o.title}</strong>` : "";
+    const act = (btn) => (o.action ? html `<a class="${`button small ${btn}`}" href="${safeHref(o.action.href)}">${o.action.label}</a>` : "");
     if (o.signal) {
         const role = o.signal === "down" || o.signal === "warn" ? "alert" : "status";
-        const title = o.title ? html `<strong class="notice-title">${signalMark(o.signal)}${o.title}</strong>` : "";
-        return html `<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}${ref}</div>`;
+        const label = o.label ? html `<span class="notice-label">${o.label}</span>` : "";
+        return html `<div class="${`notice signal-${o.signal}`}" role="${role}">${o.icon ? icon(o.icon) : signalMark(o.signal)}<div class="notice-body">${label}${title}${o.text}${ref}</div>${act("ghost")}</div>`;
     }
     const tone = o.tone ?? "info";
     const role = tone === "error" || tone === "warning" ? "alert" : "status";
-    const title = o.title ? html `<strong class="notice-title">${o.title}</strong>` : "";
-    return html `<div class="${cls("notice", tone !== "info" && tone)}" role="${role}">${title}${o.text}${ref}</div>`;
+    const label = html `<span class="notice-label">${o.label ?? NOTICE_LABEL[lang][tone]}</span>`;
+    return html `<div class="${cls("notice", tone !== "info" && tone)}" role="${role}">${icon(o.icon ?? NOTICE_ICON[tone])}<div class="notice-body">${label}${title}${o.text}${ref}</div>${act(NOTICE_BUTTON[tone])}</div>`;
 }
 /**
  * A failed submit's summary, at the top of the form (D-30, docs/usage.md section 4): the error
@@ -375,7 +387,7 @@ export function errorSummary(o) {
     if (!o.errors.length)
         return html ``;
     const id = o.id ?? "error-summary";
-    return html `<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html `<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div>`;
+    return html `<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}>${icon(NOTICE_ICON.error)}<div class="notice-body"><span class="notice-label">${NOTICE_LABEL[o.lang].error}</span><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html `<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div></div>`;
 }
 /** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
 export function signal(text, s) {

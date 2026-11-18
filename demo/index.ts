@@ -300,10 +300,12 @@ ${crumbs("Placering", [{ label: "Forside", href: "#" }, { label: "Komponenter", 
 
 <section><h2>Beskeder</h2>
 ${notice({ text: "Vi sender en mail, når eksporten er klar." })}
-${notice({ tone: "success", text: "Du har taget imod invitationen." })}
-${notice({ tone: "warning", title: "Din prøveperiode udløber om 3 dage", text: "Vælg en plan for at beholde dine sider." })}
-${notice({ tone: "error", text: "Det lykkedes ikke. Hent siden igen og prøv en gang til." })}
+${notice({ label: "Værkstedsnote", icon: "clock", text: "Værkstedet har lukket tidligere fredag." })}
+${notice({ tone: "success", text: "Du har taget imod invitationen.", action: { label: "Åbn siderne", href: "#" } })}
+${notice({ tone: "warning", title: "Din prøveperiode udløber om 3 dage", text: "Vælg en plan for at beholde dine sider.", action: { label: "Vælg plan", href: "#" } })}
+${notice({ tone: "error", text: "Det lykkedes ikke. Hent siden igen og prøv en gang til.", action: { label: "Prøv igen", href: "#" } })}
 ${notice({ tone: "error", title: "Noget gik galt hos os", text: "Intet er gået tabt. Prøv igen om lidt.", ref: "4bf92f35", lang: "da" })}
+${notice({ label: "Opbevaring", icon: "file-text", text: "Din eksport gemmes i 30 dage.", action: { label: "Hent den", href: "#" } })}
 </section>
 
 <section><h2>Signaler</h2>

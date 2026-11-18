@@ -79,9 +79,29 @@ describe("blocks", () => {
   });
 
   test("notices: errors alert, the rest are status", () => {
-    expect(String(notice({ tone: "error", text: "x" }))).toBe('<div class="notice error" role="alert">x</div>');
-    expect(String(notice({ tone: "success", text: "x" }))).toBe('<div class="notice success" role="status">x</div>');
-    expect(String(notice({ text: "x" }))).toBe('<div class="notice" role="status">x</div>');
+    expect(String(notice({ tone: "error", text: "x" }))).toMatch(/^<div class="notice error" role="alert"><svg[^>]*aria-hidden="true"[\s\S]*<\/svg><div class="notice-body"><span class="notice-label">Fejl<\/span>x<\/div><\/div>$/);
+    expect(String(notice({ tone: "success", text: "x" }))).toContain('<div class="notice success" role="status">');
+    expect(String(notice({ text: "x" }))).toContain('<div class="notice" role="status">');
+  });
+
+  test("notices (D-44): a label word, an icon per tone, a content icon, an action in the tone", () => {
+    const words = { info: "Bemærk", success: "Udført", warning: "Advarsel", error: "Fejl" } as const;
+    for (const tone of ["info", "success", "warning", "error"] as const) {
+      const h = String(notice({ tone, text: "x" }));
+      expect(h).toContain(`<span class="notice-label">${words[tone]}</span>`);
+      expect(h.match(/<svg/g)).toHaveLength(1);
+      expect(h).toContain('aria-hidden="true"');
+    }
+    expect(String(notice({ tone: "success", lang: "en", text: "x" }))).toContain(">Done</span>");
+    expect(String(notice({ tone: "info", label: "Workshop", icon: "clock", text: "x" }))).toContain(">Workshop</span>");
+    expect(String(notice({ tone: "info", icon: "clock", text: "x" }))).not.toBe(String(notice({ tone: "info", text: "x" })));
+    const btn = (tone: "info" | "success" | "warning" | "error") => String(notice({ tone, text: "x", action: { label: "Go", href: "/go" } }));
+    expect(btn("success")).toContain('<a class="button small success" href="/go">Go</a>');
+    expect(btn("warning")).toContain('<a class="button small warning" href="/go">Go</a>');
+    expect(btn("error")).toContain('<a class="button small critical" href="/go">Go</a>');
+    expect(btn("info")).toContain('<a class="button small ghost" href="/go">Go</a>');
+    expect(btn("error")).not.toContain("danger");
+    expect(String(notice({ tone: "error", text: "x", action: { label: evil, href: "javascript:alert(1)" } }))).not.toContain("javascript:");
   });
 
   test("a table's frame is a labelled region a keyboard can reach", () => {
@@ -183,7 +203,7 @@ describe("menu, crumbs and signals (D-13)", () => {
     expect(String(signal("Down", "down"))).toBe('<span class="signal down"><span class="signal-mark down" aria-hidden="true"></span>Down</span>');
     expect(String(crumbs("Breadcrumb", [{ label: "Home", href: "/" }]))).toBe('<nav class="crumbs" aria-label="Breadcrumb"><ol><li><a href="/">Home</a></li></ol></nav>');
     expect(String(notice({ signal: "down", title: "1 check is down", text: "x" }))).toBe(
-      '<div class="notice signal-down" role="alert"><strong class="notice-title"><span class="signal-mark down" aria-hidden="true"></span>1 check is down</strong>x</div>',
+      '<div class="notice signal-down" role="alert"><span class="signal-mark down" aria-hidden="true"></span><div class="notice-body"><strong class="notice-title">1 check is down</strong>x</div></div>',
     );
     expect(String(notice({ signal: "ok", text: "fine" }))).toContain('role="status"');
   });
@@ -213,7 +233,8 @@ describe("forms and errors match the usage guidance (D-30)", () => {
     expect(String(errorSummary({ lang: "en", errors: ERRORS }))).toContain(">Fix these fields</h2>");
     const own = String(errorSummary({ lang: "en", errors: ERRORS, title: "Check the invitation", id: "invite-errors" }));
     expect(own).toContain('id="invite-errors"');
-    expect(own).toContain('aria-labelledby="invite-errors-title"><h2 class="notice-title" id="invite-errors-title">Check the invitation</h2>');
+    expect(own).toContain('aria-labelledby="invite-errors-title">');
+    expect(own).toContain('<span class="notice-label">Error</span><h2 class="notice-title" id="invite-errors-title">Check the invitation</h2>');
   });
 
   test("no errors, no summary", () => {
@@ -248,8 +269,8 @@ describe("forms and errors match the usage guidance (D-30)", () => {
   });
 
   test("a notice and a failed state show the ref, escaped, with the hint to quote it", () => {
-    expect(String(notice({ tone: "error", text: "Noget gik galt.", ref: "4bf92f35" }))).toBe(
-      '<div class="notice error" role="alert">Noget gik galt.<p class="error-ref">Fejlkode: <code>4bf92f35</code><br>Nævn den, hvis du skriver til os.</p></div>',
+    expect(String(notice({ tone: "error", text: "Noget gik galt.", ref: "4bf92f35" }))).toContain(
+      'Noget gik galt.<p class="error-ref">Fejlkode: <code>4bf92f35</code><br>Nævn den, hvis du skriver til os.</p></div></div>',
     );
     expect(String(notice({ tone: "error", text: "x", ref: "4bf92f35", lang: "en" }))).toContain('<p class="error-ref">Reference: <code>4bf92f35</code><br>Quote it if you contact us.</p>');
     expect(String(notice({ tone: "error", text: "x", ref: evil }))).toContain(`<code>${escaped}</code>`);

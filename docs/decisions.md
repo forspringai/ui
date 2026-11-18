@@ -1755,3 +1755,47 @@ statuses by OKLab x100: warning 11.4 and success 12.0 apart (light); success 10.
 10 every other accent keeps, and a named test ("FlowSpring's moss stays 10 from every status and
 signal", both themes) holds it, so it survives a change to any status. Beside FlowSpring's accent a
 status is always a labelled pill, word and colour, never a dot or a tint alone (brand/README).
+
+
+## D-44: One notice style, a tinted fill with no coloured edge (0.30.0, 2026-11-18)
+
+**Why.** Peter, via cos, with lead-brand's adjustments: a notice, card or panel never has a coloured
+left border. A notice is a whole tinted fill in its tone, the tone's icon on the left, the label in
+small caps in the tone colour, and an action button in the tone (reference: Peter's markup of the
+"Storage reminder" and "Workshop note" twins, bench round exp-judge, `hc3-r2b`).
+
+**What changed.**
+- `.notice`: no border-left. `--_fill` is `color-mix(tone 14%, card)` in the light theme and 9% in the
+  dark one (`light-dark()`); 14% takes the dark danger label to 4.29:1. Markup: icon, `.notice-body`
+  (`.notice-label`, `.notice-title`, text, ref), and an optional action. `notice()` takes `label`,
+  `icon` and `action`; the default label is the tone's word in da and en (hub D-120: the word carries
+  the meaning), the default icon is info, check, alert-triangle, alert-octagon.
+- Info is neutral: `--muted` fill, icon and label in `--muted-foreground`. Not an accent tint
+  (decision of 2026-10-10: an accent can read as an error on SiteSpring and PulseSpring).
+- Signal notices join it: neutral fill, the signal's mark as the icon, no edge.
+- Buttons: `.success` and `.warning` are filled, label `--primary-foreground`. `.critical` is the
+  danger outline; `.danger` keeps meaning destructive. `.button.ghost` is info's action.
+- `errorSummary()` is the critical style (icon, "Fejl" label). The toast loses its edge too; an
+  info toast's icon is neutral instead of the accent.
+- Not changed: the selected row, menu item and tab keep their accent edge rule. They mark a position
+  in a list, not a notice, card or panel.
+
+**The numbers** (`test/notice.test.ts`, every product, both themes). Tone label on its tint: light
+5.03 success, 5.61 warning, 6.54 danger; dark 7.54, 8.53, 4.55. Body text on the tint at
+least 8.2. Fill from page and card at least 4.6 (light) and 4.6 (dark, from the card). Filled
+buttons: 6.16 success and 6.92 warning light, 9.65 and 11.16 dark. Info: 5.46 light, 6.02 dark.
+Plain against error: ink 18.1 and 23.4 apart, fill 3.4 light and 2.9 dark. The fill alone cannot
+reach 4 there, because the muted surface is the page's own neutral; the icon, the word and the ink
+carry the difference, and the test holds the measured floors (ink 15, fill 2.5).
+
+**Breaking.** The `.notice` markup gained children and the edge rules are gone. Products that draw
+`.notice` by hand add the icon and `.notice-body`, or switch to `notice()`.
+
+**Two families (same release).** Peter flagged three faces on one screen, and his hand-written
+reference uses two; lead-brand decided (hub ui D-44): Archivo for text and labels, Archivo Condensed
+for display, Space Mono only for code and identifiers meant to be quoted (`code`, `kbd`, the error
+ref, keys, a diff's sign). Every `var(--font-mono)` label in `css/components.css` and `css/shadcn.css`
+(tag, kicker, table heads, meta lines, chips, counts, menu labels, crumbs, footer, the approval's
+kicker and facts) moved to Archivo: 600 for the uppercase labels, tag and table head, 400 for meta
+lines, `tabular-nums` on counts. brand/README section 5 says so. Fonts stay self-hosted; Space Mono
+is still loaded for code. Not changed: marketing.md's eyebrow (a marketing page, not product UI).
