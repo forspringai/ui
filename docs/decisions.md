@@ -1738,3 +1738,20 @@ platform scrollbar is no cue. Sideways scrollers are not counted, because a cut 
 more. The audit's window is 900px tall, so a box capped in vh is measured as a reader sees it. ui's
 own pages have none.
 
+
+## D-43: FlowSpring's accent, moss (0.29.0, 2026-11-18)
+
+**Why.** Hub D-120 (Peter's pick, lead-brand's options sheet) gives FlowSpring, the agent-defined
+workflow product, its own accent: moss `#3d4900` light and `#9fab02` dark. It is a new product, so
+the key is in `tokens/accent.json`, `Product` and `PRODUCT_NAMES`, its name in `scripts/wordmarks.py`,
+and the doll, favicons and lockup are generated as for the others (same doll, colour only).
+
+**The numbers** (the package's own arithmetic, `test/contrast.test.ts`): light 8.24:1 on the worst
+surface, white label on moss 9.76:1; dark 6.27:1, `#111215` label on dark moss 7.40:1. Nearest
+statuses by OKLab x100: warning 11.4 and success 12.0 apart (light); success 10.8 and signal-ok 11.8
+(dark).
+
+**The rule it carries.** Moss is close enough to the status greens and yellows that the bar is the
+10 every other accent keeps, and a named test ("FlowSpring's moss stays 10 from every status and
+signal", both themes) holds it, so it survives a change to any status. Beside FlowSpring's accent a
+status is always a labelled pill, word and colour, never a dot or a tint alone (brand/README).

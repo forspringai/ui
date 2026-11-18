@@ -16,6 +16,7 @@ const PRODUCTS = [
   ["dataspring", "DataSpring"],
   ["appspring", "AppSpring"],
   ["pulsespring", "PulseSpring"],
+  ["flowspring", "FlowSpring"],
 ] as const;
 
 const radios = (name: string, items: readonly (readonly [string, string])[], checked: string) =>

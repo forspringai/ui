@@ -6,6 +6,7 @@ export const products = Object.freeze([
   "sitespring",
   "dataspring",
   "appspring",
+  "flowspring",
   "pulsespring"
 ]);
 
@@ -29,6 +30,10 @@ export const accents = Object.freeze({
   "appspring": {
     "light": "#5d2eb8",
     "dark": "#b09af5"
+  },
+  "flowspring": {
+    "light": "#3d4900",
+    "dark": "#9fab02"
   },
   "pulsespring": {
     "light": "#a3237a",
@@ -56,6 +61,10 @@ export const marks = Object.freeze({
   "appspring": {
     "light": "#5d2eb8",
     "dark": "#b09af5"
+  },
+  "flowspring": {
+    "light": "#3d4900",
+    "dark": "#9fab02"
   },
   "pulsespring": {
     "light": "#a3237a",

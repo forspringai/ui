@@ -120,6 +120,33 @@
         }
       }
     },
+    "flowspring": {
+      "$description": "FlowSpring, moss (hub D-120). Light #3d4900 is 8.24:1 on the worst surface with a white label at 9.76:1; dark #9fab02 is 6.27:1 with a #111215 label at 7.40:1. At least 10 from every status and signal in both themes (test/contrast.test.ts, \"FlowSpring's moss stays 10 from every status and signal\"). Beside it a status is always a labelled pill, never a dot or a tint alone (brand/README, D-43).",
+      "light": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.2392,
+            0.2863,
+            0
+          ],
+          "hex": "#3d4900"
+        }
+      },
+      "dark": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [
+            0.6235,
+            0.6706,
+            0.0078
+          ],
+          "hex": "#9fab02"
+        }
+      }
+    },
     "pulsespring": {
       "$description": "PulseSpring, magenta: green would blur with the success status in a monitoring product.",
       "light": {

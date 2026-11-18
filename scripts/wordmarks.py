@@ -16,7 +16,7 @@ import uharfbuzz as hb
 from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parent.parent
-NAMES = ["Forspring", "Spring", "SiteSpring", "DataSpring", "AppSpring", "PulseSpring"]
+NAMES = ["Forspring", "Spring", "SiteSpring", "DataSpring", "AppSpring", "PulseSpring", "FlowSpring"]
 WEIGHT = 900
 # The bar's letter-spacing, -0.01em (components.css .brand .word), between letters only.
 TRACKING = -0.01

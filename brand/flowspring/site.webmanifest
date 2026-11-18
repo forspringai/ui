@@ -1,0 +1,19 @@
+{
+  "name": "FlowSpring",
+  "short_name": "FlowSpring",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "apple-touch-icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "background_color": "#f6f6f4",
+  "display": "browser"
+}
