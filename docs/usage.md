@@ -100,7 +100,12 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 | `refusedPage()` | Why the whole request was refused | It is the page | Not signed in, not a member, role too low, product off |
 | `state()` | What a block holds: nothing, loading, or failed | In place of the data | An empty list, a read that failed |
 
-- **`notice()`** tones are `info`, `success`, `warning` and `error`. Warnings and errors are alerts,
+- **`notice()`** (D-44) is one style: a tinted fill in the tone, the tone's icon on the left, the label
+  word in small caps in the tone colour ("Udført", "Done"; `label` changes it), and an optional
+  `action` button in the tone (filled for success and warning, an outline for error, ghost for info).
+  `icon` swaps in a content icon (`clock`, `file-text`); the label still carries the meaning. Info is
+  neutral grey, never an accent tint. There is no coloured edge on any notice, card or toast.
+  Tones are `info`, `success`, `warning` and `error`. Warnings and errors are alerts,
   read out at once, so use them for what needs attention, not for decoration. A notice is never the
   report of a save; that is a toast, and a form's errors are `errorSummary()`, the error notice made
   for them. A platform error passes its `ref` (section 5).
@@ -116,7 +121,8 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   read failed and never claims there is nothing.
 - **`signal()`** is a monitored thing's state: a check, a site, a job, up, late, down or not judged
   (D-13, hub D-95). Not for an outcome or a category, and never `--danger` or the accent for "down".
-  `notice({ signal })` is the page-level summary ("2 tjek er nede").
+  `notice({ signal })` is the page-level summary ("2 tjek er nede"): the neutral fill with the signal's
+  mark as its icon.
 - **`tag()`** is a short label on a row: a category, "Ny", "Denne enhed", or a status word with a
   status tone ("Aktiv", "Spærret"). Not for a monitored state (that is `signal()`) and not clickable.
   `"primary"` only for "new" or "current", never for a status.

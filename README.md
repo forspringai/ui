@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.29.0
+pnpm add github:forspringai/ui#v0.30.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -157,7 +157,9 @@ shell({
 
 A sidebar on a wide screen, folded under "Menu" on a phone, no script. `signal(word, "ok" | "warn" |
 "down" | "off")` is a monitored state as a traffic light: a shaped mark in `--signal-*` and the word.
-`notice({ signal: "down", title, text })` is the neutral card with that signal as its edge.
+`notice({ signal: "down", title, text })` is the neutral fill with that signal's mark as its icon.
+`notice({ tone, text, action })` is the one notice style (D-44): a tinted fill, the tone's icon, the label
+in small caps and an action button in the tone; info is neutral, and nothing has a coloured edge.
 
 ### The bar, the standard pages and refusals (0.8.0, D-17, hub D-99)
 
@@ -619,8 +621,8 @@ utilities, so the copies stay as shadcn wrote them and still look like the famil
 | `dialog-content`, `alert-dialog-content` / their title, description | 10 | | content h2 21, Archivo Condensed 800 / content small 13 |
 | `popover-content`, `dropdown-menu-content`, `select-content`, `tooltip-content` | 6 (tooltip 3) | | chrome body 14 |
 | menu and select items | 3 | | chrome body 14 |
-| `table`, `table-cell` / `table-head` | | | chrome body 14 / chrome meta 12, Space Mono |
-| `badge` | pill | 20 | chrome label 11, Space Mono |
+| `table`, `table-cell` / `table-head` | | | chrome body 14 / chrome meta 12, Archivo 600 |
+| `badge` | pill | 20 | chrome label 11, Archivo 600 |
 | `label` | | | chrome body 14 |
 
 Focus is the family's 2px outline in `--ring`. Line heights are the step's leading, and a control's

@@ -172,18 +172,20 @@
   }
 
   [data-slot="table-head"] {
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
+    font-weight: 600;
     font-size: var(--text-chrome-meta);
     line-height: var(--leading-chrome-meta);
   }
 
-  /* The family's tag: a pill in Space Mono at the floor, 20px tall. */
+  /* The family's tag: a pill in Archivo 600 at the floor, 20px tall. */
   [data-slot="badge"] {
     box-sizing: border-box;
     min-height: var(--space-5);
     padding-block: 0;
     border-radius: 999px;
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
+    font-weight: 600;
     font-size: var(--text-chrome-label);
     line-height: var(--leading-chrome-label);
   }

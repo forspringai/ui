@@ -89,7 +89,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.29.0";
+export const VERSION = "0.30.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -481,7 +481,7 @@ ${footer}</body></html>`;
 
 export type ButtonOptions = {
   label: Content;
-  variant?: "primary" | "ghost" | "danger";
+  variant?: "primary" | "ghost" | "danger" | "success" | "warning" | "critical";
   small?: boolean;
   wide?: boolean;
   /** A link styled as a button; otherwise a <button>. */
@@ -618,30 +618,51 @@ export function errorRef(o: { lang: Lang; ref: string }): Html {
 export type NoticeOptions = {
   tone?: Tone;
   signal?: Signal;
+  /** The label word in small caps: the tone's word by default ("Udført", "Done"); none for a signal. */
+  label?: string;
+  /** A content icon (clock, file-text) in place of the tone's own. The label still carries the meaning. */
+  icon?: IconName;
   title?: Content;
   text: Content;
+  /** One action, a link button in the tone: filled for success and warning, an outline for an error, ghost for info. */
+  action?: { label: Content; href: string };
   /** A platform error's short ref (hub D-88), shown under the text with errorRef(). */
   ref?: string;
-  /** The page's language, for the ref's words; Danish by default. */
+  /** The page's language, for the label and the ref's words; Danish by default. */
   lang?: Lang;
 };
 
+// The kind of message in words, so the tone is never told by colour or icon alone (hub D-120).
+const NOTICE_LABEL: Record<Lang, Record<Tone, string>> = {
+  da: { info: "Bemærk", success: "Udført", warning: "Advarsel", error: "Fejl" },
+  en: { info: "Note", success: "Done", warning: "Warning", error: "Error" },
+};
+
+// One default icon per tone: an i, a tick, a triangle and an octagon.
+const NOTICE_ICON: Record<Tone, IconName> = { info: "info", success: "check", warning: "alert-triangle", error: "alert-octagon" };
+
+const NOTICE_BUTTON: Record<Tone, string> = { info: "ghost", success: "success", warning: "warning", error: "critical" };
+
 /**
  * What is true about this page, in words: errors and warnings are alerts, the rest polite status
- * messages. `signal` instead of `tone` reports a monitored state (D-13): the neutral card with the
- * signal's colour as its edge rule and its mark before the title.
+ * messages (D-44). One style: a tinted fill in the tone, the tone's icon, the label in small caps,
+ * and an optional action in the tone. Info is neutral. `signal` instead of `tone` reports a
+ * monitored state (D-13): the neutral fill with the signal's mark as its icon.
  */
 export function notice(o: NoticeOptions): Html {
-  const ref = o.ref ? errorRef({ lang: o.lang ?? "da", ref: o.ref }) : "";
+  const lang = o.lang ?? "da";
+  const ref = o.ref ? errorRef({ lang, ref: o.ref }) : "";
+  const title = o.title ? html`<strong class="notice-title">${o.title}</strong>` : "";
+  const act = (btn: string) => (o.action ? html`<a class="${`button small ${btn}`}" href="${safeHref(o.action.href)}">${o.action.label}</a>` : "");
   if (o.signal) {
     const role = o.signal === "down" || o.signal === "warn" ? "alert" : "status";
-    const title = o.title ? html`<strong class="notice-title">${signalMark(o.signal)}${o.title}</strong>` : "";
-    return html`<div class="${`notice signal-${o.signal}`}" role="${role}">${title}${o.text}${ref}</div>`;
+    const label = o.label ? html`<span class="notice-label">${o.label}</span>` : "";
+    return html`<div class="${`notice signal-${o.signal}`}" role="${role}">${o.icon ? icon(o.icon) : signalMark(o.signal)}<div class="notice-body">${label}${title}${o.text}${ref}</div>${act("ghost")}</div>`;
   }
   const tone = o.tone ?? "info";
   const role = tone === "error" || tone === "warning" ? "alert" : "status";
-  const title = o.title ? html`<strong class="notice-title">${o.title}</strong>` : "";
-  return html`<div class="${cls("notice", tone !== "info" && tone)!}" role="${role}">${title}${o.text}${ref}</div>`;
+  const label = html`<span class="notice-label">${o.label ?? NOTICE_LABEL[lang][tone]}</span>`;
+  return html`<div class="${cls("notice", tone !== "info" && tone)!}" role="${role}">${icon(o.icon ?? NOTICE_ICON[tone])}<div class="notice-body">${label}${title}${o.text}${ref}</div>${act(NOTICE_BUTTON[tone])}</div>`;
 }
 
 /** One error in a form, for errorSummary(): the field's id (its link target) and what to do. */
@@ -665,7 +686,7 @@ export type ErrorSummaryOptions = {
 export function errorSummary(o: ErrorSummaryOptions): Html {
   if (!o.errors.length) return html``;
   const id = o.id ?? "error-summary";
-  return html`<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html`<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div>`;
+  return html`<div${raw(attrs({ class: "notice error error-summary", id, role: "alert", tabindex: "-1", autofocus: "", "aria-labelledby": `${id}-title` }))}>${icon(NOTICE_ICON.error)}<div class="notice-body"><span class="notice-label">${NOTICE_LABEL[o.lang].error}</span><h2 class="notice-title" id="${`${id}-title`}">${o.title ?? FORM[o.lang].summary}</h2><ul class="error-summary-list">${o.errors.map((e) => html`<li><a href="${`#${e.field}`}">${e.message}</a></li>`)}</ul></div></div>`;
 }
 
 /** A monitored thing's state: the signal's mark (a shape as well as a colour) and the word (D-13). */
