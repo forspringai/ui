@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.30.1
+pnpm add github:forspringai/ui#v0.31.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -672,14 +672,21 @@ the person's approval. Values only, never geometry (D-34).
 }
 ```
 
-- **level**: `default` (Forspring's look, no brand block), `brand` (accent, tint, logo) or
+- **level**: `default` (Forspring's look, no brand block), `brand` (any of accent, tint, charts,
+  states, plus a logo) or
   `guideline` (Brand plus an approved font and a radius and a density preset; accepted by the schema,
   refused by `validateTheme()` until it ships, hub D-117).
 - **accent**: buttons, links, the focus ring and the doll. **tint**: the soft surface (table heads,
   hover rows, quiet sections); the page is the same hue a step lighter in light and darker in dark,
   the family's own step from soft to page. **logo**: an `https:` URL, a `data:image/` URL or a
   relative path in the bundle, and its `alt`. A colour is `#rrggbb` or a DTCG `srgb` colour value.
-- **dark** is optional for the accent and the tint: without it, a dark value is derived (the nearest
+- **charts** (D-45): `chart-1` onward, up to eight, each a colour or `{ light, dark }`; `chart-N-tint`
+  is derived (the slot at 0.2 on the card, D-37). **states** (D-45): the app's own state keys (an enum
+  or lifecycle value, `^[a-z][a-z0-9_]{0,39}$`, up to 24) to a colour, for chips, bars and calendar
+  blocks. `customerTheme()` writes `--state-<key>`, `--state-<key>-foreground` (the label that passed)
+  and `--state-<key>-soft` (the hue at the notice shares on the card) per theme, and returns them in
+  `t.states`. An app palette needs no accent: what it does not set stays Forspring's look.
+- **dark** is optional for every colour: without it, a dark value is derived (the nearest
   to the light one that passes in dark), checked, and reported as a warning carrying the value, so
   the file can pin it.
 - The JSON Schema is `@forspring/ui/schema/customer-theme.schema.json`; it checks the shape only.
@@ -694,6 +701,7 @@ const t = customerTheme(file, { selector: '[data-theme-org="acme"]' }); // throw
 t.roles.light.primary; // every role per theme, the family's values with the customer's in place
 t.css;                 // custom properties under the selector; "" at the Default level
 t.logo;                // { light, dark, alt } or null
+t.states;              // { <key>: { light: { hue, foreground, soft }, dark: {…} } }
 ```
 
 `t.css` for the file above:
@@ -719,8 +727,10 @@ Put it after `tokens.css`, on the element that holds the customer's surface, not
 `data-product`. The last three lines are the component layer's own shades, declared again because
 a custom property resolves its `var()`s where it is declared.
 
-Refusals. Every code is stable; a colour refusal's `fix` is the nearest value at the same hue that
-passes every rule there (lightness and chroma stepped, as D-20 did for DataSpring's teal).
+Refusals are accessibility and safety; taste only warns (D-45: the platform owns what must be true,
+the author owns what is seen). Every code is stable; a colour refusal's `fix` is the nearest value at
+the same hue that passes every rule there (lightness and chroma stepped, as D-20 did for DataSpring's
+teal).
 
 | Code | When | fix |
 |---|---|---|
@@ -729,16 +739,29 @@ passes every rule there (lightness and chroma stepped, as D-20 did for DataSprin
 | `theme.level.mismatch` | Default with a brand block, Brand or Guideline without one, a guideline block below Guideline | the level |
 | `theme.accent.contrast` | The accent under 4.5:1 on background, card or muted (tinted), in either theme | a colour |
 | `theme.accent.label_contrast` | Neither the family's label nor the ink reaches 4.5:1 on the filled accent | a colour |
-| `theme.accent.status_clash` | The accent within 10 (OKLab x100) of success, warning, danger or a signal colour | a colour |
 | `theme.tint.text_contrast` | A text role (foreground, body, muted, status) under 4.5:1 on the tinted page or soft surface | a colour |
 | `theme.tint.mark_contrast` | A signal mark under 3:1 on the tinted page or soft surface | a colour |
 | `theme.logo.alt_missing` | A logo with no `alt`, or a blank one | |
 | `theme.logo.unsafe_url` | A logo that is not `https:`, `data:image/` or a bundle path (no `..`, no `//`) | |
 | `theme.guideline.unavailable` | The Guideline level, or a guideline block: not available yet (hub D-117) | `brand` |
+| `theme.state.mark_contrast` | A state colour under 3:1 on background, card or muted (tinted), in either theme | a colour |
+| `theme.state.label_contrast` | Neither label reaches 4.5:1 on the filled state colour | a colour |
+| `theme.chart.mark_contrast` | A chart slot under 3:1 on the page or the card | a colour |
 
-Warnings never refuse: `theme.accent.dark_derived` and `theme.tint.dark_derived` (the value in
-`fix`), and `theme.accent.product_close` (with `product`, an accent within 10 of that product's own,
-so the customer's views could read as the product's chrome).
+Warnings never refuse:
+
+- `theme.accent.dark_derived`, `theme.tint.dark_derived`, `theme.state.dark_derived` and
+  `theme.chart.dark_derived`: a derived dark value, carried in `fix`.
+- `theme.accent.product_close`: with `product`, an accent within 10 of that product's own, so the
+  customer's views could read as the product's chrome.
+- `theme.accent.status_clash`: the accent within 10 (OKLab x100) of success, warning, danger or a
+  signal colour, with a colour in `fix`. It was a refusal until D-45.
+- `theme.state.status_clash`: a state within 10 of success, warning or danger; fine when it means
+  that.
+- `theme.state.close` and `theme.chart.close`: two states, or two neighbouring chart slots, that may
+  read as one, in normal vision or under simulated colour-vision deficiency.
+
+A state's soft fill has no check: at the notice shares the ink keeps 4.5:1 on it for every hue.
 
 ## Run the audit in CI
 
