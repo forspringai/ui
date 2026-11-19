@@ -53,9 +53,14 @@ export type ThemeFile = {
     $schema?: string;
     $description?: string;
     level: Level;
+    /** At least one of accent, tint, charts or states (validateTheme refuses an empty brand). */
     brand?: {
-        accent: ColorPair;
+        accent?: ColorPair;
         tint?: ColorPair;
+        /** chart-1 first, 1 to 8 slots; a bare colour is the light value (dark derived). */
+        charts?: (ColorInput | ColorPair)[];
+        /** The app's own state keys (^[a-z][a-z0-9_]{0,39}$, at most 24); a bare colour is the light value. */
+        states?: Record<string, ColorInput | ColorPair>;
         /** An https: URL, a data:image/ URL or a path in the app's bundle, and the words for it. */
         logo?: {
             light: string;

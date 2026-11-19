@@ -1839,4 +1839,8 @@ author owns what is seen. lead-brand's condition: Forspring's look stays the lib
   test sweeps the wheel and the extremes instead of a code that cannot fire.
 - **Not changed.** The Default level is the family's look and writes no CSS. Products, the shell and
   the account are untouched.
-
+- **Amended 0.31.1 (2026-11-19).** The exported `ThemeFile` type now matches what `validateTheme()`
+  accepts: `brand.accent` is optional, and `brand.charts` and `brand.states` are typed (a bare colour
+  or `{ light, dark? }`). 0.31.0 shipped the runtime and the schema but the old type, so a typed caller
+  (AppSpring's kernel, K2) had to pass an untyped object. The palette test is now typed `ThemeFile`, so
+  tsc catches a drift.

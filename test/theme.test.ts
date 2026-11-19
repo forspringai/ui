@@ -19,6 +19,7 @@ import {
   type Code,
   type Mode,
   type Problem,
+  type ThemeFile,
 } from "../src/theme.ts";
 
 const root = join(import.meta.dirname, "..");
@@ -280,7 +281,8 @@ describe("the CSS", () => {
 // The app palette (ui D-45, the Fable memo's change 2): the app's own states and chart slots, contrast
 // as errors, taste as warnings.
 describe("an app palette", () => {
-  const PALETTE = {
+  // Typed, so tsc proves the published ThemeFile takes a palette with no accent (0.31.0's did not).
+  const PALETTE: ThemeFile = {
     level: "brand",
     brand: {
       charts: ["#2f5bd3", { light: "#b35a1a", dark: "#e08a4a" }],
