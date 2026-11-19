@@ -1886,3 +1886,21 @@ the launcher and sign-in).
   type, or a path in the app's bundle); anything else draws no image. The rule moved to `src/logo.ts`
   so the theme check and the bar share one copy.
 - `productLabel` still names the product in the page title.
+
+## D-48: The platform's loud strip (0.34.0, 2026-11-19)
+
+lead-ui for AppSpring's shell (#1724), from cos and Peter: the view-as strip changes what is true, so
+it must be loud, and the D-44 warning soft tint read beige on beige. No existing role passed: the full
+`--warning` is brown in light (ink 2.63:1) and yellow in dark, and the light ink fails on the dark
+theme's amber (1.52:1).
+
+- **Roles:** `--strip-warn` is the signal amber at full strength (`signal.warn`), and
+  `--strip-warn-foreground` is its ink: the light theme's ink, and the dark card in the dark theme.
+  4.85:1 light and 9.65:1 dark; the strip is 3:1 or more against the page and 10 or more from every
+  product accent (`test/contrast.test.ts`).
+- **`strip({ title, text, action })`** and `.strip.warning`: 28px, full width, the bold lead and the line
+  (cut with an ellipsis on a phone), and one way out as a link or a POST form. The button is
+  transparent with a 1px border and text in the strip's ink, and its focus ring is the same ink. The
+  strip is `role="status"`, so assistive tech hears it when it appears without a reload.
+- **Where:** above the bar, outside every app frame; the platform's, never an app's colour. Not for
+  news or errors, which are notices (D-44).

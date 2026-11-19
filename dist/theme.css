@@ -43,6 +43,8 @@
   --color-signal-warn: var(--signal-warn);
   --color-signal-down: var(--signal-down);
   --color-signal-off: var(--signal-off);
+  --color-strip-warn: var(--strip-warn);
+  --color-strip-warn-foreground: var(--strip-warn-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);

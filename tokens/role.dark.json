@@ -121,6 +121,16 @@
       "$type": "color",
       "$value": "{signal.off.dark}"
     },
+    "strip-warn": {
+      "$type": "color",
+      "$value": "{signal.warn.dark}",
+      "$description": "The platform's loud strip for an unusual truth (viewing as another role): the amber at full strength (D-48)."
+    },
+    "strip-warn-foreground": {
+      "$type": "color",
+      "$value": "{palette.dark.card}",
+      "$description": "Text and the button's border on strip-warn: the dark card, since the light ink is under 4.5:1 on the amber (D-48)."
+    },
     "chart-1": {
       "$type": "color",
       "$value": "{chart.1.dark}"

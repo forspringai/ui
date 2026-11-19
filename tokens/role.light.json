@@ -121,6 +121,16 @@
       "$type": "color",
       "$value": "{signal.off.light}"
     },
+    "strip-warn": {
+      "$type": "color",
+      "$value": "{signal.warn.light}",
+      "$description": "The platform's loud strip for an unusual truth (viewing as another role): the amber at full strength (D-48)."
+    },
+    "strip-warn-foreground": {
+      "$type": "color",
+      "$value": "{palette.light.ink}",
+      "$description": "Text and the button's border on strip-warn: the ink (D-48)."
+    },
     "chart-1": {
       "$type": "color",
       "$value": "{chart.1.light}"

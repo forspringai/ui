@@ -29,6 +29,8 @@
   --signal-warn: light-dark(#b87503, #f5b830);
   --signal-down: light-dark(#ee0a32, #ff2d3f);
   --signal-off: light-dark(#7d808a, #7c7f88);
+  --strip-warn: light-dark(#b87503, #f5b830);
+  --strip-warn-foreground: light-dark(#14151a, #1a1b1f);
   --chart-1: light-dark(#6a87f0, #295fd4);
   --chart-2: light-dark(#e9661a, #a25834);
   --chart-3: light-dark(#0da26b, #3ca368);

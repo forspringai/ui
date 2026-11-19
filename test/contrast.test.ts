@@ -89,6 +89,14 @@ describe.each(MODES)("%s theme", (mode) => {
     }
   });
 
+  // The platform's loud strip (D-48): its text and its button's border on the amber, 4.5:1; the strip
+  // itself must stand out from the page it sits above (3:1), and never read as a product's accent.
+  test("the strip's ink on strip-warn is 4.5:1, and the strip stands out from the page", () => {
+    expect(contrast(c("strip-warn-foreground"), c("strip-warn"))).toBeGreaterThanOrEqual(AA);
+    expect(contrast(c("strip-warn"), c("background"))).toBeGreaterThanOrEqual(3);
+    for (const p of m.products) expect(distance(c("strip-warn"), m.product[p]!.primary[mode]), p).toBeGreaterThanOrEqual(10);
+  });
+
   // The doll is a non-text graphic (WCAG 1.4.11): 3:1 on every surface, in every product.
   test("every product's doll is visible on every surface (non-text, 3:1)", () => {
     for (const p of m.products) for (const s of SURFACES) expect(contrast(m.product[p]!.mark[mode], c(s)), p).toBeGreaterThanOrEqual(3);
