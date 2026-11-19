@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.33.0";
+export const VERSION = "0.34.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -658,6 +658,27 @@ const FORM: Record<Lang, { required: string; optional: string; summary: string; 
 export function errorRef(o: { lang: Lang; ref: string }): Html {
   const t = FORM[o.lang];
   return html`<p class="error-ref">${t.ref}: <code>${o.ref}</code><br>${t.refHint}</p>`;
+}
+
+export type StripOptions = {
+  /** The bold lead: "Viewing as Sales." */
+  title?: Content;
+  /** The rest of the line: "You are Inês Costa, Owner." It is cut with an ellipsis on a phone. */
+  text?: Content;
+  /** The one way out: a link, or a POST form (a CSRF token in `fields`). */
+  action?: { label: Content; href: string } | { label: Content; post: string; fields?: Record<string, string> };
+};
+
+/** The platform's loud line for an unusual truth, above the bar (D-48): viewing as another role. The
+ *  amber at full strength with ink text in both themes; never an app's colour. Place it before bar(). */
+export function strip(o: StripOptions): Html {
+  const a = o.action;
+  const action = !a
+    ? ""
+    : "href" in a
+      ? html`<a class="strip-action" href="${safeHref(a.href)}">${a.label}</a>`
+      : html`<form method="post" action="${safeHref(a.post)}">${Object.entries(a.fields ?? {}).map(([name, value]) => html`<input type="hidden" name="${name}" value="${value}">`)}<button class="strip-action" type="submit">${a.label}</button></form>`;
+  return html`<div class="strip warning"><p>${o.title ? html`<strong>${o.title}</strong> ` : ""}${o.text ?? ""}</p>${action}</div>`;
 }
 
 export type NoticeOptions = {

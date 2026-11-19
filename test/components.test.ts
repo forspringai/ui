@@ -244,3 +244,11 @@ test("the anchor condition appears exactly twice in components.css, and the rewr
   const min = "@supports (position-area:block-end) and (anchor-scope:all){a{b:c}}@supports not ((position-area:block-end)and (anchor-scope:all)){d{e:f}}";
   expect(withoutAnchorPositioning(min)).toBe("@supports (forspring-no-anchor: 1){a{b:c}}@supports not ((forspring-no-anchor: 1)){d{e:f}}");
 });
+
+// D-48: the strip's words are its own ink on the amber; the page's strong colour (light in the dark
+// theme) must not reach them.
+test("the strip's bold lead inherits the strip's ink", () => {
+  const i = code.indexOf(".strip strong {");
+  expect(i).toBeGreaterThan(-1);
+  expect(code.slice(i, code.indexOf("}", i))).toContain("color: inherit;");
+});

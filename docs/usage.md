@@ -43,6 +43,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   or reword its menus: the org switcher, the product switcher and "Log ud af Forspring" are the same in
   every product (D-17). It uses `orgPath()` to keep the person's place when they switch org and
   `initials()` for the avatar; call them yourself only for your own links or avatars.
+- **`strip()`** is the platform's loud line above the bar while something unusual is true, such as
+  viewing as another role (D-48): a bold lead, the line, and one way out ("Stop viewing as"). It is
+  the amber at full strength with ink text, never an app's colour. Not for news or errors: those are
+  notices.
 - **`menuFrame()`** is the menu and `main` without the rest of the page, for a product that draws its
   own document around `bar()` (D-38). **`menuBody()`** is the menu's contents alone, for a frame of your
   own. Use these, never a copy of the markup: the fold's nav landmark, the one-landmark-per-layout rule

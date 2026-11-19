@@ -3,7 +3,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
-import { bar, esc, initials, orgPath, shell, type BarOptions } from "../src/html.ts";
+import { bar, esc, initials, orgPath, shell, strip, type BarOptions } from "../src/html.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "../src/pages.ts";
 import { AccountUnavailable, Bar, ChooseOrg, NoOrg, Refused } from "../src/react.ts";
 import { agentFix, isRefusal, REFUSAL_REASONS, REFUSALS, type RefusalText } from "../src/refusals.ts";
@@ -185,6 +185,22 @@ describe("an app's own brand (D-47)", () => {
   test("with nav: the app zone is the app's brand and its pages", () => {
     const out = String(bar({ ...opts, org: undefined, products: undefined, app: { name: "Salão Douro" }, nav: { label: "Pages", toggle: "Menu", items: [{ label: "A", href: "/a", current: true }, { label: "B", href: "/b" }] } }));
     expect(out).toMatch(/<span class="word">Salão Douro<\/span><\/a><nav class="bar-nav" aria-label="Pages">/);
+  });
+});
+
+describe("the strip (D-48)", () => {
+  test("the bold lead, the line and a link out", () => {
+    expect(String(strip({ title: "Viewing as Sales.", text: "You are Inês Costa, Owner.", action: { label: "Stop viewing as", href: "?view_as=" } }))).toBe(
+      '<div class="strip warning"><p><strong>Viewing as Sales.</strong> You are Inês Costa, Owner.</p><a class="strip-action" href="?view_as=">Stop viewing as</a></div>',
+    );
+  });
+
+  test("a POST way out carries its fields; everything is escaped and the href made safe", () => {
+    const out = String(strip({ title: evil, action: { label: "Stop", post: "javascript:alert(1)", fields: { csrf: evil } } }));
+    expect(out).toContain('<form method="post" action="#">');
+    expect(out).toContain(`<input type="hidden" name="csrf" value="${esc(evil)}">`);
+    expect(out).toContain('<button class="strip-action" type="submit">Stop</button>');
+    expect(out).not.toContain(evil);
   });
 });
 

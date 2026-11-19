@@ -1740,6 +1740,70 @@
     border-radius: 999px;
   }
 
+  /* --- Strip: the platform's loud line for an unusual truth (D-48) -------------------------- */
+
+  /* strip(): full width above the bar, 28px, while something unusual is true (viewing as another
+     role). The amber at full strength with ink text (4.5:1 in both themes, test/contrast.test.ts),
+     never an app's colour. Its one action is a bordered button in the strip's own ink. */
+  .strip {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: var(--space-7);
+    padding: 0 var(--space-4);
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
+  }
+
+  .strip.warning {
+    background: var(--strip-warn);
+    color: var(--strip-warn-foreground);
+  }
+
+  .strip > p {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* In the strip's ink: the page's strong colour would be light on the dark theme's amber. */
+  .strip strong {
+    font-weight: 700;
+    color: inherit;
+  }
+
+  .strip form {
+    display: contents;
+  }
+
+  .strip-action {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-6);
+    padding: 0 var(--space-2);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-button);
+    background: transparent;
+    color: inherit;
+    font: 600 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .strip-action:hover {
+    color: inherit;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  /* The ring in the strip's ink: the accent ring is not drawn for the amber. */
+  .strip-action:focus-visible {
+    outline-color: currentColor;
+    outline-offset: 2px;
+  }
+
   /* --- Notice: what just happened, in words; the colour only repeats it --------------------- */
 
   /* One style for every notice (D-44): a whole tinted fill in the tone, the tone's icon on the left,
