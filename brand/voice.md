@@ -210,6 +210,31 @@ Stricter than the rest, consistent with sections 7 and 9 of the [brand guideline
 - **Status is never colour alone** (section 9): a word with every icon or signal.
 - **No marketing in the chrome.** No claims, no hype, no "AI-powered" labels. Say what the screen does.
 
+### Words for who may do what
+
+Peter's access model (2026-11-19, coordinator/areas/ui/access-model-fable.md; ui D-50). Two ideas that
+never share a list: the **access level** is how much of the platform a person may run (a ladder, set in
+the Forspring account); a **role** is a job in the apps (set per org in AppSpring, not a ladder).
+
+| English | Danish | Meaning |
+|---|---|---|
+| access level | adgangsniveau | Owner, Admin, Member, Viewer / Ejer, Administrator, Medlem, Læser. Lowercase in running text ("du er medlem"), capitalised as a label. `ACCESS_LEVEL_NAMES`. |
+| role | rolle | A job the org names itself: Chef, Bookkeeper / Kok, Bogholder. |
+| product role | produktrolle | A fixed job in one Forspring product: Billing contact / Betalingskontakt. |
+| guest | gæst | An outside person who signs in to one app by an emailed link. Only on access screens, and always with its role: "Gæst: Leverandør" / "Guest: Supplier" (in a restaurant or hotel app a guest is also a diner in the data). |
+| visitor | besøgende | Anyone using a public app or form, not signed in. |
+| Forspring staff | Forsprings medarbejdere | Our own people running the platform. Never shortened to "medarbejdere" (that reads as the customer's own staff), never "platform admin". |
+| agent | agent | Software acting for a person with a key; never more than that person. |
+| automation | automatisering | A flow that runs on its own; at most a member. |
+
+cos fixed the Danish (2026-11-19): adgangsniveau with its four levels, rolle, produktrolle, gæst,
+besøgende, Forsprings medarbejdere, agent and automatisering.
+
+- **Never "role" for a level.** Not "your role is Admin", not "rollen administrator". Say "adgangsniveauet
+  administrator", "you are an admin", or "Owner in Salão Douro" beside a name.
+- **Retired** from anything a customer or Peter reads: account role, app role (just "role"), group, team,
+  persona, carrier, baseline, standing, ceiling, wall, credential cap, platform admin, product flag.
+
 ## 7. When in doubt
 
 - **The letter wins.** If a line would not sit comfortably in the founders' letter, rewrite it.

@@ -54,8 +54,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   and the sidebar's width (`--layout-menu`) come with them.
 - **`crumbs()`** names a detail page's parents, quiet, just before its h1. The page itself is the h1,
   never the last crumb. A top-level page has no crumbs.
-- **`ROLES`** and **`ROLE_NAMES`** are the account's four roles and their words ("ejer",
-  "administrator", "medlem", "læser"). Write a role with `ROLE_NAMES`, never your own word for it.
+- **`ACCESS_LEVELS`** and **`ACCESS_LEVEL_NAMES`** are the account's four access levels and their words
+  ("ejer", "administrator", "medlem", "læser"; D-50). Write a level with `ACCESS_LEVEL_NAMES`, never your
+  own word for it, and never call it a role: a role is a job in AppSpring (brand/voice.md §6, Words).
+  `ROLES`, `ROLE_NAMES` and `Role` stay as deprecated aliases.
 - **`PRODUCT_NAMES`** is how each product's name is written ("SiteSpring", never "Sitespring" or
   "site spring"). Use it wherever you name a product in copy.
 - **The standard pages:** `chooseOrgPage()` when a person with several orgs arrives with none in the

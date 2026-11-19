@@ -9,7 +9,7 @@
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 
 import { REFUSALS, type Refusal } from "./refusals.ts";
-import { button, errorRef, html, list, ROLE_NAMES, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
+import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
 
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = { status: number; title: string; narrow: true; body: Html };
@@ -35,8 +35,8 @@ const T = {
     canAdd: "De kan invitere dig",
     admins: "Administratorer, der kan slå det til",
     owners: "Ejere",
-    hasRole: (r: string) => `Har rollen ${r}`,
-    needs: (r: string) => `Det kræver rollen ${r}.`,
+    hasRole: (r: string) => `Har adgangsniveauet ${r}`,
+    needs: (r: string) => `Det kræver adgangsniveauet ${r}.`,
     orgLine: (o: string) => `Organisation: ${o}`,
     keyFor: (o: string) => `Nøglen gælder ${o}.`,
     signIn: "Log ind",
@@ -61,8 +61,8 @@ const T = {
     canAdd: "They can add you",
     admins: "Admins who can switch it on",
     owners: "Owners",
-    hasRole: (r: string) => `Have the role ${r}`,
-    needs: (r: string) => `It needs the role ${r}.`,
+    hasRole: (r: string) => `Have the ${r} access level`,
+    needs: (r: string) => `It needs the ${r} access level.`,
     orgLine: (o: string) => `Organization: ${o}`,
     keyFor: (o: string) => `The key is for ${o}.`,
     signIn: "Sign in",
@@ -106,7 +106,7 @@ export type ChooseOrgOptions = {
   lastHere?: string;
 };
 
-/** Signed in, several orgs with this product and none in the URL: each org with your role and when you last used it. */
+/** Signed in, several orgs with this product and none in the URL: each org with your access level and when you last used it. */
 export function chooseOrgPage(o: ChooseOrgOptions): StandardPage {
   const t = T[o.lang];
   const last = o.orgs.find((g) => g.slug === o.lastHere);
@@ -114,7 +114,7 @@ export function chooseOrgPage(o: ChooseOrgOptions): StandardPage {
   const items = list(
     orgs.map((g) => ({
       name: g === last ? html`${g.name} ${tag(t.lastHere, "primary")}` : g.name,
-      meta: [ROLE_NAMES[o.lang][g.role], g.lastUsed ? ` · ${t.lastUsed(when(g.lastUsed, o.lang))}` : ""],
+      meta: [ACCESS_LEVEL_NAMES[o.lang][g.role], g.lastUsed ? ` · ${t.lastUsed(when(g.lastUsed, o.lang))}` : ""],
       action: button({ label: t.open, href: g.href, small: true, variant: g === last || (!last && orgs.length === 1) ? "primary" : "ghost", ariaLabel: t.openOrg(g.name) }),
     })),
   );
@@ -154,7 +154,7 @@ export type RefusedOptions = {
   people?: Person[];
   /** org_suspended: the account's billing page for the org. */
   billingHref?: string;
-  /** role_too_low: the role it needs. */
+  /** role_too_low: the access level it needs (the reason code keeps its old name). */
   roleNeeded?: Org["role"];
   /** org_mismatch: the organisation the key or token is for. */
   credentialOrg?: string;
@@ -176,13 +176,13 @@ export function refusedPage(o: RefusedOptions): StandardPage {
   const parts: Content[] = [];
   if (o.org && o.reason !== "not_a_member") parts.push(html`<p class="meta">${t.orgLine(o.org)}</p>`);
   parts.push(html`<p>${words.text}</p>`);
-  if (o.reason === "role_too_low" && o.roleNeeded) parts.push(html`<p>${t.needs(ROLE_NAMES[o.lang][o.roleNeeded])}</p>`);
+  if (o.reason === "role_too_low" && o.roleNeeded) parts.push(html`<p>${t.needs(ACCESS_LEVEL_NAMES[o.lang][o.roleNeeded])}</p>`);
   if (o.reason === "org_mismatch" && o.credentialOrg) parts.push(html`<p>${t.keyFor(o.credentialOrg)}</p>`);
   if (o.orgs?.length && (o.reason === "org_required" || o.reason === "not_a_member")) {
-    parts.push(label(t.yourOrgs), list(o.orgs.map((g) => ({ name: g.name, meta: ROLE_NAMES[o.lang][g.role], action: button({ label: t.open, href: g.href, small: true, variant: "ghost", ariaLabel: t.openOrg(g.name) }) }))));
+    parts.push(label(t.yourOrgs), list(o.orgs.map((g) => ({ name: g.name, meta: ACCESS_LEVEL_NAMES[o.lang][g.role], action: button({ label: t.open, href: g.href, small: true, variant: "ghost", ariaLabel: t.openOrg(g.name) }) }))));
   }
   if (o.people?.length) {
-    const heading = o.reason === "org_suspended" ? t.owners : o.reason === "product_off" ? t.admins : o.reason === "role_too_low" && o.roleNeeded ? t.hasRole(ROLE_NAMES[o.lang][o.roleNeeded]) : t.canAdd;
+    const heading = o.reason === "org_suspended" ? t.owners : o.reason === "product_off" ? t.admins : o.reason === "role_too_low" && o.roleNeeded ? t.hasRole(ACCESS_LEVEL_NAMES[o.lang][o.roleNeeded]) : t.canAdd;
     parts.push(label(heading), people(o.people));
   }
   parts.push(html`<p>${words.fix}</p>`);

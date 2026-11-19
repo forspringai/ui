@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.35.0";
+export declare const VERSION = "0.36.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.35.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.36.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -72,12 +72,23 @@ export type Link = {
     href: string;
     lang?: Lang;
 };
-/** The suite's one role set (hub D-96), a person's place in an organisation. */
-export type Role = "owner" | "admin" | "member" | "viewer";
-export declare const ROLES: readonly Role[];
-/** The roles as words inside a sentence or beside a name, as the account writes them. */
-export declare const ROLE_NAMES: Record<Lang, Record<Role, string>>;
-/** An organisation as the bar and the pages show it: the customer's name and your role there. */
+/** The suite's four access levels (hub D-96; Peter's access model, 2026-11-19, D-50): how much of the
+ *  platform a person may run, set in the Forspring account. A ladder, one per person per org. Not a
+ *  role: a role is a job in AppSpring (Chef, Bookkeeper), and the two never share a list. */
+export type AccessLevel = "owner" | "admin" | "member" | "viewer";
+export declare const ACCESS_LEVELS: readonly AccessLevel[];
+/** The levels as words inside a sentence or beside a name, as the account writes them: lowercase in
+ *  running text, capitalised as a label (Ejer, Administrator, Medlem, Læser). The word for the ladder
+ *  itself is "adgangsniveau" / "access level", never "rolle" / "role". */
+export declare const ACCESS_LEVEL_NAMES: Record<Lang, Record<AccessLevel, string>>;
+/** @deprecated Use `AccessLevel` (D-50): these are access levels, not roles. */
+export type Role = AccessLevel;
+/** @deprecated Use `ACCESS_LEVELS` (D-50). */
+export declare const ROLES: readonly AccessLevel[];
+/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
+export declare const ROLE_NAMES: Record<Lang, Record<AccessLevel, string>>;
+/** An organisation as the bar and the pages show it: the customer's name and your access level there
+ *  (the field keeps its old name, `role`). */
 export type Org = {
     slug: string;
     name: string;
@@ -85,7 +96,7 @@ export type Org = {
 };
 /** The bar's org switcher (D-17). */
 export type BarOrg = {
-    /** The organisation this page is in. Its role shows in the user menu's head. */
+    /** The organisation this page is in. Your access level there shows in the user menu's head. */
     current: Org;
     /** Every organisation the person has this product in, the current one too. The switcher shows only
      *  when there is more than one; `href` overrides the link that keeps the person's place. */
@@ -107,7 +118,7 @@ export type BarProducts = {
     /** "All of <org> at Forspring": the account's page for the organisation. */
     accountHref: string;
 };
-/** The user menu: an avatar button with the person, their role here, the account, language, sign out. */
+/** The user menu: an avatar button with the person, their access level here, the account, language, sign out. */
 export type UserMenu = {
     name: string;
     email: string;

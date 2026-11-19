@@ -107,14 +107,14 @@ export const REFUSALS = {
     status: 403,
     exit: 4,
     da: {
-      title: "Din rolle kan ikke det her",
-      text: "Du er med i organisationen, men det kræver en anden rolle.",
-      fix: "Bed en, der har rollen, om at gøre det eller give dig rollen.",
+      title: "Dit adgangsniveau rækker ikke til det her",
+      text: "Du er med i organisationen, men det kræver et højere adgangsniveau.",
+      fix: "Bed en ejer eller administrator om at gøre det eller give dig et højere adgangsniveau.",
     },
     en: {
-      title: "Your role cannot do this",
-      text: "You are in the organization, but this needs another role.",
-      fix: "Ask someone with that role to do it, or to give you the role.",
+      title: "Your access level cannot do this",
+      text: "You are in the organization, but this needs a higher access level.",
+      fix: "Ask an owner or admin to do it, or to raise your access level.",
     },
   },
   org_mismatch: {
