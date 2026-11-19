@@ -1904,3 +1904,17 @@ theme's amber (1.52:1).
   strip is `role="status"`, so assistive tech hears it when it appears without a reload.
 - **Where:** above the bar, outside every app frame; the platform's, never an app's colour. Not for
   news or errors, which are notices (D-44).
+
+## D-49: Counts in the bar's nav; an app's catalog icon beside its name (0.35.0, 2026-11-19)
+
+lead-ui, moving AppSpring's shell (#1724) onto `bar({ app, nav })`: two things the old nav had.
+
+- **Badges.** A `BarNav` item takes the menu item's `badge` ("Leads 5", with an optional signal mark
+  and words for a screen reader), drawn with the same `.menu-badge` look. A count is information, not
+  decoration, and it must not vanish when the same pages move from the sheet or the sidebar into the
+  bar. The badge is neutral (muted ink); the accent stays only on the shown page's foot rule.
+- **The app's icon.** `bar({ app: { icon } })` takes the app's catalog icon, the ui icon name its author
+  chose (AppSpring's `AppDecl.icon`), and draws it in ink at 20px before the name when there is no
+  logo. It is the app's own, the same icon as its tile in the launcher, so the bar and the tile agree.
+  The logo wins over the icon; an unknown name draws nothing rather than throwing, since the name
+  comes from an app's declaration.

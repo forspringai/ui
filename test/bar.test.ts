@@ -204,6 +204,24 @@ describe("the strip (D-48)", () => {
   });
 });
 
+describe("bar-nav badges and the app's catalog icon (D-49)", () => {
+  test("a page's count rides beside its label, the menu's badge look", () => {
+    const out = String(bar({ ...opts, nav: { label: "Pages", toggle: "Menu", items: [{ label: "Leads", href: "/l", badge: { text: "5", signal: "warn", label: "waiting" } }, { label: "Deals", href: "/d", current: true }] } }));
+    expect(out).toContain('<a href="/l">Leads<span class="menu-badge"><span class="signal-mark warn" aria-hidden="true"></span>5<span class="visually-hidden"> waiting</span></span></a>');
+  });
+
+  test("the app's icon in ink when there is no logo; the logo wins; an unknown name draws nothing", () => {
+    const withIcon = String(bar({ ...opts, app: { name: "Bookings", icon: "calendar" } }));
+    expect(withIcon).toMatch(/aria-label="Bookings"><span class="app-icon"><svg[^>]*class="icon"/);
+    const both = String(bar({ ...opts, app: { name: "Bookings", icon: "calendar", logo: "https://cdn.example.com/b.png" } }));
+    expect(both).toContain('<img class="app-logo"');
+    expect(both).not.toContain("app-icon");
+    const unknown = String(bar({ ...opts, app: { name: "Bookings", icon: "no-such-icon" } }));
+    expect(unknown).not.toContain("app-icon");
+    expect(unknown).toContain('aria-label="Bookings"><span class="word">Bookings</span>');
+  });
+});
+
 test("orgPath keeps the place in another org", () => {
   expect(orgPath("/o/noon/datacore/runs", "spekta")).toBe("/o/spekta/datacore/runs");
   expect(orgPath("/o/noon", "spekta")).toBe("/o/spekta/");
