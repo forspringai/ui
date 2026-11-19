@@ -369,7 +369,8 @@ export function errorRef(o) {
     return html `<p class="error-ref">${t.ref}: <code>${o.ref}</code><br>${t.refHint}</p>`;
 }
 /** The platform's loud line for an unusual truth, above the bar (D-48): viewing as another role. The
- *  amber at full strength with ink text in both themes; never an app's colour. Place it before bar(). */
+ *  amber at full strength with ink text in both themes; never an app's colour. Place it before bar().
+ *  role="status": assistive tech hears it when it appears without a reload. */
 export function strip(o) {
     const a = o.action;
     const action = !a
@@ -377,7 +378,7 @@ export function strip(o) {
         : "href" in a
             ? html `<a class="strip-action" href="${safeHref(a.href)}">${a.label}</a>`
             : html `<form method="post" action="${safeHref(a.post)}">${Object.entries(a.fields ?? {}).map(([name, value]) => html `<input type="hidden" name="${name}" value="${value}">`)}<button class="strip-action" type="submit">${a.label}</button></form>`;
-    return html `<div class="strip warning"><p>${o.title ? html `<strong>${o.title}</strong> ` : ""}${o.text ?? ""}</p>${action}</div>`;
+    return html `<div class="strip warning" role="status"><p>${o.title ? html `<strong>${o.title}</strong> ` : ""}${o.text ?? ""}</p>${action}</div>`;
 }
 // The kind of message in words, so the tone is never told by colour or icon alone (hub D-120).
 const NOTICE_LABEL = {

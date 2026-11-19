@@ -191,7 +191,7 @@ describe("an app's own brand (D-47)", () => {
 describe("the strip (D-48)", () => {
   test("the bold lead, the line and a link out", () => {
     expect(String(strip({ title: "Viewing as Sales.", text: "You are Inês Costa, Owner.", action: { label: "Stop viewing as", href: "?view_as=" } }))).toBe(
-      '<div class="strip warning"><p><strong>Viewing as Sales.</strong> You are Inês Costa, Owner.</p><a class="strip-action" href="?view_as=">Stop viewing as</a></div>',
+      '<div class="strip warning" role="status"><p><strong>Viewing as Sales.</strong> You are Inês Costa, Owner.</p><a class="strip-action" href="?view_as=">Stop viewing as</a></div>',
     );
   });
 

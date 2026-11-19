@@ -364,7 +364,8 @@ export type StripOptions = {
     };
 };
 /** The platform's loud line for an unusual truth, above the bar (D-48): viewing as another role. The
- *  amber at full strength with ink text in both themes; never an app's colour. Place it before bar(). */
+ *  amber at full strength with ink text in both themes; never an app's colour. Place it before bar().
+ *  role="status": assistive tech hears it when it appears without a reload. */
 export declare function strip(o: StripOptions): Html;
 export type NoticeOptions = {
     tone?: Tone;

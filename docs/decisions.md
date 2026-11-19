@@ -1900,6 +1900,7 @@ theme's amber (1.52:1).
   product accent (`test/contrast.test.ts`).
 - **`strip({ title, text, action })`** and `.strip.warning`: 28px, full width, the bold lead and the line
   (cut with an ellipsis on a phone), and one way out as a link or a POST form. The button is
-  transparent with a 1px border and text in the strip's ink, and its focus ring is the same ink.
+  transparent with a 1px border and text in the strip's ink, and its focus ring is the same ink. The
+  strip is `role="status"`, so assistive tech hears it when it appears without a reload.
 - **Where:** above the bar, outside every app frame; the platform's, never an app's colour. Not for
   news or errors, which are notices (D-44).
