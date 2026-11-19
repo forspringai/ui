@@ -15,6 +15,7 @@
 
 import { contrast, distance, fromOklch, luminance, mix, oklab, oklch } from "./color.ts";
 import { PRODUCTS, ROLES, type Product, type Role } from "./family.ts";
+import { safeLogo } from "./logo.ts";
 
 export type { Product, Role } from "./family.ts";
 export type Mode = "light" | "dark";
@@ -215,22 +216,6 @@ function pair(v: unknown, path: string, s: Sink): { light: string | null; dark: 
 function colorOrPair(v: unknown, path: string, s: Sink): { light: string | null; dark: string | null | undefined } | null {
   if (typeof v === "string" || (isObj(v) && v.colorSpace !== undefined)) return { light: color(v, path, s), dark: undefined };
   return pair(v, path, s);
-}
-
-// A logo is an https: URL, a data:image/ URL of a raster or SVG type (an <img> runs no script from
-// either), or a relative path in the app's bundle. Nothing that can leave an attribute or name
-// another scheme: no javascript:, http:, protocol-relative //, backslash or .. segment.
-function safeLogo(v: string): boolean {
-  if (v.length === 0 || v.length > 2048 || v !== v.trim()) return false;
-  if (/^https:\/\//i.test(v)) {
-    try {
-      return new URL(v).protocol === "https:" && !/["'<>\s\\]/.test(v);
-    } catch {
-      return false;
-    }
-  }
-  if (/^data:/i.test(v)) return /^data:image\/(png|jpeg|gif|webp|avif|svg\+xml)[;,][^"'<>\s\\]*$/i.test(v);
-  return /^(\.\/)?[A-Za-z0-9_][A-Za-z0-9._~\-/]*$/.test(v) && !v.split("/").includes("..") && !v.includes("//");
 }
 
 // ── Colour rules ──────────────────────────────────────────────────────────────────────────────────

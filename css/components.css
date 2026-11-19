@@ -372,6 +372,14 @@
     flex: none;
   }
 
+  /* An app's own logo (bar({ app }), D-47): the doll's box, the image kept whole inside it. */
+  .brand .app-logo {
+    width: var(--space-7);
+    height: var(--space-7);
+    flex: none;
+    object-fit: contain;
+  }
+
   /* The doll's colour is --mark: the product's accent, ink on Forspring's own pages (hub D-101).
      The wordmark beside it stays ink in every product. */
   .brand .mark .fill {

@@ -8,6 +8,7 @@
 // `${h}` gives the HTML.
 
 import { iconSvg } from "./icons.ts";
+import { safeLogo } from "./logo.ts";
 import { ICON_NAMES, ICON_PATHS, type IconName } from "./icons/lucide.ts";
 
 export { ICON_NAMES, type IconName };
@@ -89,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.32.0";
+export const VERSION = "0.33.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -257,6 +258,12 @@ export type BarOptions = {
   /** Where the wordmark leads, and its accessible name. Defaults to the org's home, /o/<org>/, with an org. */
   home?: string;
   homeLabel?: string;
+  /** An app's own brand, for an app frame (AppSpring): the app's name as the wordmark and its logo, if
+   *  any, in place of the product's doll; no doll and no Forspring mark (hub D-98; lead-brand's app-zone
+   *  rule). `logo` is an https: URL, a data:image/ URL or a path in the app's bundle (the theme file's
+   *  rule); any other value draws no logo. The logo is decoration beside the name (alt ""). `productLabel`
+   *  still names the product in the page title. */
+  app?: { name: string; logo?: string | undefined };
   /** A small app's pages in the bar, after the wordmark (D-46): one row, the shown page marked with the
    *  muted surface and the accent along its foot. With it, the org and product switchers move to the
    *  bar's end with the person (the app's zone, then the platform's). Fewer than two items draw nothing.
@@ -402,7 +409,9 @@ export function bar(o: BarOptions): Html {
     : "";
   const user = o.user ? html`<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
   const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
-  const brand = html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html`<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>`;
+  const brand = o.app
+    ? html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html`<img class="app-logo" src="${o.app.logo}" alt="">` : ""}<span class="word">${o.app.name}</span></a>`
+    : html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html`<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>`;
   const switchers = html`${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
   const nav = barNav(o.nav);
   // With the app's pages in the bar, the switchers join the person at the end: the app's zone, then the platform's.

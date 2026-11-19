@@ -7,6 +7,7 @@
 // string as markup, for a stylesheet or markup the caller built and escaped itself. String(h) or
 // `${h}` gives the HTML.
 import { iconSvg } from "./icons.js";
+import { safeLogo } from "./logo.js";
 import { ICON_NAMES, ICON_PATHS } from "./icons/lucide.js";
 export { ICON_NAMES };
 // A registered symbol rather than instanceof, so Html from a second copy of this module (src/ and
@@ -70,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.32.0";
+export const VERSION = "0.33.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -233,7 +234,9 @@ export function bar(o) {
         : "";
     const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
     const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
-    const brand = html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
+    const brand = o.app
+        ? html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html `<img class="app-logo" src="${o.app.logo}" alt="">` : ""}<span class="word">${o.app.name}</span></a>`
+        : html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
     const switchers = html `${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
     const nav = barNav(o.nav);
     // With the app's pages in the bar, the switchers join the person at the end: the app's zone, then the platform's.
