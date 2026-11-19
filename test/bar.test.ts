@@ -100,6 +100,62 @@ describe("the bar", () => {
   });
 });
 
+describe("the bar's nav (D-46)", () => {
+  const nav = {
+    label: "Pages",
+    toggle: "Menu",
+    items: [
+      { label: "Dashboard", href: "/o/noon/" },
+      { label: "Staff", href: "/o/noon/staff", current: true },
+      { label: evil, href: "/o/noon/x" },
+    ],
+  };
+
+  test("the pages follow the wordmark, the shown one aria-current, and the switchers move to the end with the person", () => {
+    const out = String(bar({ ...opts, nav }));
+    expect(out).toContain('</a><nav class="bar-nav" aria-label="Pages"><ul><li><a href="/o/noon/">Dashboard</a></li><li><a href="/o/noon/staff" aria-current="page">Staff</a></li>');
+    expect(out).toContain(esc(evil));
+    expect(out).not.toContain(evil);
+    const at = (s: string) => out.indexOf(s);
+    expect(at('class="bar-nav"')).toBeLessThan(at('class="spacer"'));
+    expect(at('class="spacer"')).toBeLessThan(at("org-switcher"));
+    expect(at("org-switcher")).toBeLessThan(at("user-menu"));
+  });
+
+  test("without nav the bar is unchanged: the switchers stay after the wordmark", () => {
+    const out = String(bar(opts));
+    expect(out).not.toContain("bar-nav");
+    expect(out.indexOf("org-switcher")).toBeLessThan(out.indexOf('class="spacer"'));
+  });
+
+  test("one page draws no nav", () => {
+    const out = String(bar({ ...opts, nav: { ...nav, items: [nav.items[0]!] } }));
+    expect(out).not.toContain("bar-nav");
+    expect(out.indexOf("org-switcher")).toBeLessThan(out.indexOf('class="spacer"'));
+  });
+
+  test("shell: the pages fold under the toggle on a phone, no sidebar column, nav-in-bar on the body", () => {
+    const page = String(shell({ ...opts, nav, title: "Staff", body: "x" }));
+    expect(page).toContain('<body class="has-menu nav-in-bar">');
+    expect(page).toContain('<details class="menu-fold"><summary><span>Menu</span><span class="menu-fold-current">Staff</span></summary>');
+    expect(page.match(/class="bar-nav"/g)).toHaveLength(1);
+  });
+
+  test("shell: a menu wins over nav (the sidebar, no pages in the bar)", () => {
+    const menu = { label: "Main menu", toggle: "Menu", groups: [{ items: [{ label: "Runs", href: "/o/noon/runs", current: true }] }] };
+    const page = String(shell({ ...opts, nav, menu, title: "Runs", body: "x" }));
+    expect(page).not.toContain("bar-nav");
+    expect(page).not.toContain("nav-in-bar");
+    expect(page).toContain('<nav class="menu menu-side" aria-label="Main menu">');
+  });
+
+  test("shell: one page is a plain page, no menu", () => {
+    const page = String(shell({ ...opts, nav: { ...nav, items: [nav.items[0]!] }, title: "Home", body: "x" }));
+    expect(page).not.toContain("has-menu");
+    expect(page).not.toContain("menu-fold");
+  });
+});
+
 test("orgPath keeps the place in another org", () => {
   expect(orgPath("/o/noon/datacore/runs", "spekta")).toBe("/o/spekta/datacore/runs");
   expect(orgPath("/o/noon", "spekta")).toBe("/o/spekta/");

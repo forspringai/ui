@@ -112,16 +112,24 @@ test("reduced motion stops everything", () => {
   expect(block).toContain("animation: none !important;");
 });
 
-test.each(sheets)("%s: a box-shadow is an elevation token, none, or a 2 to 3px edge rule in a role", (_file, code) => {
+test.each(sheets)("%s: a box-shadow is an elevation token, none, or a 2 to 3px rule along an item's foot", (_file, code) => {
   const off: string[] = [];
   for (const m of code.matchAll(/box-shadow:\s*([^;]+);/g)) {
     const v = m[1]!.trim();
     if (/^var\(--shadow-(raised|overlay)\)$/.test(v) || v === "none") continue;
-    // The accent's edge rule on a selected row or tab: a solid inset line like a border, no blur.
+    // The accent's rule under a chosen tab or bar-nav page: a solid inset line along the foot, no blur.
+    // Never at an item's side (D-46: no inline-start active bar), so the x offset is 0.
     const edge = /^inset (-?\d+)(?:px)? (-?\d+)(?:px)? 0 var\(--[a-z-]+\)$/.exec(v);
-    if (edge && [edge[1], edge[2]].every((n) => Math.abs(Number(n)) <= 3)) continue;
+    if (edge && Number(edge[1]) === 0 && Math.abs(Number(edge[2])) <= 3) continue;
     off.push(v);
   }
+  expect(off).toEqual([]);
+});
+
+test.each(sheets)("%s: no coloured edge at an item's side (D-46): an inline-start border is a 1px divider in --input or --border", (_file, code) => {
+  const off = [...code.matchAll(/border-(?:inline-start|left)(?:-width|-color)?:\s*([^;]+);/g)]
+    .map((m) => m[1]!.trim())
+    .filter((v) => !/^(0|none|1px solid var\(--(input|border)\))$/.test(v));
   expect(off).toEqual([]);
 });
 

@@ -32,8 +32,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 
 - **`shell()`** is every server-rendered page: the bar, the menu, `main`, the skip link and the
   favicons. Give a console with more than one section a `menu` (a sidebar, folded on a phone; D-13,
-  hub D-95), never rows of links above the h1. `narrow: true` is for one card alone: sign-in, a
-  refusal, a confirm page.
+  hub D-95), never rows of links above the h1. A small app whose pages fit one row and have no groups
+  may put them in the bar instead with `nav` (D-46): the pages follow the wordmark, the switchers move
+  to the end with the person, and a phone folds the same pages under "Menu". One page needs no nav.
+  `narrow: true` is for one card alone: sign-in, a refusal, a confirm page.
 - **`bar()`** is the bar alone, for a rich app that draws its own frame. Don't build a bar of your own
   or reword its menus: the org switcher, the product switcher and "Log ud af Forspring" are the same in
   every product (D-17). It uses `orgPath()` to keep the person's place when they switch org and
@@ -104,7 +106,8 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   word in small caps in the tone colour ("Udført", "Done"; `label` changes it), and an optional
   `action` button in the tone (filled for success and warning, an outline for error, ghost for info).
   `icon` swaps in a content icon (`clock`, `file-text`); the label still carries the meaning. Info is
-  neutral grey, never an accent tint. There is no coloured edge on any notice, card or toast.
+  neutral grey, never an accent tint. There is no coloured edge on any notice, card or toast, and no coloured edge at the side of a chosen
+  menu item, switcher item or row (D-46): the muted surface and weight mark it.
   Tones are `info`, `success`, `warning` and `error`. Warnings and errors are alerts,
   read out at once, so use them for what needs attention, not for decoration. A notice is never the
   report of a save; that is a toast, and a form's errors are `errorSummary()`, the error notice made

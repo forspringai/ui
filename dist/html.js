@@ -70,7 +70,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.31.1";
+export const VERSION = "0.32.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -234,7 +234,20 @@ export function bar(o) {
     const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
     const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
     const brand = html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
-    return html `<header class="bar"><div class="wrap bar-inner">${brand}${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
+    const switchers = html `${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
+    const nav = barNav(o.nav);
+    // With the app's pages in the bar, the switchers join the person at the end: the app's zone, then the platform's.
+    return nav
+        ? html `<header class="bar"><div class="wrap bar-inner">${brand}${nav}${o.controls}<span class="spacer"></span>${switchers}${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`
+        : html `<header class="bar"><div class="wrap bar-inner">${brand}${switchers}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
+}
+/** The pages to draw in the bar: two or more (one page needs no nav). */
+const navItems = (n) => (n && n.items.length >= 2 ? n.items : undefined);
+function barNav(n) {
+    const items = navItems(n);
+    if (!n || !items)
+        return undefined;
+    return html `<nav class="bar-nav" aria-label="${n.label}"><ul>${items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}</a></li>`)}</ul></nav>`;
 }
 /** All or none per group (D-39 point 6): icons only when every item has one and no two match. */
 const groupIcons = (items) => items.length > 0 && items.every((i) => i.icon !== undefined) && new Set(items.map((i) => i.icon)).size === items.length;
@@ -282,11 +295,15 @@ export function shell(o) {
         : "";
     const htmlAttrs = raw(attrs({ lang: o.lang, "data-product": o.product, "data-theme": o.theme }));
     const icons = o.favicon === false ? "" : faviconLinks(o.favicon ?? faviconFor(o.product ?? "forspring", o.brandBase));
+    // Pages in the bar (no menu): the same pages fold under the toggle on a narrow screen, and no sidebar.
+    const navPages = o.menu ? undefined : navItems(o.nav);
+    const barOpts = o.menu ? { ...o, nav: undefined } : o;
+    const menu = o.menu ?? (navPages && o.nav ? { label: o.nav.label, toggle: o.nav.toggle, groups: [{ items: navPages }] } : undefined);
     return html `<!doctype html><html${htmlAttrs}><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${o.title} · ${own ? "Forspring" : o.productLabel}</title>${icons}${o.head}</head>
-<body${raw(attrs({ class: cls(o.menu && "has-menu", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
-${bar(o)}
-${o.menu ? menuFrame(o.menu, o.body, o.narrow) : html `<main id="main" class="${cls("wrap", o.narrow && "narrow")}">${o.body}</main>`}
+<body${raw(attrs({ class: cls(menu && "has-menu", navPages && "nav-in-bar", o.bodyClass) }))}><a class="skip" href="#main">${da ? "Spring til indhold" : "Skip to content"}</a>
+${bar(barOpts)}
+${menu ? menuFrame(menu, o.body, o.narrow) : html `<main id="main" class="${cls("wrap", o.narrow && "narrow")}">${o.body}</main>`}
 ${footer}</body></html>`;
 }
 export function button(o) {
