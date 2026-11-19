@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.36.0";
+export const VERSION = "0.37.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -150,10 +150,6 @@ export const ACCESS_LEVEL_NAMES = {
     da: { owner: "ejer", admin: "administrator", member: "medlem", viewer: "læser" },
     en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
 };
-/** @deprecated Use `ACCESS_LEVELS` (D-50). */
-export const ROLES = ACCESS_LEVELS;
-/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
-export const ROLE_NAMES = ACCESS_LEVEL_NAMES;
 // The bar's words are the suite's, not a product's: every product's bar says the same (D-17).
 const BAR = {
     da: {

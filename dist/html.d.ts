@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.36.0";
+export declare const VERSION = "0.37.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.36.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.37.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -81,18 +81,12 @@ export declare const ACCESS_LEVELS: readonly AccessLevel[];
  *  running text, capitalised as a label (Ejer, Administrator, Medlem, Læser). The word for the ladder
  *  itself is "adgangsniveau" / "access level", never "rolle" / "role". */
 export declare const ACCESS_LEVEL_NAMES: Record<Lang, Record<AccessLevel, string>>;
-/** @deprecated Use `AccessLevel` (D-50): these are access levels, not roles. */
-export type Role = AccessLevel;
-/** @deprecated Use `ACCESS_LEVELS` (D-50). */
-export declare const ROLES: readonly AccessLevel[];
-/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
-export declare const ROLE_NAMES: Record<Lang, Record<AccessLevel, string>>;
 /** An organisation as the bar and the pages show it: the customer's name and your access level there
  *  (the field keeps its old name, `role`). */
 export type Org = {
     slug: string;
     name: string;
-    role: Role;
+    role: AccessLevel;
 };
 /** The bar's org switcher (D-17). */
 export type BarOrg = {

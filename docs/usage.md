@@ -57,7 +57,7 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 - **`ACCESS_LEVELS`** and **`ACCESS_LEVEL_NAMES`** are the account's four access levels and their words
   ("ejer", "administrator", "medlem", "læser"; D-50). Write a level with `ACCESS_LEVEL_NAMES`, never your
   own word for it, and never call it a role: a role is a job in AppSpring (brand/voice.md §6, Words).
-  `ROLES`, `ROLE_NAMES` and `Role` stay as deprecated aliases.
+  The old names `Role`, `ROLES` and `ROLE_NAMES` are gone since 0.37.0 (D-51).
 - **`PRODUCT_NAMES`** is how each product's name is written ("SiteSpring", never "Sitespring" or
   "site spring"). Use it wherever you name a product in copy.
 - **The standard pages:** `chooseOrgPage()` when a person with several orgs arrives with none in the
