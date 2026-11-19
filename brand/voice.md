@@ -221,14 +221,14 @@ the Forspring account); a **role** is a job in the apps (set per org in AppSprin
 | access level | adgangsniveau | Owner, Admin, Member, Viewer / Ejer, Administrator, Medlem, Læser. Lowercase in running text ("du er medlem"), capitalised as a label. `ACCESS_LEVEL_NAMES`. |
 | role | rolle | A job the org names itself: Chef, Bookkeeper / Kok, Bogholder. |
 | product role | produktrolle | A fixed job in one Forspring product: Billing contact / Betalingskontakt. |
-| guest | gæst | An outside person who signs in to one app by an emailed link. |
+| guest | gæst | An outside person who signs in to one app by an emailed link. Only on access screens, and always with its role: "Gæst: Leverandør" / "Guest: Supplier" (in a restaurant or hotel app a guest is also a diner in the data). |
 | visitor | besøgende | Anyone using a public app or form, not signed in. |
-| Forspring staff | Forsprings medarbejdere | Our own people running the platform. Never "platform admin". |
+| Forspring staff | Forsprings medarbejdere | Our own people running the platform. Never shortened to "medarbejdere" (that reads as the customer's own staff), never "platform admin". |
 | agent | agent | Software acting for a person with a key; never more than that person. |
 | automation | automatisering | A flow that runs on its own; at most a member. |
 
-cos fixed "adgangsniveau" with its four levels and "rolle". The Danish for product role, guest, visitor
-and Forspring staff is lead-brand's proposal, pending cos.
+cos fixed the Danish (2026-11-19): adgangsniveau with its four levels, rolle, produktrolle, gæst,
+besøgende, Forsprings medarbejdere, agent and automatisering.
 
 - **Never "role" for a level.** Not "your role is Admin", not "rollen administrator". Say "adgangsniveauet
   administrator", "you are an admin", or "Owner in Salão Douro" beside a name.

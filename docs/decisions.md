@@ -1933,5 +1933,6 @@ Forspring account; a **role** ("rolle") is a job in AppSpring. The package calle
   refusal page's "Har rollen …" / "Det kræver rollen …" become "Har adgangsniveauet …" / "Det kræver
   adgangsniveauet …" ("Have the admin access level", "It needs the admin access level").
 - **The glossary** is in brand/voice.md §6 (Words for who may do what), English and Danish, with the
-  retired words. cos fixed "adgangsniveau", the four levels and "rolle"; the Danish for product role,
-  guest, visitor and Forspring staff is proposed there, pending cos.
+  retired words. cos fixed all the Danish: adgangsniveau and its four levels, rolle, produktrolle,
+  gæst (only on access screens, always with its role: "Gæst: Leverandør"), besøgende, Forsprings
+  medarbejdere (never shortened to "medarbejdere"), agent and automatisering.
