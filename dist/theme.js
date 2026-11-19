@@ -14,6 +14,7 @@
 // compiler with no file access.
 import { contrast, distance, fromOklch, luminance, mix, oklab, oklch } from "./color.js";
 import { PRODUCTS, ROLES } from "./family.js";
+import { safeLogo } from "./logo.js";
 const MODES = ["light", "dark"];
 /** The three levels (hub D-117): Forspring's look, the customer's brand, and later the Guideline level. */
 export const LEVELS = ["default", "brand", "guideline"];
@@ -162,24 +163,6 @@ function colorOrPair(v, path, s) {
     if (typeof v === "string" || (isObj(v) && v.colorSpace !== undefined))
         return { light: color(v, path, s), dark: undefined };
     return pair(v, path, s);
-}
-// A logo is an https: URL, a data:image/ URL of a raster or SVG type (an <img> runs no script from
-// either), or a relative path in the app's bundle. Nothing that can leave an attribute or name
-// another scheme: no javascript:, http:, protocol-relative //, backslash or .. segment.
-function safeLogo(v) {
-    if (v.length === 0 || v.length > 2048 || v !== v.trim())
-        return false;
-    if (/^https:\/\//i.test(v)) {
-        try {
-            return new URL(v).protocol === "https:" && !/["'<>\s\\]/.test(v);
-        }
-        catch {
-            return false;
-        }
-    }
-    if (/^data:/i.test(v))
-        return /^data:image\/(png|jpeg|gif|webp|avif|svg\+xml)[;,][^"'<>\s\\]*$/i.test(v);
-    return /^(\.\/)?[A-Za-z0-9_][A-Za-z0-9._~\-/]*$/.test(v) && !v.split("/").includes("..") && !v.includes("//");
 }
 // The tint is the soft surface (muted: table heads, hover rows, quiet sections), and the page is the
 // same hue moved by the family's own step from soft to page: lighter in light, darker in dark. The

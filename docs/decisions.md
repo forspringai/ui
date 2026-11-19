@@ -1871,3 +1871,18 @@ than one row holds, belong in the sidebar.
 
 **Breaking (visual only).** Products that relied on the side edge to find the chosen item now see the
 muted surface. No markup changes outside the new option.
+
+## D-47: An app frame's own brand in the bar (0.33.0, 2026-11-19)
+
+lead-ui, for AppSpring's default shell (#1724) after Peter's shell-nav decision: the app owns the bar
+up to the platform's corner, and its brand is the app's, never the product doll or Forspring's mark
+(hub D-98; lead-brand's app-zone rule; the Forspring lockup appears only in the platform's panels,
+the launcher and sign-in).
+
+- **`bar({ app: { name, logo? } })`** (and `shell`, which passes it on): the wordmark is the app's name,
+  and the logo, when given, is an `<img class="app-logo" alt="" referrerpolicy="no-referrer">` in the
+  doll's 28px box (`object-fit: contain`): a logo on an outside host never learns the page's URL. No doll is drawn. The link's accessible name is the app's name.
+- **The logo URL** follows the theme file's rule (an https: URL, a data:image/ URL of a raster or SVG
+  type, or a path in the app's bundle); anything else draws no image. The rule moved to `src/logo.ts`
+  so the theme check and the bar share one copy.
+- `productLabel` still names the product in the page title.

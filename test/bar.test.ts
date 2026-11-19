@@ -156,6 +156,38 @@ describe("the bar's nav (D-46)", () => {
   });
 });
 
+describe("an app's own brand (D-47)", () => {
+  test("the app's name and logo replace the doll; no Forspring or product mark", () => {
+    const out = String(bar({ ...opts, product: "appspring", productLabel: "AppSpring", app: { name: "Salão Douro", logo: "https://cdn.example.com/salao.png" } }));
+    expect(out).toContain('<a class="brand" href="/o/noon/" aria-label="Salão Douro"><img class="app-logo" src="https://cdn.example.com/salao.png" alt="" referrerpolicy="no-referrer"><span class="word">Salão Douro</span></a>');
+    expect(out).not.toContain('class="mark"');
+    expect(out).not.toContain("AppSpring");
+    expect(out).not.toContain("Forspring</span>");
+  });
+
+  test("no logo: the name alone", () => {
+    const out = String(bar({ ...opts, app: { name: "Salão Douro" } }));
+    expect(out).toContain('aria-label="Salão Douro"><span class="word">Salão Douro</span></a>');
+    expect(out).not.toContain("<img");
+  });
+
+  test.each(["javascript:alert(1)", "http://x.example/a.png", "//x.example/a.png", "../a.png", 'a.png" onerror="x', "data:text/html,<b>"])("an unsafe logo %s draws no image", (logo) => {
+    const out = String(bar({ ...opts, app: { name: "App", logo } }));
+    expect(out).not.toContain("<img");
+  });
+
+  test("the name is escaped", () => {
+    const out = String(bar({ ...opts, app: { name: evil } }));
+    expect(out).toContain(`<span class="word">${esc(evil)}</span>`);
+    expect(out).not.toContain(evil);
+  });
+
+  test("with nav: the app zone is the app's brand and its pages", () => {
+    const out = String(bar({ ...opts, org: undefined, products: undefined, app: { name: "Salão Douro" }, nav: { label: "Pages", toggle: "Menu", items: [{ label: "A", href: "/a", current: true }, { label: "B", href: "/b" }] } }));
+    expect(out).toMatch(/<span class="word">Salão Douro<\/span><\/a><nav class="bar-nav" aria-label="Pages">/);
+  });
+});
+
 test("orgPath keeps the place in another org", () => {
   expect(orgPath("/o/noon/datacore/runs", "spekta")).toBe("/o/spekta/datacore/runs");
   expect(orgPath("/o/noon", "spekta")).toBe("/o/spekta/");
