@@ -1844,3 +1844,30 @@ author owns what is seen. lead-brand's condition: Forspring's look stays the lib
   or `{ light, dark? }`). 0.31.0 shipped the runtime and the schema but the old type, so a typed caller
   (AppSpring's kernel, K2) had to pass an untyped object. The palette test is now typed `ThemeFile`, so
   tsc catches a drift.
+
+## D-46: No inline-start active bar; a small app's pages in the bar (0.32.0, 2026-11-19)
+
+Peter, via cos and lead-ui on the AppSpring default shell (#1724): he has rejected coloured left edge
+bars many times. D-44 took the edge off notices and kept it on "the selected row, menu item and tab";
+this takes it off those too, except the tab's rule, which runs along the foot.
+
+- **Gone:** the accent's inset edge at the side of `.switcher a[aria-current]` (the bar's menus),
+  `.menu-group a[aria-current]` (the sidebar and the fold), `details.menu-context a[aria-current]` and
+  `tr:target td:first-child`. Each chosen item now has the muted surface and weight 600; the row a link
+  points at keeps its muted surface.
+- **Kept:** a chosen tab and the bar's shown page have a 2px accent rule along their foot, the way a
+  link is underlined. The `.brand .sub` divider is a 1px rule in `--input`, not a marker.
+- **Guard:** `test/components.test.ts` allows an inset edge only with an x offset of 0, and an
+  inline-start border only as a 1px divider in `--input` or `--border`.
+
+**`bar({ nav })` and `shell({ nav })`.** A small app's pages as one row after the wordmark, the look
+lead-ui's shell settled on: each page a chrome-body link, the shown one `aria-current="page"` with the
+muted surface, ink, weight and the foot rule (the bar's only accent). With a nav the org and product
+switchers move to the bar's end beside the person, so the bar reads as the app's zone, then the
+platform's (lead-brand's two-zone rule for the AppSpring app bar, 2026-11-19). Fewer than two pages draw nothing. At 800px and under
+the row goes, and `shell()` folds the same pages under the nav's `toggle` with menuFrame's fold; the
+sidebar column is not drawn (`body.nav-in-bar`). A `menu` wins over `nav`: pages in groups, or more
+than one row holds, belong in the sidebar.
+
+**Breaking (visual only).** Products that relied on the side edge to find the chosen item now see the
+muted surface. No markup changes outside the new option.

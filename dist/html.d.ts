@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.31.1";
+export declare const VERSION = "0.32.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.31.1/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.32.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -124,6 +124,16 @@ export type UserMenu = {
         fields?: Record<string, string>;
     };
 };
+/** A small app's pages for the bar (D-46). */
+export type BarNav = {
+    /** The nav's accessible name: "Sider", "Pages". */
+    label: string;
+    /** The phone's fold, as Menu's `toggle`: "Menu". */
+    toggle: string;
+    items: (Link & {
+        current?: boolean | undefined;
+    })[];
+};
 /** The bar alone: for shell(), and for a rich app's own frame (the React Bar renders the same). */
 export type BarOptions = {
     lang: Lang;
@@ -137,6 +147,12 @@ export type BarOptions = {
     /** Where the wordmark leads, and its accessible name. Defaults to the org's home, /o/<org>/, with an org. */
     home?: string;
     homeLabel?: string;
+    /** A small app's pages in the bar, after the wordmark (D-46): one row, the shown page marked with the
+     *  muted surface and the accent along its foot. With it, the org and product switchers move to the
+     *  bar's end with the person (the app's zone, then the platform's). Fewer than two items draw nothing.
+     *  Hidden at 800px and under; shell() folds the same pages under `toggle`. For pages in groups, or more
+     *  than fit one row, use shell's `menu` (the sidebar) instead. */
+    nav?: BarNav;
     /** The org switcher (D-17). */
     org?: BarOrg;
     /** The product switcher (D-17). */
@@ -170,7 +186,8 @@ export type ShellOptions = BarOptions & {
     favicon?: Favicon | false;
     /** Stylesheets and anything else for <head>: raw(`<style>…</style>`) or <link> tags. */
     head?: Content;
-    /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). */
+    /** The product's own menu: a sidebar on a wide screen, folded under "Menu" on a phone (D-13). It
+     *  wins over `nav`: a product with both gets the sidebar and no pages in the bar. */
     menu?: Menu;
     /** A single card in a narrow column: sign-in and refusals. */
     narrow?: boolean;

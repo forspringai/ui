@@ -264,13 +264,9 @@
     white-space: nowrap;
   }
 
-  /* The row a link pointed at: neutral, with the accent as an edge rule (a row, not a notice). */
+  /* The row a link pointed at: the muted surface, no edge rule (D-46: no inline-start active bar). */
   tr:target td {
     background: var(--muted);
-  }
-
-  tr:target td:first-child {
-    box-shadow: inset 3px 0 0 var(--primary);
   }
 
   main {
@@ -485,9 +481,10 @@
     color: var(--foreground);
   }
 
+  /* The chosen item: the muted surface and weight, no edge rule (D-46). */
   .switcher a[aria-current] {
+    background: var(--muted);
     font-weight: 600;
-    box-shadow: inset 2px 0 0 var(--primary);
   }
 
   /* --- The bar's menus: org, products, the person (D-17) ------------------------------------ */
@@ -721,6 +718,52 @@
     overflow-wrap: anywhere;
   }
 
+  /* --- The bar's nav: a small app's pages in the bar (D-46) --------------------------------- */
+
+  /* bar({ nav }): the app's pages as one row after the wordmark. The shown page has the muted
+     surface, ink, weight and the accent as a rule along its foot, the bar's only accent. At 800px
+     and under the row goes; shell() folds the same pages under "Menu" (menuFrame). */
+  .bar-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+
+  .bar-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-8);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-button);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
+    color: var(--body-foreground);
+    text-decoration: none;
+  }
+
+  .bar-nav a:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .bar-nav a[aria-current] {
+    background: var(--muted);
+    color: var(--foreground);
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--primary);
+  }
+
+  /* The pages are in the bar, so the sidebar column goes; the fold stays for a narrow screen. */
+  .nav-in-bar .app {
+    display: block;
+  }
+
+  .nav-in-bar nav.menu-side {
+    display: none;
+  }
+
   /* --- Menu: a product's own sections, beside the page (D-13) -------------------------------- */
 
   /* With a menu the frame widens so the content keeps its measure beside it. The sidebar shows on a
@@ -806,13 +849,12 @@
     color: var(--foreground);
   }
 
-  /* Where the person is (the page, or the item it sits under): the muted surface, ink, and the
-     accent only as an edge rule (D-5). */
+  /* Where the person is (the page, or the item it sits under): the muted surface, ink and weight.
+     No edge rule at the item's side (D-46). */
   .menu-group a[aria-current] {
     background: var(--muted);
     color: var(--foreground);
     font-weight: 600;
-    box-shadow: inset 2px 0 0 var(--primary);
   }
 
   /* A menu item's icon (D-40): before the words, never shrunk, in the item's own colour. */
@@ -928,8 +970,8 @@
   }
 
   details.menu-context a[aria-current="true"] {
+    background: var(--muted);
     font-weight: 600;
-    box-shadow: inset 2px 0 0 var(--primary);
   }
 
   /* --- Crumbs: the page's parents, quiet, before its h1 ------------------------------------- */
@@ -2713,6 +2755,10 @@
   @media (max-width: 800px) {
     .app {
       display: block;
+    }
+
+    .bar-nav {
+      display: none;
     }
 
     nav.menu-side {
