@@ -96,14 +96,14 @@ export declare const REFUSALS: {
         readonly status: 403;
         readonly exit: 4;
         readonly da: {
-            readonly title: "Din rolle kan ikke det her";
-            readonly text: "Du er med i organisationen, men det kræver en anden rolle.";
-            readonly fix: "Bed en, der har rollen, om at gøre det eller give dig rollen.";
+            readonly title: "Dit adgangsniveau rækker ikke til det her";
+            readonly text: "Du er med i organisationen, men det kræver et højere adgangsniveau.";
+            readonly fix: "Bed en ejer eller administrator om at gøre det eller give dig et højere adgangsniveau.";
         };
         readonly en: {
-            readonly title: "Your role cannot do this";
-            readonly text: "You are in the organization, but this needs another role.";
-            readonly fix: "Ask someone with that role to do it, or to give you the role.";
+            readonly title: "Your access level cannot do this";
+            readonly text: "You are in the organization, but this needs a higher access level.";
+            readonly fix: "Ask an owner or admin to do it, or to raise your access level.";
         };
     };
     readonly org_mismatch: {

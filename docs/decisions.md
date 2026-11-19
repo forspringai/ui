@@ -1918,3 +1918,20 @@ lead-ui, moving AppSpring's shell (#1724) onto `bar({ app, nav })`: two things t
   logo. It is the app's own, the same icon as its tile in the launcher, so the bar and the tile agree.
   The logo wins over the icon; an unknown name draws nothing rather than throwing, since the name
   comes from an app's declaration.
+
+## D-50: Access level, not role (0.36.0, 2026-11-19)
+
+Peter adopted the access model (coordinator/areas/ui/access-model-fable.md, via lead-ui and cos): the
+four rungs Owner, Admin, Member and Viewer are an **access level** ("adgangsniveau"), set in the
+Forspring account; a **role** ("rolle") is a job in AppSpring. The package called the levels roles.
+
+- **Exports:** `AccessLevel`, `ACCESS_LEVELS` and `ACCESS_LEVEL_NAMES` (the same values and words as
+  before). `Role`, `ROLES` and `ROLE_NAMES` stay as deprecated aliases, so nothing breaks. `Org.role`
+  and the refusal reason `role_too_low` keep their names: they are wire and API names, not words.
+- **Words a person reads:** the `role_too_low` refusal now says "Dit adgangsniveau rækker ikke til det
+  her" / "Your access level cannot do this", "a higher access level", and to ask an owner or admin. The
+  refusal page's "Har rollen …" / "Det kræver rollen …" become "Har adgangsniveauet …" / "Det kræver
+  adgangsniveauet …" ("Have the admin access level", "It needs the admin access level").
+- **The glossary** is in brand/voice.md §6 (Words for who may do what), English and Danish, with the
+  retired words. cos fixed "adgangsniveau", the four levels and "rolle"; the Danish for product role,
+  guest, visitor and Forspring staff is proposed there, pending cos.

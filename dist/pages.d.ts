@@ -27,7 +27,7 @@ export type ChooseOrgOptions = {
      *  listed first and drawn as the primary action. */
     lastHere?: string;
 };
-/** Signed in, several orgs with this product and none in the URL: each org with your role and when you last used it. */
+/** Signed in, several orgs with this product and none in the URL: each org with your access level and when you last used it. */
 export declare function chooseOrgPage(o: ChooseOrgOptions): StandardPage;
 export type NoOrgOptions = {
     lang: Lang;
@@ -58,7 +58,7 @@ export type RefusedOptions = {
     people?: Person[];
     /** org_suspended: the account's billing page for the org. */
     billingHref?: string;
-    /** role_too_low: the role it needs. */
+    /** role_too_low: the access level it needs (the reason code keeps its old name). */
     roleNeeded?: Org["role"];
     /** org_mismatch: the organisation the key or token is for. */
     credentialOrg?: string;

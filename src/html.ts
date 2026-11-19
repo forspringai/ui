@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.35.0";
+export const VERSION = "0.36.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -188,22 +188,34 @@ export function faviconLinks(f: Favicon): Html {
 
 export type Link = { label: string; href: string; lang?: Lang };
 
-/** The suite's one role set (hub D-96), a person's place in an organisation. */
-export type Role = "owner" | "admin" | "member" | "viewer";
-export const ROLES: readonly Role[] = ["owner", "admin", "member", "viewer"];
+/** The suite's four access levels (hub D-96; Peter's access model, 2026-11-19, D-50): how much of the
+ *  platform a person may run, set in the Forspring account. A ladder, one per person per org. Not a
+ *  role: a role is a job in AppSpring (Chef, Bookkeeper), and the two never share a list. */
+export type AccessLevel = "owner" | "admin" | "member" | "viewer";
+export const ACCESS_LEVELS: readonly AccessLevel[] = ["owner", "admin", "member", "viewer"];
 
-/** The roles as words inside a sentence or beside a name, as the account writes them. */
-export const ROLE_NAMES: Record<Lang, Record<Role, string>> = {
+/** The levels as words inside a sentence or beside a name, as the account writes them: lowercase in
+ *  running text, capitalised as a label (Ejer, Administrator, Medlem, Læser). The word for the ladder
+ *  itself is "adgangsniveau" / "access level", never "rolle" / "role". */
+export const ACCESS_LEVEL_NAMES: Record<Lang, Record<AccessLevel, string>> = {
   da: { owner: "ejer", admin: "administrator", member: "medlem", viewer: "læser" },
   en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
 };
 
-/** An organisation as the bar and the pages show it: the customer's name and your role there. */
+/** @deprecated Use `AccessLevel` (D-50): these are access levels, not roles. */
+export type Role = AccessLevel;
+/** @deprecated Use `ACCESS_LEVELS` (D-50). */
+export const ROLES: readonly AccessLevel[] = ACCESS_LEVELS;
+/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
+export const ROLE_NAMES: Record<Lang, Record<AccessLevel, string>> = ACCESS_LEVEL_NAMES;
+
+/** An organisation as the bar and the pages show it: the customer's name and your access level there
+ *  (the field keeps its old name, `role`). */
 export type Org = { slug: string; name: string; role: Role };
 
 /** The bar's org switcher (D-17). */
 export type BarOrg = {
-  /** The organisation this page is in. Its role shows in the user menu's head. */
+  /** The organisation this page is in. Your access level there shows in the user menu's head. */
   current: Org;
   /** Every organisation the person has this product in, the current one too. The switcher shows only
    *  when there is more than one; `href` overrides the link that keeps the person's place. */
@@ -221,7 +233,7 @@ export type BarProducts = {
   accountHref: string;
 };
 
-/** The user menu: an avatar button with the person, their role here, the account, language, sign out. */
+/** The user menu: an avatar button with the person, their access level here, the account, language, sign out. */
 export type UserMenu = {
   name: string;
   email: string;
@@ -369,7 +381,7 @@ function orgSwitcher(o: BarOrg, t: (typeof BAR)[Lang], lang: Lang): Html {
   if (orgs.length < 2) return html``;
   const items = orgs.map(
     (g) =>
-      html`<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ROLE_NAMES[lang][g.role]}</span></a></li>`,
+      html`<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ACCESS_LEVEL_NAMES[lang][g.role]}</span></a></li>`,
   );
   const foot = o.peopleHref ? html`<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
   return html`<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
@@ -384,7 +396,7 @@ function productSwitcher(p: BarProducts, t: (typeof BAR)[Lang], org: Org | undef
 }
 
 function userMenu(u: UserMenu, t: (typeof BAR)[Lang], lang: Lang, org: Org | undefined): Html {
-  const role = org ? html`<span class="user-role">${t.roleIn(ROLE_NAMES[lang][org.role], org.name)}</span>` : "";
+  const role = org ? html`<span class="user-role">${t.roleIn(ACCESS_LEVEL_NAMES[lang][org.role], org.name)}</span>` : "";
   const agents = u.agentsHref ? html`<li><a href="${safeHref(u.agentsHref)}">${t.agents(org?.name)}</a></li>` : "";
   const langs = u.languages
     ? html`<p class="user-lang"><span class="visually-hidden">${t.language}: </span>${(["da", "en"] as const).map(

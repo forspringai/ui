@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.35.0";
+export const VERSION = "0.36.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -142,12 +142,18 @@ export function faviconFor(product, base = DEFAULT_BRAND_BASE) {
 export function faviconLinks(f) {
     return html `${f.png32 ? html `<link rel="icon" type="image/png" sizes="32x32" href="${safeHref(f.png32)}">` : ""}${f.png16 ? html `<link rel="icon" type="image/png" sizes="16x16" href="${safeHref(f.png16)}">` : ""}<link rel="icon" type="image/svg+xml" href="${safeHref(f.svg)}">${f.appleTouch ? html `<link rel="apple-touch-icon" sizes="180x180" href="${safeHref(f.appleTouch)}">` : ""}${f.manifest ? html `<link rel="manifest" href="${safeHref(f.manifest)}">` : ""}`;
 }
-export const ROLES = ["owner", "admin", "member", "viewer"];
-/** The roles as words inside a sentence or beside a name, as the account writes them. */
-export const ROLE_NAMES = {
+export const ACCESS_LEVELS = ["owner", "admin", "member", "viewer"];
+/** The levels as words inside a sentence or beside a name, as the account writes them: lowercase in
+ *  running text, capitalised as a label (Ejer, Administrator, Medlem, Læser). The word for the ladder
+ *  itself is "adgangsniveau" / "access level", never "rolle" / "role". */
+export const ACCESS_LEVEL_NAMES = {
     da: { owner: "ejer", admin: "administrator", member: "medlem", viewer: "læser" },
     en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
 };
+/** @deprecated Use `ACCESS_LEVELS` (D-50). */
+export const ROLES = ACCESS_LEVELS;
+/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
+export const ROLE_NAMES = ACCESS_LEVEL_NAMES;
 // The bar's words are the suite's, not a product's: every product's bar says the same (D-17).
 const BAR = {
     da: {
@@ -203,7 +209,7 @@ function orgSwitcher(o, t, lang) {
     const orgs = o.orgs ?? [];
     if (orgs.length < 2)
         return html ``;
-    const items = orgs.map((g) => html `<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ROLE_NAMES[lang][g.role]}</span></a></li>`);
+    const items = orgs.map((g) => html `<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ACCESS_LEVEL_NAMES[lang][g.role]}</span></a></li>`);
     const foot = o.peopleHref ? html `<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
     return html `<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
 }
@@ -212,7 +218,7 @@ function productSwitcher(p, t, org) {
     return html `<details class="switcher bar-menu product-switcher"><summary>${t.products}</summary><div class="bar-panel"><p class="bar-panel-label">${org ? t.has(org.name) : t.products}</p><ul>${items}</ul><p class="bar-panel-foot"><a href="${safeHref(p.accountHref)}">${org ? t.allOf(org.name) : t.account}</a></p></div></details>`;
 }
 function userMenu(u, t, lang, org) {
-    const role = org ? html `<span class="user-role">${t.roleIn(ROLE_NAMES[lang][org.role], org.name)}</span>` : "";
+    const role = org ? html `<span class="user-role">${t.roleIn(ACCESS_LEVEL_NAMES[lang][org.role], org.name)}</span>` : "";
     const agents = u.agentsHref ? html `<li><a href="${safeHref(u.agentsHref)}">${t.agents(org?.name)}</a></li>` : "";
     const langs = u.languages
         ? html `<p class="user-lang"><span class="visually-hidden">${t.language}: </span>${["da", "en"].map((l) => html `<a href="${safeHref(u.languages[l])}" lang="${l}" hreflang="${l}"${current(l === lang)}>${LANG_NAMES[l]}</a>`)}</p>`

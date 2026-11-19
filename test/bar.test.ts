@@ -289,7 +289,7 @@ describe("the standard pages", () => {
     const off = String(refusedPage({ lang: "en", reason: "product_off", org: "Noon", people: [{ name: "Jonas", email: "jonas@example.com" }] }).body);
     expect(off).toContain('<p class="std-label">Admins who can switch it on</p><ul class="std-people"><li><span class="name">Jonas</span> <a href="mailto:jonas@example.com">jonas@example.com</a></li></ul>');
     expect(off).toContain("Organization: Noon");
-    expect(String(refusedPage({ lang: "da", reason: "role_too_low", roleNeeded: "admin" }).body)).toContain("Det kræver rollen administrator.");
+    expect(String(refusedPage({ lang: "da", reason: "role_too_low", roleNeeded: "admin" }).body)).toContain("Det kræver adgangsniveauet administrator.");
     expect(String(refusedPage({ lang: "en", reason: "org_mismatch", credentialOrg: "Spekta" }).body)).toContain("The key is for Spekta.");
     expect(String(refusedPage({ lang: "en", reason: "not_signed_in", signInHref: "/login", command: "dataspring auth login" }).body)).toContain('<a class="button" href="/login">Sign in</a></div><p class="fine">From an agent: <code>dataspring auth login</code></p>');
     // not_a_member must not tell an org that exists from one that does not.
