@@ -37,7 +37,8 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   to the end with the person, and a phone folds the same pages under "Menu". One page needs no nav.
   `narrow: true` is for one card alone: sign-in, a refusal, a confirm page.
 - **`app`** (on `bar()` and `shell()`) is an app frame's own brand, for AppSpring's apps: the app's
-  name as the wordmark and its logo, if any, where the doll would be (D-47). An app's bar never shows
+  name as the wordmark and its logo, if any, where the doll would be (D-47); without a logo, its
+  catalog `icon` (a ui icon name the app's author chose) in ink (D-49). An app's bar never shows
   the product's doll or Forspring's mark; the platform's things go in the bar's end.
 - **`bar()`** is the bar alone, for a rich app that draws its own frame. Don't build a bar of your own
   or reword its menus: the org switcher, the product switcher and "Log ud af Forspring" are the same in

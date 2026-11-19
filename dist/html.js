@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.34.0";
+export const VERSION = "0.35.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -235,7 +235,7 @@ export function bar(o) {
     const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
     const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
     const brand = o.app
-        ? html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html `<img class="app-logo" src="${o.app.logo}" alt="" referrerpolicy="no-referrer">` : ""}<span class="word">${o.app.name}</span></a>`
+        ? html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${appMark(o.app)}<span class="word">${o.app.name}</span></a>`
         : html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
     const switchers = html `${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
     const nav = barNav(o.nav);
@@ -244,17 +244,27 @@ export function bar(o) {
         ? html `<header class="bar"><div class="wrap bar-inner">${brand}${nav}${o.controls}<span class="spacer"></span>${switchers}${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`
         : html `<header class="bar"><div class="wrap bar-inner">${brand}${switchers}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
 }
+/** The app's logo when it is safe, else its catalog icon when ui has one by that name, else nothing (D-47, D-49). */
+function appMark(a) {
+    if (a.logo !== undefined && safeLogo(a.logo))
+        return html `<img class="app-logo" src="${a.logo}" alt="" referrerpolicy="no-referrer">`;
+    if (a.icon !== undefined && Object.hasOwn(ICON_PATHS, a.icon))
+        return html `<span class="app-icon">${icon(a.icon)}</span>`;
+    return "";
+}
 /** The pages to draw in the bar: two or more (one page needs no nav). */
 const navItems = (n) => (n && n.items.length >= 2 ? n.items : undefined);
 function barNav(n) {
     const items = navItems(n);
     if (!n || !items)
         return undefined;
-    return html `<nav class="bar-nav" aria-label="${n.label}"><ul>${items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}</a></li>`)}</ul></nav>`;
+    return html `<nav class="bar-nav" aria-label="${n.label}"><ul>${items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}${i.badge ? menuBadge(i.badge) : ""}</a></li>`)}</ul></nav>`;
 }
 /** All or none per group (D-39 point 6): icons only when every item has one and no two match. */
 const groupIcons = (items) => items.length > 0 && items.every((i) => i.icon !== undefined) && new Set(items.map((i) => i.icon)).size === items.length;
 const signalMark = (s) => html `<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
+/** A menu or bar-nav item's count: a signal mark when given, the text, and words for a screen reader. */
+const menuBadge = (b) => html `<span class="menu-badge">${b.signal ? signalMark(b.signal) : ""}${b.text}${b.label ? html `<span class="visually-hidden"> ${b.label}</span>` : ""}</span>`;
 /** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
 export function menuBody(m) {
     const ctx = m.context;
@@ -267,9 +277,7 @@ export function menuBody(m) {
     const groups = m.groups.map((g) => {
         const icons = groupIcons(g.items);
         return html `<div class="menu-group">${g.label ? html `<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
-            const badge = i.badge
-                ? html `<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html `<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
-                : "";
+            const badge = i.badge ? menuBadge(i.badge) : "";
             return html `<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}>${icons ? icon(i.icon) : ""}<span class="menu-text">${i.label}</span>${badge}</a></li>`;
         })}</ul></div>`;
     });

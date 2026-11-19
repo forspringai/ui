@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.34.0";
+export const VERSION = "0.35.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -242,7 +242,8 @@ export type BarNav = {
   label: string;
   /** The phone's fold, as Menu's `toggle`: "Menu". */
   toggle: string;
-  items: (Link & { current?: boolean | undefined })[];
+  /** `badge` is the menu item's count ("5"), the same look as in the sidebar and the fold (D-49). */
+  items: (Link & { current?: boolean | undefined; badge?: MenuItem["badge"] })[];
 };
 
 /** The bar alone: for shell(), and for a rich app's own frame (the React Bar renders the same). */
@@ -261,9 +262,10 @@ export type BarOptions = {
   /** An app's own brand, for an app frame (AppSpring): the app's name as the wordmark and its logo, if
    *  any, in place of the product's doll; no doll and no Forspring mark (hub D-98; lead-brand's app-zone
    *  rule). `logo` is an https: URL, a data:image/ URL or a path in the app's bundle (the theme file's
-   *  rule); any other value draws no logo. The logo is decoration beside the name (alt ""). `productLabel`
-   *  still names the product in the page title. */
-  app?: { name: string; logo?: string | undefined };
+   *  rule); any other value draws no logo. The logo is decoration beside the name (alt ""). `icon` is the
+   *  app's own catalog icon, a ui icon name its author chose, drawn in ink when there is no logo; an
+   *  unknown name draws nothing (D-49). `productLabel` still names the product in the page title. */
+  app?: { name: string; logo?: string | undefined; icon?: string | undefined };
   /** A small app's pages in the bar, after the wordmark (D-46): one row, the shown page marked with the
    *  muted surface and the accent along its foot. With it, the org and product switchers move to the
    *  bar's end with the person (the app's zone, then the platform's). Fewer than two items draw nothing.
@@ -410,7 +412,7 @@ export function bar(o: BarOptions): Html {
   const user = o.user ? html`<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
   const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
   const brand = o.app
-    ? html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html`<img class="app-logo" src="${o.app.logo}" alt="" referrerpolicy="no-referrer">` : ""}<span class="word">${o.app.name}</span></a>`
+    ? html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${appMark(o.app)}<span class="word">${o.app.name}</span></a>`
     : html`<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html`<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html`<span class="word">${o.productLabel}</span>`}</a>`;
   const switchers = html`${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
   const nav = barNav(o.nav);
@@ -420,6 +422,13 @@ export function bar(o: BarOptions): Html {
     : html`<header class="bar"><div class="wrap bar-inner">${brand}${switchers}${o.controls}<span class="spacer"></span>${user}${o.userMenu ? userMenu(o.userMenu, t, o.lang, org) : ""}</div></header>`;
 }
 
+/** The app's logo when it is safe, else its catalog icon when ui has one by that name, else nothing (D-47, D-49). */
+function appMark(a: NonNullable<BarOptions["app"]>): Html | "" {
+  if (a.logo !== undefined && safeLogo(a.logo)) return html`<img class="app-logo" src="${a.logo}" alt="" referrerpolicy="no-referrer">`;
+  if (a.icon !== undefined && Object.hasOwn(ICON_PATHS, a.icon)) return html`<span class="app-icon">${icon(a.icon as IconName)}</span>`;
+  return "";
+}
+
 /** The pages to draw in the bar: two or more (one page needs no nav). */
 const navItems = (n: BarNav | undefined) => (n && n.items.length >= 2 ? n.items : undefined);
 
@@ -427,7 +436,7 @@ function barNav(n: BarNav | undefined): Html | undefined {
   const items = navItems(n);
   if (!n || !items) return undefined;
   return html`<nav class="bar-nav" aria-label="${n.label}"><ul>${items.map(
-    (i) => html`<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}</a></li>`,
+    (i) => html`<li><a href="${safeHref(i.href)}"${current(i.current, "page")}>${i.label}${i.badge ? menuBadge(i.badge) : ""}</a></li>`,
   )}</ul></nav>`;
 }
 
@@ -462,6 +471,10 @@ export type Menu = {
 
 const signalMark = (s: Signal): Html => html`<span class="${`signal-mark ${s}`}" aria-hidden="true"></span>`;
 
+/** A menu or bar-nav item's count: a signal mark when given, the text, and words for a screen reader. */
+const menuBadge = (b: NonNullable<MenuItem["badge"]>): Html =>
+  html`<span class="menu-badge">${b.signal ? signalMark(b.signal) : ""}${b.text}${b.label ? html`<span class="visually-hidden"> ${b.label}</span>` : ""}</span>`;
+
 /** The menu's contents: the context (and its switcher) and the groups, for a product that draws its own frame. */
 export function menuBody(m: Menu): Html {
   const ctx = m.context;
@@ -476,9 +489,7 @@ export function menuBody(m: Menu): Html {
   const groups = m.groups.map((g) => {
     const icons = groupIcons(g.items);
     return html`<div class="menu-group">${g.label ? html`<p class="menu-label">${g.label}</p>` : ""}<ul>${g.items.map((i) => {
-      const badge = i.badge
-        ? html`<span class="menu-badge">${i.badge.signal ? signalMark(i.badge.signal) : ""}${i.badge.text}${i.badge.label ? html`<span class="visually-hidden"> ${i.badge.label}</span>` : ""}</span>`
-        : "";
+      const badge = i.badge ? menuBadge(i.badge) : "";
       return html`<li><a href="${safeHref(i.href)}"${raw(i.current === "parent" ? ' aria-current="true"' : i.current ? ' aria-current="page"' : "")}>${icons ? icon(i.icon!) : ""}<span class="menu-text">${i.label}</span>${badge}</a></li>`;
     })}</ul></div>`;
   });
