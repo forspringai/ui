@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.36.0";
+export const VERSION = "0.37.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -202,16 +202,9 @@ export const ACCESS_LEVEL_NAMES: Record<Lang, Record<AccessLevel, string>> = {
   en: { owner: "owner", admin: "admin", member: "member", viewer: "viewer" },
 };
 
-/** @deprecated Use `AccessLevel` (D-50): these are access levels, not roles. */
-export type Role = AccessLevel;
-/** @deprecated Use `ACCESS_LEVELS` (D-50). */
-export const ROLES: readonly AccessLevel[] = ACCESS_LEVELS;
-/** @deprecated Use `ACCESS_LEVEL_NAMES` (D-50). */
-export const ROLE_NAMES: Record<Lang, Record<AccessLevel, string>> = ACCESS_LEVEL_NAMES;
-
 /** An organisation as the bar and the pages show it: the customer's name and your access level there
  *  (the field keeps its old name, `role`). */
-export type Org = { slug: string; name: string; role: Role };
+export type Org = { slug: string; name: string; role: AccessLevel };
 
 /** The bar's org switcher (D-17). */
 export type BarOrg = {

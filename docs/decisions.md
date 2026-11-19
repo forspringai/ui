@@ -1936,3 +1936,18 @@ Forspring account; a **role** ("rolle") is a job in AppSpring. The package calle
   retired words. cos fixed all the Danish: adgangsniveau and its four levels, rolle, produktrolle,
   gæst (only on access screens, always with its role: "Gæst: Leverandør"), besøgende, Forsprings
   medarbejdere (never shortened to "medarbejdere"), agent and automatisering.
+
+## D-51: The old Role names are removed (0.37.0, 2026-11-19)
+
+cos: AppSpring will next rename its "group" to "role" (a job, per D-50). If `@forspring/ui` still
+exported `Role`, `ROLES` and `ROLE_NAMES` for the access levels, the old name would come back with a new
+meaning in the same codebase. So the deprecated aliases from 0.36.0 go now, before that rename.
+
+- **Breaking.** `@forspring/ui/html` no longer exports `Role`, `ROLES` or `ROLE_NAMES` (nor do
+  `pages` and `react`, which re-use them). Use `AccessLevel`, `ACCESS_LEVELS` and `ACCESS_LEVEL_NAMES`:
+  same values, same words. `Org.role` and the reason code `role_too_low` keep their wire names.
+- **Who it touches:** at the time of writing, one import: SiteSpring's `workers/api/src/console.ts`
+  (`type Role`, pinned at 0.28.0), a one-word change when it bumps. AppSpring, the account, DataSpring,
+  PulseSpring and Spring import none of the three.
+- **Not touched:** `@forspring/ui/theme`'s `Role` is a colour role (background, primary, chart-1), a
+  design-token word, unrelated to access.

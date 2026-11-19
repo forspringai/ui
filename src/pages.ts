@@ -150,7 +150,7 @@ export type RefusedOptions = {
   /** org_required, not_a_member: your own organisations. */
   orgs?: (Org & { href: string })[];
   /** Who can fix it: admins (product_off, not_a_member), owners (org_suspended), people with the
-   *  role (role_too_low). The account names up to three. */
+   *  access level (role_too_low). The account names up to three. */
   people?: Person[];
   /** org_suspended: the account's billing page for the org. */
   billingHref?: string;

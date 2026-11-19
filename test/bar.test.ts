@@ -368,3 +368,12 @@ describe("the React wrappers render the same markup", () => {
     same(createElement(Refused, { lang: "da", reason: "account_unavailable", ref: "4bf92f35" }), refusedPage({ lang: "da", reason: "account_unavailable", ref: "4bf92f35" }).body);
   });
 });
+
+// D-51: the access levels are never exported as "roles" again; AppSpring's role is a job (D-50).
+test("@forspring/ui/html exports the access levels, and no Role, ROLES or ROLE_NAMES", async () => {
+  const mod: Record<string, unknown> = await import("../src/html.ts");
+  expect(Object.keys(mod)).toEqual(expect.arrayContaining(["ACCESS_LEVELS", "ACCESS_LEVEL_NAMES"]));
+  for (const old of ["ROLES", "ROLE_NAMES"]) expect(mod).not.toHaveProperty(old);
+  const dts = (await import("node:fs")).readFileSync(new URL("../dist/html.d.ts", import.meta.url), "utf8");
+  expect(dts).not.toMatch(/export (type|declare const) (Role|ROLES|ROLE_NAMES)\b/);
+});
