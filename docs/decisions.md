@@ -1880,8 +1880,8 @@ up to the platform's corner, and its brand is the app's, never the product doll 
 the launcher and sign-in).
 
 - **`bar({ app: { name, logo? } })`** (and `shell`, which passes it on): the wordmark is the app's name,
-  and the logo, when given, is an `<img class="app-logo" alt="">` in the doll's 28px box
-  (`object-fit: contain`). No doll is drawn. The link's accessible name is the app's name.
+  and the logo, when given, is an `<img class="app-logo" alt="" referrerpolicy="no-referrer">` in the
+  doll's 28px box (`object-fit: contain`): a logo on an outside host never learns the page's URL. No doll is drawn. The link's accessible name is the app's name.
 - **The logo URL** follows the theme file's rule (an https: URL, a data:image/ URL of a raster or SVG
   type, or a path in the app's bundle); anything else draws no image. The rule moved to `src/logo.ts`
   so the theme check and the bar share one copy.

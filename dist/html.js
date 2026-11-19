@@ -235,7 +235,7 @@ export function bar(o) {
     const user = o.user ? html `<span class="who">${o.user.email}</span>${o.user.signOut}` : "";
     const home = o.home ?? (org ? `/o/${encodeURIComponent(org.slug)}/` : "/");
     const brand = o.app
-        ? html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html `<img class="app-logo" src="${o.app.logo}" alt="">` : ""}<span class="word">${o.app.name}</span></a>`
+        ? html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? o.app.name}">${o.app.logo !== undefined && safeLogo(o.app.logo) ? html `<img class="app-logo" src="${o.app.logo}" alt="" referrerpolicy="no-referrer">` : ""}<span class="word">${o.app.name}</span></a>`
         : html `<a class="brand" href="${safeHref(home)}" aria-label="${o.homeLabel ?? (own ? `Forspring ${o.productLabel}` : o.productLabel)}">${mark()}${own ? html `<span class="word">Forspring</span> <span class="sub">${o.productLabel}</span>` : html `<span class="word">${o.productLabel}</span>`}</a>`;
     const switchers = html `${o.org ? orgSwitcher(o.org, t, o.lang) : ""}${o.products ? productSwitcher(o.products, t, org) : ""}${legacy}`;
     const nav = barNav(o.nav);

@@ -159,7 +159,7 @@ describe("the bar's nav (D-46)", () => {
 describe("an app's own brand (D-47)", () => {
   test("the app's name and logo replace the doll; no Forspring or product mark", () => {
     const out = String(bar({ ...opts, product: "appspring", productLabel: "AppSpring", app: { name: "Salão Douro", logo: "https://cdn.example.com/salao.png" } }));
-    expect(out).toContain('<a class="brand" href="/o/noon/" aria-label="Salão Douro"><img class="app-logo" src="https://cdn.example.com/salao.png" alt=""><span class="word">Salão Douro</span></a>');
+    expect(out).toContain('<a class="brand" href="/o/noon/" aria-label="Salão Douro"><img class="app-logo" src="https://cdn.example.com/salao.png" alt="" referrerpolicy="no-referrer"><span class="word">Salão Douro</span></a>');
     expect(out).not.toContain('class="mark"');
     expect(out).not.toContain("AppSpring");
     expect(out).not.toContain("Forspring</span>");
