@@ -252,3 +252,16 @@ test("the strip's bold lead inherits the strip's ink", () => {
   expect(i).toBeGreaterThan(-1);
   expect(code.slice(i, code.indexOf("}", i))).toContain("color: inherit;");
 });
+
+// D-52: the removable tag's x is a 24 px target, and on a phone the touch floor like every button.
+test("the removable tag's x is 24 px, and the touch floor on a phone", () => {
+  const block = (from: number, sel: string) => {
+    const i = code.indexOf(`${sel} {`, from);
+    expect(i, sel).toBeGreaterThan(-1);
+    return code.slice(i, code.indexOf("}", i));
+  };
+  expect(block(0, ".tag-remove")).toContain("width: var(--space-6);");
+  expect(block(0, ".tag-remove")).toContain("min-height: var(--space-6);");
+  const phone = code.lastIndexOf("@media (max-width: 560px)");
+  expect(block(phone, ".tag-remove")).toContain("width: var(--control-touch);");
+});

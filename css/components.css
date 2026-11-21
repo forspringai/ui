@@ -1969,6 +1969,35 @@
     border-color: var(--danger);
   }
 
+  /* A removable tag (D-52): its x is a 24 px round button (WCAG 2.5.8) at the pill's end, so the pill
+     is the x's height and its border. The x takes the tag's colour; pointed at, it gets the muted
+     fill and the ink. The focus ring is the global one. */
+  .tag.removable {
+    padding-inline-end: 0;
+    gap: var(--space-1);
+  }
+
+  .tag-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: var(--space-6);
+    min-height: var(--space-6);
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+  }
+
+  .tag-remove:hover {
+    background: var(--muted);
+    border-color: transparent;
+    color: var(--foreground);
+  }
+
   /* --- States: empty, loading, failed (Canonify DESIGN-SURFACE §3) ------------------------- */
 
   /* A state takes the footprint of the list or table it stands in for, so nothing jumps when the
@@ -3093,6 +3122,12 @@
 
     .tooltip-trigger {
       min-width: var(--control-touch);
+    }
+
+    /* A removable tag's x is a button here too: the touch floor's box (the rule below gives the
+       height), and the pill grows round it. */
+    .tag-remove {
+      width: var(--control-touch);
     }
 
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */

@@ -139,6 +139,11 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 - **`tag()`** is a short label on a row: a category, "Ny", "Denne enhed", or a status word with a
   status tone ("Aktiv", "Spærret"). Not for a monitored state (that is `signal()`) and not clickable.
   `"primary"` only for "new" or "current", never for a status.
+- **`removableTag()`** is a tag a person may take away right there: a role on a person, a filter
+  term. Its x is a submit (no script), a 24 px target that grows to the touch floor on a phone (D-52).
+  `remove.label` is its only name, verb first and naming both sides: "Remove Chef from Carla Ferreira" /
+  "Fjern Kok fra Carla Ferreira", never "Remove" alone. Put it in the form that removes, or name that
+  form with `remove.form`. A tag that only shows something stays `tag()`.
 - Status text, plain words in a sentence or a meta line, is the default; reach for a tag or a signal
   only when the eye must find it in a list. Every tone and signal carries its word; colour alone says
   nothing (brand §9).

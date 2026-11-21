@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.37.0";
+export declare const VERSION = "0.38.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.37.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.38.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -427,6 +427,30 @@ export declare function signal(text: Content, s: Signal): Html;
 /** Where the page sits: its parents as links, before the h1. The page itself is the h1, not a crumb. */
 export declare function crumbs(label: string, items: Link[]): Html;
 export declare function tag(text: Content, tone?: "primary" | "success" | "warning" | "danger"): Html;
+export type RemovableTagOptions = {
+    text: Content;
+    tone?: "primary" | "success" | "warning" | "danger";
+    /** The remove button: a submit, so it works with no script. Put the tag in the form that removes it,
+     *  or name that form with `form`. */
+    remove: {
+        /** What the button does, verb first, naming the thing and whom it is taken from: "Remove Chef from
+         *  Carla Ferreira" / "Fjern Kok fra Carla Ferreira". It is the button's only name (the x is hidden). */
+        label: string;
+        name?: string;
+        value?: string;
+        /** The id of the form it submits, when the tag sits outside it. */
+        form?: string;
+        /** Where it submits, when that is not the form's own action. */
+        formAction?: string;
+    };
+};
+/**
+ * A tag with a remove button inside it (D-52): "Chef" with an x that takes the role away. The button
+ * is a 24 px target (WCAG 2.5.8) with the focus ring, and grows to the touch floor on a phone like
+ * every other button. Use it where a person may take the thing away right there; a tag that only
+ * shows something stays tag().
+ */
+export declare function removableTag(o: RemovableTagOptions): Html;
 export declare function card(body: Content): Html;
 export type ListItem = {
     name: Content;

@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { actions, approval, button, card, confirmDestructive, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { actions, approval, button, card, confirmDestructive, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, removableTag, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -320,6 +320,7 @@ ${notice({ signal: "ok", title: "Alt kører", text: "Alle 14 tjek har meldt sig 
 <p class="fine">Ingen knap er slået fra (D-23). Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
 <div class="demo-row">${button({ label: "Tag imod", small: true })}${button({ label: "Afslå", variant: "ghost", small: true })}${button({ label: "Fjern", variant: "danger", small: true })}</div>
 <div class="demo-row">${tag("platform")}${tag("Denne enhed")}${tag("Ny", "primary")}${tag("Aktiv", "success")}${tag("Afventer", "warning")}${tag("Spærret", "danger")}</div>
+<div class="demo-row">${removableTag({ text: "Kok", remove: { label: "Fjern Kok fra Carla Ferreira", name: "role", value: "kok" } })}${removableTag({ text: "Bogholder", remove: { label: "Fjern Bogholder fra Carla Ferreira", name: "role", value: "bogholder" } })}</div>
 </section>
 
 <section><h2>Værktøjslinje</h2>

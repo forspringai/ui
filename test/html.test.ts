@@ -3,7 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import * as tokens from "../dist/tokens.js";
 import type { Product } from "../src/html.ts";
-import { button, confirmDestructive, crumbs, errorRef, errorSummary, esc, field, html, list, menuBody, menuFrame, notice, raw, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
+import { button, confirmDestructive, crumbs, errorRef, errorSummary, esc, field, html, list, menuBody, menuFrame, notice, raw, removableTag, safeHref, shell, signal, state, switchButton, table, tag, type Menu } from "../src/html.ts";
 import { ErrorSummary } from "../src/react.ts";
 
 const evil = `<script>alert("x")</script>&'`;
@@ -37,6 +37,7 @@ describe("escaping", () => {
       field({ label: evil, name: "t", control: "textarea", value: evil }),
       notice({ tone: "error", title: evil, text: evil }),
       tag(evil),
+      removableTag({ text: evil, tone: "success", remove: { label: evil, name: evil, value: evil, form: evil, formAction: `/x?a=${evil}` } }),
       list([{ name: evil, meta: evil, action: evil }]),
       table({ label: evil, caption: evil, columns: [{ label: evil }], rows: [[evil]] }),
       switchButton({ checked: true, label: evil, on: evil }),
@@ -283,5 +284,26 @@ describe("forms and errors match the usage guidance (D-30)", () => {
     for (const lang of ["da", "en"] as const) expect(renderToStaticMarkup(createElement(ErrorSummary, { lang, errors: ERRORS }))).toBe(String(errorSummary({ lang, errors: ERRORS })));
     expect(renderToStaticMarkup(createElement(ErrorSummary, { lang: "en", errors: [{ field: evil, message: evil }], title: evil }))).toBe(String(errorSummary({ lang: "en", errors: [{ field: evil, message: evil }], title: evil })));
     expect(renderToStaticMarkup(createElement(ErrorSummary, { lang: "da", errors: [] }))).toBe("");
+  });
+});
+
+// D-52: the removable tag's x is a submit named by its words, never a bare glyph.
+describe("removableTag()", () => {
+  test("the tag holds its words and a submit named by the remove label, the x hidden", () => {
+    const t = String(removableTag({ text: "Chef", remove: { label: "Remove Chef from Carla Ferreira", name: "role", value: "chef" } }));
+    expect(t).toMatch(/^<span class="tag removable">Chef<button class="tag-remove" type="submit" name="role" value="chef">/);
+    expect(t).toContain('<span class="visually-hidden">Remove Chef from Carla Ferreira</span></button></span>');
+    expect(t).toMatch(/<svg[^>]*aria-hidden="true"/);
+    const toned = String(removableTag({ text: "Kok", tone: "success", remove: { label: "Fjern Kok", form: "f1", formAction: "/o/x/people/roles/remove" } }));
+    expect(toned).toContain('class="tag success removable"');
+    expect(toned).toContain('form="f1" formaction="/o/x/people/roles/remove"');
+  });
+
+  test("a script URL in formAction becomes #", () => {
+    expect(String(removableTag({ text: "x", remove: { label: "Remove x", formAction: "javascript:alert(1)" } }))).toContain('formaction="#"');
+  });
+
+  test("an empty remove label throws: the x would have no name", () => {
+    expect(() => removableTag({ text: "Chef", remove: { label: "  " } })).toThrow(/remove\.label/);
   });
 });

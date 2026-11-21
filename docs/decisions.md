@@ -1951,3 +1951,22 @@ meaning in the same codebase. So the deprecated aliases from 0.36.0 go now, befo
   PulseSpring and Spring import none of the three.
 - **Not touched:** `@forspring/ui/theme`'s `Role` is a colour role (background, primary, chart-1), a
   design-token word, unrelated to access.
+
+## D-52: A removable tag (0.38.0, 2026-11-21)
+
+lead-ui: AppSpring's People page (appspring#1792, ADR 0082 D6) lets the Owner take a role away from a
+person, and composed the tag and its x by hand. `@forspring/ui` had `.tag`, the filter `.chip` and the
+toast's dismiss, but no tag with a remove control in it.
+
+- **`removableTag({ text, tone?, remove: { label, name?, value?, form?, formAction? } })`**: the tag's
+  words, then a `<button type="submit" class="tag-remove">` with the x and `remove.label` as visually
+  hidden text, the same way the toast names its dismiss (a translator reaches it; an aria-label it may
+  not). A submit, so it works with no script, as every action in the family does.
+- **Target.** The x is a 24 x 24 px round button (WCAG 2.2 AA, 2.5.8) at the pill's end, so a removable
+  tag is 26 px tall (the x and the border) where a plain one is at least 20. On a phone it is a button
+  like any other: the touch floor (44 px), and the pill grows with it, so the audit's primary-control
+  rule needs no exception.
+- **Look.** The x takes the tag's colour (muted, or the tone's); pointed at, the muted fill and the ink.
+  The focus ring is the global one. No new tokens.
+- **The label is required.** An empty `remove.label` throws: the x is its only content, so the button
+  would have no name.

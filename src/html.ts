@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.37.0";
+export const VERSION = "0.38.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -784,6 +784,36 @@ export function crumbs(label: string, items: Link[]): Html {
 
 export function tag(text: Content, tone?: "primary" | "success" | "warning" | "danger"): Html {
   return html`<span class="${cls("tag", tone)!}">${text}</span>`;
+}
+
+export type RemovableTagOptions = {
+  text: Content;
+  tone?: "primary" | "success" | "warning" | "danger";
+  /** The remove button: a submit, so it works with no script. Put the tag in the form that removes it,
+   *  or name that form with `form`. */
+  remove: {
+    /** What the button does, verb first, naming the thing and whom it is taken from: "Remove Chef from
+     *  Carla Ferreira" / "Fjern Kok fra Carla Ferreira". It is the button's only name (the x is hidden). */
+    label: string;
+    name?: string;
+    value?: string;
+    /** The id of the form it submits, when the tag sits outside it. */
+    form?: string;
+    /** Where it submits, when that is not the form's own action. */
+    formAction?: string;
+  };
+};
+
+/**
+ * A tag with a remove button inside it (D-52): "Chef" with an x that takes the role away. The button
+ * is a 24 px target (WCAG 2.5.8) with the focus ring, and grows to the touch floor on a phone like
+ * every other button. Use it where a person may take the thing away right there; a tag that only
+ * shows something stays tag().
+ */
+export function removableTag(o: RemovableTagOptions): Html {
+  if (o.remove.label.trim() === "") throw new Error("removableTag: remove.label is the button's only name; say what it removes and from whom");
+  const a = { class: "tag-remove", type: "submit", name: o.remove.name, value: o.remove.value, form: o.remove.form, formaction: o.remove.formAction === undefined ? undefined : safeHref(o.remove.formAction) };
+  return html`<span class="${cls("tag", o.tone, "removable")!}">${o.text}<button${raw(attrs(a))}>${icon("x")}<span class="visually-hidden">${o.remove.label}</span></button></span>`;
 }
 
 export function card(body: Content): Html {
