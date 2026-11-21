@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.37.0";
+export const VERSION = "0.38.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -441,6 +441,18 @@ export function crumbs(label, items) {
 }
 export function tag(text, tone) {
     return html `<span class="${cls("tag", tone)}">${text}</span>`;
+}
+/**
+ * A tag with a remove button inside it (D-52): "Chef" with an x that takes the role away. The button
+ * is a 24 px target (WCAG 2.5.8) with the focus ring, and grows to the touch floor on a phone like
+ * every other button. Use it where a person may take the thing away right there; a tag that only
+ * shows something stays tag().
+ */
+export function removableTag(o) {
+    if (o.remove.label.trim() === "")
+        throw new Error("removableTag: remove.label is the button's only name; say what it removes and from whom");
+    const a = { class: "tag-remove", type: "submit", name: o.remove.name, value: o.remove.value, form: o.remove.form, formaction: o.remove.formAction === undefined ? undefined : safeHref(o.remove.formAction) };
+    return html `<span class="${cls("tag", o.tone, "removable")}">${o.text}<button${raw(attrs(a))}>${icon("x")}<span class="visually-hidden">${o.remove.label}</span></button></span>`;
 }
 export function card(body) {
     return html `<div class="card">${body}</div>`;
