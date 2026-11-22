@@ -14,7 +14,6 @@
   [data-product],
   [data-theme] {
     --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
-    --_changed: color-mix(in srgb, var(--primary) 16%, transparent);
     --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
     --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
     /* A control's line box is what its height leaves after the padding and the 1px borders, so the
@@ -2514,20 +2513,34 @@
     }
   }
 
-  /* 2. A value that just changed: a tint of the accent that fades out over the pulse duration. With
-     motion off it is the same tint, still, and the script takes it away after the same time. */
+  /* 2. A value that just changed: a wash of the accent at 16% behind the value that fades out over the
+     pulse duration. It is a layer behind the text, faded with opacity, so the element's own background
+     is untouched and the text keeps the contrast of the accent at 16% over its surface. With motion
+     off it is the same wash, still, and the script takes it away after the same time. */
   .changed-value {
     border-radius: var(--radius-button);
   }
 
   [data-changed] {
-    background-color: var(--_changed);
+    position: relative;
+    isolation: isolate;
+  }
+
+  [data-changed]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: var(--radius-button);
+    background: var(--primary);
+    opacity: 0.16;
+    pointer-events: none;
     animation: forspring-changed var(--motion-duration-pulse) var(--motion-ease-out) both;
   }
 
   @keyframes forspring-changed {
     to {
-      background-color: transparent;
+      opacity: 0;
     }
   }
 
@@ -2615,7 +2628,7 @@
      start edge as the finger stays. The fill is behind the text, a tint of the danger colour, so the
      label keeps its contrast. A fine pointer sees the plain label and the existing confirm. */
   .hold {
-    display: inline-flex;
+    display: flex;
   }
 
   .hold-form {

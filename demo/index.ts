@@ -286,7 +286,7 @@ ${microTable}
 ${holdToConfirm({ lang: "da", id: "micro-hold", label: "Slet hjemmesiden", holdLabel: "Hold for at slette hjemmesiden", dialog: "delete-site", href: "pages/delete-site.da.html", action: "#", fields: { csrf: "demo" } })}
 
 <h3>Frist</h3>
-<div class="demo-row">${cutoff({ lang: "da", at: "2026-11-25T12:00:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T09:20:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T07:30:00Z", now: MICRO_NOW })}</div>
+<div class="demo-row">${cutoff({ lang: "da", at: "2026-11-25T12:00:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T08:40:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T07:30:00Z", now: MICRO_NOW })}</div>
 
 <h3>Fremdrift, der ikke lyver</h3>
 <div class="demo-grid">${progress({ id: "micro-p0", value: 0, max: 10, label: "0 af 10 låst" })}${progress({ id: "micro-p4", value: 4, max: 10, label: "4 af 10 låst" })}${progress({ id: "micro-p10", value: 10, max: 10, label: "10 af 10 låst" })}</div>
@@ -472,8 +472,6 @@ ${card(html`<form class="form" method="post" action="#">${field({ label: "Firman
 <ul class="demo-icons" aria-label="Alle ikoner">${ICON_NAMES.map((n) => html`<li>${icon(n)}<code>${n}</code></li>`)}</ul>
 </section>
 
-${MICRO}
-
 <section><h2>Agentgodkendelse</h2>
 <p>En agent spørger, før den gør noget, der rækker ud over den selv: hvem der spørger, hvorfor, hvad der ændres, og hvad det gør. Siden siger det samme som kortet i Slack, og når nogen har besluttet, viser hver kopi beslutningen.</p>
 ${REMINDERS}
@@ -497,6 +495,8 @@ ${orDivider("eller")}
 <form class="form" method="post" action="#">${field({ label: "Mail", name: "signin-email", type: "email", autocomplete: "email" })}${button({ label: "Send mig et link", wide: true })}</form>
 <p class="fine">Ved at logge ind accepterer du <a href="#">vilkårene</a>.</p>`)}</div>
 </section>
+
+${MICRO}
 ${connectScript()}
 ${dialogScript()}
 ${raw(SCRIPT)}${raw(LIVE)}`;

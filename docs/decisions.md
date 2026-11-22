@@ -1986,8 +1986,10 @@ moves and the state change stays visible as a static mark.
    working on submit, the product sends `ui:button-done` / `ui:button-working` / `ui:button-reset`
    (bubbling, on the button or its form). Still focusable; a second press is ignored; announced once,
    through the status region, never through the button. `pageshow` from the back-forward cache resets it.
-2. **Changed-value highlight.** `changedValue()` and `[data-changed]`: the accent at 16% over the
-   surface, fading over `--motion-duration-pulse`. Under reduced motion the tint is static and the script
+2. **Changed-value highlight.** `changedValue()` and `[data-changed]`: a layer behind the value
+   (`::after`, `z-index: -1`) in the accent at 16% opacity, fading over `--motion-duration-pulse`. A
+   layer, not the element's own background, so the audit's palette rule never samples a half-faded
+   colour and the text sits on exactly the accent at 16% over its surface. Under reduced motion the tint is static and the script
    removes it after the same 1.6 s (with no script and reduced motion nothing can clear it). Contrast of
    `foreground`, `body-foreground` and `card-foreground` on the tint is tested for every product in both
    themes (test/micro.test.ts).
@@ -2017,6 +2019,7 @@ moves and the state change stays visible as a static mark.
    ink. Under reduced motion it steps by quarters; the hold still takes the full second.
 6. **Cut-off countdown.** `cutoff({ at, now, lang, warnWithin?, words? })` is the tag pill with the
    state's own icon (clock, triangle, octagon) and words, so colour is never the only change.
+   The minutes are rounded up, so a chip says 40 min until 39 are left and never 0 min with time still to go.
    `countdownScript()` rewrites each chip every minute from the browser's clock. `sortByCutoff()` sorts
    what is to come soonest first, then what has passed (latest first), then rows with no cut-off; stable,
    a copy. `timeLeft()` is the words alone.
@@ -2024,7 +2027,6 @@ moves and the state change stays visible as a static mark.
    and aria-valuenow/max, named by its visible label. Value 0 draws an empty track; only
    `value === max` is full; a value outside the track is held to it; `max` not above 0 throws.
 
-- **No new tokens.** Spacing, motion and colour come from the existing ones; the changed tint is the
-  private `--_changed`, as `--_hover` is.
+- **No new tokens.** Spacing, motion and colour come from the existing ones.
 - **Demo.** The section "Små bevægelser" shows each as the server draws it. Its scripts load only with
   `?live` in the address, so the visual baselines stay still.

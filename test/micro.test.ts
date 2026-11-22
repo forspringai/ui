@@ -299,7 +299,9 @@ describe("6. cut-off countdown", () => {
 
   test.each([
     [0, "da", "under 1 min"],
-    [59_999, "en", "under 1 min"],
+    [-1, "en", "under 1 min"],
+    [1, "en", "1 min"],
+    [59_999, "en", "1 min"],
     [60_000, "en", "1 min"],
     [20 * 60_000, "en", "20 min"],
     [80 * 60_000, "en", "1 h 20 min"],
@@ -307,7 +309,7 @@ describe("6. cut-off countdown", () => {
     [120 * 60_000, "en", "2 h"],
     [(24 * 60 + 90) * 60_000, "en", "1 d 1 h"],
     [(3 * 24 * 60) * 60_000, "da", "3 d"],
-    [(80 * 60 + 59) * 1000, "en", "1 h 20 min"],
+    [80 * 60_000 + 1, "en", "1 h 21 min"],
   ] as const)("%i ms in %s is %s", (ms, lang, text) => expect(timeLeft(ms, lang)).toBe(text));
 
   test("soon: neutral, with the clock; the words say when", () => {

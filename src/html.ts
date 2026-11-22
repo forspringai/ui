@@ -1981,6 +1981,8 @@ export const TABLE_SELECT_SCRIPT = `(() => {
     });
   };
   const anchors = new WeakMap();
+  // A run of Shift+Arrow keeps one session, so going back up shrinks what going down grew.
+  const runs = new WeakMap();
   let drag = null;
   let suppress = false;
   document.addEventListener("pointerdown", (e) => {
@@ -2037,6 +2039,7 @@ export const TABLE_SELECT_SCRIPT = `(() => {
       return e.preventDefault();
     }
     const from = anchors.get(f);
+    runs.delete(f);
     if (e.shiftKey && from && from !== box) apply(begin(f, from, box.checked), box, true);
     anchors.set(f, box);
     say(f, true);
@@ -2049,6 +2052,7 @@ export const TABLE_SELECT_SCRIPT = `(() => {
     const i = list.indexOf(box);
     if (e.key === " " && e.shiftKey) {
       e.preventDefault();
+      runs.delete(f);
       const from = anchors.get(f);
       if (from && from !== box) {
         apply(begin(f, from, !box.checked), box, true);
@@ -2064,10 +2068,13 @@ export const TABLE_SELECT_SCRIPT = `(() => {
     e.preventDefault();
     if (!to) return;
     if (e.shiftKey) {
-      const from = anchors.get(f) || box;
-      anchors.set(f, from);
-      apply(begin(f, from, !from.checked || from === box ? true : from.checked), to, true);
+      if (!runs.has(f)) runs.set(f, begin(f, anchors.get(f) || box, true));
+      const run = runs.get(f);
+      anchors.set(f, run.box);
+      apply(run, to, true);
       say(f, true);
+    } else {
+      runs.delete(f);
     }
     to.focus();
   });
@@ -2179,7 +2186,7 @@ export const HOLD_SCRIPT = `(() => {
 export const holdScript = (nonce?: string): Html => scriptTag(HOLD_SCRIPT, nonce);
 
 /**
- * 6. A cut-off countdown (cutoff(), sortByCutoff()). "Cut-off in 1 h 20 min" to the minute from `at`
+ * 6. A cut-off countdown (cutoff(), sortByCutoff()). "Cut-off in 1 h 20 min" to the minute (rounded up) from `at`
  * and `now`, in the warning hue when under `warnWithin` minutes (default 60), and in danger with
  * "Cut-off passed" after. Each state has its own icon and words, so colour is never the only thing
  * that changes. The script rewrites every chip each minute from the browser's clock; without it the
@@ -2202,10 +2209,11 @@ const CUTOFF: Record<Lang, { before: string; passed: string; under: string; d: s
   en: { before: "Cut-off in", passed: "Cut-off passed", under: "under 1 min", d: "d", h: "h", min: "min" },
 };
 
-/** "1 h 20 min", "2 d 3 h", "20 min": whole minutes left, the units of the page's language. */
+/** "1 h 20 min", "2 d 3 h", "20 min": the minutes left rounded up (a countdown says 20 min until it is 19), the
+ *  units of the page's language. Nothing left is "under 1 min". */
 export function timeLeft(ms: number, lang: Lang): string {
   const t = CUTOFF[lang];
-  const minutes = Math.floor(ms / 60000);
+  const minutes = Math.ceil(ms / 60000);
   if (minutes < 1) return t.under;
   const d = Math.floor(minutes / 1440);
   const h = Math.floor((minutes % 1440) / 60);
@@ -2254,7 +2262,7 @@ export function sortByCutoff<T>(rows: readonly T[], at: (row: T) => Date | strin
 
 export const COUNTDOWN_SCRIPT = `(() => {
   const left = (ms, u) => {
-    const minutes = Math.floor(ms / 60000);
+    const minutes = Math.ceil(ms / 60000);
     if (minutes < 1) return u[3];
     const d = Math.floor(minutes / 1440), h = Math.floor((minutes % 1440) / 60), m = minutes % 60;
     const part = (n, w) => (n ? n + " " + w : "");
