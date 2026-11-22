@@ -1,5 +1,5 @@
 import { type ReactElement } from "react";
-import { type ActionsOptions, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
+import { type ActionsOptions, type ApprovalOptions, type BarOptions, type ButtonOptions, type ChangedValueOptions, type CutoffOptions, type HoldToConfirmOptions, type ProgressOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
 import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
@@ -68,3 +68,17 @@ export declare const Icon: (props: {
 /** A failed submit's summary (errorSummary, D-30): it takes focus when it mounts. Nothing when there
  *  are no errors. */
 export declare const ErrorSummary: (props: ErrorSummaryOptions) => ReactElement | null;
+/** A button (button() in @forspring/ui/html). With `progress` it is the working-then-done button
+ *  (D-53): put buttonScript() (or BUTTON_SCRIPT) on the page once, and send `ui:button-done` on the
+ *  button when the work ends. */
+export declare const Button: (props: ButtonOptions) => ReactElement;
+/** A value that just changed (changedValue(), D-53); send `ui:changed` on a node to tint it again. */
+export declare const ChangedValue: (props: ChangedValueOptions & {
+    children: Html | string | number;
+}) => ReactElement;
+/** A danger action held for a second on a phone (holdToConfirm(), D-53); needs holdScript(). */
+export declare const HoldToConfirm: (props: HoldToConfirmOptions) => ReactElement;
+/** A cut-off chip (cutoff(), D-53); countdownScript() keeps it current. */
+export declare const Cutoff: (props: CutoffOptions) => ReactElement;
+/** An honest progress bar (progress(), D-53): empty at 0, full only at max. */
+export declare const Progress: (props: ProgressOptions) => ReactElement;

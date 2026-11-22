@@ -49,6 +49,7 @@ const SECTIONS: Record<string, string> = {
   "Formular": "form",
   "Tomt, henter og fejl": "states",
   "Dialog og bekræftelse før sletning": "dialog",
+  "Små bevægelser": "micro",
   "Toast, værktøjstip og ikoner": "toast",
   "Agentgodkendelse": "approval",
   "Forbind en agent": "connect",

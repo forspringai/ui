@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.38.0";
+export declare const VERSION = "0.39.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.38.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.39.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -286,6 +286,17 @@ export type ButtonOptions = {
     /** An icon before the label (D-26), hidden from a screen reader: the label says it. For a button
      *  that is only an icon, give the words as `ariaLabel` and leave `label` empty. */
     icon?: IconName;
+    /** Working, then a tick (D-53). Draws the button inside a `.button-progress` span with a status
+     *  region, and the words the script needs. `state` is what the server draws now: "working" (a
+     *  spinner and the word, aria-busy, a second press ignored) or "done" (a tick and the word); unset
+     *  is the idle button. With buttonScript() on the page, a submit sets "working" and the product
+     *  sends `ui:button-done` when it is finished. Not for links. */
+    progress?: {
+        lang: Lang;
+        state?: "working" | "done";
+        working?: string;
+        done?: string;
+    };
 };
 export declare function button(o: ButtonOptions): Html;
 export type ActionsOptions = {
@@ -557,6 +568,28 @@ export type TableOptions = {
     id?: string;
     /** Search, filters, the stated order and paging around the table (D-25). */
     controls?: TableControls;
+    /** Rows a person ticks, then does one thing to (D-53). */
+    selectable?: TableSelectable;
+};
+export type TableSelectable = {
+    lang: Lang;
+    /** The checkbox's name and each row's value (the row's id), one per row, in row order. */
+    name: string;
+    ids: string[];
+    /** What each row is called, one per row, for the checkbox's name ("Select Bager Hansen"). */
+    labels: string[];
+    /** Where the selection goes: a form around the table and `actions`. GET or POST (default POST);
+     *  `fields` are hidden inputs (the CSRF token). */
+    form: {
+        action: string;
+        method?: "get" | "post";
+        fields?: Record<string, string>;
+    };
+    /** The buttons that act on the selection, in the bar under the table: button() submits, each
+     *  with its own formaction, name and value as the product needs. */
+    actions: Content;
+    /** Ids already ticked, as the server draws them (a page that came back with a selection). */
+    selected?: string[];
 };
 /**
  * A table in a scrolling frame. The frame is a labelled region a keyboard can reach (tabindex 0),
@@ -712,6 +745,18 @@ export type ToastOptions = {
         label: Content;
         href: string;
     };
+    /** An undo (D-53): the toast says what happened and offers Undo as a POST form to the product's
+     *  undo URL (`fields` are its hidden inputs, the CSRF token). With toastScript() a bar and "8 s"
+     *  show the time left, hover or focus pauses it, Escape dismisses, and when it runs out the toast
+     *  goes. The script also sends a cancelable `ui:undo` event on the toast before the POST: a
+     *  product that calls preventDefault() on it does the undo itself. Without script the toast stays
+     *  until dismissed, and the product decides how long the undo URL is good. Instead of `action`. */
+    undo?: {
+        action: string;
+        fields?: Record<string, string>;
+        label?: Content;
+        seconds?: number;
+    };
     /** Unique on the page. Default "toast"; give each one in a toastRegion() its own. */
     id?: string;
 };
@@ -740,7 +785,7 @@ export declare function toastRegion(o: {
  * toast never does, whatever its markup says: a failure stays until a person has read it. Under
  * prefers-reduced-motion nothing hides by itself, and Dismiss still works.
  */
-export declare const TOAST_SCRIPT = "(() => {\n  const gone = (t, href) => {\n    const region = t.parentElement;\n    t.remove();\n    if (region && region.classList.contains(\"toast-region\") && !region.querySelector(\".toast\")) region.remove();\n    if (href) try { history.replaceState(history.state, \"\", href); } catch {}\n  };\n  document.addEventListener(\"click\", (e) => {\n    const a = e.target instanceof Element ? e.target.closest(\"[data-toast-dismiss]\") : null;\n    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;\n    const t = a.closest(\".toast\");\n    if (!t) return;\n    e.preventDefault();\n    gone(t, a.getAttribute(\"href\"));\n  });\n  if (matchMedia(\"(prefers-reduced-motion: reduce)\").matches) return;\n  for (const t of document.querySelectorAll(\".toast[data-toast-autohide]\")) {\n    if (t.classList.contains(\"toast-danger\") || t.classList.contains(\"toast-warning\") || t.getAttribute(\"role\") === \"alert\") continue;\n    let timer = 0;\n    const start = () => {\n      clearTimeout(timer);\n      timer = setTimeout(() => {\n        if (t.matches(\":hover, :focus-within\")) return;\n        gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n      }, 8000);\n    };\n    const wait = () => clearTimeout(timer);\n    t.addEventListener(\"pointerenter\", wait);\n    t.addEventListener(\"focusin\", wait);\n    t.addEventListener(\"pointerleave\", start);\n    t.addEventListener(\"focusout\", start);\n    start();\n  }\n})();";
+export declare const TOAST_SCRIPT = "(() => {\n  const gone = (t, href) => {\n    const region = t.parentElement;\n    t.remove();\n    if (region && region.classList.contains(\"toast-region\") && !region.querySelector(\".toast\")) region.remove();\n    if (href) try { history.replaceState(history.state, \"\", href); } catch {}\n  };\n  document.addEventListener(\"click\", (e) => {\n    const a = e.target instanceof Element ? e.target.closest(\"[data-toast-dismiss]\") : null;\n    if (!a || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;\n    const t = a.closest(\".toast\");\n    if (!t) return;\n    e.preventDefault();\n    gone(t, a.getAttribute(\"href\"));\n  });\n  const reduce = matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n  const undoable = () => [...document.querySelectorAll(\".toast[data-toast-undo]\")].filter((t) => t.getAttribute(\"data-toast-undo\"));\n  document.addEventListener(\"submit\", (e) => {\n    const f = e.target;\n    if (!(f instanceof Element) || !f.matches(\"form.toast-undo-form\")) return;\n    const t = f.closest(\".toast\");\n    if (!t) return;\n    if (!t.dispatchEvent(new CustomEvent(\"ui:undo\", { bubbles: true, cancelable: true, detail: { form: f } }))) {\n      e.preventDefault();\n      gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n    }\n  });\n  document.addEventListener(\"keydown\", (e) => {\n    if (e.key !== \"Escape\" || e.defaultPrevented || document.querySelector(\"dialog[open]\")) return;\n    const all = undoable();\n    const active = document.activeElement;\n    const t = all.find((x) => x.contains(active)) || (!active || active === document.body ? all[all.length - 1] : null);\n    if (t) gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n  });\n  for (const t of undoable()) {\n    const total = Number(t.getAttribute(\"data-toast-undo\")) * 1000;\n    if (!(total > 0)) continue;\n    const bar = document.createElement(\"progress\");\n    bar.className = \"toast-time-bar\";\n    bar.max = total;\n    const text = document.createElement(\"span\");\n    text.className = \"toast-time-text\";\n    const box = document.createElement(\"span\");\n    box.className = \"toast-time\";\n    box.setAttribute(\"aria-hidden\", \"true\");\n    box.append(bar, text);\n    t.append(box);\n    let left = total, last = Date.now();\n    const paint = () => {\n      bar.value = left;\n      text.textContent = Math.ceil(left / 1000) + \" s\";\n    };\n    paint();\n    const timer = setInterval(() => {\n      const now = Date.now();\n      const paused = t.matches(\":hover, :focus-within\");\n      t.toggleAttribute(\"data-paused\", paused);\n      if (!paused) left -= now - last;\n      last = now;\n      if (!t.isConnected) return clearInterval(timer);\n      if (left <= 0) {\n        clearInterval(timer);\n        return gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n      }\n      paint();\n    }, reduce ? 1000 : 100);\n  }\n  if (reduce) return;\n  for (const t of document.querySelectorAll(\".toast[data-toast-autohide]\")) {\n    if (t.classList.contains(\"toast-danger\") || t.classList.contains(\"toast-warning\") || t.getAttribute(\"role\") === \"alert\") continue;\n    let timer = 0;\n    const start = () => {\n      clearTimeout(timer);\n      timer = setTimeout(() => {\n        if (t.matches(\":hover, :focus-within\")) return;\n        gone(t, t.querySelector(\"[data-toast-dismiss]\")?.getAttribute(\"href\"));\n      }, 8000);\n    };\n    const wait = () => clearTimeout(timer);\n    t.addEventListener(\"pointerenter\", wait);\n    t.addEventListener(\"focusin\", wait);\n    t.addEventListener(\"pointerleave\", start);\n    t.addEventListener(\"focusout\", start);\n    start();\n  }\n})();";
 /** TOAST_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
 export declare function toastScript(nonce?: string): Html;
 export type TooltipOptions = {
@@ -910,3 +955,115 @@ export declare function explain(o: ExplainOptions): Html;
 export declare const orDivider: (text: Content) => Html;
 /** Google's button (google-button.css), as a submit button for the caller's form. */
 export declare function googleButton(label: Content): Html;
+/**
+ * 1. Working, then a tick (button({ progress })). A submit button says it is working (a spinner and
+ * the product's word, aria-busy, still focusable, a second press ignored) and then that it is done
+ * (a tick and the word) for two seconds, then goes back to its label. The words are announced once,
+ * through the button's own status region, never through the button. The script sets "working" on
+ * submit; the product sends `ui:button-done` (or `ui:button-working`, `ui:button-reset`) as a
+ * bubbling event on the button or its form when it knows. A page restored from the back-forward cache
+ * resets every busy button. Without the script the server draws the state (`progress.state`).
+ */
+export declare const BUTTON_SCRIPT = "(() => {\n  const DONE_MS = 2000;\n  const saved = new WeakMap();\n  const timers = new WeakMap();\n  const find = (t) => (t instanceof Element ? (t.matches(\"button[data-working]\") ? t : t.querySelector(\"button[data-working]\")) : null);\n  const say = (b, text) => {\n    const s = b.parentElement && b.parentElement.querySelector('[role=\"status\"]');\n    if (s) s.textContent = text;\n  };\n  const reset = (b) => {\n    clearTimeout(timers.get(b));\n    if (saved.has(b)) b.innerHTML = saved.get(b);\n    saved.delete(b);\n    b.removeAttribute(\"aria-busy\");\n    b.removeAttribute(\"data-state\");\n    say(b, \"\");\n  };\n  const show = (b, state) => {\n    clearTimeout(timers.get(b));\n    if (!saved.has(b) && !b.hasAttribute(\"data-state\")) saved.set(b, b.innerHTML);\n    b.setAttribute(\"data-state\", state);\n    if (state === \"working\") {\n      b.setAttribute(\"aria-busy\", \"true\");\n      const spin = document.createElement(\"span\");\n      spin.className = \"spinner\";\n      spin.setAttribute(\"aria-hidden\", \"true\");\n      b.replaceChildren(spin, document.createTextNode(b.getAttribute(\"data-working\")));\n      say(b, b.getAttribute(\"data-working\"));\n    } else {\n      b.removeAttribute(\"aria-busy\");\n      const tpl = b.parentElement && b.parentElement.querySelector(\"template[data-done-icon]\");\n      b.replaceChildren(...(tpl ? [tpl.content.cloneNode(true)] : []), document.createTextNode(b.getAttribute(\"data-done\")));\n      say(b, b.getAttribute(\"data-done\"));\n      timers.set(b, setTimeout(() => reset(b), DONE_MS));\n    }\n  };\n  document.addEventListener(\"click\", (e) => {\n    const b = e.target instanceof Element ? e.target.closest(\"button[data-working]\") : null;\n    if (b && b.getAttribute(\"aria-busy\") === \"true\") e.preventDefault();\n  });\n  document.addEventListener(\"submit\", (e) => {\n    const b = e.submitter instanceof Element ? e.submitter.closest(\"button[data-working]\") : find(e.target);\n    if (!b) return;\n    if (b.getAttribute(\"aria-busy\") === \"true\") return e.preventDefault();\n    show(b, \"working\");\n  });\n  for (const [type, f] of [[\"ui:button-working\", (b) => show(b, \"working\")], [\"ui:button-done\", (b) => show(b, \"done\")], [\"ui:button-reset\", reset]]) {\n    document.addEventListener(type, (e) => {\n      const b = find(e.target);\n      if (b) f(b);\n    });\n  }\n  addEventListener(\"pageshow\", (e) => {\n    if (e.persisted) for (const b of document.querySelectorAll('button[data-working][aria-busy=\"true\"]')) reset(b);\n  });\n})();";
+/** BUTTON_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare const buttonScript: (nonce?: string) => Html;
+/**
+ * 2. A value that just changed (changedValue()). A table cell or a stat gets a tint that fades out
+ * over the pulse duration; under reduced motion the tint is static and clears after the same time
+ * (the script removes `data-changed` after 1.6 seconds either way). Mark a node from script by
+ * sending a bubbling `ui:changed` event on it. A page drawn with no script and reduced motion keeps
+ * the tint until the next load, since nothing can take it away.
+ */
+export type ChangedValueOptions = {
+    changed?: boolean;
+};
+export declare function changedValue(content: Content, o?: ChangedValueOptions): Html;
+export declare const CHANGED_SCRIPT = "(() => {\n  const MS = 1600;\n  const timers = new WeakMap();\n  const clear = (el) => timers.set(el, setTimeout(() => el.removeAttribute(\"data-changed\"), MS));\n  document.addEventListener(\"ui:changed\", (e) => {\n    const el = e.target;\n    if (!(el instanceof Element)) return;\n    clearTimeout(timers.get(el));\n    el.removeAttribute(\"data-changed\");\n    void el.offsetWidth;\n    el.setAttribute(\"data-changed\", \"true\");\n    clear(el);\n  });\n  for (const el of document.querySelectorAll(\"[data-changed]\")) clear(el);\n})();";
+/** CHANGED_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare const changedScript: (nonce?: string) => Html;
+/**
+ * 4. Selecting rows (table({ selectable })). The checkbox column is a form: tick and press an action,
+ * with no script. The script adds a drag from one checkbox down or up over the rows (on a touch
+ * screen only a drag that starts in the checkbox column, so the page still scrolls), Shift+click and
+ * Shift+Space for a range from the last row touched, Arrow keys between the checkboxes and Shift+Arrow
+ * to extend, and the count: "3 selected" on screen as a drag moves, and in the status region once
+ * when the selection settles.
+ */
+export declare const TABLE_SELECT_SCRIPT = "(() => {\n  const boxes = (f) => [...f.querySelectorAll(\"tbody td.select input[type=checkbox]\")];\n  const formOf = (el) => (el instanceof Element ? el.closest(\"form.table-select\") : null);\n  const say = (f, live) => {\n    const n = boxes(f).filter((b) => b.checked).length;\n    const text = (f.getAttribute(\"data-select-text\") || \"{n}\").replace(\"{n}\", n);\n    const c = f.querySelector(\".table-select-count\");\n    if (c) c.textContent = text;\n    const l = f.querySelector(\"[data-select-live]\");\n    if (live && l) l.textContent = text;\n  };\n  // A session remembers which boxes were ticked when a range began, so moving back shrinks the range.\n  const begin = (f, box, mode) => ({ f, box, mode, orig: boxes(f).map((b) => b.checked), moved: false });\n  const apply = (s, to, notify) => {\n    const list = boxes(s.f);\n    const a = list.indexOf(s.box), b = list.indexOf(to);\n    if (a < 0 || b < 0) return;\n    const lo = Math.min(a, b), hi = Math.max(a, b);\n    list.forEach((x, i) => {\n      const want = i >= lo && i <= hi ? s.mode : s.orig[i];\n      if (x.checked === want) return;\n      x.checked = want;\n      if (notify) x.dispatchEvent(new Event(\"change\", { bubbles: true }));\n    });\n  };\n  const anchors = new WeakMap();\n  let drag = null;\n  let suppress = false;\n  document.addEventListener(\"pointerdown\", (e) => {\n    const td = e.target instanceof Element ? e.target.closest(\"td.select\") : null;\n    const f = formOf(td);\n    if (!td || !f || e.button !== 0 || e.shiftKey) return;\n    const box = td.querySelector(\"input[type=checkbox]\");\n    if (!box) return;\n    drag = { ...begin(f, box, !box.checked), id: e.pointerId, td, onInput: e.target === box };\n  });\n  document.addEventListener(\"pointermove\", (e) => {\n    if (!drag || e.pointerId !== drag.id) return;\n    const tr = document.elementFromPoint(e.clientX, e.clientY)?.closest(\"tr\");\n    const to = tr && drag.f.contains(tr) ? tr.querySelector(\"td.select input[type=checkbox]\") : null;\n    if (!to) return;\n    if (to !== drag.box) {\n      drag.moved = true;\n      drag.f.setAttribute(\"data-dragging\", \"\");\n      getSelection()?.removeAllRanges();\n    }\n    if (drag.moved) {\n      apply(drag, to, false);\n      say(drag.f, false);\n    }\n  });\n  const end = (e) => {\n    if (!drag || e.pointerId !== drag.id) return;\n    const d = drag;\n    drag = null;\n    d.f.removeAttribute(\"data-dragging\");\n    if (e.type === \"pointercancel\") {\n      boxes(d.f).forEach((x, i) => (x.checked = d.orig[i]));\n      return say(d.f, false);\n    }\n    if (d.moved) {\n      suppress = true;\n      setTimeout(() => (suppress = false), 0);\n      const list = boxes(d.f);\n      list.forEach((x, i) => x.checked !== d.orig[i] && x.dispatchEvent(new Event(\"change\", { bubbles: true })));\n      anchors.set(d.f, list.find((x, i) => x.checked !== d.orig[i]) || d.box);\n      say(d.f, true);\n    } else if (!d.onInput && e.target instanceof Element && d.td.contains(e.target)) {\n      d.box.click();\n    }\n  };\n  document.addEventListener(\"pointerup\", end);\n  document.addEventListener(\"pointercancel\", end);\n  document.addEventListener(\"click\", (e) => {\n    const box = e.target instanceof HTMLInputElement && e.target.closest(\"td.select\") ? e.target : null;\n    const f = formOf(box);\n    if (!box || !f) return;\n    if (suppress) {\n      suppress = false;\n      return e.preventDefault();\n    }\n    const from = anchors.get(f);\n    if (e.shiftKey && from && from !== box) apply(begin(f, from, box.checked), box, true);\n    anchors.set(f, box);\n    say(f, true);\n  });\n  document.addEventListener(\"keydown\", (e) => {\n    const box = e.target instanceof HTMLInputElement && e.target.closest(\"td.select\") ? e.target : null;\n    const f = formOf(box);\n    if (!box || !f || e.altKey || e.ctrlKey || e.metaKey) return;\n    const list = boxes(f);\n    const i = list.indexOf(box);\n    if (e.key === \" \" && e.shiftKey) {\n      e.preventDefault();\n      const from = anchors.get(f);\n      if (from && from !== box) {\n        apply(begin(f, from, !box.checked), box, true);\n      } else {\n        box.checked = !box.checked;\n        box.dispatchEvent(new Event(\"change\", { bubbles: true }));\n      }\n      anchors.set(f, box);\n      return say(f, true);\n    }\n    if (e.key !== \"ArrowDown\" && e.key !== \"ArrowUp\") return;\n    const to = list[i + (e.key === \"ArrowDown\" ? 1 : -1)];\n    e.preventDefault();\n    if (!to) return;\n    if (e.shiftKey) {\n      const from = anchors.get(f) || box;\n      anchors.set(f, from);\n      apply(begin(f, from, !from.checked || from === box ? true : from.checked), to, true);\n      say(f, true);\n    }\n    to.focus();\n  });\n})();";
+/** TABLE_SELECT_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare const tableSelectScript: (nonce?: string) => Html;
+/**
+ * 5. Hold to confirm on a phone (holdToConfirm()). A danger action whose label, on a coarse pointer,
+ * says "Hold to …" and must be held for a second: a fill shows the progress, letting go early cancels,
+ * and holding to the end posts the action's form. It is the confirm's own trigger (dialogTrigger's
+ * link to the dialog and the no-script confirm page), so a keyboard, a screen reader, a fine pointer
+ * and a tap that is not a hold all get the existing confirm, and nothing ever acts on a plain click.
+ * A hold ended early swallows the click after it, so cancelling a hold does not open the dialog.
+ * Under reduced motion the fill steps by quarters; the hold still takes the full time.
+ */
+export type HoldToConfirmOptions = {
+    lang: Lang;
+    /** The form's id, unique on the page. */
+    id: string;
+    /** The action's words, verb first, as a dialogTrigger's: "Slet hjemmesiden". */
+    label: Content;
+    /** What the coarse pointer sees instead: "Hold for at slette hjemmesiden". Default "Hold nede" / "Hold to confirm". */
+    holdLabel?: string;
+    /** The confirm: the dialog's id and the no-script page, as dialogTrigger() takes them. */
+    dialog: string;
+    href: string;
+    /** Where a completed hold posts, and its hidden fields (the CSRF token). The server must check
+     *  what it checks for a confirm: a hold is only a gesture. */
+    action: string;
+    fields?: Record<string, string>;
+};
+export declare function holdToConfirm(o: HoldToConfirmOptions): Html;
+export declare const HOLD_SCRIPT = "(() => {\n  const HOLD_MS = 1000;\n  const EARLY_MS = 200;\n  let cur = null;\n  let swallow = false;\n  const reduced = () => matchMedia(\"(prefers-reduced-motion: reduce)\").matches;\n  const paint = (a, f) => a.style.setProperty(\"--_hold\", String(f));\n  const stop = () => {\n    if (!cur) return;\n    cancelAnimationFrame(cur.raf);\n    clearTimeout(cur.timer);\n    cur.a.removeAttribute(\"data-holding\");\n    paint(cur.a, 0);\n    cur = null;\n  };\n  const step = () => {\n    if (!cur) return;\n    const t = performance.now() - cur.start;\n    const f = Math.min(1, t / HOLD_MS);\n    paint(cur.a, reduced() ? Math.floor(f * 4) / 4 : f);\n    if (t >= HOLD_MS) {\n      const form = document.getElementById(cur.a.getAttribute(\"data-hold-form\"));\n      paint(cur.a, 1);\n      cur.done = true;\n      swallow = true;\n      cur.a.removeAttribute(\"data-holding\");\n      cur = null;\n      if (form instanceof HTMLFormElement) form.requestSubmit();\n      return;\n    }\n    if (reduced()) cur.timer = setTimeout(step, 250);\n    else cur.raf = requestAnimationFrame(step);\n  };\n  document.addEventListener(\"pointerdown\", (e) => {\n    const a = e.target instanceof Element ? e.target.closest(\"[data-hold-form]\") : null;\n    if (!a || e.button !== 0 || e.pointerType === \"mouse\" || !matchMedia(\"(pointer: coarse)\").matches) return;\n    stop();\n    swallow = false;\n    cur = { a, id: e.pointerId, start: performance.now(), raf: 0, timer: 0, done: false };\n    a.setAttribute(\"data-holding\", \"true\");\n    step();\n  });\n  const release = (e) => {\n    if (!cur || e.pointerId !== cur.id) return;\n    const early = performance.now() - cur.start;\n    stop();\n    // A hold let go after a moment was a try at holding: it must not open the dialog by its click.\n    if (e.type === \"pointerup\" && early >= EARLY_MS) {\n      swallow = true;\n      setTimeout(() => (swallow = false), 400);\n    }\n  };\n  document.addEventListener(\"pointerup\", release);\n  document.addEventListener(\"pointercancel\", release);\n  document.addEventListener(\"click\", (e) => {\n    if (!swallow || !(e.target instanceof Element) || !e.target.closest(\"[data-hold-form]\")) return;\n    swallow = false;\n    e.preventDefault();\n    e.stopImmediatePropagation();\n  }, true);\n  document.addEventListener(\"contextmenu\", (e) => {\n    if (cur || (e.target instanceof Element && e.target.closest(\"[data-hold-form]\") && matchMedia(\"(pointer: coarse)\").matches)) e.preventDefault();\n  });\n})();";
+/** HOLD_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare const holdScript: (nonce?: string) => Html;
+/**
+ * 6. A cut-off countdown (cutoff(), sortByCutoff()). "Cut-off in 1 h 20 min" to the minute from `at`
+ * and `now`, in the warning hue when under `warnWithin` minutes (default 60), and in danger with
+ * "Cut-off passed" after. Each state has its own icon and words, so colour is never the only thing
+ * that changes. The script rewrites every chip each minute from the browser's clock; without it the
+ * chip shows the server's `now` and stays that way.
+ */
+export type CutoffOptions = {
+    lang: Lang;
+    /** The deadline. */
+    at: Date | string;
+    /** The server's now. */
+    now: Date;
+    /** Minutes before the cut-off at which the chip turns to the warning hue. Default 60. */
+    warnWithin?: number;
+    /** The product's words, when "Frist" / "Cut-off" is not the thing's name: `before` is followed by the time left. */
+    words?: {
+        before: string;
+        passed: string;
+    };
+};
+/** "1 h 20 min", "2 d 3 h", "20 min": whole minutes left, the units of the page's language. */
+export declare function timeLeft(ms: number, lang: Lang): string;
+export declare function cutoff(o: CutoffOptions): Html;
+/** The rows nearest their cut-off first: those still to come, soonest first, then the ones that have
+ *  passed, most recent first, then the ones with no cut-off, in the order given. Stable, and the
+ *  array is a copy. */
+export declare function sortByCutoff<T>(rows: readonly T[], at: (row: T) => Date | string | null | undefined, now: Date): T[];
+export declare const COUNTDOWN_SCRIPT = "(() => {\n  const left = (ms, u) => {\n    const minutes = Math.floor(ms / 60000);\n    if (minutes < 1) return u[3];\n    const d = Math.floor(minutes / 1440), h = Math.floor((minutes % 1440) / 60), m = minutes % 60;\n    const part = (n, w) => (n ? n + \" \" + w : \"\");\n    return (d ? [part(d, u[0]), part(h, u[1])] : h ? [part(h, u[1]), part(m, u[2])] : [part(m, u[2])]).filter(Boolean).join(\" \");\n  };\n  const run = () => {\n    for (const c of document.querySelectorAll(\"time[data-cutoff]\")) {\n      const ms = Date.parse(c.getAttribute(\"data-cutoff\")) - Date.now();\n      const warn = Number(c.getAttribute(\"data-warn\")) * 60000;\n      const state = ms <= 0 ? \"passed\" : ms <= warn ? \"warning\" : \"soon\";\n      const text = state === \"passed\" ? c.getAttribute(\"data-passed\") : c.getAttribute(\"data-before\") + \" \" + left(ms, c.getAttribute(\"data-units\").split(\",\"));\n      const t = c.querySelector(\".cutoff-text\");\n      if (t && t.textContent !== text) t.textContent = text;\n      if (c.getAttribute(\"data-state\") === state) continue;\n      c.setAttribute(\"data-state\", state);\n      c.classList.toggle(\"warning\", state === \"warning\");\n      c.classList.toggle(\"danger\", state === \"passed\");\n    }\n  };\n  run();\n  const next = () => setTimeout(() => { run(); next(); }, 60000 - (Date.now() % 60000) + 50);\n  next();\n})();";
+/** COUNTDOWN_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export declare const countdownScript: (nonce?: string) => Html;
+/**
+ * 7. An honest progress bar (progress()). 0 of 10 is an empty track, with no minimum fill, and the
+ * bar is full only when value equals max. A native <progress>, drawn by the CSS, so it needs no
+ * inline style and a screen reader gets the value and the maximum. `label` is the product's words
+ * for it ("0 af 10 låst"); it names the bar and is shown beside it.
+ */
+export type ProgressOptions = {
+    value: number;
+    max: number;
+    /** "0 of 10 locked": shown, and the bar's accessible name. */
+    label: string;
+    /** Unique on the page when there are two or more. Default "progress". */
+    id?: string;
+};
+export declare function progress(o: ProgressOptions): Html;

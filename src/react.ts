@@ -8,7 +8,7 @@
 // needs no React build step of its own.
 
 import { createElement, type ReactElement } from "react";
-import { actions, approval, bar, confirmDestructive, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip, type ActionsOptions, type ApprovalOptions, type BarOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
+import { actions, approval, bar, button, changedValue, confirmDestructive, cutoff, holdToConfirm, progress, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip, type ActionsOptions, type ApprovalOptions, type BarOptions, type ButtonOptions, type ChangedValueOptions, type CutoffOptions, type HoldToConfirmOptions, type ProgressOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { connectPanel, type ConnectPanelOptions } from "./connect.ts";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
 
@@ -107,3 +107,20 @@ export const ErrorSummary = (props: ErrorSummaryOptions): ReactElement | null =>
   const h = errorSummary(props);
   return String(h) ? fromHtml(h) : null;
 };
+
+/** A button (button() in @forspring/ui/html). With `progress` it is the working-then-done button
+ *  (D-53): put buttonScript() (or BUTTON_SCRIPT) on the page once, and send `ui:button-done` on the
+ *  button when the work ends. */
+export const Button = (props: ButtonOptions): ReactElement => fromHtml(button(props));
+
+/** A value that just changed (changedValue(), D-53); send `ui:changed` on a node to tint it again. */
+export const ChangedValue = (props: ChangedValueOptions & { children: Html | string | number }): ReactElement => fromHtml(changedValue(props.children, props));
+
+/** A danger action held for a second on a phone (holdToConfirm(), D-53); needs holdScript(). */
+export const HoldToConfirm = (props: HoldToConfirmOptions): ReactElement => fromHtml(holdToConfirm(props));
+
+/** A cut-off chip (cutoff(), D-53); countdownScript() keeps it current. */
+export const Cutoff = (props: CutoffOptions): ReactElement => fromHtml(cutoff(props));
+
+/** An honest progress bar (progress(), D-53): empty at 0, full only at max. */
+export const Progress = (props: ProgressOptions): ReactElement => fromHtml(progress(props));

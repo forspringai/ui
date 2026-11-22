@@ -14,6 +14,7 @@
   [data-product],
   [data-theme] {
     --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
+    --_changed: color-mix(in srgb, var(--primary) 16%, transparent);
     --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
     --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
     /* A control's line box is what its height leaves after the padding and the 1px borders, so the
@@ -2473,6 +2474,274 @@
 
   .toast-dismiss.button.ghost:hover {
     border-color: var(--input);
+  }
+
+  /* --- Micro-interactions (D-53) ------------------------------------------------------------- */
+
+  /* 1. Working, then a tick. The wrapper is inline so a button keeps its place in a row; the spinner is
+     1em of the button's text and turns on the pulse duration. Under reduced motion it stands still as
+     a ring with a gap, and the word beside it says the rest. A busy button ignores the pointer too. */
+  .button-progress {
+    display: inline-flex;
+  }
+
+  .button-progress > button[aria-busy="true"] {
+    cursor: progress;
+  }
+
+  .spinner {
+    display: inline-block;
+    flex: none;
+    width: 1em;
+    height: 1em;
+    box-sizing: border-box;
+    border: 2px solid currentColor;
+    border-block-start-color: transparent;
+    border-radius: 999px;
+    animation: forspring-spin var(--motion-duration-pulse) linear infinite;
+  }
+
+  button:has(> .spinner) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+  }
+
+  @keyframes forspring-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* 2. A value that just changed: a tint of the accent that fades out over the pulse duration. With
+     motion off it is the same tint, still, and the script takes it away after the same time. */
+  .changed-value {
+    border-radius: var(--radius-button);
+  }
+
+  [data-changed] {
+    background-color: var(--_changed);
+    animation: forspring-changed var(--motion-duration-pulse) var(--motion-ease-out) both;
+  }
+
+  @keyframes forspring-changed {
+    to {
+      background-color: transparent;
+    }
+  }
+
+  /* 3. An undo toast: the form is the small ghost button's box, and the time left is a thin bar and
+     the seconds, on a row of its own at the foot of the toast. The bar is the script's. */
+  .toast-undo-form {
+    display: flex;
+    margin: 0;
+  }
+
+  .toast-time {
+    display: flex;
+    flex-basis: 100%;
+    align-items: center;
+    gap: var(--space-3);
+    padding-inline-end: var(--space-2);
+  }
+
+  .toast-time-bar {
+    flex: 1;
+  }
+
+  .toast-time-text {
+    min-inline-size: var(--space-8);
+    font: 600 var(--text-chrome-meta)/var(--leading-solid) var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    text-align: end;
+    color: var(--muted-foreground);
+  }
+
+  .toast[data-paused] .toast-time-bar {
+    opacity: 0.55;
+  }
+
+  /* 4. Selectable rows: a narrow checkbox column that is the drag handle. On a touch screen it pans
+     sideways only, so a finger that starts there can drag down over the rows and one that starts in
+     any other column scrolls the page. A ticked row has the muted surface and no edge rule (D-46). */
+  .table-select {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin: 0;
+  }
+
+  th.select,
+  td.select {
+    inline-size: var(--space-12);
+    padding-inline: var(--space-4) var(--space-2);
+  }
+
+  td.select {
+    touch-action: pan-x;
+    cursor: pointer;
+  }
+
+  .table-select[data-dragging] {
+    user-select: none;
+  }
+
+  tr:has(td.select input:checked) td {
+    background: var(--muted);
+  }
+
+  .table-select-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3) var(--space-4);
+  }
+
+  .table-select-count {
+    margin: 0;
+    font: 600 var(--text-chrome-body)/var(--leading-chrome-meta) var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    color: var(--foreground);
+  }
+
+  .table-select-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--rhythm-actions);
+  }
+
+  /* 5. Hold to confirm: on a coarse pointer the label is the hold word and the fill grows from the
+     start edge as the finger stays. The fill is behind the text, a tint of the danger colour, so the
+     label keeps its contrast. A fine pointer sees the plain label and the existing confirm. */
+  .hold {
+    display: inline-flex;
+  }
+
+  .hold-form {
+    margin: 0;
+  }
+
+  .hold-button {
+    position: relative;
+    overflow: hidden;
+    -webkit-touch-callout: none;
+    user-select: none;
+  }
+
+  /* The fill is the danger colour, wiped in from the start edge by the hold, and it carries its own copy
+     of the hold word in the label's ink, so the word keeps its contrast on both halves: danger on the
+     surface, the primary-foreground role on the danger fill. */
+  .hold-fill {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3) var(--space-5);
+    clip-path: inset(0 calc((1 - var(--_hold, 0)) * 100%) 0 0);
+    background: var(--danger);
+    color: var(--primary-foreground);
+    pointer-events: none;
+  }
+
+  .hold-label,
+  .hold-hint {
+    position: relative;
+  }
+
+  .hold-hint,
+  .hold-fill {
+    display: none;
+  }
+
+  @media (pointer: coarse) {
+    .hold-hint {
+      display: inline;
+    }
+
+    .hold-fill {
+      display: flex;
+    }
+
+    .hold-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+  }
+
+  /* 6. A cut-off chip: the tag's pill with the state's icon before the words. Soon is neutral, then the
+     warning hue, then danger; each shows its own icon, so the change is not colour alone. */
+  .cutoff {
+    gap: var(--space-1);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .cutoff-icon {
+    display: none;
+  }
+
+  .cutoff-text {
+    white-space: nowrap;
+  }
+
+  .cutoff[data-state="soon"] > .cutoff-icon-soon,
+  .cutoff[data-state="warning"] > .cutoff-icon-warning,
+  .cutoff[data-state="passed"] > .cutoff-icon-passed {
+    display: inline-flex;
+  }
+
+  /* 7. An honest progress bar: a native progress with the track drawn and the fill only as long as the
+     value, so 0 of 10 is an empty track and only value = max reaches the end. */
+  .progress-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .progress-label {
+    margin: 0;
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-meta) var(--font-sans);
+    font-variant-numeric: tabular-nums;
+    color: var(--muted-foreground);
+  }
+
+  .progress,
+  .toast-time-bar {
+    appearance: none;
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: var(--space-2);
+    border: 1px solid var(--input);
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--card);
+    color: var(--primary);
+  }
+
+  .toast-time-bar {
+    block-size: var(--space-2);
+  }
+
+  .progress::-webkit-progress-bar,
+  .toast-time-bar::-webkit-progress-bar {
+    background: var(--card);
+  }
+
+  .progress::-webkit-progress-value,
+  .toast-time-bar::-webkit-progress-value {
+    background: var(--primary);
+    border-radius: 999px;
+  }
+
+  .progress::-moz-progress-bar,
+  .toast-time-bar::-moz-progress-bar {
+    background: var(--primary);
+    border-radius: 999px;
   }
 
   /* --- Tooltip: a button and a native popover ---------------------------------------------- */

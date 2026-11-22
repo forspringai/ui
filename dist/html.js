@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.38.0";
+export const VERSION = "0.39.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -319,9 +319,35 @@ ${bar(barOpts)}
 ${menu ? menuFrame(menu, o.body, o.narrow) : html `<main id="main" class="${cls("wrap", o.narrow && "narrow")}">${o.body}</main>`}
 ${footer}</body></html>`;
 }
+const BUTTON = {
+    da: { working: "Arbejder…", done: "Færdig" },
+    en: { working: "Working…", done: "Done" },
+};
+function buttonProgress(o, variant) {
+    const p = o.progress;
+    const w = p.working ?? BUTTON[p.lang].working;
+    const d = p.done ?? BUTTON[p.lang].done;
+    const content = p.state === "working" ? html `<span class="spinner" aria-hidden="true"></span>${w}` : p.state === "done" ? html `${icon("check")}${d}` : o.icon ? html `${icon(o.icon)}${o.label}` : o.label;
+    const a = {
+        class: cls(variant, o.small && "small", o.wide && "wide"),
+        type: o.type ?? "submit",
+        name: o.name,
+        value: o.value,
+        "aria-label": o.ariaLabel,
+        "data-working": w,
+        "data-done": d,
+        "data-state": p.state,
+        "aria-busy": p.state === "working" ? "true" : undefined,
+    };
+    // The status region starts empty: on a fresh page the button's own words are read in order, and the
+    // script writes the one announcement when the state changes, so the change is heard once.
+    return html `<span class="button-progress"><button${raw(attrs(a))}>${content}</button><template data-done-icon>${icon("check")}</template><span class="visually-hidden" role="status"></span></span>`;
+}
 export function button(o) {
     const label = o.icon ? html `${icon(o.icon)}${o.label}` : o.label;
     const variant = o.variant && o.variant !== "primary" ? o.variant : null;
+    if (o.progress && o.href === undefined)
+        return buttonProgress(o, variant);
     if (o.href !== undefined) {
         return html `<a${raw(attrs({ class: cls("button", variant, o.small && "small", o.wide && "wide"), href: safeHref(o.href), "aria-label": o.ariaLabel }))}>${label}</a>`;
     }
@@ -512,6 +538,10 @@ export function pagination(o) {
     const order = o.order ? html `<span class="pagination-order">, ${o.order}</span>` : "";
     return html `<nav class="pagination" aria-label="${o.label ?? t.pages()}"><p class="pagination-range">${range}${order}</p><span class="pagination-steps">${step(o.prevHref, t.prev, "prev")}${step(o.nextHref, t.next, "next")}</span></nav>`;
 }
+const SELECT = {
+    da: { column: "Vælg", row: (l) => `Vælg ${l}`, count: (n) => `${n} valgt`, region: "Markering" },
+    en: { column: "Select", row: (l) => `Select ${l}`, count: (n) => `${n} selected`, region: "Selection" },
+};
 const isHtml = (c) => typeof c === "object" && c !== null && c[BRAND] === true;
 const ARIA_SORT = { asc: "ascending", desc: "descending" };
 /**
@@ -532,7 +562,19 @@ export function table(o) {
         const arrow = dir ? html `<span class="sort-dir" aria-hidden="true">${dir === "asc" ? "↑" : "↓"}</span>` : "";
         return html `<th scope="col"${raw(attrs({ class: c(col), "aria-sort": dir ? ARIA_SORT[dir] : undefined }))}><a class="sort" href="${safeHref(col.sort.href)}">${col.label}${arrow}</a></th>`;
     };
-    const frame = html `<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html `<caption>${o.caption}</caption>` : ""}<thead><tr>${o.columns.map(head)}</tr></thead><tbody>${o.rows.map((r) => html `<tr>${r.map((cell, i) => html `<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`)}</tbody></table></div>`;
+    const sel = o.selectable;
+    if (sel && (sel.ids.length !== o.rows.length || sel.labels.length !== o.rows.length))
+        throw new Error("table: a selectable table needs one id and one label for each row");
+    const st = sel ? SELECT[sel.lang] : undefined;
+    const ticked = new Set(sel?.selected ?? []);
+    const selectHead = sel ? html `<th scope="col" class="select"><span class="visually-hidden">${st.column}</span></th>` : "";
+    const selectCell = (i) => (sel ? html `<td class="select"><input type="checkbox" name="${sel.name}" value="${sel.ids[i]}" aria-label="${st.row(sel.labels[i])}"${raw(ticked.has(sel.ids[i]) ? " checked" : "")}></td>` : "");
+    const frame0 = html `<div class="table-wrap" role="region" aria-label="${o.label}" tabindex="0"><table>${o.caption ? html `<caption>${o.caption}</caption>` : ""}<thead><tr>${selectHead}${o.columns.map(head)}</tr></thead><tbody>${o.rows.map((r, n) => html `<tr>${selectCell(n)}${r.map((cell, i) => html `<td${raw(attrs({ class: c(o.columns[i]) }))}>${cell}</td>`)}</tr>`)}</tbody></table></div>`;
+    // One form around the table and its actions. The count is drawn twice: a visible one the script
+    // updates as a pointer drags, and a status region it writes once when the selection settles.
+    const frame = sel
+        ? html `<form class="table-select" data-select-text="${st.count(0).replace("0", "{n}")}" action="${safeHref(sel.form.action)}" method="${sel.form.method ?? "post"}">${hidden(sel.form.fields)}${frame0}<div class="table-select-bar" role="group" aria-label="${st.region}"><p class="table-select-count" aria-hidden="true">${st.count(ticked.size)}</p><span class="visually-hidden" role="status" data-select-live></span><span class="table-select-actions">${sel.actions}</span></div></form>`
+        : frame0;
     const k = o.controls;
     if (!k)
         return frame;
@@ -715,8 +757,8 @@ export function confirmDestructive(o) {
 // The package's words, as the bar's and the confirm's are (D-17, D-23). The tone's word is read
 // before the text, so a screen reader hears what kind of message it is, as an eye sees from the icon.
 const TOAST = {
-    da: { dismiss: "Luk", region: "Beskeder", tone: { success: "Udført", warning: "Advarsel", danger: "Fejl", info: "Bemærk" } },
-    en: { dismiss: "Dismiss", region: "Messages", tone: { success: "Done", warning: "Warning", danger: "Error", info: "Note" } },
+    da: { dismiss: "Luk", region: "Beskeder", undo: "Fortryd", tone: { success: "Udført", warning: "Advarsel", danger: "Fejl", info: "Bemærk" } },
+    en: { dismiss: "Dismiss", region: "Messages", undo: "Undo", tone: { success: "Done", warning: "Warning", danger: "Error", info: "Note" } },
 };
 // A shape per tone as well as a colour, so the tone is never told by colour alone: a tick, a
 // triangle, an octagon and an i.
@@ -735,10 +777,16 @@ export function toast(o) {
     const tone = o.tone ?? "info";
     const id = o.id ?? "toast";
     const textId = `${id}-text`;
+    if (o.undo && o.action)
+        throw new Error("toast: give an undo or an action, not both");
     // Only a success or a fact with nothing to do may hide itself, and only through toastScript().
-    const autohide = (tone === "success" || tone === "info") && !o.action;
-    const a = raw(attrs({ class: `toast toast-${tone}`, id, role: tone === "danger" ? "alert" : "status", "aria-live": tone === "danger" ? undefined : "polite", "data-toast-autohide": autohide ? "true" : undefined }));
-    const action = o.action ? html `<a class="button ghost small" href="${safeHref(o.action.href)}" aria-describedby="${textId}">${o.action.label}</a>` : "";
+    const autohide = (tone === "success" || tone === "info") && !o.action && !o.undo;
+    const seconds = o.undo ? Math.max(1, Math.round(o.undo.seconds ?? 10)) : undefined;
+    const a = raw(attrs({ class: `toast toast-${tone}`, id, role: tone === "danger" ? "alert" : "status", "aria-live": tone === "danger" ? undefined : "polite", "data-toast-autohide": autohide ? "true" : undefined, "data-toast-undo": seconds }));
+    const undo = o.undo
+        ? html `<form class="toast-undo-form" method="post" action="${safeHref(o.undo.action)}">${hidden(o.undo.fields)}<button type="submit" class="ghost small" aria-describedby="${textId}">${o.undo.label ?? t.undo}</button></form>`
+        : "";
+    const action = o.action ? html `<a class="button ghost small" href="${safeHref(o.action.href)}" aria-describedby="${textId}">${o.action.label}</a>` : undo;
     return html `<div${a}>${icon(TOAST_ICON[tone])}<p class="toast-text" id="${textId}"><span class="visually-hidden">${t.tone[tone]}: </span>${o.text}</p><span class="toast-actions">${action}<a class="button ghost small toast-dismiss" href="${safeHref(o.dismissHref)}" data-toast-dismiss="${id}" aria-describedby="${textId}">${icon("x")}<span class="visually-hidden">${t.dismiss}</span></a></span></div>`;
 }
 /** Several toasts stacked at the bottom of the window, newest last, in a region named "Beskeder" /
@@ -769,7 +817,59 @@ export const TOAST_SCRIPT = `(() => {
     e.preventDefault();
     gone(t, a.getAttribute("href"));
   });
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const undoable = () => [...document.querySelectorAll(".toast[data-toast-undo]")].filter((t) => t.getAttribute("data-toast-undo"));
+  document.addEventListener("submit", (e) => {
+    const f = e.target;
+    if (!(f instanceof Element) || !f.matches("form.toast-undo-form")) return;
+    const t = f.closest(".toast");
+    if (!t) return;
+    if (!t.dispatchEvent(new CustomEvent("ui:undo", { bubbles: true, cancelable: true, detail: { form: f } }))) {
+      e.preventDefault();
+      gone(t, t.querySelector("[data-toast-dismiss]")?.getAttribute("href"));
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || e.defaultPrevented || document.querySelector("dialog[open]")) return;
+    const all = undoable();
+    const active = document.activeElement;
+    const t = all.find((x) => x.contains(active)) || (!active || active === document.body ? all[all.length - 1] : null);
+    if (t) gone(t, t.querySelector("[data-toast-dismiss]")?.getAttribute("href"));
+  });
+  for (const t of undoable()) {
+    const total = Number(t.getAttribute("data-toast-undo")) * 1000;
+    if (!(total > 0)) continue;
+    const bar = document.createElement("progress");
+    bar.className = "toast-time-bar";
+    bar.max = total;
+    const text = document.createElement("span");
+    text.className = "toast-time-text";
+    const box = document.createElement("span");
+    box.className = "toast-time";
+    box.setAttribute("aria-hidden", "true");
+    box.append(bar, text);
+    t.append(box);
+    let left = total, last = Date.now();
+    const paint = () => {
+      bar.value = left;
+      text.textContent = Math.ceil(left / 1000) + " s";
+    };
+    paint();
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const paused = t.matches(":hover, :focus-within");
+      t.toggleAttribute("data-paused", paused);
+      if (!paused) left -= now - last;
+      last = now;
+      if (!t.isConnected) return clearInterval(timer);
+      if (left <= 0) {
+        clearInterval(timer);
+        return gone(t, t.querySelector("[data-toast-dismiss]")?.getAttribute("href"));
+      }
+      paint();
+    }, reduce ? 1000 : 100);
+  }
+  if (reduce) return;
   for (const t of document.querySelectorAll(".toast[data-toast-autohide]")) {
     if (t.classList.contains("toast-danger") || t.classList.contains("toast-warning") || t.getAttribute("role") === "alert") continue;
     let timer = 0;
@@ -964,4 +1064,385 @@ const GOOGLE_G = `<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
 /** Google's button (google-button.css), as a submit button for the caller's form. */
 export function googleButton(label) {
     return html `<button class="gsi" type="submit">${raw(GOOGLE_G)}<span>${label}</span></button>`;
+}
+// --- Micro-interactions (D-53) ---------------------------------------------------------------------
+// Seven small behaviours at component level, so every product gets them from the package. Each is
+// markup that works with no script (a server-drawn state, a form, a link) plus, where it needs one,
+// a script in the package's usual shape: a *_SCRIPT text and *Script(nonce) writing the tag. Every
+// script listens on the document, so markup React draws later works too.
+const scriptTag = (text, nonce) => html `<script${raw(nonce ? ` nonce="${nonce.replace(/[^A-Za-z0-9+/=_-]/g, "")}"` : "")}>${raw(text)}</script>`;
+/**
+ * 1. Working, then a tick (button({ progress })). A submit button says it is working (a spinner and
+ * the product's word, aria-busy, still focusable, a second press ignored) and then that it is done
+ * (a tick and the word) for two seconds, then goes back to its label. The words are announced once,
+ * through the button's own status region, never through the button. The script sets "working" on
+ * submit; the product sends `ui:button-done` (or `ui:button-working`, `ui:button-reset`) as a
+ * bubbling event on the button or its form when it knows. A page restored from the back-forward cache
+ * resets every busy button. Without the script the server draws the state (`progress.state`).
+ */
+export const BUTTON_SCRIPT = `(() => {
+  const DONE_MS = 2000;
+  const saved = new WeakMap();
+  const timers = new WeakMap();
+  const find = (t) => (t instanceof Element ? (t.matches("button[data-working]") ? t : t.querySelector("button[data-working]")) : null);
+  const say = (b, text) => {
+    const s = b.parentElement && b.parentElement.querySelector('[role="status"]');
+    if (s) s.textContent = text;
+  };
+  const reset = (b) => {
+    clearTimeout(timers.get(b));
+    if (saved.has(b)) b.innerHTML = saved.get(b);
+    saved.delete(b);
+    b.removeAttribute("aria-busy");
+    b.removeAttribute("data-state");
+    say(b, "");
+  };
+  const show = (b, state) => {
+    clearTimeout(timers.get(b));
+    if (!saved.has(b) && !b.hasAttribute("data-state")) saved.set(b, b.innerHTML);
+    b.setAttribute("data-state", state);
+    if (state === "working") {
+      b.setAttribute("aria-busy", "true");
+      const spin = document.createElement("span");
+      spin.className = "spinner";
+      spin.setAttribute("aria-hidden", "true");
+      b.replaceChildren(spin, document.createTextNode(b.getAttribute("data-working")));
+      say(b, b.getAttribute("data-working"));
+    } else {
+      b.removeAttribute("aria-busy");
+      const tpl = b.parentElement && b.parentElement.querySelector("template[data-done-icon]");
+      b.replaceChildren(...(tpl ? [tpl.content.cloneNode(true)] : []), document.createTextNode(b.getAttribute("data-done")));
+      say(b, b.getAttribute("data-done"));
+      timers.set(b, setTimeout(() => reset(b), DONE_MS));
+    }
+  };
+  document.addEventListener("click", (e) => {
+    const b = e.target instanceof Element ? e.target.closest("button[data-working]") : null;
+    if (b && b.getAttribute("aria-busy") === "true") e.preventDefault();
+  });
+  document.addEventListener("submit", (e) => {
+    const b = e.submitter instanceof Element ? e.submitter.closest("button[data-working]") : find(e.target);
+    if (!b) return;
+    if (b.getAttribute("aria-busy") === "true") return e.preventDefault();
+    show(b, "working");
+  });
+  for (const [type, f] of [["ui:button-working", (b) => show(b, "working")], ["ui:button-done", (b) => show(b, "done")], ["ui:button-reset", reset]]) {
+    document.addEventListener(type, (e) => {
+      const b = find(e.target);
+      if (b) f(b);
+    });
+  }
+  addEventListener("pageshow", (e) => {
+    if (e.persisted) for (const b of document.querySelectorAll('button[data-working][aria-busy="true"]')) reset(b);
+  });
+})();`;
+/** BUTTON_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export const buttonScript = (nonce) => scriptTag(BUTTON_SCRIPT, nonce);
+export function changedValue(content, o = {}) {
+    return html `<span${raw(attrs({ class: "changed-value", "data-changed": o.changed ? "true" : undefined }))}>${content}</span>`;
+}
+export const CHANGED_SCRIPT = `(() => {
+  const MS = 1600;
+  const timers = new WeakMap();
+  const clear = (el) => timers.set(el, setTimeout(() => el.removeAttribute("data-changed"), MS));
+  document.addEventListener("ui:changed", (e) => {
+    const el = e.target;
+    if (!(el instanceof Element)) return;
+    clearTimeout(timers.get(el));
+    el.removeAttribute("data-changed");
+    void el.offsetWidth;
+    el.setAttribute("data-changed", "true");
+    clear(el);
+  });
+  for (const el of document.querySelectorAll("[data-changed]")) clear(el);
+})();`;
+/** CHANGED_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export const changedScript = (nonce) => scriptTag(CHANGED_SCRIPT, nonce);
+/**
+ * 4. Selecting rows (table({ selectable })). The checkbox column is a form: tick and press an action,
+ * with no script. The script adds a drag from one checkbox down or up over the rows (on a touch
+ * screen only a drag that starts in the checkbox column, so the page still scrolls), Shift+click and
+ * Shift+Space for a range from the last row touched, Arrow keys between the checkboxes and Shift+Arrow
+ * to extend, and the count: "3 selected" on screen as a drag moves, and in the status region once
+ * when the selection settles.
+ */
+export const TABLE_SELECT_SCRIPT = `(() => {
+  const boxes = (f) => [...f.querySelectorAll("tbody td.select input[type=checkbox]")];
+  const formOf = (el) => (el instanceof Element ? el.closest("form.table-select") : null);
+  const say = (f, live) => {
+    const n = boxes(f).filter((b) => b.checked).length;
+    const text = (f.getAttribute("data-select-text") || "{n}").replace("{n}", n);
+    const c = f.querySelector(".table-select-count");
+    if (c) c.textContent = text;
+    const l = f.querySelector("[data-select-live]");
+    if (live && l) l.textContent = text;
+  };
+  // A session remembers which boxes were ticked when a range began, so moving back shrinks the range.
+  const begin = (f, box, mode) => ({ f, box, mode, orig: boxes(f).map((b) => b.checked), moved: false });
+  const apply = (s, to, notify) => {
+    const list = boxes(s.f);
+    const a = list.indexOf(s.box), b = list.indexOf(to);
+    if (a < 0 || b < 0) return;
+    const lo = Math.min(a, b), hi = Math.max(a, b);
+    list.forEach((x, i) => {
+      const want = i >= lo && i <= hi ? s.mode : s.orig[i];
+      if (x.checked === want) return;
+      x.checked = want;
+      if (notify) x.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  };
+  const anchors = new WeakMap();
+  let drag = null;
+  let suppress = false;
+  document.addEventListener("pointerdown", (e) => {
+    const td = e.target instanceof Element ? e.target.closest("td.select") : null;
+    const f = formOf(td);
+    if (!td || !f || e.button !== 0 || e.shiftKey) return;
+    const box = td.querySelector("input[type=checkbox]");
+    if (!box) return;
+    drag = { ...begin(f, box, !box.checked), id: e.pointerId, td, onInput: e.target === box };
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const tr = document.elementFromPoint(e.clientX, e.clientY)?.closest("tr");
+    const to = tr && drag.f.contains(tr) ? tr.querySelector("td.select input[type=checkbox]") : null;
+    if (!to) return;
+    if (to !== drag.box) {
+      drag.moved = true;
+      drag.f.setAttribute("data-dragging", "");
+      getSelection()?.removeAllRanges();
+    }
+    if (drag.moved) {
+      apply(drag, to, false);
+      say(drag.f, false);
+    }
+  });
+  const end = (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const d = drag;
+    drag = null;
+    d.f.removeAttribute("data-dragging");
+    if (e.type === "pointercancel") {
+      boxes(d.f).forEach((x, i) => (x.checked = d.orig[i]));
+      return say(d.f, false);
+    }
+    if (d.moved) {
+      suppress = true;
+      setTimeout(() => (suppress = false), 0);
+      const list = boxes(d.f);
+      list.forEach((x, i) => x.checked !== d.orig[i] && x.dispatchEvent(new Event("change", { bubbles: true })));
+      anchors.set(d.f, list.find((x, i) => x.checked !== d.orig[i]) || d.box);
+      say(d.f, true);
+    } else if (!d.onInput && e.target instanceof Element && d.td.contains(e.target)) {
+      d.box.click();
+    }
+  };
+  document.addEventListener("pointerup", end);
+  document.addEventListener("pointercancel", end);
+  document.addEventListener("click", (e) => {
+    const box = e.target instanceof HTMLInputElement && e.target.closest("td.select") ? e.target : null;
+    const f = formOf(box);
+    if (!box || !f) return;
+    if (suppress) {
+      suppress = false;
+      return e.preventDefault();
+    }
+    const from = anchors.get(f);
+    if (e.shiftKey && from && from !== box) apply(begin(f, from, box.checked), box, true);
+    anchors.set(f, box);
+    say(f, true);
+  });
+  document.addEventListener("keydown", (e) => {
+    const box = e.target instanceof HTMLInputElement && e.target.closest("td.select") ? e.target : null;
+    const f = formOf(box);
+    if (!box || !f || e.altKey || e.ctrlKey || e.metaKey) return;
+    const list = boxes(f);
+    const i = list.indexOf(box);
+    if (e.key === " " && e.shiftKey) {
+      e.preventDefault();
+      const from = anchors.get(f);
+      if (from && from !== box) {
+        apply(begin(f, from, !box.checked), box, true);
+      } else {
+        box.checked = !box.checked;
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      anchors.set(f, box);
+      return say(f, true);
+    }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const to = list[i + (e.key === "ArrowDown" ? 1 : -1)];
+    e.preventDefault();
+    if (!to) return;
+    if (e.shiftKey) {
+      const from = anchors.get(f) || box;
+      anchors.set(f, from);
+      apply(begin(f, from, !from.checked || from === box ? true : from.checked), to, true);
+      say(f, true);
+    }
+    to.focus();
+  });
+})();`;
+/** TABLE_SELECT_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export const tableSelectScript = (nonce) => scriptTag(TABLE_SELECT_SCRIPT, nonce);
+const HOLD = { da: "Hold nede", en: "Hold to confirm" };
+export function holdToConfirm(o) {
+    const hint = o.holdLabel ?? HOLD[o.lang];
+    const a = raw(attrs({ class: "button danger hold-button", href: safeHref(o.href), "data-dialog-open": o.dialog, "data-hold-form": o.id }));
+    return html `<span class="hold"><a${a}><span class="hold-fill" aria-hidden="true"><span>${hint}</span></span><span class="hold-label">${o.label}</span><span class="hold-hint" aria-hidden="true">${hint}</span></a><form class="hold-form" id="${o.id}" method="post" action="${safeHref(o.action)}" hidden>${hidden(o.fields)}</form></span>`;
+}
+export const HOLD_SCRIPT = `(() => {
+  const HOLD_MS = 1000;
+  const EARLY_MS = 200;
+  let cur = null;
+  let swallow = false;
+  const reduced = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const paint = (a, f) => a.style.setProperty("--_hold", String(f));
+  const stop = () => {
+    if (!cur) return;
+    cancelAnimationFrame(cur.raf);
+    clearTimeout(cur.timer);
+    cur.a.removeAttribute("data-holding");
+    paint(cur.a, 0);
+    cur = null;
+  };
+  const step = () => {
+    if (!cur) return;
+    const t = performance.now() - cur.start;
+    const f = Math.min(1, t / HOLD_MS);
+    paint(cur.a, reduced() ? Math.floor(f * 4) / 4 : f);
+    if (t >= HOLD_MS) {
+      const form = document.getElementById(cur.a.getAttribute("data-hold-form"));
+      paint(cur.a, 1);
+      cur.done = true;
+      swallow = true;
+      cur.a.removeAttribute("data-holding");
+      cur = null;
+      if (form instanceof HTMLFormElement) form.requestSubmit();
+      return;
+    }
+    if (reduced()) cur.timer = setTimeout(step, 250);
+    else cur.raf = requestAnimationFrame(step);
+  };
+  document.addEventListener("pointerdown", (e) => {
+    const a = e.target instanceof Element ? e.target.closest("[data-hold-form]") : null;
+    if (!a || e.button !== 0 || e.pointerType === "mouse" || !matchMedia("(pointer: coarse)").matches) return;
+    stop();
+    swallow = false;
+    cur = { a, id: e.pointerId, start: performance.now(), raf: 0, timer: 0, done: false };
+    a.setAttribute("data-holding", "true");
+    step();
+  });
+  const release = (e) => {
+    if (!cur || e.pointerId !== cur.id) return;
+    const early = performance.now() - cur.start;
+    stop();
+    // A hold let go after a moment was a try at holding: it must not open the dialog by its click.
+    if (e.type === "pointerup" && early >= EARLY_MS) {
+      swallow = true;
+      setTimeout(() => (swallow = false), 400);
+    }
+  };
+  document.addEventListener("pointerup", release);
+  document.addEventListener("pointercancel", release);
+  document.addEventListener("click", (e) => {
+    if (!swallow || !(e.target instanceof Element) || !e.target.closest("[data-hold-form]")) return;
+    swallow = false;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }, true);
+  document.addEventListener("contextmenu", (e) => {
+    if (cur || (e.target instanceof Element && e.target.closest("[data-hold-form]") && matchMedia("(pointer: coarse)").matches)) e.preventDefault();
+  });
+})();`;
+/** HOLD_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export const holdScript = (nonce) => scriptTag(HOLD_SCRIPT, nonce);
+const CUTOFF = {
+    da: { before: "Frist om", passed: "Frist overskredet", under: "under 1 min", d: "d", h: "t", min: "min" },
+    en: { before: "Cut-off in", passed: "Cut-off passed", under: "under 1 min", d: "d", h: "h", min: "min" },
+};
+/** "1 h 20 min", "2 d 3 h", "20 min": whole minutes left, the units of the page's language. */
+export function timeLeft(ms, lang) {
+    const t = CUTOFF[lang];
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 1)
+        return t.under;
+    const d = Math.floor(minutes / 1440);
+    const h = Math.floor((minutes % 1440) / 60);
+    const m = minutes % 60;
+    const part = (n, u) => (n ? `${n} ${u}` : "");
+    return (d ? [part(d, t.d), part(h, t.h)] : h ? [part(h, t.h), part(m, t.min)] : [part(m, t.min)]).filter(Boolean).join(" ");
+}
+export function cutoff(o) {
+    const at = o.at instanceof Date ? o.at : new Date(o.at);
+    if (Number.isNaN(at.getTime()))
+        throw new Error("cutoff: `at` is not a date");
+    const t = CUTOFF[o.lang];
+    const words = o.words ?? { before: t.before, passed: t.passed };
+    const warn = Math.max(0, o.warnWithin ?? 60);
+    const left = at.getTime() - o.now.getTime();
+    const state = left <= 0 ? "passed" : left <= warn * 60000 ? "warning" : "soon";
+    const text = state === "passed" ? words.passed : `${words.before} ${timeLeft(left, o.lang)}`;
+    const a = {
+        class: cls("tag cutoff", state === "warning" && "warning", state === "passed" && "danger"),
+        datetime: at.toISOString(),
+        "data-cutoff": at.toISOString(),
+        "data-warn": warn,
+        "data-before": words.before,
+        "data-passed": words.passed,
+        "data-units": `${t.d},${t.h},${t.min},${t.under}`,
+        "data-state": state,
+    };
+    return html `<time${raw(attrs(a))}><span class="cutoff-icon cutoff-icon-soon" aria-hidden="true">${icon("clock")}</span><span class="cutoff-icon cutoff-icon-warning" aria-hidden="true">${icon("alert-triangle")}</span><span class="cutoff-icon cutoff-icon-passed" aria-hidden="true">${icon("alert-octagon")}</span><span class="cutoff-text">${text}</span></time>`;
+}
+/** The rows nearest their cut-off first: those still to come, soonest first, then the ones that have
+ *  passed, most recent first, then the ones with no cut-off, in the order given. Stable, and the
+ *  array is a copy. */
+export function sortByCutoff(rows, at, now) {
+    const time = (r) => {
+        const v = at(r);
+        const n = v === null || v === undefined ? Number.NaN : (v instanceof Date ? v : new Date(v)).getTime();
+        return n;
+    };
+    const rank = (n) => (Number.isNaN(n) ? 2 : n > now.getTime() ? 0 : 1);
+    return rows
+        .map((r, i) => ({ r, i, n: time(r) }))
+        .sort((a, b) => rank(a.n) - rank(b.n) || (rank(a.n) === 0 ? a.n - b.n : rank(a.n) === 1 ? b.n - a.n : 0) || a.i - b.i)
+        .map((x) => x.r);
+}
+export const COUNTDOWN_SCRIPT = `(() => {
+  const left = (ms, u) => {
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 1) return u[3];
+    const d = Math.floor(minutes / 1440), h = Math.floor((minutes % 1440) / 60), m = minutes % 60;
+    const part = (n, w) => (n ? n + " " + w : "");
+    return (d ? [part(d, u[0]), part(h, u[1])] : h ? [part(h, u[1]), part(m, u[2])] : [part(m, u[2])]).filter(Boolean).join(" ");
+  };
+  const run = () => {
+    for (const c of document.querySelectorAll("time[data-cutoff]")) {
+      const ms = Date.parse(c.getAttribute("data-cutoff")) - Date.now();
+      const warn = Number(c.getAttribute("data-warn")) * 60000;
+      const state = ms <= 0 ? "passed" : ms <= warn ? "warning" : "soon";
+      const text = state === "passed" ? c.getAttribute("data-passed") : c.getAttribute("data-before") + " " + left(ms, c.getAttribute("data-units").split(","));
+      const t = c.querySelector(".cutoff-text");
+      if (t && t.textContent !== text) t.textContent = text;
+      if (c.getAttribute("data-state") === state) continue;
+      c.setAttribute("data-state", state);
+      c.classList.toggle("warning", state === "warning");
+      c.classList.toggle("danger", state === "passed");
+    }
+  };
+  run();
+  const next = () => setTimeout(() => { run(); next(); }, 60000 - (Date.now() % 60000) + 50);
+  next();
+})();`;
+/** COUNTDOWN_SCRIPT in a <script> tag, with the page's CSP nonce when it has one. */
+export const countdownScript = (nonce) => scriptTag(COUNTDOWN_SCRIPT, nonce);
+export function progress(o) {
+    if (!(o.max > 0) || !Number.isFinite(o.max))
+        throw new Error("progress: max must be above 0");
+    const value = Number.isFinite(o.value) ? Math.min(o.max, Math.max(0, o.value)) : 0;
+    const id = o.id ?? "progress";
+    const a = { class: "progress", role: "progressbar", value, max: o.max, "aria-valuemin": 0, "aria-valuemax": o.max, "aria-valuenow": value, "aria-labelledby": `${id}-label` };
+    return html `<div class="progress-block"><progress${raw(attrs(a))}></progress><p class="progress-label" id="${id}-label">${o.label}</p></div>`;
 }
