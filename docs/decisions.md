@@ -1970,3 +1970,63 @@ toast's dismiss, but no tag with a remove control in it.
   The focus ring is the global one. No new tokens.
 - **The label is required.** An empty `remove.label` throws: the x is its only content, so the button
   would have no name.
+
+## D-53: Micro-interactions at component level (0.39.0, 2026-11-22)
+
+lead-ui, from lead-bench's Pax round (pax-2screen) and Peter: seven small behaviours belong in
+`@forspring/ui`, so every product gets them from the package and none is composed by hand. Each is
+markup that works with no script, a script as progressive enhancement in the package's shape (a
+`*_SCRIPT` text and `*Script(nonce)` writing the tag), CSS from tokens only, the words in Danish and
+English or the product's own, and a React twin (`fromHtml`). Under `prefers-reduced-motion` nothing
+moves and the state change stays visible as a static mark.
+
+1. **Working, then a tick.** `button({ progress: { lang, state? } })`: the button sits in a
+   `.button-progress` span with an empty status region and a tick in a `<template>`. State is server-drawn
+   (`working`: spinner and word, `aria-busy`; `done`: tick and word) or script-drawn: `buttonScript()` sets
+   working on submit, the product sends `ui:button-done` / `ui:button-working` / `ui:button-reset`
+   (bubbling, on the button or its form). Still focusable; a second press is ignored; announced once,
+   through the status region, never through the button. `pageshow` from the back-forward cache resets it.
+2. **Changed-value highlight.** `changedValue()` and `[data-changed]`: a layer behind the value
+   (`::after`, `z-index: -1`) in the accent at 16% opacity, fading over `--motion-duration-pulse`. A
+   layer, not the element's own background, so the audit's palette rule never samples a half-faded
+   colour and the text sits on exactly the accent at 16% over its surface. Under reduced motion the tint is static and the script
+   removes it after the same 1.6 s (with no script and reduced motion nothing can clear it). Contrast of
+   `foreground`, `body-foreground` and `card-foreground` on the tint is tested for every product in both
+   themes (test/micro.test.ts).
+3. **Undo toast.** `toast({ undo: { action, fields?, label?, seconds? } })`: Undo is a POST form; with
+   `toastScript()` a bar and "8 s" show the time left, hover or focus pauses it, Escape dismisses (only
+   when focus is on the toast or on nothing, and no dialog is open), and a cancelable `ui:undo` event on
+   the toast lets a product do the undo itself. When it runs out the toast goes, also under reduced
+   motion (the bar and the seconds step each second). An undo and an `action` are refused together.
+   **COMPONENT ONLY:** this changes no product's confirm. **When to use undo:** the action is reversible
+   and cheap to reverse (archive, move, hide, rename, a status change), so an Undo for a few seconds is
+   kinder than a question before it. **When a confirm stays:** the action is destructive (delete, purge)
+   or outward (send, publish, charge, invite, anything another person or system sees or pays for), or
+   undoing it needs more than the product can promise. Which verbs may skip a confirm is a product
+   decision, not this package's.
+4. **Drag-select rows.** `table({ selectable })`: a checkbox column inside a form (GET or POST, hidden
+   fields, the actions under the table). `tableSelectScript()` adds a pointer drag from one checkbox over
+   the rows (the range shrinks again when the pointer goes back), Shift+click, Shift+Space, Arrow keys
+   between the checkboxes and Shift+Arrow to extend. On touch only the checkbox column pans sideways
+   (`touch-action: pan-x`), so a drag starts only there and the page still scrolls. The count ("3 selected")
+   is drawn visibly as a drag moves, and written once to a status region when the selection settles.
+5. **Hold to confirm on phones.** `holdToConfirm()` is the confirm's own trigger (a link carrying
+   `data-dialog-open`, so `dialogScript()` opens the dialog and the no-script page answers) with a
+   hidden POST form. `holdScript()` acts only on a touch or pen pointer on a `(pointer: coarse)` screen
+   held for a full second; a click is never an act. A hold let go after 200 ms swallows the click that
+   follows, so cancelling does not open the dialog; a quick tap still goes to the confirm. The fill is
+   solid danger wiped in from the start, with its own copy of the hold word in the primary-foreground
+   ink. Under reduced motion it steps by quarters; the hold still takes the full second.
+6. **Cut-off countdown.** `cutoff({ at, now, lang, warnWithin?, words? })` is the tag pill with the
+   state's own icon (clock, triangle, octagon) and words, so colour is never the only change.
+   The minutes are rounded up, so a chip says 40 min until 39 are left and never 0 min with time still to go.
+   `countdownScript()` rewrites each chip every minute from the browser's clock. `sortByCutoff()` sorts
+   what is to come soonest first, then what has passed (latest first), then rows with no cut-off; stable,
+   a copy. `timeLeft()` is the words alone.
+7. **Honest progress.** `progress({ value, max, label })` is a native `<progress>` with `role="progressbar"`
+   and aria-valuenow/max, named by its visible label. Value 0 draws an empty track; only
+   `value === max` is full; a value outside the track is held to it; `max` not above 0 throws.
+
+- **No new tokens.** Spacing, motion and colour come from the existing ones.
+- **Demo.** The section "Små bevægelser" shows each as the server draws it. Its scripts load only with
+  `?live` in the address, so the visual baselines stay still.

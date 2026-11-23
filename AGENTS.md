@@ -33,7 +33,8 @@ src/assets.ts      writes fonts.css, the component CSS and the demo page
 src/html.ts        typed, escaping HTML helpers for server-rendered pages (D-6), the bar (D-17), the
                    doll and the favicon links (D-18), the dialog and the destructive confirm (D-23),
                    agent approval, diff and explain (D-24), the table at scale and pagination (D-25),
-                   toast, tooltip and icon() (D-26)
+                   toast, tooltip and icon() (D-26), the micro-interactions (D-53: button progress, changedValue,
+                   undo toast, selectable table rows, holdToConfirm, cutoff, progress)
 src/icons/         lucide.ts, the vendored Lucide subset icon() draws, and Lucide's LICENSE (ISC, Feather's MIT)
 src/brand.ts       the brand SVGs from the tokens and brand/wordmarks.json (D-18, hub D-101)
 src/refusals.ts    the refusal vocabulary, Danish and English, no markup (D-17)
@@ -69,7 +70,7 @@ dist/              committed build output (D-2)
   brand/<product>/ mark, favicon and logo SVGs, their PNGs and site.webmanifest, what products serve (D-18, D-28)
   demo/index.html  every component, every product, light and dark; demo/pages/ the standard pages
 test/              vitest: contrast, chart palette, DTCG validity, dist snapshot, component CSS
-                   rules, HTML escaping, the bar and the brand files (brand.test.ts), the audit
+                   rules, HTML escaping, the micro-interactions (micro.test.ts; micro-browser.test.ts drives their scripts in Chromium), the bar and the brand files (brand.test.ts), the audit
                    (demo passes, test/fixtures/broken.html fails; layout.html breaks the five layout rules, D-41; shadcn.html passes --rich-app,
                    shadcn-drift.html fails it), the brand templates (templates.test.ts),
                    visual regression over the demo (visual.test.ts, baselines in test/visual/, D-32),
@@ -84,7 +85,7 @@ pnpm build        # tokens/ -> dist/
 pnpm typecheck
 pnpm test         # fails if dist/ is stale: run pnpm build and commit dist/ with the sources
 pnpm test:ci      # what ui-ci runs: all but the browser tests
-pnpm test:browser # the browser tests: the design audit and the visual tests over the demo (pre-push runs them)
+pnpm test:browser # the browser tests: the design audit, the visual tests and the micro-interaction scripts (pre-push runs them)
 pnpm test:visual:update  # rewrites test/visual/ baselines on purpose (D-32); look at every PNG it changes
 pnpm ci:log --watch  # ui-ci's verdict for HEAD
 pnpm demo         # the demo page, for a look or an agent-browser screenshot and axe run
@@ -111,7 +112,7 @@ suite's model (hub `docs/suite-infrastructure.md`, "CI on Cloudflare"). Two halv
 - **Before the push: `.githooks/pre-push`**, installed by `pnpm install`. It runs `pnpm typecheck`,
   and, when the pushed commits touch tokens, CSS, helpers, the demo, brand files or `dist/`,
   `pnpm test:browser` (the design audit over the demo for every product, the audit's browser
-  tests, and the visual regression tests, D-32). The builder has no browser, so this is the only place they run before a merge.
+  tests, and the visual regression tests, D-32). The builder has no browser, so this is the only place they run before a merge (test/micro-browser.test.ts too).
   `SKIP_GATE=1 git push` skips it, consciously. Before a release, run the full `pnpm test` as well.
 
 The trigger, the stub and the repo connection were made through the Workers Builds API with the
@@ -120,7 +121,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.38.0"
+"@forspring/ui": "github:forspringai/ui#v0.39.0"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus

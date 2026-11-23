@@ -4,7 +4,7 @@
 // pages around signing in (D-17) are pages of their own, in DataSpring, in Danish and English:
 // dist/demo/pages/<name>.<lang>.html, from standardPages().
 
-import { actions, approval, button, card, confirmDestructive, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, removableTag, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
+import { actions, approval, BUTTON_SCRIPT, button, CHANGED_SCRIPT, card, changedValue, confirmDestructive, COUNTDOWN_SCRIPT, cutoff, HOLD_SCRIPT, holdToConfirm, progress, sortByCutoff, TABLE_SELECT_SCRIPT, TOAST_SCRIPT, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, removableTag, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
@@ -64,6 +64,27 @@ const SCRIPT = `<script>
   if (q.get("tab")) { const r = document.getElementById("connect-" + q.get("tab")); if (r) r.checked = true; }
   form.addEventListener("change", apply);
   apply();
+})();
+</script>`;
+
+// ?live loads the package's own scripts and the few lines that stand in for a product's server.
+const LIVE = `<script>
+(() => {
+  if (!new URLSearchParams(location.search).has("live")) return;
+  const add = (text) => { const s = document.createElement("script"); s.textContent = text; document.head.append(s); };
+  for (const text of ${JSON.stringify([BUTTON_SCRIPT, CHANGED_SCRIPT, TOAST_SCRIPT, TABLE_SELECT_SCRIPT, HOLD_SCRIPT, COUNTDOWN_SCRIPT]).replace(/</g, "\\u003c")}) add(text);
+  // A product's server would answer; here a timer does.
+  for (const f of document.querySelectorAll("#micro form")) f.addEventListener("submit", (e) => e.preventDefault());
+  document.addEventListener("ui:undo", (e) => e.preventDefault());
+  document.addEventListener("submit", (e) => {
+    const b = e.submitter;
+    if (b && b.hasAttribute("data-working")) setTimeout(() => b.dispatchEvent(new CustomEvent("ui:button-done", { bubbles: true })), 1500);
+  });
+  document.querySelector('[name="micro-refresh"]').addEventListener("click", () => {
+    const v = document.querySelector("#micro-visits .changed-value");
+    v.textContent = (1249 + Math.floor(Math.random() * 40)).toLocaleString("da-DK");
+    v.dispatchEvent(new CustomEvent("ui:changed", { bubbles: true }));
+  });
 })();
 </script>`;
 
@@ -219,6 +240,57 @@ const people = [
   ["Jonas Holm", "jonas@eksempel.dk", "Medlem", true, true, 87],
   ["Aisha Rahman", "aisha@eksempel.dk", "Medlem", false, true, 3],
 ] as const;
+
+// Små bevægelser (D-53): the seven micro-interactions, drawn as the server draws them. The scripts that
+// make them move are loaded only with ?live (the review pages and a hand test), so the visual baselines
+// show the same fixed picture every run: no clock, no timer.
+const MICRO_NOW = new Date("2026-11-22T08:00:00Z");
+const MICRO_SITES: [string, string, string][] = [
+  ["Bager Hansen", "bager-hansen", "2026-11-22T09:20:00Z"],
+  ["Mette Frisør", "mette-frisor", "2026-11-22T08:40:00Z"],
+  ["Nørrebro Cykler", "norrebro-cykler", "2026-11-22T07:30:00Z"],
+  ["Kaffebaren", "kaffebaren", "2026-11-25T12:00:00Z"],
+];
+const MICRO_ROWS = sortByCutoff(MICRO_SITES, (r) => r[2], MICRO_NOW);
+const microTable = table({
+  label: "Hjemmesider med frist",
+  columns: [{ label: "Hjemmeside" }, { label: "Frist" }],
+  rows: MICRO_ROWS.map(([name, , at]) => [name, cutoff({ lang: "da", at, now: MICRO_NOW })]),
+  selectable: {
+    lang: "da",
+    name: "site",
+    ids: MICRO_ROWS.map((r) => r[1]),
+    labels: MICRO_ROWS.map((r) => r[0]),
+    form: { action: "#", fields: { csrf: "demo" } },
+    actions: button({ label: "Udgiv de valgte", variant: "ghost", small: true }),
+  },
+});
+const MICRO = html`<section id="micro"><h2>Små bevægelser</h2>
+<p>Små tegn på, at noget sker. Hver virker uden script: serveren tegner tilstanden, og scriptet gør den levende. Med <code>?live</code> i adressen kører scripts på siden.</p>
+
+<h3>Arbejder, så et flueben</h3>
+<form class="demo-row" method="post" action="#">${button({ label: "Udgiv", progress: { lang: "da" } })}${button({ label: "Udgiv", progress: { lang: "da", state: "working" } })}${button({ label: "Udgiv", progress: { lang: "da", state: "done" } })}</form>
+
+<h3>Værdi, der lige er ændret</h3>
+<div class="demo-row"><p>Besøg i dag: <strong id="micro-visits">${changedValue("1.248", { changed: true })}</strong></p>${button({ label: "Hent nye tal", variant: "ghost", small: true, type: "button", name: "micro-refresh" })}</div>
+
+<h3>Fortryd i en toast</h3>
+<div class="demo-toasts">${toastRegion({ lang: "da", toasts: toast({ lang: "da", id: "toast-undo", tone: "success", text: "Siden “Åbningstider” er arkiveret.", dismissHref: "#micro", undo: { action: "#", fields: { csrf: "demo" }, seconds: 10 } }) })}</div>
+
+<h3>Markér rækker</h3>
+<p>Træk over felterne i den første kolonne, eller hold Shift nede. Tallet står under tabellen.</p>
+${microTable}
+
+<h3>Hold for at bekræfte</h3>
+<p>På en telefon skal knappen holdes nede i et sekund. Et tryk, tastaturet og en skærmlæser får den samme bekræftelse som før.</p>
+${holdToConfirm({ lang: "da", id: "micro-hold", label: "Slet hjemmesiden", holdLabel: "Hold for at slette hjemmesiden", dialog: "delete-site", href: "pages/delete-site.da.html", action: "#", fields: { csrf: "demo" } })}
+
+<h3>Frist</h3>
+<div class="demo-row">${cutoff({ lang: "da", at: "2026-11-25T12:00:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T08:40:00Z", now: MICRO_NOW })}${cutoff({ lang: "da", at: "2026-11-22T07:30:00Z", now: MICRO_NOW })}</div>
+
+<h3>Fremdrift, der ikke lyver</h3>
+<div class="demo-grid">${progress({ id: "micro-p0", value: 0, max: 10, label: "0 af 10 låst" })}${progress({ id: "micro-p4", value: 4, max: 10, label: "4 af 10 låst" })}${progress({ id: "micro-p10", value: 10, max: 10, label: "10 af 10 låst" })}</div>
+</section>`;
 
 const peopleTable = table({
   label: "Folk og produkter",
@@ -423,9 +495,11 @@ ${orDivider("eller")}
 <form class="form" method="post" action="#">${field({ label: "Mail", name: "signin-email", type: "email", autocomplete: "email" })}${button({ label: "Send mig et link", wide: true })}</form>
 <p class="fine">Ved at logge ind accepterer du <a href="#">vilkårene</a>.</p>`)}</div>
 </section>
+
+${MICRO}
 ${connectScript()}
 ${dialogScript()}
-${raw(SCRIPT)}`;
+${raw(SCRIPT)}${raw(LIVE)}`;
 
 export function demoPage(): string {
   return String(

@@ -202,6 +202,41 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
 - A tooltip is an overlay too (above, under Inputs); a menu is the bar's or the shell's, never a
   dialog.
 
+### Micro-interactions (D-53)
+
+Seven small signs that something is happening. Each works with no script; the script, where there
+is one, only makes it live. Put the scripts on the page once (`buttonScript()` and the others write
+the tag with the CSP nonce, or serve the `*_SCRIPT` text as a file); they listen on the document, so
+markup React draws later works too.
+
+- **`button({ progress })`** is a submit that says it is working and then that it is done. The server
+  can draw `state: "working"` or `"done"`; with **`buttonScript()`** (**`BUTTON_SCRIPT`**) a submit sets
+  "working" itself, and the product sends a bubbling `ui:button-done` (or `ui:button-working`,
+  `ui:button-reset`) on the button or its form when the work ends. The button stays focusable, a
+  second press is ignored, and the change is announced once through its status region. Use it for a
+  save or a publish that takes more than a moment, not on every button.
+- **`changedValue()`** wraps a value (a table cell's text, a stat) that has just changed, so it is
+  tinted and the tint fades. **`changedScript()`** (**`CHANGED_SCRIPT`**) tints any node a product
+  marks by sending `ui:changed` on it. A value that changes under the person's eyes (a live count),
+  not one that was always there.
+- **`toast({ undo })`** says what happened and offers Undo as a POST form (**`toastScript()`** adds
+  the time left, pause on hover and focus, and Escape). Use undo for what is reversible and cheap
+  (archive, move, hide). A destructive or outward action (delete, send, publish, spend) keeps its
+  confirm (`confirmDestructive()`); this helper never decides which actions may skip one.
+- **`table({ selectable })`** adds a checkbox column and a form around the table and its actions.
+  **`tableSelectScript()`** (**`TABLE_SELECT_SCRIPT`**) adds drag-select, Shift+click, Shift+Arrow and
+  Shift+Space, and the count in a live region.
+- **`holdToConfirm()`** is the confirm's trigger that, on a coarse pointer, can also be held for a
+  second to act without the dialog. A tap, the keyboard, a screen reader and a mouse all go to the
+  confirm. Put **`holdScript()`** (**`HOLD_SCRIPT`**) on the page; the server still checks the CSRF
+  token and what the confirm checks. Only for a danger action that already has a confirm.
+- **`cutoff()`** is a deadline chip ("Cut-off in 1 h 20 min", warning under `warnWithin` minutes,
+  "Cut-off passed" after). **`countdownScript()`** (**`COUNTDOWN_SCRIPT`**) updates it each minute from
+  the browser's clock. **`sortByCutoff()`** puts the rows nearest their cut-off first, and
+  **`timeLeft()`** is the words alone.
+- **`progress()`** is a bar that tells the truth: 0 of 10 is an empty track and only `value === max`
+  is full. Give it the product's words ("0 of 10 locked").
+
 ### Icons
 
 - **`icon()`** draws one of **`ICON_NAMES`** (Lucide's, vendored). Beside words it is decoration and

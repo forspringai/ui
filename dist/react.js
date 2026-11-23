@@ -7,7 +7,7 @@
 // React is an optional peer dependency; nothing else is imported at run time. No JSX, so this file
 // needs no React build step of its own.
 import { createElement } from "react";
-import { actions, approval, bar, confirmDestructive, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip } from "./html.js";
+import { actions, approval, bar, button, changedValue, confirmDestructive, cutoff, holdToConfirm, progress, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip } from "./html.js";
 import { connectPanel } from "./connect.js";
 import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
@@ -86,3 +86,15 @@ export const ErrorSummary = (props) => {
     const h = errorSummary(props);
     return String(h) ? fromHtml(h) : null;
 };
+/** A button (button() in @forspring/ui/html). With `progress` it is the working-then-done button
+ *  (D-53): put buttonScript() (or BUTTON_SCRIPT) on the page once, and send `ui:button-done` on the
+ *  button when the work ends. */
+export const Button = (props) => fromHtml(button(props));
+/** A value that just changed (changedValue(), D-53); send `ui:changed` on a node to tint it again. */
+export const ChangedValue = (props) => fromHtml(changedValue(props.children, props));
+/** A danger action held for a second on a phone (holdToConfirm(), D-53); needs holdScript(). */
+export const HoldToConfirm = (props) => fromHtml(holdToConfirm(props));
+/** A cut-off chip (cutoff(), D-53); countdownScript() keeps it current. */
+export const Cutoff = (props) => fromHtml(cutoff(props));
+/** An honest progress bar (progress(), D-53): empty at 0, full only at max. */
+export const Progress = (props) => fromHtml(progress(props));
