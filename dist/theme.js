@@ -46,6 +46,7 @@ export const CODES = [
     "theme.accent.label_contrast",
     "theme.tint.text_contrast",
     "theme.tint.mark_contrast",
+    "theme.tint.page_delineation",
     "theme.logo.alt_missing",
     "theme.logo.unsafe_url",
     "theme.guideline.unavailable",
@@ -76,6 +77,8 @@ export class ThemeRefused extends Error {
 const AA = 4.5;
 const NON_TEXT = 3;
 const APART = 10;
+/** The card stays a visible step off the page in light (OKLab L), as test/contrast.test.ts holds the family. */
+const DELINEATION = 0.025;
 const SURFACES = ["background", "card", "muted"];
 const TEXT_ROLES = ["foreground", "body-foreground", "muted-foreground", "success", "warning", "danger"];
 const MARK_ROLES = ["signal-ok", "signal-warn", "signal-down", "signal-off"];
@@ -212,17 +215,22 @@ function accentRule(mode, s) {
 function tintRule(mode) {
     const lums = (roles) => roles.map((role) => ({ role, lum: luminance(ROLES[mode][role]) }));
     const [text, marks] = [lums(TEXT_ROLES), lums(MARK_ROLES)];
+    const cardL = oklab(ROLES[mode].card)[0];
     const findings = (hex) => {
         const ground = [
             { on: "background", lum: luminance(tintedPage(hex, mode)) },
             { on: "muted", lum: luminance(hex) },
         ];
         const under = (roles, floor) => roles.flatMap(({ role, lum }) => ground.map(({ on, lum: g }) => ({ role, on, r: ratio(lum, g) }))).filter((x) => x.r < floor);
-        return { text: under(text, AA), marks: under(marks, NON_TEXT) };
+        // Light only: the page the tint makes keeps the grey-page delineation, the card a visible step above it
+        // (ui D-41). A very light tint gives a near-white page and panes stop reading as panes. Dark is
+        // unaffected: its card sits 0.04 over the page whatever the tint.
+        const step = mode === "light" ? cardL - oklab(tintedPage(hex, mode))[0] : Infinity;
+        return { text: under(text, AA), marks: under(marks, NON_TEXT), delineation: step < DELINEATION ? step : null };
     };
     const passes = (hex) => {
         const f = findings(hex);
-        return !f.text.length && !f.marks.length;
+        return !f.text.length && !f.marks.length && f.delineation === null;
     };
     return { findings, passes };
 }
@@ -367,7 +375,7 @@ function check(file, options) {
             else {
                 const rule = tintRule(mode);
                 const f = rule.findings(hex);
-                const fix = f.text.length || f.marks.length ? nearestPassing(hex, rule.passes) : null;
+                const fix = f.text.length || f.marks.length || f.delineation !== null ? nearestPassing(hex, rule.passes) : null;
                 const withFix = fix ? { fix } : {};
                 if (f.text.length) {
                     const worst = f.text.reduce((a, b) => (b.r < a.r ? b : a));
@@ -376,6 +384,9 @@ function check(file, options) {
                 if (f.marks.length) {
                     const worst = f.marks.reduce((a, b) => (b.r < a.r ? b : a));
                     s.errors.push({ path, code: "theme.tint.mark_contrast", message: `the ${worst.role} mark is ${worst.r.toFixed(2)}:1 on the tinted ${worst.on} in ${mode} (a mark needs 3:1)${fix ? `; ${fix} is the nearest that passes` : ""}`, ...withFix });
+                }
+                if (f.delineation !== null) {
+                    s.errors.push({ path, code: "theme.tint.page_delineation", message: `${hex} is too light in ${mode}: the page it makes (${tintedPage(hex, mode)}) is only ${f.delineation.toFixed(3)} under the card in OKLab L, and panes need ${DELINEATION} to read as panes${fix ? `; ${fix} is the nearest that passes` : ""}`, ...withFix });
                 }
             }
             tints[mode] = hex;

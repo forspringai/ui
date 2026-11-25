@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.39.0
+pnpm add github:forspringai/ui#v0.40.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -666,7 +666,7 @@ the person's approval. Values only, never geometry (D-34).
   "level": "brand",
   "brand": {
     "accent": { "light": "#0f5132" },
-    "tint": { "light": "#eef6f0" },
+    "tint": { "light": "#e7efe9" },
     "logo": { "light": "https://acme.example/logo.svg", "alt": "Acme" }
   }
 }
@@ -713,10 +713,10 @@ t.states;              // { <key>: { light: { hue, foreground, soft }, dark: {â€
   --primary-foreground: light-dark(#ffffff, #111215);
   --ring: light-dark(#0f5132, #5f9c78);
   --mark: light-dark(#0f5132, #5f9c78);
-  --background: light-dark(#fefffe, #0e1410);
-  --muted: light-dark(#eef6f0, #171d19);
-  --secondary: light-dark(#eef6f0, #171d19);
-  --accent: light-dark(#eef6f0, #171d19);
+  --background: light-dark(#f1f9f3, #0e1410);
+  --muted: light-dark(#e7efe9, #1e2420);
+  --secondary: light-dark(#e7efe9, #1e2420);
+  --accent: light-dark(#e7efe9, #1e2420);
   --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
   --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
   --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
@@ -741,6 +741,7 @@ teal).
 | `theme.accent.label_contrast` | Neither the family's label nor the ink reaches 4.5:1 on the filled accent | a colour |
 | `theme.tint.text_contrast` | A text role (foreground, body, muted, status) under 4.5:1 on the tinted page or soft surface | a colour |
 | `theme.tint.mark_contrast` | A signal mark under 3:1 on the tinted page or soft surface | a colour |
+| `theme.tint.page_delineation` | Light only: the page the tint makes sits less than 0.025 OKLab L under the card, so panes stop reading as panes (D-54) | a colour |
 | `theme.logo.alt_missing` | A logo with no `alt`, or a blank one | |
 | `theme.logo.unsafe_url` | A logo that is not `https:`, `data:image/` or a bundle path (no `..`, no `//`) | |
 | `theme.guideline.unavailable` | The Guideline level, or a guideline block: not available yet (hub D-117) | `brand` |

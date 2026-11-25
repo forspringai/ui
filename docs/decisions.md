@@ -2030,3 +2030,17 @@ moves and the state change stays visible as a static mark.
 - **No new tokens.** Spacing, motion and colour come from the existing ones.
 - **Demo.** The section "Små bevægelser" shows each as the server draws it. Its scripts load only with
   `?live` in the address, so the visual baselines stay still.
+
+## D-54: A customer tint keeps the grey-page delineation (0.40.0, 2026-11-25)
+
+lead-brand, hub tick lg7. Since D-41 a customer theme's page is its tint moved up by the family's
+soft-to-page step, so a very light tint gave a near-white page (the README's own example made #fbfffc)
+and panes lost the grey-page delineation Peter asked for; cards passed only through their border.
+
+- **`theme.tint.page_delineation`** (an error, light only): the page the tint makes must sit at least
+  0.025 OKLab L under the card, the same step `test/contrast.test.ts` holds the family to. Its fix is the
+  nearest passing tint at the same hue (the tint rule's search now includes this check, so a contrast fix
+  never lands on a too-light tint either). Dark is unaffected: its card sits 0.04 over the page.
+- **The example moves** from #eef6f0 (page #fbfffc) to its fix, #e7efe9 (page #f1f9f3), in the README and
+  the tests. A product whose saved theme now fails gets the fix in the refusal; customerTheme() throws
+  as for any refused theme.
