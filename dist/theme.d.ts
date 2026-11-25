@@ -75,7 +75,7 @@ export type ThemeFile = {
     };
 };
 /** Stable refusal and warning codes; AppSpring's compiler maps them, so they never change meaning. */
-export declare const CODES: readonly ["theme.schema", "theme.color.format", "theme.level.mismatch", "theme.accent.contrast", "theme.accent.label_contrast", "theme.tint.text_contrast", "theme.tint.mark_contrast", "theme.logo.alt_missing", "theme.logo.unsafe_url", "theme.guideline.unavailable", "theme.state.mark_contrast", "theme.state.label_contrast", "theme.chart.mark_contrast", "theme.accent.dark_derived", "theme.tint.dark_derived", "theme.accent.product_close", "theme.accent.status_clash", "theme.state.dark_derived", "theme.state.close", "theme.state.status_clash", "theme.chart.dark_derived", "theme.chart.close"];
+export declare const CODES: readonly ["theme.schema", "theme.color.format", "theme.level.mismatch", "theme.accent.contrast", "theme.accent.label_contrast", "theme.tint.text_contrast", "theme.tint.mark_contrast", "theme.tint.page_delineation", "theme.logo.alt_missing", "theme.logo.unsafe_url", "theme.guideline.unavailable", "theme.state.mark_contrast", "theme.state.label_contrast", "theme.chart.mark_contrast", "theme.accent.dark_derived", "theme.tint.dark_derived", "theme.accent.product_close", "theme.accent.status_clash", "theme.state.dark_derived", "theme.state.close", "theme.state.status_clash", "theme.chart.dark_derived", "theme.chart.close"];
 export type Code = (typeof CODES)[number];
 /** path is dotted ("brand.accent.light", "" for the file); fix, when given, is a value that passes there. */
 export type Problem = {

@@ -29,7 +29,7 @@ const GOOD = {
   level: "brand",
   brand: {
     accent: { light: "#0f5132" },
-    tint: { light: "#eef6f0" },
+    tint: { light: "#e7efe9" },
     logo: { light: "https://acme.example/logo.svg", dark: "assets/logo-dark.svg", alt: "Acme" },
   },
 };
@@ -71,9 +71,9 @@ describe("a good theme", () => {
     expect(t.roles.light.primary).toBe("#0f5132");
     expect(t.roles.light.ring).toBe("#0f5132");
     expect(t.roles.light.mark).toBe("#0f5132");
-    expect(t.roles.light.muted).toBe("#eef6f0");
-    expect(t.roles.light.secondary).toBe("#eef6f0");
-    expect(t.roles.light.accent).toBe("#eef6f0");
+    expect(t.roles.light.muted).toBe("#e7efe9");
+    expect(t.roles.light.secondary).toBe("#e7efe9");
+    expect(t.roles.light.accent).toBe("#e7efe9");
     expect(t.roles.light.card).toBe(ROLES.light.card);
     expect(t.roles.dark.foreground).toBe(ROLES.dark.foreground);
     expect(t.logo).toEqual({ light: "https://acme.example/logo.svg", dark: "assets/logo-dark.svg", alt: "Acme" });
@@ -98,7 +98,8 @@ describe("a good theme", () => {
       let start: string | null = null;
       for (let c = 0.1; !start; c -= 0.01) start = fromOklch(0.45, c, h);
       const light = validateTheme({ level: "brand", brand: { accent: { light: start } } }).errors.find((e) => e.path === "brand.accent.light")?.fix ?? start;
-      const tint = fromOklch(0.965, 0.015, h)!;
+      // The tint at the family's own soft lightness, so its page keeps the delineation (D-54).
+      const tint = fromOklch(oklch(ROLES.light.muted)[0], 0.015, h)!;
       const file = { level: "brand", brand: { accent: { light }, tint: { light: tint } } };
       const v = validateTheme(file);
       expect(v.errors, `hue ${h}: ${light} on ${tint}`).toEqual([]);
@@ -167,8 +168,10 @@ const CASES: { code: Code; path: string; file: unknown }[] = [
   { code: "theme.state.label_contrast", path: "brand.states.open.light", file: { level: "brand", brand: { states: { open: { light: "#777777" } } } } },
   { code: "theme.chart.mark_contrast", path: "brand.charts.0.light", file: { level: "brand", brand: { charts: [{ light: "#f0f0a0" }] } } },
   { code: "theme.tint.text_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#b0b8c8" } } } },
-  { code: "theme.tint.text_contrast", path: "brand.tint.dark", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#eef6f0", dark: "#d0e0ff" } } } },
+  { code: "theme.tint.text_contrast", path: "brand.tint.dark", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#e7efe9", dark: "#d0e0ff" } } } },
   { code: "theme.tint.mark_contrast", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#dcebe0" } } } },
+  // lg7: a near-white tint makes a near-white page, and panes lose the grey-page delineation (ui D-41).
+  { code: "theme.tint.page_delineation", path: "brand.tint.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, tint: { light: "#eef6f0" } } } },
   { code: "theme.logo.alt_missing", path: "brand.logo.alt", file: { level: "brand", brand: { accent: { light: "#0f5132" }, logo: { light: "logo.svg", alt: "  " } } } },
   { code: "theme.logo.unsafe_url", path: "brand.logo.light", file: { level: "brand", brand: { accent: { light: "#0f5132" }, logo: { light: "javascript:alert(1)", alt: "Acme" } } } },
   { code: "theme.guideline.unavailable", path: "level", file: { level: "guideline", brand: { accent: { light: "#0f5132" } }, guideline: { radius: "round" } } },
@@ -261,10 +264,10 @@ describe("the CSS", () => {
         --primary-foreground: light-dark(#ffffff, #111215);
         --ring: light-dark(#0f5132, #5f9c78);
         --mark: light-dark(#0f5132, #5f9c78);
-        --background: light-dark(#fbfffc, #0e1410);
-        --muted: light-dark(#eef6f0, #1e2420);
-        --secondary: light-dark(#eef6f0, #1e2420);
-        --accent: light-dark(#eef6f0, #1e2420);
+        --background: light-dark(#f1f9f3, #0e1410);
+        --muted: light-dark(#e7efe9, #1e2420);
+        --secondary: light-dark(#e7efe9, #1e2420);
+        --accent: light-dark(#e7efe9, #1e2420);
         --_link: color-mix(in srgb, var(--primary) 70%, var(--foreground));
         --_hover: color-mix(in srgb, var(--primary) 80%, light-dark(var(--background), var(--foreground)));
         --_shadow: color-mix(in srgb, light-dark(var(--foreground), var(--background)) 25%, transparent);
