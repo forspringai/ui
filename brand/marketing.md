@@ -134,3 +134,28 @@ From hub D-101 and README sections 2 and 3.
 - **It is the accent's one use** in its view: a filled button in `primary` with `primary-foreground` text.
 - **Verb first, saying what happens** (voice.md section 6); never "Klik her" or "Læs mere".
 - **The words come from the page's owner** (vision.md or offer.md). This file does not set them.
+
+## 10. The suite on every product site
+
+Every product site (appspring.app, sitespring.app, dataspring.app, pulsespring.app, www.flowspring.app,
+and forspring.ai when it carries the suite) shows the same four things, so a reader who lands on one
+can find the rest (lead-brand, 2026-11-25).
+
+- **A suite row in the footer,** in every language the page has. It names Forspring first, then the other
+  products in vision.md's order, each linked to its site in the page's language. The page's own product is
+  plain text with `aria-current="page"`, not a link. BrainSpring and Spring have no site yet, so they aren't
+  listed; add each one when its site exists.
+
+  | Language | Row |
+  |---|---|
+  | Danish | En del af [Forspring](https://forspring.ai): [DataSpring](https://dataspring.app) · [SiteSpring](https://sitespring.app) · [AppSpring](https://appspring.app) · [PulseSpring](https://pulsespring.app) · [FlowSpring](https://www.flowspring.app) |
+  | English | Part of [Forspring](https://forspring.ai): [DataSpring](https://dataspring.app/en) · [SiteSpring](https://sitespring.app/en) · [AppSpring](https://appspring.app/en/) · [PulseSpring](https://pulsespring.app/en/) · [FlowSpring](https://www.flowspring.app/en/) |
+
+  Set it in `muted-foreground` at content's small step (13), on its own line under the footer's links. The
+  names are plain words: no logos, no colours.
+- **A share image,** 1200 × 630, the page's h1 on paper with the product's lockup (section 5). Never the
+  1200 × 300 logo stretched or letterboxed.
+- **`/llms.txt`** with the page list, plus a closing section, "## The Forspring suite", that gives each
+  product its one line from vision.md's suite table and its address. The line about the site's own product
+  stays.
+- **The product's own sign-in** linked from the header and the footer, at the address its app answers.
