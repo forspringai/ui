@@ -2136,3 +2136,22 @@ lead-brand, from lead-ui (DataSpring's CI, their PR #97, was the first consumer 
   rule NAME (`words`, `control`, `class`), that `file` is the path as the finding prints it, that one entry covers
   every finding of that rule in that file, and show one example entry. No behaviour change.
 - **Also released:** #59's invented names in the demo and tests (no API change).
+
+
+## D-62: a theme preview a customer can open (0.44.0, 2026-11-27)
+
+lead-brand, hub tick gj2 (papercut: a customer or their agent could not preview a theme file against the family's
+screens without this repository).
+- **The page:** `dist/demo/theme-preview.html` (demo/theme-preview.ts). Load or paste a theme file; it runs
+  `validateTheme()` and `customerTheme()` from `../theme.js` in the browser and shows every error and warning
+  with its suggested value, the states and chart slots, and the logo. The screens are the demo's own pages in a
+  same-origin frame (the components page, an AppSpring record, the org picker, connect, a refusal, a
+  destructive confirmation), light, dark or as the system, so the preview is the package's real CSS. A refused
+  file leaves the family's look on the screens. Nothing is sent anywhere.
+- **The link carries the file:** `#theme=<base64url JSON>`, so an agent drafting a theme can hand a person a
+  preview to look at, with no upload and no storage.
+- **Where:** https://ui.appspring.app/theme-preview, an assets-only Worker `ui-demo` on appspring.app (customer
+  themes are AppSpring's), the package's `dist/` and `fonts/` as `pnpm demo` serves them, with a strict CSP
+  (own files only, plus a theme's https: or data: logo). `pnpm publish:demo` publishes it after a release tag;
+  the schema's description links it. AppSpring's theme setting can link the same address.
+- **Example:** an invented bakery's theme that passes with one warning, so the first look shows a warning too.

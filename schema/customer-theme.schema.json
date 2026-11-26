@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:forspring:ui:customer-theme",
   "title": "A customer's theme",
-  "description": "A customer's brand on their own surfaces in AppSpring (hub D-103 item 4, D-117; ui D-34, D-45): accent, surface tint, chart slots, the app's own state colours and logo, values only, never geometry. The shape only: @forspring/ui's validateTheme() also checks contrast (errors), closeness to the status colours and between states and chart neighbours (warnings) and the logo's URL, and refuses the Guideline level until it ships.",
+  "description": "A customer's brand on their own surfaces in AppSpring (hub D-103 item 4, D-117; ui D-34, D-45): accent, surface tint, chart slots, the app's own state colours and logo, values only, never geometry. The shape only: @forspring/ui's validateTheme() also checks contrast (errors), closeness to the status colours and between states and chart neighbours (warnings) and the logo's URL, and refuses the Guideline level until it ships. Preview a file on the family's screens, with every error and warning: https://ui.appspring.app/theme-preview (the package's dist/demo/theme-preview.html).",
   "type": "object",
   "additionalProperties": false,
   "required": ["level"],
