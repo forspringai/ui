@@ -2116,3 +2116,14 @@ lead-brand.
   identifiers keep their names. "Organization settings" in the connect panel stays: it quotes another product's
   menu. Closes hub tick akf.
 
+
+## D-60: chartSvg review fixes (0.43.1, 2026-11-26)
+
+lead-ui's follow-ups to D-58, released by lead-brand.
+- **Accessible name:** the SVG is `role="img"` with `aria-labelledby` pointing at its `<title>` and `<desc>` (an id deterministic per chart).
+- **Title fallback:** when no title is given, the title is "Linjediagram: <series>" / "Line chart: …".
+- **Description:** `<desc>` adds each series' lowest and highest value, per language.
+- **Labels:** bar labels show only when there are at most 12 bars and each label fits. Last-point labels sit off the line.
+- **Test:** one pins straight M/L paths, so lines are never smoothed.
+
+No visual baseline moved.
