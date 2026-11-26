@@ -51,7 +51,7 @@ describe("orgPicker", () => {
     Object.defineProperty(globalThis, "navigator", { value: { language: "en-GB", languages: ["en-GB"] }, configurable: true });
     try {
       for (const lang of ["da", "en"] as const) {
-        const b = String(orgPicker({ ...two, lang, subtitle: undefined, connecting: undefined, orgs: [{ value: "v", name: "Noon", role: "viewer" }] }));
+        const b = String(orgPicker({ ...two, lang, subtitle: undefined, connecting: undefined, orgs: [{ value: "v", name: "Acme", role: "viewer" }] }));
         expect(b).toBe(
           lang === "da"
             ? '<div class="card std-page org-picker"><h1>Vælg organisation</h1><ul class="org-picker-list"><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">Du kan ikke ændre valget her bagefter.</p></div>'
