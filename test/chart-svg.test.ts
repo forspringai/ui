@@ -166,13 +166,33 @@ describe("never throws", () => {
 });
 
 describe("alt text and labelled values", () => {
-  test("an SVG title and desc say what the chart shows", () => {
+  test("title is the chart title, or generated; desc has the type, series, x range and each series' min and max", () => {
     const s = chartSvg(line, opts);
-    expect(s).toContain("<title>Omsætning pr. dag</title>");
-    const desc = /<desc>([^<]*)<\/desc>/.exec(s)![1]!;
-    expect(desc).toBe("Linjediagram. Serier: Butik, Webshop. Dag fra 17. nov 2026 til 21. nov 2026. Værdier fra 4.200 til 16.345.");
-    expect(/<desc>([^<]*)<\/desc>/.exec(chartSvg(bar, { ...opts, lang: "en" }))![1]).toBe("Bar chart. Series: Antal. Produkt from Rugbrød to Tebirkes. Values from 80 to 200.");
+    expect(s).toMatch(/<title id="[a-z0-9-]+">Omsætning pr\. dag<\/title>/);
+    const desc = /<desc id="[a-z0-9-]+">([^<]*)<\/desc>/.exec(s)![1]!;
+    expect(desc).toBe(
+      "Linjediagram. Serier: Butik, Webshop. Dag fra 17. nov 2026 til 21. nov 2026. Butik: laveste 12.345, højeste 16.345. Webshop: laveste 4.200, højeste 5.400.",
+    );
+    const untitled = chartSvg({ ...bar, title: undefined }, { ...opts, lang: "en" });
+    expect(untitled).toMatch(/<title id="[a-z0-9-]+">Bar chart: Antal<\/title>/);
+    expect(untitled).toContain("Antal: lowest 80, highest 200.");
+    expect(chartSvg({ ...bar, title: undefined }, opts)).toMatch(/>Søjlediagram: Antal</);
     expect(chartSvg({ ...bar, rows: [] }, opts)).toContain("Ingen data.</desc>");
+  });
+
+  test("role img points aria-labelledby at both ids; ids are deterministic and differ per input", () => {
+    const s = chartSvg(line, opts);
+    const [, t, d] = /aria-labelledby="([^ "]+) ([^ "]+)"/.exec(s)!;
+    expect(s).toContain('role="img"');
+    expect(s).toContain(`<title id="${t}">`);
+    expect(s).toContain(`<desc id="${d}">`);
+    expect(t).not.toBe(d);
+    expect(chartSvg(line, opts)).toBe(s);
+    expect(/aria-labelledby="([^ "]+)/.exec(chartSvg(bar, opts))![1]).not.toBe(t);
+  });
+
+  test("a line is straight segments between its points, never a curve", () => {
+    for (const d of chartSvg(line, opts).matchAll(/<path d="([^"]+)"/g)) expect(d[1]).toMatch(/^[ML0-9. -]+$/);
   });
 
   test("bars carry their values where they fit; a line carries its last value", () => {
@@ -180,6 +200,9 @@ describe("alt text and labelled values", () => {
     for (const v of ["120", "80", "200"]) expect(b).toContain(`>${v}</text>`);
     const l = chartSvg({ ...line, y: [line.y[0]!] }, opts);
     expect(l).toContain(">16.345</text>");
+    // more than about 12 bars: no value labels
+    const wide: Chart = { ...bar, rows: Array.from({ length: 14 }, (_, i) => ({ p: `P${i}`, n: 1237 + i })) };
+    expect(chartSvg(wide, opts)).not.toMatch(/>1\.23[7-9]<\/text>/);
     // two series that end close together: the second label is dropped, never overprinted
     const close = chartSvg({ ...line, rows: line.rows.map((r) => ({ ...r, web: r.shop ?? null })) }, opts);
     expect(count(close, />16\.345</g)).toBe(1);
