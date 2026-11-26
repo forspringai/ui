@@ -70,9 +70,10 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   name (`connecting`: kind, name, optional icon URL); then one row per org: its logo or first letter,
   its name, your access level, a chevron. The whole row is the submit button of its own POST form (the
   caller's `action` and hidden `fields`, then `name`, default `org`, = the org's `value`), so it needs no
-  script and works with Tab, Enter and Space. `value` is opaque (the account seals a token in it): it is
-  sent unchanged and the picker builds no URL from it. One language per render (`lang`), never two
-  stacked. An optional `subtitle` goes under the heading and a `note` under the list (default: the
+  script and works with Tab, Enter and Space. It draws exactly the orgs it is given: the caller filters by
+  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). `value` is opaque (the account seals a token in it): it is
+  sent unchanged and the picker builds no URL from it. One language per render: `lang` is required and comes only from the
+  caller (the picker reads no browser language, header or cookie), never two stacked. An optional `subtitle` goes under the heading and a `note` under the list (default: the
   choice cannot be changed here later; `false` for none). One org is no page: skip the step and use
   that org. Given one anyway it draws that single row; given none it says so, never an empty list. It
   is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET); the picker

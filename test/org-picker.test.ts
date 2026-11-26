@@ -46,6 +46,27 @@ describe("orgPicker", () => {
     expect(String(orgPicker(two))).not.toMatch(/Choose|owner|cannot/);
   });
 
+  test("the language is the caller's lang only: a browser saying otherwise changes nothing, the orgs are drawn as given", () => {
+    const nav = Object.getOwnPropertyDescriptor(globalThis, "navigator");
+    Object.defineProperty(globalThis, "navigator", { value: { language: "en-GB", languages: ["en-GB"] }, configurable: true });
+    try {
+      for (const lang of ["da", "en"] as const) {
+        const b = String(orgPicker({ ...two, lang, subtitle: undefined, connecting: undefined, orgs: [{ value: "v", name: "Noon", role: "viewer" }] }));
+        expect(b).toBe(
+          lang === "da"
+            ? '<div class="card std-page org-picker"><h1>Vælg organisation</h1><ul class="org-picker-list"><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">Du kan ikke ændre valget her bagefter.</p></div>'
+            : '<div class="card std-page org-picker"><h1>Choose organisation</h1><ul class="org-picker-list"><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">You cannot change this choice here later.</p></div>',
+        );
+        expect(b).toContain(lang === "da" ? '<span class="meta">læser</span>' : '<span class="meta">viewer</span>');
+      }
+    } finally {
+      if (nav) Object.defineProperty(globalThis, "navigator", nav);
+      else Reflect.deleteProperty(globalThis, "navigator");
+    }
+    // no role filter in the picker: a viewer org given is a viewer org drawn
+    expect(forms(String(orgPicker({ ...two, orgs: [...two.orgs, { value: "sealed.CCC", name: "Læser ApS", role: "viewer" }] })))).toHaveLength(3);
+  });
+
   test("each org is its own POST form whose one submit button is the whole row, carrying the opaque value unchanged", () => {
     const f = forms(String(orgPicker(two)));
     expect(f).toHaveLength(2);
