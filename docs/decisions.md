@@ -2071,3 +2071,16 @@ cos, after real names came back once (D-55, ui#53). ui-ci runs `scripts/name-gua
 - **The list is not in the repo, not even as hashes.** UI_NAME_GUARD is a secret variable on the ui-ci trigger: the comma-separated SHA-256 of each normalized name.
 - **Who makes it:** whoever may read the account's customer list, with `node scripts/name-guard.ts --hash < names` on their own machine.
 - **Without the variable** (a fork, a laptop) the scan is skipped. No package or version change.
+
+## D-58: chartSvg, a chart as an SVG string for places with no browser (0.42.0, 2026-11-26)
+
+lead-ui for lead-forspring (rich answers v1, the `Chart` of the presentation contract). lead-brand releases; no version bump in this change.
+
+- **`chartSvg(chart, { theme, width, height, lang })`** in `@forspring/ui/chart-svg`, plus `formatNumber`, `formatDate` and `niceTicks`. Line and bar, up to 4 series and 400 points.
+- **Look:** the chart slots, `border`, `muted-foreground` and `card` of the theme, as the SpringML Chart draws them (2 px lines, a 1 px grid, 12 px labels, nothing under 11 px). One series uses `chart-1`. A series also has its own marker (circle, square, triangle, diamond) on a line of 31 points or fewer, so colour is never the only cue.
+- **Alt text and values:** the SVG carries `<title>` and `<desc>` (kind, series, x range, value range) so the PNG's alt text can come from it. A bar carries its value where it fits the bar's width; a line carries its last value (a second label that would overprint is dropped).
+- **Colours** are the generated role values of `src/family.ts` (chart slots, border, muted-foreground, card); the module holds no hex literal, and a test checks that.
+- **For a rasteriser, not a browser:** only plain presentation attributes. No script, no foreignObject, no external href, no `<style>`, no CSS variables. Pure and deterministic; months and number marks are tables, never Intl.
+- **Fonts:** the text is `Archivo, Arial, sans-serif`. resvg-wasm has no system fonts and reads TTF/OTF, not woff2: the renderer must load Archivo as TTF or OTF (regular and bold) and set `defaultFontFamily` to `Archivo`. Nothing loads a font at runtime. Archivo here is a variable font; a renderer that cannot pick its weight draws the title at regular weight.
+- **Never throws:** more than 4 series or 400 points are cut and said so in a note under the chart; empty data draws "Ingen data" / "No data".
+- **Tests:** structure, escaping, da and en formats, colours from the tokens, clamping, empty, determinism, and resvg rendering both themes, both chart types, at 800x400 and 480x270 (`test/chart-svg.test.ts`, `@resvg/resvg-js` as a devDependency).
