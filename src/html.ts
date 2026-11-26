@@ -331,8 +331,8 @@ const BAR = {
     signOut: "Log ud af Forspring",
   },
   en: {
-    orgs: "Your organizations",
-    switchOrg: "switch organization",
+    orgs: "Your organisations",
+    switchOrg: "switch organisation",
     people: (o: string) => `Manage people in ${o}`,
     products: "Products",
     has: (o: string) => `${o} has`,

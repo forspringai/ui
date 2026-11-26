@@ -49,7 +49,7 @@ describe("the bar", () => {
   });
 
   test("the org switcher names each customer with your role, keeps the path, and links to people", () => {
-    expect(out).toContain('<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">Acme</span><span class="visually-hidden">, switch organization</span></summary>');
+    expect(out).toContain('<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">Acme</span><span class="visually-hidden">, switch organisation</span></summary>');
     // The rows are the suite's one org list (D-57, test/org-list.test.ts), in its menu form.
     expect(out).toContain('<a class="org-picker-row" href="/o/globex/datacore/runs?state=failed"><span class="org-picker-mark" aria-hidden="true">G</span><span class="org-picker-text"><span class="name">Globex</span><span class="meta">owner</span></span></a>');
     expect(out).toContain('<a class="org-picker-row" href="/o/acme/datacore/runs?state=failed" aria-current="true">');
@@ -289,7 +289,7 @@ describe("the standard pages", () => {
   test("refusal details: who can fix it, the role, the credential's org, the command", () => {
     const off = String(refusedPage({ lang: "en", reason: "product_off", org: "Acme", people: [{ name: "Jonas", email: "jonas@example.com" }] }).body);
     expect(off).toContain('<p class="std-label">Admins who can switch it on</p><ul class="std-people"><li><span class="name">Jonas</span> <a href="mailto:jonas@example.com">jonas@example.com</a></li></ul>');
-    expect(off).toContain("Organization: Acme");
+    expect(off).toContain("Organisation: Acme");
     expect(String(refusedPage({ lang: "da", reason: "role_too_low", roleNeeded: "admin" }).body)).toContain("Det kræver adgangsniveauet administrator.");
     expect(String(refusedPage({ lang: "en", reason: "org_mismatch", credentialOrg: "Globex" }).body)).toContain("The key is for Globex.");
     expect(String(refusedPage({ lang: "en", reason: "not_signed_in", signInHref: "/login", command: "dataspring auth login" }).body)).toContain('<a class="button" href="/login">Sign in</a></div><p class="fine">From an agent: <code>dataspring auth login</code></p>');

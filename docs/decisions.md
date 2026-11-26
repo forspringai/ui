@@ -2082,10 +2082,15 @@ lead-brand releases.
 - **`forspring-ui-check org-lists`** (a bin, `@forspring/ui/check` for tests): a static check a product runs
   in its CI, no browser. Rules: `words` (a picker's heading written by hand), `control` (a map over orgs
   that makes a choice control, a control carrying an org field, a select of orgs), `class` (the package's
-  org-list classes or marker written by hand). Exceptions in `.forspring-ui-allow.json`, each with a tick,
-  or the run fails. Fixtures in `test/fixtures/org-lists/` copy the shapes of the hand-drawn lists the suite
+  org-list classes or marker written by hand). Exceptions live in the consuming repo's
+  `.forspring-ui-allow.json` (read from where the check runs), each with a tick, or the run fails; ui ships no
+  allowlist of other repos. Fixtures in `test/fixtures/org-lists/` copy the shapes of the hand-drawn lists the suite
   had (invented code).
 - **ui-audit `own-org-list`** (error): on a rendered page, two or more controls in one list box that lead to
   or choose different orgs (links to `/o/<org>/` or with `?org=`, submits, radios or checkboxes named `org`
   or `org_id`), or a select of orgs, outside the marker. It sees what the static check cannot read
   (Python-rendered or generated pages).
+- **One English spelling: British "organisation"** (lead-brand; as the brand texts: colour, licence). Every
+  user-visible English string says "organisation": the standard pages, the refusals, the bar. Exported
+  identifiers keep their names. "Organization settings" in the connect panel stays: it quotes another product's
+  menu. Closes hub tick akf.

@@ -44,8 +44,8 @@ export declare const REFUSALS: {
             readonly agent: "En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.";
         };
         readonly en: {
-            readonly title: "Choose an organization";
-            readonly text: "You are in several organizations and none of them was named.";
+            readonly title: "Choose an organisation";
+            readonly text: "You are in several organisations and none of them was named.";
             readonly fix: "Pick the one to work in.";
             readonly agent: "An agent names it with --org, <PRODUCT>_ORG or .forspring.json.";
         };
@@ -59,9 +59,9 @@ export declare const REFUSALS: {
             readonly fix: "Tjek adressen, eller vælg en af dine egne organisationer. En administrator i organisationen kan invitere dig.";
         };
         readonly en: {
-            readonly title: "This organization does not exist, or you are not in it";
-            readonly text: "We cannot show you anything from an organization you are not in.";
-            readonly fix: "Check the address, or pick one of your own organizations. An admin of the organization can add you.";
+            readonly title: "This organisation does not exist, or you are not in it";
+            readonly text: "We cannot show you anything from an organisation you are not in.";
+            readonly fix: "Check the address, or pick one of your own organisations. An admin of the organisation can add you.";
         };
     };
     readonly product_off: {
@@ -74,7 +74,7 @@ export declare const REFUSALS: {
         };
         readonly en: {
             readonly title: "This product is not switched on for you";
-            readonly text: "You are in the organization, but you have not been given this product.";
+            readonly text: "You are in the organisation, but you have not been given this product.";
             readonly fix: "Ask an admin to switch it on for you.";
         };
     };
@@ -87,8 +87,8 @@ export declare const REFUSALS: {
             readonly fix: "En ejer kan starte det igen under betaling.";
         };
         readonly en: {
-            readonly title: "This product is paused for the organization";
-            readonly text: "Billing has stopped, so nobody in the organization can use the product right now.";
+            readonly title: "This product is paused for the organisation";
+            readonly text: "Billing has stopped, so nobody in the organisation can use the product right now.";
             readonly fix: "An owner can start it again on the billing page.";
         };
     };
@@ -102,7 +102,7 @@ export declare const REFUSALS: {
         };
         readonly en: {
             readonly title: "Your access level cannot do this";
-            readonly text: "You are in the organization, but this needs a higher access level.";
+            readonly text: "You are in the organisation, but this needs a higher access level.";
             readonly fix: "Ask an owner or admin to do it, or to raise your access level.";
         };
     };
@@ -115,9 +115,9 @@ export declare const REFUSALS: {
             readonly fix: "Brug en nøgle til denne organisation, eller adressen for nøglens egen.";
         };
         readonly en: {
-            readonly title: "The key is for another organization";
-            readonly text: "The key or token is for another organization than the one in the address.";
-            readonly fix: "Use a key for this organization, or the address of the key's own.";
+            readonly title: "The key is for another organisation";
+            readonly text: "The key or token is for another organisation than the one in the address.";
+            readonly fix: "Use a key for this organisation, or the address of the key's own.";
         };
     };
     readonly account_unavailable: {

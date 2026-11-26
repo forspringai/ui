@@ -85,6 +85,9 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   and carry the `data-forspring-org-list` marker. An in-app switcher draws `orgList({ lang, links })`
   (`menu: true` inside a menu panel). Never draw your own org list: `forspring-ui-check org-lists` fails a
   product's CI on one, and ui-audit's `own-org-list` rule finds one on a rendered page.
+  Run it from your repo's root in CI: `forspring-ui-check org-lists src` (your source paths). Exceptions
+  live in YOUR repo, in `.forspring-ui-allow.json` beside the run: `[{ "file", "rule", "reason", "tick" }]`;
+  an entry without a tick fails the run, and an unused one is reported. ui ships no allowlist.
 
 ### Actions
 
