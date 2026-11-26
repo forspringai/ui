@@ -2072,7 +2072,7 @@ cos, after real names came back once (D-55, ui#53). ui-ci runs `scripts/name-gua
 - **Who makes it:** whoever may read the account's customer list, with `node scripts/name-guard.ts --hash < names` on their own machine.
 - **Without the variable** (a fork, a laptop) the scan is skipped. No package or version change.
 
-## D-58: chartSvg, a chart as an SVG string for places with no browser (2026-11-26)
+## D-58: chartSvg, a chart as an SVG string for places with no browser (0.42.0, 2026-11-26)
 
 lead-ui for lead-forspring (rich answers v1, the `Chart` of the presentation contract). lead-brand releases; no version bump in this change.
 
