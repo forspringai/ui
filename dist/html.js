@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.40.0";
+export const VERSION = "0.40.1";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -185,7 +185,7 @@ const BAR = {
 };
 const LANG_NAMES = { da: "Dansk", en: "English" };
 /**
- * The same page in another organisation: /o/noon/runs?x=1 becomes /o/spekta/runs?x=1, and a path
+ * The same page in another organisation: /o/acme/runs?x=1 becomes /o/globex/runs?x=1, and a path
  * outside /o/ becomes the org's home. A page that does not exist there is the product's to send home.
  */
 export function orgPath(path, slug) {

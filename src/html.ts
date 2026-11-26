@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.40.0";
+export const VERSION = "0.40.1";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ export type BarOrg = {
   /** Every organisation the person has this product in, the current one too. The switcher shows only
    *  when there is more than one; `href` overrides the link that keeps the person's place. */
   orgs?: (Org & { href?: string })[];
-  /** This page's path, so switching keeps the person's place: /o/noon/runs becomes /o/spekta/runs. */
+  /** This page's path, so switching keeps the person's place: /o/acme/runs becomes /o/globex/runs. */
   path?: string;
   /** "Manage people in <org>": the account's people page, for owners and admins. */
   peopleHref?: string;
@@ -350,7 +350,7 @@ const BAR = {
 const LANG_NAMES: Record<Lang, string> = { da: "Dansk", en: "English" };
 
 /**
- * The same page in another organisation: /o/noon/runs?x=1 becomes /o/spekta/runs?x=1, and a path
+ * The same page in another organisation: /o/acme/runs?x=1 becomes /o/globex/runs?x=1, and a path
  * outside /o/ becomes the org's home. A page that does not exist there is the product's to send home.
  */
 export function orgPath(path: string, slug: string): string {
@@ -1261,7 +1261,7 @@ export type ConfirmDestructiveOptions = {
   lang: Lang;
   /** The dialog's id, unique on the page; a dialogTrigger() names it. */
   id: string;
-  /** The question, naming the thing: "Slet banegaarden.dk?". */
+  /** The question, naming the thing: "Slet bakery.example?". */
   title: Content;
   /** What is lost, each with its count: ["181 pages", "4 forms", "62 redirects"]. Up to four are one
    *  sentence ("This removes 181 pages, 4 forms and 62 redirects."), more a list. */
@@ -1362,8 +1362,8 @@ export type ToastOptions = {
   tone?: ToastTone;
   /** What happened, in a sentence: "Ændringerne er gemt." */
   text: Content;
-  /** This page without the toast: its URL with the flash parameter dropped (/o/noon/sites, not
-   *  /o/noon/sites?gemt=1), or the same URL when the flash was a one-time cookie. Dismiss is a link
+  /** This page without the toast: its URL with the flash parameter dropped (/o/acme/sites, not
+   *  /o/acme/sites?gemt=1), or the same URL when the flash was a one-time cookie. Dismiss is a link
    *  here, so it works with no script; toastScript() makes it instant. */
   dismissHref: string;
   /** One thing to do about it, a link: "Fortryd", "Se fakturaen". A toast with one never hides itself. */
