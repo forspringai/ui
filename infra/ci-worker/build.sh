@@ -51,6 +51,8 @@ pnpm --version
 
 stage "install" pnpm install --frozen-lockfile
 stage "typecheck" pnpm typecheck
+# No live customer or org name in this public repo (D-57): UI_NAME_GUARD is a secret var on this trigger.
+stage "name-guard" node scripts/name-guard.ts
 # test/build.test.ts compares dist/ with a fresh build of the sources, so a commit that forgot
 # `pnpm build` fails here. Workers are limited: the builder is shared by the suite.
 stage "test" pnpm test:ci --maxWorkers="${CI_TEST_WORKERS:-2}"
