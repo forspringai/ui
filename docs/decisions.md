@@ -2063,3 +2063,11 @@ lead-ui (design approved by Peter; hub plan suite-org-picker-plan-2026-11-26), r
 - **One org is no page:** the caller skips the step. With none, it shows the no-org sentence.
 - `chooseOrgPage()` overlaps it (GET links to an org's home, and US spelling). Its future is lead-brand's
   call under the one-picker rule: a follow-up tick.
+
+## D-57: A guard against customer names in this public repo (2026-11-26)
+
+cos, after real names came back once (D-55, ui#53). ui-ci runs `scripts/name-guard.ts` before the tests.
+- **What it does:** scans every tracked text file for a live customer or org name of one to four whole words, and fails with file and line only.
+- **The list is not in the repo, not even as hashes.** UI_NAME_GUARD is a secret variable on the ui-ci trigger: the comma-separated SHA-256 of each normalized name.
+- **Who makes it:** whoever may read the account's customer list, with `node scripts/name-guard.ts --hash < names` on their own machine.
+- **Without the variable** (a fork, a laptop) the scan is skipped. No package or version change.

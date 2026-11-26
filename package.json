@@ -70,6 +70,7 @@
   "scripts": {
     "build": "node scripts/build.ts",
     "typecheck": "tsc --noEmit",
+    "name-guard": "node scripts/name-guard.ts",
     "test": "vitest run",
     "demo": "node scripts/demo.ts",
     "audit": "node dist/audit/cli.js",
