@@ -597,6 +597,8 @@ function orgPickerPages(out: Record<string, string>): void {
             lang === "da"
               ? "Du kan kun ændre det senere ved at fjerne Spring fra workspacet og installere den igen."
               : "You can change this later only by removing Spring from the workspace and installing it again.",
+          // A demo of the role words: a real caller lists only the roles it allows (Spring's install: owner and admin),
+          // so the viewer row here only shows how each access level reads.
           orgs: ORGS.map((o) => ({ value: `sealed.${o.slug}`, name: o.name, role: o.role })),
         }),
       }),

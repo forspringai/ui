@@ -139,9 +139,11 @@ export type PickerOrg = {
 };
 
 export type OrgPickerOptions = {
-  /** The one language of the page (from the browser or the account): never two stacked. */
+  /** The one language of the page, decided by the caller (the account's or the product's own locale logic). Required:
+   *  the picker never reads the browser (no navigator, Accept-Language or cookie) and never draws two languages. */
   lang: Lang;
-  /** The organisations the person may choose, in this order. */
+  /** The organisations the person may choose, in this order. The picker draws exactly these: the CALLER filters by
+   *  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). */
   orgs: PickerOrg[];
   /** Where each choice is posted. Every org is its own form whose one button is the whole row, so choosing needs no
    *  script. */
