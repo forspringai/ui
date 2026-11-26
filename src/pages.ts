@@ -9,7 +9,7 @@
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 
 import { REFUSALS, type Refusal } from "./refusals.ts";
-import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
+import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag, type AccessLevel, type Content, type Html, type Lang, type Org } from "./html.ts";
 
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = { status: number; title: string; narrow: true; body: Html };
@@ -20,6 +20,10 @@ export type Person = { name?: string; email: string };
 const T = {
   da: {
     chooseTitle: "Vælg en organisation",
+    pickTitle: "Vælg organisation",
+    pickText: (p?: string) => (p ? `Hvilken organisation vil du bruge ${p} i?` : "Hvilken organisation vil du bruge?"),
+    pick: "Vælg",
+    pickOrg: (o: string) => `Vælg ${o}`,
     chooseText: (p?: string) => (p ? `Du er med i flere organisationer, der har ${p}. Hvilken vil du arbejde i?` : "Du er med i flere organisationer. Hvilken vil du arbejde i?"),
     lastHere: "Sidst brugt her",
     lastUsed: (d: string) => `sidst brugt ${d}`,
@@ -46,6 +50,10 @@ const T = {
   },
   en: {
     chooseTitle: "Choose an organization",
+    pickTitle: "Choose organisation",
+    pickText: (p?: string) => (p ? `Which organisation do you want to use ${p} in?` : "Which organisation do you want to use?"),
+    pick: "Choose",
+    pickOrg: (o: string) => `Choose ${o}`,
     chooseText: (p?: string) => (p ? `You are in several organizations that have ${p}. Which one do you want to work in?` : "You are in several organizations. Which one do you want to work in?"),
     lastHere: "Last used here",
     lastUsed: (d: string) => `last used ${d}`,
@@ -119,6 +127,56 @@ export function chooseOrgPage(o: ChooseOrgOptions): StandardPage {
     })),
   );
   return page(200, t.chooseTitle, "choose-org", html`<h1>${t.chooseTitle}</h1><p>${t.chooseText(o.product)}</p>${items}`);
+}
+
+/** An organisation the picker offers: its id (what the form sends back), its name and your access level there. */
+export type PickerOrg = { id: string; name: string; role: AccessLevel };
+
+export type OrgPickerOptions = {
+  lang: Lang;
+  /** The organisations the person may choose: the ones where they have the role the product asked for and that
+   *  have the product. Listed in this order. */
+  orgs: PickerOrg[];
+  /** Where each choice is posted (the account's picker step). Every org is its own form with one button, so
+   *  choosing needs no script. */
+  action: string;
+  /** The field the chosen org's id is sent in (default `org`). */
+  name?: string;
+  /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
+  fields?: Record<string, string>;
+  /** The product's name, for the lede ("Which organisation do you want to use AppSpring in?"). */
+  product?: string;
+};
+
+/**
+ * Choose an organisation at sign-in (the suite's org picker, hub plan 2026-11-26): the account shows it after the
+ * person signed in, when the product asked for an `org`. One list in the look of the account's "Dine
+ * organisationer" and a product's org switcher: each org's name, your access level there, and one button, each its
+ * own POST form (`fields`, then `name`=the org's id), so it is server-rendered and works with no script.
+ *
+ * One org is no page: the caller skips the step and uses that org (the plan). Given one anyway, it draws that one
+ * org with a primary button, so a page that does show it still reads right; given none, it says the person is in no
+ * organisation with the product (noOrgPage's words), never an empty list.
+ */
+export function orgPicker(o: OrgPickerOptions): Html {
+  const t = T[o.lang];
+  const field = o.name ?? "org";
+  const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`);
+  const items = o.orgs.length === 0
+    ? html`<p>${t.noOrgText(undefined, o.product)}</p>`
+    : list(
+        o.orgs.map((g) => ({
+          name: g.name,
+          meta: ACCESS_LEVEL_NAMES[o.lang][g.role],
+          action: html`<form class="inline" method="post" action="${safeHref(o.action)}">${hidden}${button({ label: t.pick, name: field, value: g.id, small: true, variant: o.orgs.length === 1 ? "primary" : "ghost", ariaLabel: t.pickOrg(g.name) })}</form>`,
+        })),
+      );
+  return html`<div class="card std-page org-picker"><h1>${t.pickTitle}</h1><p>${t.pickText(o.product)}</p>${items}</div>`;
+}
+
+/** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
+export function orgPickerPage(o: OrgPickerOptions): StandardPage {
+  return { status: 200, title: T[o.lang].pickTitle, narrow: true, body: orgPicker(o) };
 }
 
 export type NoOrgOptions = {

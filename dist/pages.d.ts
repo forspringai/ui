@@ -1,5 +1,5 @@
 import { type Refusal } from "./refusals.ts";
-import { type Html, type Lang, type Org } from "./html.ts";
+import { type AccessLevel, type Html, type Lang, type Org } from "./html.ts";
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = {
     status: number;
@@ -29,6 +29,40 @@ export type ChooseOrgOptions = {
 };
 /** Signed in, several orgs with this product and none in the URL: each org with your access level and when you last used it. */
 export declare function chooseOrgPage(o: ChooseOrgOptions): StandardPage;
+/** An organisation the picker offers: its id (what the form sends back), its name and your access level there. */
+export type PickerOrg = {
+    id: string;
+    name: string;
+    role: AccessLevel;
+};
+export type OrgPickerOptions = {
+    lang: Lang;
+    /** The organisations the person may choose: the ones where they have the role the product asked for and that
+     *  have the product. Listed in this order. */
+    orgs: PickerOrg[];
+    /** Where each choice is posted (the account's picker step). Every org is its own form with one button, so
+     *  choosing needs no script. */
+    action: string;
+    /** The field the chosen org's id is sent in (default `org`). */
+    name?: string;
+    /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
+    fields?: Record<string, string>;
+    /** The product's name, for the lede ("Which organisation do you want to use AppSpring in?"). */
+    product?: string;
+};
+/**
+ * Choose an organisation at sign-in (the suite's org picker, hub plan 2026-11-26): the account shows it after the
+ * person signed in, when the product asked for an `org`. One list in the look of the account's "Dine
+ * organisationer" and a product's org switcher: each org's name, your access level there, and one button, each its
+ * own POST form (`fields`, then `name`=the org's id), so it is server-rendered and works with no script.
+ *
+ * One org is no page: the caller skips the step and uses that org (the plan). Given one anyway, it draws that one
+ * org with a primary button, so a page that does show it still reads right; given none, it says the person is in no
+ * organisation with the product (noOrgPage's words), never an empty list.
+ */
+export declare function orgPicker(o: OrgPickerOptions): Html;
+/** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
+export declare function orgPickerPage(o: OrgPickerOptions): StandardPage;
 export type NoOrgOptions = {
     lang: Lang;
     product?: string;

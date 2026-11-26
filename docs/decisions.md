@@ -1187,7 +1187,7 @@ D-41) with PulseSpring's branch trigger so a PR gets the check.
 - **`ui-ci`**, a Workers Build with two triggers, `ui-ci main` and `ui-ci branches` (every other
   branch), every path except `.tick/*`. Build command `bash infra/ci-worker/build.sh`: install,
   typecheck, `pnpm test:ci` with two workers (`CI_TEST_WORKERS` overrides), ending in a `VERDICT`
-  line. Deploy command: the inert stub in `infra/ci-worker/`. `NODE_VERSION=24`.
+  line. Deploy command: the inert stub in `infra/ci-worker/`. `NODE_VERSION=24.22.3` (pinned to the Node security floor on 2026-11-25; it was the floating `24`).
 - **The builder has no browser**, so `test/audit.test.ts` (Chromium: the design audit over the demo
   for every product) is not in `test:ci`. It is `pnpm test:browser`, run by `.githooks/pre-push`
   when a push touches what it checks, and part of the full `pnpm test` before a release. The visual
@@ -1196,7 +1196,7 @@ D-41) with PulseSpring's branch trigger so a PR gets the check.
 - Made 2026-11-11 through the Workers Builds API with `forspring`/`prd_deploy` (no dashboard): stub
   Worker `ui-ci` (script tag `588774dad9c2433fba8912f14cd74a2b`), repo connection
   `04f5c066-a838-4afc-938b-8745122faf3b`, triggers `ui-ci main` `e432ae85-764d-4542-8be5-c3b72ea5c704`
-  and `ui-ci branches` `62e7d0f8-c259-4fbf-a829-1e3f9f70b4a3`, the suite's build token, `NODE_VERSION=24`.
+  and `ui-ci branches` `62e7d0f8-c259-4fbf-a829-1e3f9f70b4a3`, the suite's build token, `NODE_VERSION=24.22.3` (pinned 2026-11-25; it was `24`).
   First build on main: 46601624, green, 704 tests, 74 s.
 
 Not chosen: a self-hosted runner with a browser on the shared dev host (it would compete with the

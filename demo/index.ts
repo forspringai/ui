@@ -6,7 +6,7 @@
 
 import { actions, approval, BUTTON_SCRIPT, button, CHANGED_SCRIPT, card, changedValue, confirmDestructive, COUNTDOWN_SCRIPT, cutoff, HOLD_SCRIPT, holdToConfirm, progress, sortByCutoff, TABLE_SELECT_SCRIPT, TOAST_SCRIPT, crumbs, dialog, dialogScript, dialogTrigger, diff, errorSummary, explain, field, googleButton, html, icon, ICON_NAMES, list, notice, orDivider, pageOf, raw, removableTag, shell, signal, state, switchButton, table, tag, toast, toastRegion, tooltip, type BarOptions, type ConfirmDestructiveOptions, type Lang, type Org } from "../src/html.ts";
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
-import { chooseOrgPage, noOrgPage, refusedPage, type StandardPage } from "../src/pages.ts";
+import { chooseOrgPage, noOrgPage, orgPickerPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
 
 const PRODUCTS = [
@@ -572,6 +572,27 @@ function standard(name: string, lang: Lang): StandardPage {
   });
 }
 
+/** dist/demo/pages/org-picker.<lang>.html: the sign-in org picker as the account shows it (no bar: the person has signed
+ *  in but no org is chosen yet). Kept out of the standard pages' list on the index, so the index's look stays as it is. */
+function orgPickerPages(out: Record<string, string>): void {
+  for (const lang of ["da", "en"] as const) {
+    const name = "org-picker";
+    out[`pages/${name}.${lang}.html`] = String(
+      shell({
+        lang,
+        product: "dataspring",
+        productLabel: "DataSpring",
+        homeLabel: lang === "da" ? "DataSpring, forside" : "DataSpring, home",
+        brandBase: "../../brand/",
+        head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
+        userMenu: METTE(lang, `${name}.da.html`, `${name}.en.html`),
+        footer: [lang === "da" ? { label: "English", href: `${name}.en.html`, lang: "en" } : { label: "Dansk", href: `${name}.da.html`, lang: "da" }, { label: lang === "da" ? "Alle komponenter" : "All components", href: "../index.html" }],
+        ...orgPickerPage({ lang, product: "DataSpring", action: "#", fields: { csrf: "demo" }, orgs: ORGS.map((o) => ({ id: o.slug, name: o.name, role: o.role })) }),
+      }),
+    ) + "\n";
+  }
+}
+
 /** dist/demo/pages/connect.<lang>.html: the connect panel on a page of its own, in SiteSpring's bar. */
 function connectPages(out: Record<string, string>) {
   for (const lang of ["da", "en"] as const) {
@@ -685,6 +706,7 @@ export function standardPages(): Record<string, string> {
     }
   connectPages(out);
   confirmPages(out);
+  orgPickerPages(out);
   out["pages/lead.en.html"] = leadPage();
   return out;
 }

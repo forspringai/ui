@@ -1,13 +1,16 @@
 import { type ReactElement } from "react";
 import { type ActionsOptions, type ApprovalOptions, type BarOptions, type ButtonOptions, type ChangedValueOptions, type CutoffOptions, type HoldToConfirmOptions, type ProgressOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { type ConnectPanelOptions } from "./connect.ts";
-import { type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
+import { type ChooseOrgOptions, type NoOrgOptions, type OrgPickerOptions, type RefusedOptions } from "./pages.ts";
 /** Html with one outer element, as a React element: its attributes as props, the rest as inner HTML. */
 export declare function fromHtml(h: Html, key?: string): ReactElement;
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
 export declare const Bar: (props: BarOptions) => ReactElement;
 /** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
 export declare const ChooseOrg: (props: ChooseOrgOptions) => ReactElement;
+/** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
+ *  in-app switcher can draw the same list. */
+export declare const OrgPicker: (props: OrgPickerOptions) => ReactElement;
 /** No organization yet (noOrgPage). */
 export declare const NoOrg: (props: NoOrgOptions) => ReactElement;
 /** A refusal by its reason (refusedPage). */

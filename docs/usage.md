@@ -64,6 +64,15 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   URL, `noOrgPage()` when they are in none that has the product, `refusedPage()` for any refusal, and
   `accountUnavailablePage()` when the account does not answer. Spread the result into `shell()` and
   answer with its `status`. Never draw your own version of these screens (hub D-99).
+- **Choosing an organisation at sign-in:** `orgPicker()` (or `orgPickerPage()` for a page of its own,
+  `OrgPicker` in React) is the suite's one org picker (hub plan 2026-11-26): the account draws it after
+  sign-in when a product asks for `scope=openid org`. Give it the orgs the person may choose (`id`,
+  `name`, access level), the form `action` and the hidden `fields` (the CSRF token, the sign-in
+  request's handle): each org is its own POST form whose button sends `org=<id>` (or your `name`), so it
+  needs no script. One org is no page: skip the step and use that org. Given one anyway it draws it with
+  a primary button; given none it says so, never an empty list. An app's in-app switcher can draw the
+  same list. It is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET);
+  the picker posts the choice back to the sign-in, so the choice never sits in a URL.
 
 ### Actions
 

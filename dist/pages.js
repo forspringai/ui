@@ -12,6 +12,10 @@ import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag } from 
 const T = {
     da: {
         chooseTitle: "Vælg en organisation",
+        pickTitle: "Vælg organisation",
+        pickText: (p) => (p ? `Hvilken organisation vil du bruge ${p} i?` : "Hvilken organisation vil du bruge?"),
+        pick: "Vælg",
+        pickOrg: (o) => `Vælg ${o}`,
         chooseText: (p) => (p ? `Du er med i flere organisationer, der har ${p}. Hvilken vil du arbejde i?` : "Du er med i flere organisationer. Hvilken vil du arbejde i?"),
         lastHere: "Sidst brugt her",
         lastUsed: (d) => `sidst brugt ${d}`,
@@ -37,6 +41,10 @@ const T = {
     },
     en: {
         chooseTitle: "Choose an organization",
+        pickTitle: "Choose organisation",
+        pickText: (p) => (p ? `Which organisation do you want to use ${p} in?` : "Which organisation do you want to use?"),
+        pick: "Choose",
+        pickOrg: (o) => `Choose ${o}`,
         chooseText: (p) => (p ? `You are in several organizations that have ${p}. Which one do you want to work in?` : "You are in several organizations. Which one do you want to work in?"),
         lastHere: "Last used here",
         lastUsed: (d) => `last used ${d}`,
@@ -82,6 +90,33 @@ export function chooseOrgPage(o) {
         action: button({ label: t.open, href: g.href, small: true, variant: g === last || (!last && orgs.length === 1) ? "primary" : "ghost", ariaLabel: t.openOrg(g.name) }),
     })));
     return page(200, t.chooseTitle, "choose-org", html `<h1>${t.chooseTitle}</h1><p>${t.chooseText(o.product)}</p>${items}`);
+}
+/**
+ * Choose an organisation at sign-in (the suite's org picker, hub plan 2026-11-26): the account shows it after the
+ * person signed in, when the product asked for an `org`. One list in the look of the account's "Dine
+ * organisationer" and a product's org switcher: each org's name, your access level there, and one button, each its
+ * own POST form (`fields`, then `name`=the org's id), so it is server-rendered and works with no script.
+ *
+ * One org is no page: the caller skips the step and uses that org (the plan). Given one anyway, it draws that one
+ * org with a primary button, so a page that does show it still reads right; given none, it says the person is in no
+ * organisation with the product (noOrgPage's words), never an empty list.
+ */
+export function orgPicker(o) {
+    const t = T[o.lang];
+    const field = o.name ?? "org";
+    const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html `<input type="hidden" name="${k}" value="${v}">`);
+    const items = o.orgs.length === 0
+        ? html `<p>${t.noOrgText(undefined, o.product)}</p>`
+        : list(o.orgs.map((g) => ({
+            name: g.name,
+            meta: ACCESS_LEVEL_NAMES[o.lang][g.role],
+            action: html `<form class="inline" method="post" action="${safeHref(o.action)}">${hidden}${button({ label: t.pick, name: field, value: g.id, small: true, variant: o.orgs.length === 1 ? "primary" : "ghost", ariaLabel: t.pickOrg(g.name) })}</form>`,
+        })));
+    return html `<div class="card std-page org-picker"><h1>${t.pickTitle}</h1><p>${t.pickText(o.product)}</p>${items}</div>`;
+}
+/** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
+export function orgPickerPage(o) {
+    return { status: 200, title: T[o.lang].pickTitle, narrow: true, body: orgPicker(o) };
 }
 /** Signed in, but in no organisation with this product: who to ask. */
 export function noOrgPage(o) {
