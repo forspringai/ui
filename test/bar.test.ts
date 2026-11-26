@@ -50,8 +50,9 @@ describe("the bar", () => {
 
   test("the org switcher names each customer with your role, keeps the path, and links to people", () => {
     expect(out).toContain('<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">Acme</span><span class="visually-hidden">, switch organization</span></summary>');
-    expect(out).toContain('<a href="/o/globex/datacore/runs?state=failed"><span class="bar-item-name">Globex</span><span class="bar-item-meta">owner</span></a>');
-    expect(out).toContain('<a href="/o/acme/datacore/runs?state=failed" aria-current="true">');
+    // The rows are the suite's one org list (D-57, test/org-list.test.ts), in its menu form.
+    expect(out).toContain('<a class="org-picker-row" href="/o/globex/datacore/runs?state=failed"><span class="org-picker-mark" aria-hidden="true">G</span><span class="org-picker-text"><span class="name">Globex</span><span class="meta">owner</span></span></a>');
+    expect(out).toContain('<a class="org-picker-row" href="/o/acme/datacore/runs?state=failed" aria-current="true">');
     expect(out).toContain(">Manage people in Acme</a>");
   });
 
@@ -328,8 +329,9 @@ describe("the standard pages", () => {
     expect(b.indexOf("Globex")).toBeLessThan(b.indexOf("Acme"));
     expect(b).toContain('Globex <span class="tag primary">Last used here</span>');
     expect(b).toContain("admin · last used 12 Oct 2026");
-    expect(b).toContain('<a class="button small" href="/o/globex/" aria-label="Open Globex">Open</a>');
-    expect(b).toContain('<a class="button ghost small" href="/o/acme/" aria-label="Open Acme">Open</a>');
+    // Each row is the link (the suite's one org list, D-57), no separate Open button.
+    expect(b).toContain('<a class="org-picker-row" href="/o/globex/">');
+    expect(b).toContain('<a class="org-picker-row" href="/o/acme/">');
   });
 
   test("no org yet: who to ask", () => {

@@ -1,5 +1,5 @@
 import { type Refusal } from "./refusals.ts";
-import { type AccessLevel, type Html, type Lang, type Org } from "./html.ts";
+import { type OrgLink, type PickerOrg, type Html, type Lang, type Org } from "./html.ts";
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = {
     status: number;
@@ -24,35 +24,16 @@ export type ChooseOrgOptions = {
     /** The product's name, for the lede ("that have DataSpring"). */
     product?: string;
     /** The org this browser used last (a cookie of the product's own, never the server's state):
-     *  listed first and drawn as the primary action. */
+     *  listed first and tagged "Last used here". */
     lastHere?: string;
 };
 /** Signed in, several orgs with this product and none in the URL: each org with your access level and when you last used it. */
 export declare function chooseOrgPage(o: ChooseOrgOptions): StandardPage;
-/** An organisation the picker offers: its name, your access level there, and the value the form sends back. */
-export type PickerOrg = {
-    name: string;
-    role: AccessLevel;
-    /** Sent back unchanged as the chosen button's value: opaque to the picker (the account seals a token in it).
-     *  The picker never builds a URL or anything else from it. */
-    value: string;
-    /** The org's logo, an image URL; without one the row shows the name's first letter. */
-    logo?: string;
-};
+export type { OrgLink, PickerOrg } from "./html.ts";
 export type OrgPickerOptions = {
     /** The one language of the page, decided by the caller (the account's or the product's own locale logic). Required:
      *  the picker never reads the browser (no navigator, Accept-Language or cookie) and never draws two languages. */
     lang: Lang;
-    /** The organisations the person may choose, in this order. The picker draws exactly these: the CALLER filters by
-     *  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). */
-    orgs: PickerOrg[];
-    /** Where each choice is posted. Every org is its own form whose one button is the whole row, so choosing needs no
-     *  script. */
-    action: string;
-    /** The field the chosen org's value is sent in (default `org`). */
-    name?: string;
-    /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
-    fields?: Record<string, string>;
     /** What is being connected, at the top, by its real display name: a Slack workspace "Acme" with its icon (an image
      *  URL; without one, the name's first letter). */
     connecting?: {
@@ -64,13 +45,28 @@ export type OrgPickerOptions = {
     subtitle?: string;
     /** The line under the list. Default: the choice cannot be changed here later. `false` leaves it out. */
     note?: string | false;
-};
+} & ({
+    /** The organisations the person may choose, in this order. The picker draws exactly these: the CALLER filters by
+     *  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). */
+    orgs: PickerOrg[];
+    /** Where each choice is posted. Every org is its own form whose one button is the whole row, so choosing needs
+     *  no script. */
+    action: string;
+    /** The field the chosen org's value is sent in (default `org`). */
+    name?: string;
+    /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
+    fields?: Record<string, string>;
+} | {
+    /** The link mode: each org a row leading to the caller's href (navigation, not a choice the server must trust).
+     *  The picker builds no URL from an org. Same filtering rule as `orgs`. */
+    links: OrgLink[];
+});
 /**
  * Choose an organisation (the suite's org picker, hub plan 2026-11-26): the account shows it after sign-in when a
  * product asks for an `org`. At the top, what is being connected; then one row per org (its mark, name and your
  * access level, a chevron). The whole row is the `<button>` of its own POST form (`fields`, then `name`=the org's
- * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. One
- * language per render.
+ * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. In the
+ * link mode (`links`) each row is a link to the caller's href instead. One language per render.
  *
  * One org is no page: the caller skips the step and uses that org. Given one anyway, it draws that single row (the
  * page still reads right); given none, it says there is no organisation to choose, never an empty list.

@@ -24,7 +24,8 @@ export type Rule =
   | "popover-anchor"
   | "surface-distinct"
   | "off-scale"
-  | "clip";
+  | "clip"
+  | "own-org-list";
 
 export type Finding = {
   rule: Rule;

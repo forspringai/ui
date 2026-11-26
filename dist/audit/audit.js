@@ -290,6 +290,15 @@ export function findings(obs, sc, width) {
         for (const t of obs.primaries)
             if (t.height < 43.5)
                 out.push({ rule: "target-primary", severity: "error", selector: t.selector, value: `${t.height}px tall`, expected: "at least 44px tall on a phone", note: "primary controls on phones (ui-standard §3)" });
+    for (const g of obs.orgLists ?? [])
+        out.push({
+            rule: "own-org-list",
+            severity: "error",
+            selector: g.selector,
+            value: `${g.orgs} organisations as ${g.kind === "select" ? "a select" : g.kind}, drawn by the page`,
+            expected: "@forspring/ui's org list: orgList(), orgPicker(), chooseOrgPage() or the bar's org switcher (data-forspring-org-list)",
+            note: "the suite has one org list (D-57); forspring-ui-check org-lists finds the source",
+        });
     return out;
 }
 /**

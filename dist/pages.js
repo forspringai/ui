@@ -8,7 +8,7 @@
 //
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 import { REFUSALS } from "./refusals.js";
-import { ACCESS_LEVEL_NAMES, button, errorRef, html, icon, list, safeHref, tag } from "./html.js";
+import { ACCESS_LEVEL_NAMES, button, errorRef, html, orgList, orgMark, safeHref } from "./html.js";
 const T = {
     da: {
         chooseTitle: "Vælg en organisation",
@@ -18,8 +18,6 @@ const T = {
         chooseText: (p) => (p ? `Du er med i flere organisationer, der har ${p}. Hvilken vil du arbejde i?` : "Du er med i flere organisationer. Hvilken vil du arbejde i?"),
         lastHere: "Sidst brugt her",
         lastUsed: (d) => `sidst brugt ${d}`,
-        open: "Åbn",
-        openOrg: (o) => `Åbn ${o}`,
         noOrgTitle: "Ingen organisation endnu",
         noOrgText: (who, p) => `${who ? `Du er logget ind som ${who}, men du` : "Du"} er ikke med i en organisation${p ? `, der har ${p}` : ""}.`,
         askThese: "Bed en af dem om at invitere dig:",
@@ -46,8 +44,6 @@ const T = {
         chooseText: (p) => (p ? `You are in several organizations that have ${p}. Which one do you want to work in?` : "You are in several organizations. Which one do you want to work in?"),
         lastHere: "Last used here",
         lastUsed: (d) => `last used ${d}`,
-        open: "Open",
-        openOrg: (o) => `Open ${o}`,
         noOrgTitle: "No organization yet",
         noOrgText: (who, p) => `${who ? `You are signed in as ${who}, but you are` : "You are"} not in an organization${p ? ` that has ${p}` : ""}.`,
         askThese: "Ask one of them to add you:",
@@ -82,40 +78,32 @@ export function chooseOrgPage(o) {
     const t = T[o.lang];
     const last = o.orgs.find((g) => g.slug === o.lastHere);
     const orgs = last ? [last, ...o.orgs.filter((g) => g !== last)] : o.orgs;
-    const items = list(orgs.map((g) => ({
-        name: g === last ? html `${g.name} ${tag(t.lastHere, "primary")}` : g.name,
-        meta: [ACCESS_LEVEL_NAMES[o.lang][g.role], g.lastUsed ? ` · ${t.lastUsed(when(g.lastUsed, o.lang))}` : ""],
-        action: button({ label: t.open, href: g.href, small: true, variant: g === last || (!last && orgs.length === 1) ? "primary" : "ghost", ariaLabel: t.openOrg(g.name) }),
-    })));
+    // The suite's one org list in its link mode (D-57): the row is the link, the org used here first and tagged.
+    const items = orgList({
+        lang: o.lang,
+        links: orgs.map((g) => ({ name: g.name, role: g.role, href: g.href, tag: g === last ? t.lastHere : undefined, meta: g.lastUsed ? t.lastUsed(when(g.lastUsed, o.lang)) : undefined })),
+    });
     return page(200, t.chooseTitle, "choose-org", html `<h1>${t.chooseTitle}</h1><p>${t.chooseText(o.product)}</p>${items}`);
-}
-/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
-function mark(name, src) {
-    const inner = src ? html `<img src="${safeHref(src)}" alt="">` : (Array.from(name.trim())[0] ?? "?").toLocaleUpperCase();
-    return html `<span class="org-picker-mark" aria-hidden="true">${inner}</span>`;
 }
 /**
  * Choose an organisation (the suite's org picker, hub plan 2026-11-26): the account shows it after sign-in when a
  * product asks for an `org`. At the top, what is being connected; then one row per org (its mark, name and your
  * access level, a chevron). The whole row is the `<button>` of its own POST form (`fields`, then `name`=the org's
- * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. One
- * language per render.
+ * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. In the
+ * link mode (`links`) each row is a link to the caller's href instead. One language per render.
  *
  * One org is no page: the caller skips the step and uses that org. Given one anyway, it draws that single row (the
  * page still reads right); given none, it says there is no organisation to choose, never an empty list.
  */
 export function orgPicker(o) {
     const t = T[o.lang];
-    const field = o.name ?? "org";
-    const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html `<input type="hidden" name="${k}" value="${v}">`);
     const c = o.connecting;
     const subject = c
-        ? html `<p class="org-picker-subject">${mark(c.name, c.icon)}<span><span class="org-picker-kind">${c.kind}</span><span class="name">${c.name}</span></span></p>`
+        ? html `<p class="org-picker-subject">${orgMark(c.name, c.icon)}<span><span class="org-picker-kind">${c.kind}</span><span class="name">${c.name}</span></span></p>`
         : "";
-    const rows = o.orgs.length === 0
-        ? html `<p>${t.pickNone}</p>`
-        : html `<ul class="org-picker-list">${o.orgs.map((g) => html `<li><form method="post" action="${safeHref(o.action)}">${hidden}<button class="org-picker-row" type="submit" name="${field}" value="${g.value}">${mark(g.name, g.logo)}<span class="org-picker-text"><span class="name">${g.name}</span><span class="meta">${ACCESS_LEVEL_NAMES[o.lang][g.role]}</span></span>${icon("chevron-right")}</button></form></li>`)}</ul>`;
-    const note = o.note === false || o.orgs.length === 0 ? "" : html `<p class="org-picker-note">${o.note ?? t.pickNote}</p>`;
+    const count = "links" in o ? o.links.length : o.orgs.length;
+    const rows = count === 0 ? html `<p>${t.pickNone}</p>` : orgList(o);
+    const note = o.note === false || count === 0 ? "" : html `<p class="org-picker-note">${o.note ?? t.pickNote}</p>`;
     return html `<div class="card std-page org-picker">${subject}<h1>${t.pickTitle}</h1>${o.subtitle ? html `<p>${o.subtitle}</p>` : ""}${rows}${note}</div>`;
 }
 /** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
@@ -142,7 +130,7 @@ export function refusedPage(o) {
     if (o.reason === "org_mismatch" && o.credentialOrg)
         parts.push(html `<p>${t.keyFor(o.credentialOrg)}</p>`);
     if (o.orgs?.length && (o.reason === "org_required" || o.reason === "not_a_member")) {
-        parts.push(label(t.yourOrgs), list(o.orgs.map((g) => ({ name: g.name, meta: ACCESS_LEVEL_NAMES[o.lang][g.role], action: button({ label: t.open, href: g.href, small: true, variant: "ghost", ariaLabel: t.openOrg(g.name) }) }))));
+        parts.push(label(t.yourOrgs), orgList({ lang: o.lang, links: o.orgs.map((g) => ({ name: g.name, role: g.role, href: g.href })) }));
     }
     if (o.people?.length) {
         const heading = o.reason === "org_suspended" ? t.owners : o.reason === "product_off" ? t.admins : o.reason === "role_too_low" && o.roleNeeded ? t.hasRole(ACCESS_LEVEL_NAMES[o.lang][o.roleNeeded]) : t.canAdd;

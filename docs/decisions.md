@@ -2063,3 +2063,29 @@ lead-ui (design approved by Peter; hub plan suite-org-picker-plan-2026-11-26), r
 - **One org is no page:** the caller skips the step. With none, it shows the no-org sentence.
 - `chooseOrgPage()` overlaps it (GET links to an org's home, and US spelling). Its future is lead-brand's
   call under the one-picker rule: a follow-up tick.
+
+## D-57: One org list suite wide, and the checks that keep it one (2026-11-26)
+
+lead-ui (cos approved the plan; Peter: "make sure we only have ONE org picker suite wide"). No release here:
+lead-brand releases.
+
+- **One list, two modes.** `orgList()` (in `@forspring/ui/html`, with `orgMark()`) draws every list of
+  organisations to choose from, in D-56's row look: the org's mark, its name, your access level. Choices
+  (`orgs`, `action`): each row is the submit button of its own POST form carrying the caller's opaque value.
+  Links (`links`): each row is a link to the `href` the caller gives, for navigation. The list builds no URL
+  from an org. `orgPicker()` takes either (`links` is its link mode).
+- **Thin wrappers.** `chooseOrgPage()`, `refusedPage()`'s "your organisations" and the bar's org switcher
+  now draw `orgList()`; their options and callers are unchanged. The look moves on purpose: the row is the
+  link (no separate "Open" button), with the mark and a chevron; in the bar's panel the rows have a smaller
+  mark and no chevron. "Last used here" stays a tag after the name.
+- **The marker.** Every `orgList()` carries `data-forspring-org-list`.
+- **`forspring-ui-check org-lists`** (a bin, `@forspring/ui/check` for tests): a static check a product runs
+  in its CI, no browser. Rules: `words` (a picker's heading written by hand), `control` (a map over orgs
+  that makes a choice control, a control carrying an org field, a select of orgs), `class` (the package's
+  org-list classes or marker written by hand). Exceptions in `.forspring-ui-allow.json`, each with a tick,
+  or the run fails. Fixtures in `test/fixtures/org-lists/` copy the shapes of the hand-drawn lists the suite
+  had (invented code).
+- **ui-audit `own-org-list`** (error): on a rendered page, two or more controls in one list box that lead to
+  or choose different orgs (links to `/o/<org>/` or with `?org=`, submits, radios or checkboxes named `org`
+  or `org_id`), or a select of orgs, outside the marker. It sees what the static check cannot read
+  (Python-rendered or generated pages).

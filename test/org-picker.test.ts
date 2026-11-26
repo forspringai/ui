@@ -30,7 +30,7 @@ describe("orgPicker", () => {
     expect(b).toMatch(/^<div class="card std-page org-picker"><p class="org-picker-subject">/);
     expect(b).toContain('<span class="org-picker-kind">Slack-workspace</span><span class="name">Acme</span>');
     expect(b).toContain("<h1>Vælg organisation</h1><p>Hvilken organisation skal Slack-workspacet Acme forbindes med?</p>");
-    expect(b.match(/<ul class="org-picker-list">/g)).toHaveLength(1);
+    expect(b.match(/<ul class="org-picker-list" data-forspring-org-list>/g)).toHaveLength(1);
     expect(b).toContain('<span class="name">Acme</span><span class="meta">administrator</span>');
     expect(b).toContain('<span class="name">Globex</span><span class="meta">ejer</span>');
     expect(b.indexOf("sealed.AAA")).toBeLessThan(b.indexOf("sealed.BBB"));
@@ -54,8 +54,8 @@ describe("orgPicker", () => {
         const b = String(orgPicker({ ...two, lang, subtitle: undefined, connecting: undefined, orgs: [{ value: "v", name: "Acme", role: "viewer" }] }));
         expect(b).toBe(
           lang === "da"
-            ? '<div class="card std-page org-picker"><h1>Vælg organisation</h1><ul class="org-picker-list"><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">Du kan ikke ændre valget her bagefter.</p></div>'
-            : '<div class="card std-page org-picker"><h1>Choose organisation</h1><ul class="org-picker-list"><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">You cannot change this choice here later.</p></div>',
+            ? '<div class="card std-page org-picker"><h1>Vælg organisation</h1><ul class="org-picker-list" data-forspring-org-list><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">Du kan ikke ændre valget her bagefter.</p></div>'
+            : '<div class="card std-page org-picker"><h1>Choose organisation</h1><ul class="org-picker-list" data-forspring-org-list><li>' + forms(b)[0] + '</li></ul><p class="org-picker-note">You cannot change this choice here later.</p></div>',
         );
         expect(b).toContain(lang === "da" ? '<span class="meta">læser</span>' : '<span class="meta">viewer</span>');
       }

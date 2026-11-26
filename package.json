@@ -9,7 +9,8 @@
     "node": ">=22.18"
   },
   "bin": {
-    "ui-audit": "./dist/audit/cli.js"
+    "ui-audit": "./dist/audit/cli.js",
+    "forspring-ui-check": "./dist/check/cli.js"
   },
   "files": [
     "dist",
@@ -64,6 +65,10 @@
     "./audit": {
       "types": "./dist/audit/audit.d.ts",
       "default": "./dist/audit/audit.js"
+    },
+    "./check": {
+      "types": "./dist/check/org-lists.d.ts",
+      "default": "./dist/check/org-lists.js"
     },
     "./package.json": "./package.json"
   },

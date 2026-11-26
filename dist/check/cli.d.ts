@@ -1,0 +1,2 @@
+#!/usr/bin/env node
+export declare const USAGE = "forspring-ui-check org-lists [--allow <file>] [--json] <path>...\n\nFinds a list of organisations a product draws by hand instead of @forspring/ui's orgList() (orgPicker,\nchooseOrgPage, the bar's org switcher). Paths are files or directories, relative to the current directory.\n--allow  the allowlist (default .forspring-ui-allow.json): [{ \"file\", \"rule\", \"reason\", \"tick\" }]; an entry\n         without a tick fails the run.\n--json   the result as JSON on stdout.";

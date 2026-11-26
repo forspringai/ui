@@ -16,5 +16,7 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "scripts", "test", "demo", "dist", "vitest.config.ts"]
+  "include": ["src", "scripts", "test", "demo", "dist", "vitest.config.ts"],
+  // Source-shaped fixtures for forspring-ui-check: read as text by the tests, never compiled.
+  "exclude": ["test/fixtures/org-lists"]
 }
