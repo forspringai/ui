@@ -86,8 +86,18 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   (`menu: true` inside a menu panel). Never draw your own org list: `forspring-ui-check org-lists` fails a
   product's CI on one, and ui-audit's `own-org-list` rule finds one on a rendered page.
   Run it from your repo's root in CI: `forspring-ui-check org-lists src` (your source paths). Exceptions
-  live in YOUR repo, in `.forspring-ui-allow.json` beside the run: `[{ "file", "rule", "reason", "tick" }]`;
-  an entry without a tick fails the run, and an unused one is reported. ui ships no allowlist.
+  live in YOUR repo, in `.forspring-ui-allow.json` beside the run: `[{ "file", "rule", "reason", "tick" }]`.
+  `file` is the path exactly as the finding prints it (relative to where the check runs, with `/`).
+  `rule` is a rule NAME, one of `words` (a picker's heading or label written by hand), `control` (a map
+  over orgs that makes a choice control, a control carrying an org field, a select of orgs) or `class`
+  (the package's org-list classes or marker written by hand); not a line number or the matched text.
+  One entry covers every finding of that rule in that file. An entry without a tick fails the run, and
+  an unused one is reported. ui ships no allowlist. Example:
+
+  ```json
+  [{ "file": "src/admin/switch.tsx", "rule": "control",
+     "reason": "operator-only switcher; moves to orgList() links", "tick": "abc" }]
+  ```
 
 ### Actions
 
