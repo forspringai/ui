@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.40.0
+pnpm add github:forspringai/ui#v0.40.1
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -173,16 +173,16 @@ import { refusedPage, chooseOrgPage } from "@forspring/ui/pages";
 const bar: BarOptions = {
   lang: "da", product: "dataspring", productLabel: "DataSpring",            // the wordmark leads to /o/<org>/
   org: {
-    current: { slug: "noon", name: "Noon", role: "admin" },
+    current: { slug: "acme", name: "Acme", role: "admin" },
     orgs: myOrgs,                         // [{ slug, name, role }]; the switcher shows with two or more
-    path: url.pathname,                   // switching keeps the place: /o/noon/runs -> /o/spekta/runs
-    peopleHref: "https://account.forspring.ai/o/noon/people",
+    path: url.pathname,                   // switching keeps the place: /o/acme/runs -> /o/globex/runs
+    peopleHref: "https://account.forspring.ai/o/acme/people",
   },
-  products: { items: [{ name: "DataSpring", href: "/o/noon/", current: true }, { name: "SiteSpring", href: "https://…/o/noon/" }], accountHref: "https://account.forspring.ai/o/noon/" },
+  products: { items: [{ name: "DataSpring", href: "/o/acme/", current: true }, { name: "SiteSpring", href: "https://…/o/acme/" }], accountHref: "https://account.forspring.ai/o/acme/" },
   userMenu: {
     name: "Peter Engelbrecht", email: "peter@…",
     accountHref: "https://account.forspring.ai/",
-    agentsHref: "https://account.forspring.ai/o/noon/agents?product=dataspring",
+    agentsHref: "https://account.forspring.ai/o/acme/agents?product=dataspring",
     languages: { da: "?lang=da", en: "?lang=en" },
     signOut: { action: "/signout", fields: { csrf } },   // "Log ud af Forspring": ends every session
   },
@@ -190,7 +190,7 @@ const bar: BarOptions = {
 
 return new Response(String(shell({ ...bar, title: "Kørsler", body })), { headers });
 
-const page = refusedPage({ lang: "da", reason: "product_off", org: "Noon", people: admins });
+const page = refusedPage({ lang: "da", reason: "product_off", org: "Acme", people: admins });
 return new Response(String(shell({ ...bar, ...page })), { status: page.status, headers });
 ```
 
@@ -488,14 +488,14 @@ are `role="status"` with `aria-live="polite"`.
 ```ts
 import { toast, toastRegion, toastScript } from "@forspring/ui/html";
 
-// POST /o/noon/sites/42 saves, then 303 to /o/noon/sites/42?gemt=1, which draws:
+// POST /o/acme/sites/42 saves, then 303 to /o/acme/sites/42?gemt=1, which draws:
 const body = [
   toast({
     lang: "da",
     tone: "success",                                  // "success" | "warning" | "danger" | "info" (default)
     text: "Ændringerne er gemt.",
-    dismissHref: "/o/noon/sites/42",                  // this page without the flash parameter
-    action: { label: "Fortryd", href: "/o/noon/sites/42/undo" },  // optional, one link
+    dismissHref: "/o/acme/sites/42",                  // this page without the flash parameter
+    action: { label: "Fortryd", href: "/o/acme/sites/42/undo" },  // optional, one link
   }),
   page,
   toastScript(nonce),                                 // optional

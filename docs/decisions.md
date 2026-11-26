@@ -491,8 +491,8 @@ org's home, `/o/<org>/`, when `home` is unset.
 - **Org switcher:** the customer's name in the bar; the panel lists every org with the person's role
   ("ejer", "administrator", "medlem", "læser", as the account writes them) and "Administrer folk i
   <org>" to the account's people page. Hidden with one org; the org then shows only in the user
-  menu's head. Each link keeps the person's place: `orgPath("/o/noon/runs", "spekta")` is
-  `/o/spekta/runs` (a query or hash kept, a path outside `/o/` the org's home); a page that does not
+  menu's head. Each link keeps the person's place: `orgPath("/o/acme/runs", "globex")` is
+  `/o/globex/runs` (a query or hash kept, a path outside `/o/` the org's home); a page that does not
   exist there is the product's to send home. `href` per org overrides it.
 - **Product switcher:** "Produkter"; the panel is "<org> har", the org's products with the current one
   marked "her", and "Alt for <org> hos Forspring" to the account's org page.
@@ -749,7 +749,7 @@ exact name, escaped for a regular expression, and the browser blocks the submit 
 matches. Browsers compile `pattern` with the v flag, where an unneeded escape (`\-`) is a syntax error
 and the browser then ignores the whole pattern, so `regexEscape()` escapes exactly the syntax
 characters and `/`, and a test compiles the result as a browser does. Autocapitalize, autocorrect and
-spellcheck are off, so a phone does not turn "banegaarden.dk" into "Banegaarden.dk". Until the name
+spellcheck are off, so a phone does not turn "bakery.example" into "Bakery.example". Until the name
 matches, `.dialog-form:has(:invalid)` draws the destructive button in muted words on a hairline rather
 than in danger; it stays a live button, so pressing it makes the browser say what is missing, and its
 words keep their contrast (a faded button would fail the audit, which cannot know it is unavailable).
@@ -761,7 +761,7 @@ the CSRF token, before it deletes anything. The helper's doc comment and the REA
 
 **The confirm's words are the package's,** as the bar's are (D-17): "Behold" / "Keep", "Det fjerner A,
 B og C." / "This removes A, B and C.", "Det kan ikke fortrydes." / "It can't be undone.", and the
-field's label names what to type, "Skriv banegaarden.dk for at bekræfte" / "Type banegaarden.dk to
+field's label names what to type, "Skriv bakery.example for at bekræfte" / "Type bakery.example to
 confirm", rather than the review's "Type the site name to confirm", because the helper serves more than
 sites and the person should see the exact string. The title, the losses, `keepLabel` and
 `confirmLabel` are the product's ("Behold hjemmesiden", "Slet hjemmesiden"). The dialog is an
@@ -2044,3 +2044,11 @@ and panes lost the grey-page delineation Peter asked for; cards passed only thro
 - **The example moves** from #eef6f0 (page #fbfffc) to its fix, #e7efe9 (page #f1f9f3), in the README and
   the tests. A product whose saved theme now fails gets the fix in the refusal; customerTheme() throws
   as for any refused theme.
+
+## D-55: No customer names in this public repo (0.40.1, 2026-11-26)
+
+Papercut order item 1 (leaks first, Peter 2026-11-26). This repo is public. Its README, demo, doc comments
+and tests used real customer and org names as examples. They are now fictional: org slugs `acme` and
+`globex`, and the site `bakery.example`. The demo's dialog and lead baselines were regenerated; no behaviour
+changed. The names stay in git history; rewriting history isn't worth it for example strings. New examples
+use invented names only.

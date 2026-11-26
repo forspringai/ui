@@ -10,10 +10,10 @@ import { ConnectAgent } from "../src/react.ts";
 const base: ConnectPanelOptions = {
   lang: "da",
   product: "sitespring",
-  org: { slug: "noon", name: "Noon" },
+  org: { slug: "acme", name: "Acme" },
   mcpUrl: "https://mcp.sitespring.app/mcp",
 };
-const withKeys: ConnectPanelOptions = { ...base, keysHref: "https://account.forspring.ai/o/noon/agents?product=sitespring", createKey: { action: "/o/noon/keys", fields: { csrf: "t0k" } } };
+const withKeys: ConnectPanelOptions = { ...base, keysHref: "https://account.forspring.ai/o/acme/agents?product=sitespring", createKey: { action: "/o/acme/keys", fields: { csrf: "t0k" } } };
 
 // The panel's text with tags dropped and entities decoded, for comparing with the hub's sentences.
 const text = (h: string) => h.replace(/<[^>]+>/g, "").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
@@ -26,13 +26,13 @@ describe("the Danish copy (agent-connect-plan.md section 2)", () => {
 
   test("title and lede", () => {
     expect(out).toContain('<section class="connect" aria-labelledby="connect-title"><h2 id="connect-title">Forbind en agent</h2>');
-    expect(t).toContain("Giv Claude, Cursor eller en anden agent adgang til SiteSpring i Noon. Du logger ind med din Forspring-konto og godkender i browseren. Der er ingen nøgle at kopiere, og du kan altid afbryde forbindelsen igen.");
+    expect(t).toContain("Giv Claude, Cursor eller en anden agent adgang til SiteSpring i Acme. Du logger ind med din Forspring-konto og godkender i browseren. Der er ingen nøgle at kopiere, og du kan altid afbryde forbindelsen igen.");
   });
 
   test("Claude Code: add with --scope user, no header, then /mcp; headless with claude mcp login", () => {
     expect(t).toContain("Kør i din terminal:");
     expect(out).toContain("<pre><code>claude mcp add --transport http --scope user sitespring https://mcp.sitespring.app/mcp</code></pre>");
-    expect(t).toContain("Skriv derefter /mcp i Claude Code, vælg sitespring og Authenticate. Log ind, og godkend Noon.");
+    expect(t).toContain("Skriv derefter /mcp i Claude Code, vælg sitespring og Authenticate. Log ind, og godkend Acme.");
     expect(t).toContain("På en server uden browser: kør claude mcp login sitespring, åbn linket på en anden enhed, og indsæt adressen, du ender på.");
     expect(out).toContain('<i lang="en">Authenticate</i>');
   });
@@ -41,7 +41,7 @@ describe("the Danish copy (agent-connect-plan.md section 2)", () => {
     expect(t).toContain("Åbn Customize → Connectors, og vælg Add custom connector.");
     expect(t).toContain("Navn: SiteSpring. Adresse:");
     expect(t).toContain("Klik Add.");
-    expect(t).toContain("Klik Connect, log ind med Forspring, og godkend Noon.");
+    expect(t).toContain("Klik Connect, log ind med Forspring, og godkend Acme.");
     expect(t).toContain("På Team og Enterprise tilføjer en ejer forbindelsen under Organization settings → Connectors. Derefter klikker hver person på Connect.");
   });
 
@@ -55,17 +55,17 @@ describe("the Danish copy (agent-connect-plan.md section 2)", () => {
   test("CLI: install and auth login, and how the org is named", () => {
     expect(out).toContain("<pre><code>curl -fsSL https://sitespring.app/install.sh | sh</code></pre>");
     expect(out).toContain("<pre><code>sitespring auth login</code></pre>");
-    expect(t).toContain("CLI'en viser en kode og et link. Åbn linket på en hvilken som helst enhed, og godkend. Det virker også over SSH og i en container. Organisationen vælges med --org noon, SITESPRING_ORG eller en .forspring.json.");
+    expect(t).toContain("CLI'en viser en kode og et link. Åbn linket på en hvilken som helst enhed, og godkend. Det virker også over SSH og i en container. Organisationen vælges med --org acme, SITESPRING_ORG eller en .forspring.json.");
   });
 
   test("Automation and CI: folded, the key's reach, the form, header and variable, the link", () => {
     expect(out).toContain('<details class="connect-ci"><summary>Automatisering og CI</summary>');
     expect(out).not.toContain('<details class="connect-ci" open');
-    expect(t).toContain("Til et CI-job eller en agent, der kører uden en person til stede. En nøgle handler som dig i Noon, højst som admin, indtil du tilbagekalder den. Brug login ovenfor, når en person er til stede.");
-    expect(out).toContain('<form class="connect-key" method="post" action="/o/noon/keys"><input type="hidden" name="csrf" value="t0k"><label for="connect-key-name">Navngiv nøglen</label>');
+    expect(t).toContain("Til et CI-job eller en agent, der kører uden en person til stede. En nøgle handler som dig i Acme, højst som admin, indtil du tilbagekalder den. Brug login ovenfor, når en person er til stede.");
+    expect(out).toContain('<form class="connect-key" method="post" action="/o/acme/keys"><input type="hidden" name="csrf" value="t0k"><label for="connect-key-name">Navngiv nøglen</label>');
     expect(out).toContain('placeholder="fx GitHub Actions"><button type="submit" class="small">Opret en nøgle</button>');
     expect(t).toContain("MCP: Authorization: Bearer <nøgle> · CLI: export SITESPRING_API_KEY=<nøgle>");
-    expect(out).toContain('<a class="go" href="https://account.forspring.ai/o/noon/agents?product=sitespring">Se og tilbagekald alle agenter i Noon</a>');
+    expect(out).toContain('<a class="go" href="https://account.forspring.ai/o/acme/agents?product=sitespring">Se og tilbagekald alle agenter i Acme</a>');
   });
 });
 
@@ -74,26 +74,26 @@ describe("the English copy", () => {
   test("every sentence", () => {
     for (const s of [
       "Connect an agent",
-      "Give Claude, Cursor or another agent access to SiteSpring in Noon. You sign in with your Forspring account and approve in your browser. There is no key to copy, and you can disconnect at any time.",
+      "Give Claude, Cursor or another agent access to SiteSpring in Acme. You sign in with your Forspring account and approve in your browser. There is no key to copy, and you can disconnect at any time.",
       "Run in your terminal:",
-      "Then type /mcp in Claude Code, pick sitespring and Authenticate. Sign in and approve Noon.",
+      "Then type /mcp in Claude Code, pick sitespring and Authenticate. Sign in and approve Acme.",
       "On a server with no browser: run claude mcp login sitespring, open the link on another device, and paste back the address you land on.",
       "Open Customize → Connectors and choose Add custom connector.",
       "Name: SiteSpring. URL:",
-      "Click Connect, sign in with Forspring and approve Noon.",
+      "Click Connect, sign in with Forspring and approve Acme.",
       "On Team and Enterprise an owner adds it under Organization settings → Connectors, then each person clicks Connect.",
       "Other clients",
       "Cursor, VS Code, Codex and others",
       "Server address:",
       "Clients that support OAuth sign in by themselves: add the address and approve in your browser.",
       "Add to Cursor",
-      "The CLI prints a code and a link. Open the link on any device and approve. It works over SSH and in containers too. Name the org with --org noon, SITESPRING_ORG or a .forspring.json.",
+      "The CLI prints a code and a link. Open the link on any device and approve. It works over SSH and in containers too. Name the org with --org acme, SITESPRING_ORG or a .forspring.json.",
       "Automation and CI",
-      "For a CI job or an agent that runs with no person present. A key acts as you in Noon, at most as admin, until you revoke it. When a person is present, use the sign-in above.",
+      "For a CI job or an agent that runs with no person present. A key acts as you in Acme, at most as admin, until you revoke it. When a person is present, use the sign-in above.",
       "Name the key",
       "Create a key",
       "MCP: Authorization: Bearer <key> · CLI: export SITESPRING_API_KEY=<key>",
-      "See and revoke every agent in Noon",
+      "See and revoke every agent in Acme",
     ])
       expect(t).toContain(s);
   });
@@ -116,11 +116,11 @@ describe("interactive first (hub D-102)", () => {
 
 describe("names, tabs and markup", () => {
   test("the server's name is the CLI's, or <cli>-<org> with several orgs", () => {
-    expect(connectServerName("sitespring", "noon")).toBe("sitespring");
-    expect(connectServerName("sitespring", "noon", true)).toBe("sitespring-noon");
+    expect(connectServerName("sitespring", "acme")).toBe("sitespring");
+    expect(connectServerName("sitespring", "acme", true)).toBe("sitespring-acme");
     const out = String(connectPanel({ ...base, multiOrg: true }));
-    expect(out).toContain("claude mcp add --transport http --scope user sitespring-noon https://mcp.sitespring.app/mcp");
-    expect(out).toContain("<code>claude mcp login sitespring-noon</code>");
+    expect(out).toContain("claude mcp add --transport http --scope user sitespring-acme https://mcp.sitespring.app/mcp");
+    expect(out).toContain("<code>claude mcp login sitespring-acme</code>");
   });
 
   test("cliName and installUrl override the product's; the variables follow the CLI's name", () => {
@@ -129,14 +129,14 @@ describe("names, tabs and markup", () => {
     expect(out).toContain("pulse-spring auth login");
     expect(out).toContain("PULSE_SPRING_ORG");
     expect(out).toContain("PULSE_SPRING_API_KEY");
-    expect(out).toContain("adgang til PulseSpring i Noon");
+    expect(out).toContain("adgang til PulseSpring i Acme");
   });
 
   test("Cursor's deeplink carries the URL as base64 JSON, and nothing else", () => {
-    const u = new URL(cursorInstallUrl("sitespring-noon", "https://mcp.sitespring.app/mcp/o/noon"));
+    const u = new URL(cursorInstallUrl("sitespring-acme", "https://mcp.sitespring.app/mcp/o/acme"));
     expect(u.protocol).toBe("cursor:");
-    expect(u.searchParams.get("name")).toBe("sitespring-noon");
-    expect(JSON.parse(atob(u.searchParams.get("config")!))).toEqual({ url: "https://mcp.sitespring.app/mcp/o/noon" });
+    expect(u.searchParams.get("name")).toBe("sitespring-acme");
+    expect(JSON.parse(atob(u.searchParams.get("config")!))).toEqual({ url: "https://mcp.sitespring.app/mcp/o/acme" });
   });
 
   test("four tabs as radios in a labelled group, Claude Code open by default, each panel with a heading", () => {

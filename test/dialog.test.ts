@@ -11,12 +11,12 @@ import { ConfirmDestructive, Dialog } from "../src/react.ts";
 const SITE: ConfirmDestructiveOptions = {
   lang: "en",
   id: "delete-site",
-  title: "Delete banegaarden.dk?",
+  title: "Delete bakery.example?",
   losses: ["181 pages", "4 forms", "62 redirects"],
   text: "The domain stops answering at once.",
   irreversible: true,
-  confirmName: "banegaarden.dk",
-  action: "/o/bager-hansen/sites/banegaarden.dk/delete",
+  confirmName: "bakery.example",
+  action: "/o/bager-hansen/sites/bakery.example/delete",
   fields: { csrf: "tok-123" },
   keepLabel: "Keep site",
   confirmLabel: "Delete site",
@@ -60,13 +60,13 @@ describe("confirmDestructive()", () => {
 
   test("an alertdialog described by what is lost", () => {
     expect(h).toMatch(/^<dialog class="dialog" id="delete-site" role="alertdialog" aria-labelledby="delete-site-title" aria-describedby="delete-site-body">/);
-    expect(h).toContain('<h2 class="dialog-title" id="delete-site-title">Delete banegaarden.dk?</h2>');
+    expect(h).toContain('<h2 class="dialog-title" id="delete-site-title">Delete bakery.example?</h2>');
     expect(h).toContain('<div class="dialog-body" id="delete-site-body"><p>This removes 181 pages, 4 forms and 62 redirects. The domain stops answering at once. <strong>It can&#39;t be undone.</strong></p>');
   });
 
   test("Keep closes through form method=dialog; the confirm is a POST with the CSRF field", () => {
     expect(h).toContain('<form method="dialog" id="delete-site-close"></form>');
-    expect(h).toContain('<form class="dialog-form" method="post" action="/o/bager-hansen/sites/banegaarden.dk/delete"><input type="hidden" name="csrf" value="tok-123">');
+    expect(h).toContain('<form class="dialog-form" method="post" action="/o/bager-hansen/sites/bakery.example/delete"><input type="hidden" name="csrf" value="tok-123">');
     // Keep is first in the footer, in focus; the destructive button is after it, in danger.
     expect(h).toContain('<div class="dialog-actions"><button type="submit" class="ghost" form="delete-site-close" value="close" autofocus>Keep site</button><button class="danger" type="submit">Delete site</button></div>');
     expect(h.match(/autofocus/g)).toHaveLength(1);
@@ -77,12 +77,12 @@ describe("confirmDestructive()", () => {
     const input = /<input id="delete-site-name"[^>]*>/.exec(h)![0];
     expect(input).toContain(' name="confirm" required ');
     expect(input).toContain('autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"');
-    expect(attr(input, /pattern="([^"]*)"/)).toBe("banegaarden\\.dk");
-    expect(h).toContain('<label for="delete-site-name">Type <b>banegaarden.dk</b> to confirm</label>');
+    expect(attr(input, /pattern="([^"]*)"/)).toBe("bakery\\.example");
+    expect(h).toContain('<label for="delete-site-name">Type <b>bakery.example</b> to confirm</label>');
   });
 
   test("the pattern matches the name alone, compiled as a browser does (v flag, anchored)", () => {
-    for (const name of ["banegaarden.dk", 'Bob\'s "<site>" & co', "a(b)[c]{d}|e^$*+?/\\f-g"]) {
+    for (const name of ["bakery.example", 'Bob\'s "<site>" & co', "a(b)[c]{d}|e^$*+?/\\f-g"]) {
       const out = String(confirmDestructive({ ...SITE, confirmName: name }));
       const pattern = unescape(attr(out, /pattern="([^"]*)"/)!);
       expect(pattern).toBe(regexEscape(name));
@@ -91,7 +91,7 @@ describe("confirmDestructive()", () => {
       expect(re.test(name + "x")).toBe(false);
       expect(re.test(name.toUpperCase() === name ? name.toLowerCase() : name.toUpperCase())).toBe(false);
     }
-    expect(regexEscape("banegaarden.dk")).not.toBe("banegaarden.dk");
+    expect(regexEscape("bakery.example")).not.toBe("bakery.example");
   });
 
   test("a name with quotes and < is escaped in the pattern, the label and the title", () => {
@@ -105,11 +105,11 @@ describe("confirmDestructive()", () => {
   });
 
   test("Danish words", () => {
-    const da = String(confirmDestructive({ ...SITE, lang: "da", title: "Slet banegaarden.dk?", losses: ["181 sider", "4 formularer", "62 omdirigeringer"], text: "Domænet holder op med at svare med det samme.", keepLabel: undefined, confirmLabel: "Slet hjemmesiden" }));
+    const da = String(confirmDestructive({ ...SITE, lang: "da", title: "Slet bakery.example?", losses: ["181 sider", "4 formularer", "62 omdirigeringer"], text: "Domænet holder op med at svare med det samme.", keepLabel: undefined, confirmLabel: "Slet hjemmesiden" }));
     expect(da).toContain("<p>Det fjerner 181 sider, 4 formularer og 62 omdirigeringer. Domænet holder op med at svare med det samme. <strong>Det kan ikke fortrydes.</strong></p>");
     expect(da).toContain(">Behold</button>");
-    expect(da).toContain("Skriv <b>banegaarden.dk</b> for at bekræfte");
-    expect(da).toContain('title="Skriv banegaarden.dk præcis, som det står."');
+    expect(da).toContain("Skriv <b>bakery.example</b> for at bekræfte");
+    expect(da).toContain('title="Skriv bakery.example præcis, som det står."');
   });
 
   test("English default Keep, one loss, many losses as a list, no name field without confirmName", () => {
@@ -122,11 +122,11 @@ describe("confirmDestructive()", () => {
   });
 
   test("the fallback page keeps the POST, the field and the CSRF token; Keep links back", () => {
-    const p = String(confirmDestructive({ ...SITE, page: { keepHref: "/o/bager-hansen/sites/banegaarden.dk" } }));
+    const p = String(confirmDestructive({ ...SITE, page: { keepHref: "/o/bager-hansen/sites/bakery.example" } }));
     expect(p).toMatch(/^<section class="dialog dialog-page" id="delete-site" aria-labelledby="delete-site-title"><h1/);
-    expect(p).toContain('<a class="button ghost" href="/o/bager-hansen/sites/banegaarden.dk" autofocus>Keep site</a><button class="danger" type="submit">Delete site</button>');
+    expect(p).toContain('<a class="button ghost" href="/o/bager-hansen/sites/bakery.example" autofocus>Keep site</a><button class="danger" type="submit">Delete site</button>');
     expect(p).toContain('<input type="hidden" name="csrf" value="tok-123">');
-    expect(p).toContain('pattern="banegaarden\\.dk"');
+    expect(p).toContain('pattern="bakery\\.example"');
   });
 });
 
