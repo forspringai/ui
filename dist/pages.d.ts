@@ -29,36 +29,49 @@ export type ChooseOrgOptions = {
 };
 /** Signed in, several orgs with this product and none in the URL: each org with your access level and when you last used it. */
 export declare function chooseOrgPage(o: ChooseOrgOptions): StandardPage;
-/** An organisation the picker offers: its id (what the form sends back), its name and your access level there. */
+/** An organisation the picker offers: its name, your access level there, and the value the form sends back. */
 export type PickerOrg = {
-    id: string;
     name: string;
     role: AccessLevel;
+    /** Sent back unchanged as the chosen button's value: opaque to the picker (the account seals a token in it).
+     *  The picker never builds a URL or anything else from it. */
+    value: string;
+    /** The org's logo, an image URL; without one the row shows the name's first letter. */
+    logo?: string;
 };
 export type OrgPickerOptions = {
+    /** The one language of the page (from the browser or the account): never two stacked. */
     lang: Lang;
-    /** The organisations the person may choose: the ones where they have the role the product asked for and that
-     *  have the product. Listed in this order. */
+    /** The organisations the person may choose, in this order. */
     orgs: PickerOrg[];
-    /** Where each choice is posted (the account's picker step). Every org is its own form with one button, so
-     *  choosing needs no script. */
+    /** Where each choice is posted. Every org is its own form whose one button is the whole row, so choosing needs no
+     *  script. */
     action: string;
-    /** The field the chosen org's id is sent in (default `org`). */
+    /** The field the chosen org's value is sent in (default `org`). */
     name?: string;
     /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
     fields?: Record<string, string>;
-    /** The product's name, for the lede ("Which organisation do you want to use AppSpring in?"). */
-    product?: string;
+    /** What is being connected, at the top, by its real display name: a Slack workspace "Noon" with its icon (an image
+     *  URL; without one, the name's first letter). */
+    connecting?: {
+        kind: string;
+        name: string;
+        icon?: string;
+    };
+    /** A line under the heading, e.g. "Hvilken organisation skal Slack-workspacet Noon forbindes med?". */
+    subtitle?: string;
+    /** The line under the list. Default: the choice cannot be changed here later. `false` leaves it out. */
+    note?: string | false;
 };
 /**
- * Choose an organisation at sign-in (the suite's org picker, hub plan 2026-11-26): the account shows it after the
- * person signed in, when the product asked for an `org`. One list in the look of the account's "Dine
- * organisationer" and a product's org switcher: each org's name, your access level there, and one button, each its
- * own POST form (`fields`, then `name`=the org's id), so it is server-rendered and works with no script.
+ * Choose an organisation (the suite's org picker, hub plan 2026-11-26): the account shows it after sign-in when a
+ * product asks for an `org`. At the top, what is being connected; then one row per org (its mark, name and your
+ * access level, a chevron). The whole row is the `<button>` of its own POST form (`fields`, then `name`=the org's
+ * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. One
+ * language per render.
  *
- * One org is no page: the caller skips the step and uses that org (the plan). Given one anyway, it draws that one
- * org with a primary button, so a page that does show it still reads right; given none, it says the person is in no
- * organisation with the product (noOrgPage's words), never an empty list.
+ * One org is no page: the caller skips the step and uses that org. Given one anyway, it draws that single row (the
+ * page still reads right); given none, it says there is no organisation to choose, never an empty list.
  */
 export declare function orgPicker(o: OrgPickerOptions): Html;
 /** The org picker as a page of its own (spread it into shell(), as the other standard pages). */

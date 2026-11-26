@@ -66,13 +66,17 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   answer with its `status`. Never draw your own version of these screens (hub D-99).
 - **Choosing an organisation at sign-in:** `orgPicker()` (or `orgPickerPage()` for a page of its own,
   `OrgPicker` in React) is the suite's one org picker (hub plan 2026-11-26): the account draws it after
-  sign-in when a product asks for `scope=openid org`. Give it the orgs the person may choose (`id`,
-  `name`, access level), the form `action` and the hidden `fields` (the CSRF token, the sign-in
-  request's handle): each org is its own POST form whose button sends `org=<id>` (or your `name`), so it
-  needs no script. One org is no page: skip the step and use that org. Given one anyway it draws it with
-  a primary button; given none it says so, never an empty list. An app's in-app switcher can draw the
-  same list. It is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET);
-  the picker posts the choice back to the sign-in, so the choice never sits in a URL.
+  sign-in when a product asks for `scope=openid org`. At the top, what is being connected by its real
+  name (`connecting`: kind, name, optional icon URL); then one row per org: its logo or first letter,
+  its name, your access level, a chevron. The whole row is the submit button of its own POST form (the
+  caller's `action` and hidden `fields`, then `name`, default `org`, = the org's `value`), so it needs no
+  script and works with Tab, Enter and Space. `value` is opaque (the account seals a token in it): it is
+  sent unchanged and the picker builds no URL from it. One language per render (`lang`), never two
+  stacked. An optional `subtitle` goes under the heading and a `note` under the list (default: the
+  choice cannot be changed here later; `false` for none). One org is no page: skip the step and use
+  that org. Given one anyway it draws that single row; given none it says so, never an empty list. It
+  is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET); the picker
+  posts the choice back to the sign-in, so the choice never sits in a URL.
 
 ### Actions
 

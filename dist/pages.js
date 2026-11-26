@@ -8,14 +8,13 @@
 //
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 import { REFUSALS } from "./refusals.js";
-import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag } from "./html.js";
+import { ACCESS_LEVEL_NAMES, button, errorRef, html, icon, list, safeHref, tag } from "./html.js";
 const T = {
     da: {
         chooseTitle: "Vælg en organisation",
         pickTitle: "Vælg organisation",
-        pickText: (p) => (p ? `Hvilken organisation vil du bruge ${p} i?` : "Hvilken organisation vil du bruge?"),
-        pick: "Vælg",
-        pickOrg: (o) => `Vælg ${o}`,
+        pickNote: "Du kan ikke ændre valget her bagefter.",
+        pickNone: "Du er ikke med i en organisation, du kan vælge her.",
         chooseText: (p) => (p ? `Du er med i flere organisationer, der har ${p}. Hvilken vil du arbejde i?` : "Du er med i flere organisationer. Hvilken vil du arbejde i?"),
         lastHere: "Sidst brugt her",
         lastUsed: (d) => `sidst brugt ${d}`,
@@ -42,9 +41,8 @@ const T = {
     en: {
         chooseTitle: "Choose an organization",
         pickTitle: "Choose organisation",
-        pickText: (p) => (p ? `Which organisation do you want to use ${p} in?` : "Which organisation do you want to use?"),
-        pick: "Choose",
-        pickOrg: (o) => `Choose ${o}`,
+        pickNote: "You cannot change this choice here later.",
+        pickNone: "You are in no organisation you can choose here.",
         chooseText: (p) => (p ? `You are in several organizations that have ${p}. Which one do you want to work in?` : "You are in several organizations. Which one do you want to work in?"),
         lastHere: "Last used here",
         lastUsed: (d) => `last used ${d}`,
@@ -91,28 +89,34 @@ export function chooseOrgPage(o) {
     })));
     return page(200, t.chooseTitle, "choose-org", html `<h1>${t.chooseTitle}</h1><p>${t.chooseText(o.product)}</p>${items}`);
 }
+/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
+function mark(name, src) {
+    const inner = src ? html `<img src="${safeHref(src)}" alt="">` : (Array.from(name.trim())[0] ?? "?").toLocaleUpperCase();
+    return html `<span class="org-picker-mark" aria-hidden="true">${inner}</span>`;
+}
 /**
- * Choose an organisation at sign-in (the suite's org picker, hub plan 2026-11-26): the account shows it after the
- * person signed in, when the product asked for an `org`. One list in the look of the account's "Dine
- * organisationer" and a product's org switcher: each org's name, your access level there, and one button, each its
- * own POST form (`fields`, then `name`=the org's id), so it is server-rendered and works with no script.
+ * Choose an organisation (the suite's org picker, hub plan 2026-11-26): the account shows it after sign-in when a
+ * product asks for an `org`. At the top, what is being connected; then one row per org (its mark, name and your
+ * access level, a chevron). The whole row is the `<button>` of its own POST form (`fields`, then `name`=the org's
+ * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. One
+ * language per render.
  *
- * One org is no page: the caller skips the step and uses that org (the plan). Given one anyway, it draws that one
- * org with a primary button, so a page that does show it still reads right; given none, it says the person is in no
- * organisation with the product (noOrgPage's words), never an empty list.
+ * One org is no page: the caller skips the step and uses that org. Given one anyway, it draws that single row (the
+ * page still reads right); given none, it says there is no organisation to choose, never an empty list.
  */
 export function orgPicker(o) {
     const t = T[o.lang];
     const field = o.name ?? "org";
     const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html `<input type="hidden" name="${k}" value="${v}">`);
-    const items = o.orgs.length === 0
-        ? html `<p>${t.noOrgText(undefined, o.product)}</p>`
-        : list(o.orgs.map((g) => ({
-            name: g.name,
-            meta: ACCESS_LEVEL_NAMES[o.lang][g.role],
-            action: html `<form class="inline" method="post" action="${safeHref(o.action)}">${hidden}${button({ label: t.pick, name: field, value: g.id, small: true, variant: o.orgs.length === 1 ? "primary" : "ghost", ariaLabel: t.pickOrg(g.name) })}</form>`,
-        })));
-    return html `<div class="card std-page org-picker"><h1>${t.pickTitle}</h1><p>${t.pickText(o.product)}</p>${items}</div>`;
+    const c = o.connecting;
+    const subject = c
+        ? html `<p class="org-picker-subject">${mark(c.name, c.icon)}<span><span class="org-picker-kind">${c.kind}</span><span class="name">${c.name}</span></span></p>`
+        : "";
+    const rows = o.orgs.length === 0
+        ? html `<p>${t.pickNone}</p>`
+        : html `<ul class="org-picker-list">${o.orgs.map((g) => html `<li><form method="post" action="${safeHref(o.action)}">${hidden}<button class="org-picker-row" type="submit" name="${field}" value="${g.value}">${mark(g.name, g.logo)}<span class="org-picker-text"><span class="name">${g.name}</span><span class="meta">${ACCESS_LEVEL_NAMES[o.lang][g.role]}</span></span>${icon("chevron-right")}</button></form></li>`)}</ul>`;
+    const note = o.note === false || o.orgs.length === 0 ? "" : html `<p class="org-picker-note">${o.note ?? t.pickNote}</p>`;
+    return html `<div class="card std-page org-picker">${subject}<h1>${t.pickTitle}</h1>${o.subtitle ? html `<p>${o.subtitle}</p>` : ""}${rows}${note}</div>`;
 }
 /** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
 export function orgPickerPage(o) {

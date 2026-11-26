@@ -725,6 +725,113 @@
     vertical-align: middle;
   }
 
+  /* The org picker (hub plan 2026-11-26): what is being connected at the top, then one row per org.
+     The whole row is the form's button (no JS), so it drops the bare button's primary fill and takes
+     the list row's look: mark, name over access level, a chevron. Rows are full width and at least
+     the 44px touch floor, inset in the list so their hover and focus ring keep the button's radius. */
+  .org-picker-subject {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-6);
+  }
+
+  .org-picker-subject .name {
+    display: block;
+    overflow-wrap: anywhere;
+  }
+
+  .org-picker-kind {
+    display: block;
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
+    color: var(--muted-foreground);
+  }
+
+  .org-picker-mark {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    inline-size: var(--space-10);
+    block-size: var(--space-10);
+    overflow: hidden;
+    border-radius: var(--radius-button);
+    background: var(--muted);
+    font: 600 var(--text-chrome-body)/var(--leading-solid) var(--font-sans);
+    color: var(--foreground);
+  }
+
+  .org-picker-mark img {
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  .org-picker-list {
+    list-style: none;
+    margin: var(--space-5) 0 var(--space-4);
+    padding: var(--space-1);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--card);
+  }
+
+  .org-picker-list li + li {
+    border-top: 1px solid var(--border);
+  }
+
+  .org-picker-list form {
+    margin: 0;
+  }
+
+  .org-picker .org-picker-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    inline-size: 100%;
+    min-height: var(--control-height);
+    padding: var(--space-3) var(--space-4);
+    border: 0;
+    background: transparent;
+    color: var(--foreground);
+    font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
+    text-align: start;
+  }
+
+  .org-picker .org-picker-row:hover {
+    background: var(--muted);
+    color: var(--foreground);
+  }
+
+  .org-picker .org-picker-row:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .org-picker-text {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+  }
+
+  .org-picker-text .name {
+    overflow-wrap: anywhere;
+  }
+
+  .org-picker .org-picker-text .meta {
+    margin: 0;
+  }
+
+  .org-picker-row > .icon {
+    flex: none;
+    color: var(--muted-foreground);
+  }
+
+  .org-picker-note {
+    margin: 0;
+    font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
+    color: var(--muted-foreground);
+  }
+
   code {
     font-family: var(--font-mono);
     font-size: var(--text-content-small);

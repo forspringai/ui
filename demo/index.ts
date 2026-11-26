@@ -580,14 +580,25 @@ function orgPickerPages(out: Record<string, string>): void {
     out[`pages/${name}.${lang}.html`] = String(
       shell({
         lang,
-        product: "dataspring",
-        productLabel: "DataSpring",
-        homeLabel: lang === "da" ? "DataSpring, forside" : "DataSpring, home",
+        product: "spring",
+        productLabel: "Spring",
+        homeLabel: lang === "da" ? "Spring, forside" : "Spring, home",
         brandBase: "../../brand/",
         head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
         userMenu: METTE(lang, `${name}.da.html`, `${name}.en.html`),
         footer: [lang === "da" ? { label: "English", href: `${name}.en.html`, lang: "en" } : { label: "Dansk", href: `${name}.da.html`, lang: "da" }, { label: lang === "da" ? "Alle komponenter" : "All components", href: "../index.html" }],
-        ...orgPickerPage({ lang, product: "DataSpring", action: "#", fields: { csrf: "demo" }, orgs: ORGS.map((o) => ({ id: o.slug, name: o.name, role: o.role })) }),
+        ...orgPickerPage({
+          lang,
+          action: "#",
+          fields: { csrf: "demo" },
+          connecting: { kind: lang === "da" ? "Slack-workspace" : "Slack workspace", name: "Noon" },
+          subtitle: lang === "da" ? "Hvilken organisation skal Slack-workspacet Noon forbindes med?" : "Which organisation should the Slack workspace Noon connect to?",
+          note:
+            lang === "da"
+              ? "Du kan kun ændre det senere ved at fjerne Spring fra workspacet og installere den igen."
+              : "You can change this later only by removing Spring from the workspace and installing it again.",
+          orgs: ORGS.map((o) => ({ value: `sealed.${o.slug}`, name: o.name, role: o.role })),
+        }),
       }),
     ) + "\n";
   }
