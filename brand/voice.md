@@ -231,7 +231,7 @@ cos fixed the Danish (2026-11-19): adgangsniveau with its four levels, rolle, pr
 besøgende, Forsprings medarbejdere, agent and automatisering.
 
 - **Never "role" for a level.** Not "your role is Admin", not "rollen administrator". Say "adgangsniveauet
-  administrator", "you are an admin", or "Owner in Salão Douro" beside a name.
+  administrator", "you are an admin", or "Owner in Salão Example" beside a name.
 - **Retired** from anything a customer or Peter reads: account role, app role (just "role"), group, team,
   persona, carrier, baseline, standing, ceiling, wall, credential cap, platform admin, product flag.
 

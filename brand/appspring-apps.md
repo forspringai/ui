@@ -152,7 +152,7 @@ them all; both draw `approval()` with the package's words (D-24).
   input would run under the requester's rights. To change it, reject, then start a new request pre-filled
   from the stored input. The rule's message and the requester's note say why it was asked (AppSpring adds
   `ApprovalRule.message` and a requester note).
-- **The outcome replaces the actions** on every copy, on the page and in Slack: "Approved by Mette Kjær · 4
+- **The outcome replaces the actions** on every copy, on the page and in Slack: "Approved by Mette Kexample · 4
   Nov 2026, 10:41". The facts stay as the record of what was decided. Who may decide, and that nobody
   decided first, is the server's check.
 

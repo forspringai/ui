@@ -170,12 +170,12 @@ describe("4. selectable rows: table({ selectable })", () => {
   const T = {
     label: "Sites",
     columns: [{ label: "Site" }, { label: "Status" }],
-    rows: [["Bager Hansen", "Live"], ["Mette", "Draft"], ["Kaffebaren", "Live"]],
+    rows: [["Bager Hansen", "Live"], ["Mette", "Draft"], ["Café Example", "Live"]],
     selectable: {
       lang: "en" as const,
       name: "site",
       ids: ["a", "b", "c"],
-      labels: ["Bager Hansen", "Mette", "Kaffebaren"],
+      labels: ["Bager Hansen", "Mette", "Café Example"],
       form: { action: "/sites/publish", fields: { csrf: "tok" } },
       actions: button({ label: "Publish selected", small: true }),
     },

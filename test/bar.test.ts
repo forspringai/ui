@@ -31,8 +31,8 @@ const opts: BarOptions = {
     accountHref: "https://account.forspring.ai/o/acme/",
   },
   userMenu: {
-    name: "Peter Engelbrecht",
-    email: "peter@example.com",
+    name: "Petra Example",
+    email: "petra@example.com",
     accountHref: "https://account.forspring.ai/",
     agentsHref: "https://account.forspring.ai/o/acme/agents?product=dataspring",
     languages: { da: "?lang=da", en: "?lang=en" },
@@ -69,7 +69,7 @@ describe("the bar", () => {
   });
 
   test("the user menu: initials, who, role here, account, agents, language, sign out as a ghost button", () => {
-    expect(out).toContain('<summary><span class="avatar">PE</span><span class="visually-hidden">: Peter Engelbrecht, your account</span></summary>');
+    expect(out).toContain('<summary><span class="avatar">PE</span><span class="visually-hidden">: Petra Example, your account</span></summary>');
     expect(out).toContain(">Your Forspring account</a>");
     expect(out).toContain(">Agents and keys in Acme</a>");
     expect(out).toContain('<a href="?lang=en" lang="en" hreflang="en" aria-current="true">English</a>');
@@ -159,16 +159,16 @@ describe("the bar's nav (D-46)", () => {
 
 describe("an app's own brand (D-47)", () => {
   test("the app's name and logo replace the doll; no Forspring or product mark", () => {
-    const out = String(bar({ ...opts, product: "appspring", productLabel: "AppSpring", app: { name: "Salão Douro", logo: "https://cdn.example.com/salao.png" } }));
-    expect(out).toContain('<a class="brand" href="/o/acme/" aria-label="Salão Douro"><img class="app-logo" src="https://cdn.example.com/salao.png" alt="" referrerpolicy="no-referrer"><span class="word">Salão Douro</span></a>');
+    const out = String(bar({ ...opts, product: "appspring", productLabel: "AppSpring", app: { name: "Salão Example", logo: "https://cdn.example.com/salao.png" } }));
+    expect(out).toContain('<a class="brand" href="/o/acme/" aria-label="Salão Example"><img class="app-logo" src="https://cdn.example.com/salao.png" alt="" referrerpolicy="no-referrer"><span class="word">Salão Example</span></a>');
     expect(out).not.toContain('class="mark"');
     expect(out).not.toContain("AppSpring");
     expect(out).not.toContain("Forspring</span>");
   });
 
   test("no logo: the name alone", () => {
-    const out = String(bar({ ...opts, app: { name: "Salão Douro" } }));
-    expect(out).toContain('aria-label="Salão Douro"><span class="word">Salão Douro</span></a>');
+    const out = String(bar({ ...opts, app: { name: "Salão Example" } }));
+    expect(out).toContain('aria-label="Salão Example"><span class="word">Salão Example</span></a>');
     expect(out).not.toContain("<img");
   });
 
@@ -184,8 +184,8 @@ describe("an app's own brand (D-47)", () => {
   });
 
   test("with nav: the app zone is the app's brand and its pages", () => {
-    const out = String(bar({ ...opts, org: undefined, products: undefined, app: { name: "Salão Douro" }, nav: { label: "Pages", toggle: "Menu", items: [{ label: "A", href: "/a", current: true }, { label: "B", href: "/b" }] } }));
-    expect(out).toMatch(/<span class="word">Salão Douro<\/span><\/a><nav class="bar-nav" aria-label="Pages">/);
+    const out = String(bar({ ...opts, org: undefined, products: undefined, app: { name: "Salão Example" }, nav: { label: "Pages", toggle: "Menu", items: [{ label: "A", href: "/a", current: true }, { label: "B", href: "/b" }] } }));
+    expect(out).toMatch(/<span class="word">Salão Example<\/span><\/a><nav class="bar-nav" aria-label="Pages">/);
   });
 });
 
@@ -232,8 +232,8 @@ test("orgPath keeps the place in another org", () => {
 });
 
 test("initials", () => {
-  expect(initials("Peter Engelbrecht")).toBe("PE");
-  expect(initials("Mette Kjær Nielsen")).toBe("MN");
+  expect(initials("Petra Example")).toBe("PE");
+  expect(initials("Mette Kexample Nexample")).toBe("MN");
   expect(initials("Øjvind")).toBe("Ø");
   expect(initials("", "aisha@example.com")).toBe("A");
   expect(initials("")).toBe("?");

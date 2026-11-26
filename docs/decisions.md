@@ -803,7 +803,7 @@ vocabulary so a person who saw the card in a channel and opens the page reads th
 | Fact "What it does" and the closing sentence ("Approving sends exactly this at once …") | dt "What it does" / "Hvad det gør", the `effects`, a warning one marked |
 | The diff, or the channel card's "only what changes" lines, "Nothing changes." | dt "What changes" / "Hvad ændres", the items with "+k more"; `diff()` for field and text changes; "Nothing changes." / "Intet ændres." |
 | Buttons Approve (primary) and Reject | POST forms: approve (primary, "Approve" by default, the product's "Approve and send"), "Edit first" as a link, reject (ghost), and "See the draft" |
-| Decision record "Approved by", "Rejected by", "Already decided" on the other copies | `outcome`: "Approved by Mette Kjær · 4 Nov 2026, 10:41", "Rejected by …", "Expired …", with a note |
+| Decision record "Approved by", "Rejected by", "Already decided" on the other copies | `outcome`: "Approved by Mette Kexample · 4 Nov 2026, 10:41", "Rejected by …", "Expired …", with a note |
 
 The facts are a description list, one row per fact in the card's order, because the card's facts are
 label and value pairs; that keeps the two in step when one gains a fact. The labels are the package's,

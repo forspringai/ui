@@ -17,7 +17,7 @@ const REMINDERS: ApprovalOptions = {
   summary: "Spring prepared reminders for overdue invoices and is waiting for approval.",
   expires: new Date(Date.UTC(2026, 10, 12, 13, 0)),
   why: { text: "Invoices are 14+ days overdue.", links: [{ label: "the skill Chase overdue invoices, step 3", href: "/skills/chase-overdue#step-3" }] },
-  changes: { items: [["Nordkraft ApS #2041", "33 days", "12,400 kr."], ["Bager Hansen ApS #2038", "21 days", "3,150 kr."], ["Østerbro Cykler #2044", "16 days", "8,720 kr."]], total: 14, moreHref: "/requests/r-1/items" },
+  changes: { items: [["Acme Nord ApS #2041", "33 days", "12,400 kr."], ["Bager Hansen ApS #2038", "21 days", "3,150 kr."], ["Ølstue Globex #2044", "16 days", "8,720 kr."]], total: 14, moreHref: "/requests/r-1/items" },
   effects: [{ text: "Sends 14 emails from finance@" }, { text: "Can't be undone", tone: "warning" }, { text: "Nothing is charged" }],
   approve: { label: "Approve and send", action: "/requests/r-1/approve", fields: { csrf: "tok-1", request: "r-1" } },
   edit: { href: "/requests/r-1/edit" },
@@ -52,7 +52,7 @@ describe("approval()", () => {
   });
 
   test("the first three items, their parts with · between, then +11 more linked", () => {
-    expect(h).toContain('<ul class="approval-changes"><li><span class="approval-item-name">Nordkraft ApS #2041</span> · 33 days · 12,400 kr.</li>');
+    expect(h).toContain('<ul class="approval-changes"><li><span class="approval-item-name">Acme Nord ApS #2041</span> · 33 days · 12,400 kr.</li>');
     expect(h).toContain('<li class="approval-more"><a href="/requests/r-1/items">+11 more</a></li></ul>');
     expect(h.match(/<li>/g)?.length).toBe(3 + 2);
   });
@@ -81,12 +81,12 @@ describe("approval()", () => {
 
   test("an outcome replaces the buttons and the expiry, as a signal with words", () => {
     const at = new Date(Date.UTC(2026, 10, 11, 13, 2));
-    const done = String(approval({ ...REMINDERS, outcome: { status: "approved", by: "Peter Engelbrecht", at, note: "The reminders are sent." } }));
+    const done = String(approval({ ...REMINDERS, outcome: { status: "approved", by: "Petra Example", at, note: "The reminders are sent." } }));
     expect(done).not.toContain("<form");
     expect(done).not.toContain("<button");
     expect(done).not.toContain("Expires");
     expect(done).not.toContain("Waiting for approval");
-    expect(done).toContain('<div class="approval-outcome"><p><span class="signal ok"><span class="signal-mark ok" aria-hidden="true"></span><span>Approved by Peter Engelbrecht · <time datetime="2026-11-11T13:02:00.000Z">11 Nov 2026, 14:02</time></span></span></p><p>The reminders are sent.</p></div></section>');
+    expect(done).toContain('<div class="approval-outcome"><p><span class="signal ok"><span class="signal-mark ok" aria-hidden="true"></span><span>Approved by Petra Example · <time datetime="2026-11-11T13:02:00.000Z">11 Nov 2026, 14:02</time></span></span></p><p>The reminders are sent.</p></div></section>');
     expect(String(approval({ ...REMINDERS, outcome: { status: "rejected", by: "Maria" } }))).toContain('<span class="signal off"><span class="signal-mark off" aria-hidden="true"></span><span>Rejected by Maria</span></span>');
     // Nobody decided an expired request, so it names no one.
     expect(String(approval({ ...REMINDERS, outcome: { status: "expired", by: "x", at: "yesterday" } }))).toContain('<span class="signal warn"><span class="signal-mark warn" aria-hidden="true"></span><span>Expired yesterday</span></span>');
