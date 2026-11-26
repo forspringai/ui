@@ -14,11 +14,11 @@ const two: OrgPickerOptions = {
   lang: "da",
   action: "/authorize/org",
   fields: { csrf: "c1", request: "r1" },
-  connecting: { kind: "Slack-workspace", name: "Noon" },
-  subtitle: "Hvilken organisation skal Slack-workspacet Noon forbindes med?",
+  connecting: { kind: "Slack-workspace", name: "Acme" },
+  subtitle: "Hvilken organisation skal Slack-workspacet Acme forbindes med?",
   orgs: [
-    { value: "sealed.AAA", name: "Noon", role: "admin" },
-    { value: "sealed.BBB", name: "Spekta", role: "owner" },
+    { value: "sealed.AAA", name: "Acme", role: "admin" },
+    { value: "sealed.BBB", name: "Globex", role: "owner" },
   ],
 };
 
@@ -28,11 +28,11 @@ describe("orgPicker", () => {
   test("Danish: what is connected, the title, the subtitle, each org's name and access level in order, the note", () => {
     const b = String(orgPicker(two));
     expect(b).toMatch(/^<div class="card std-page org-picker"><p class="org-picker-subject">/);
-    expect(b).toContain('<span class="org-picker-kind">Slack-workspace</span><span class="name">Noon</span>');
-    expect(b).toContain("<h1>Vælg organisation</h1><p>Hvilken organisation skal Slack-workspacet Noon forbindes med?</p>");
+    expect(b).toContain('<span class="org-picker-kind">Slack-workspace</span><span class="name">Acme</span>');
+    expect(b).toContain("<h1>Vælg organisation</h1><p>Hvilken organisation skal Slack-workspacet Acme forbindes med?</p>");
     expect(b.match(/<ul class="org-picker-list">/g)).toHaveLength(1);
-    expect(b).toContain('<span class="name">Noon</span><span class="meta">administrator</span>');
-    expect(b).toContain('<span class="name">Spekta</span><span class="meta">ejer</span>');
+    expect(b).toContain('<span class="name">Acme</span><span class="meta">administrator</span>');
+    expect(b).toContain('<span class="name">Globex</span><span class="meta">ejer</span>');
     expect(b.indexOf("sealed.AAA")).toBeLessThan(b.indexOf("sealed.BBB"));
     expect(b).toContain('<p class="org-picker-note">Du kan ikke ændre valget her bagefter.</p></div>');
   });
@@ -51,8 +51,8 @@ describe("orgPicker", () => {
     expect(f).toHaveLength(2);
     expect(f[0]).toBe(
       '<form method="post" action="/authorize/org"><input type="hidden" name="csrf" value="c1"><input type="hidden" name="request" value="r1">' +
-        '<button class="org-picker-row" type="submit" name="org" value="sealed.AAA"><span class="org-picker-mark" aria-hidden="true">N</span>' +
-        '<span class="org-picker-text"><span class="name">Noon</span><span class="meta">administrator</span></span>' +
+        '<button class="org-picker-row" type="submit" name="org" value="sealed.AAA"><span class="org-picker-mark" aria-hidden="true">A</span>' +
+        '<span class="org-picker-text"><span class="name">Acme</span><span class="meta">administrator</span></span>' +
         f[0]!.match(/<svg [\s\S]*<\/svg>/)![0] +
         "</button></form>",
     );
@@ -75,7 +75,7 @@ describe("orgPicker", () => {
     const b = String(
       orgPicker({
         ...two,
-        connecting: { kind: "Slack-workspace", name: "Noon", icon: "https://cdn.example/n.png" },
+        connecting: { kind: "Slack-workspace", name: "Acme", icon: "https://cdn.example/n.png" },
         orgs: [{ value: "v", name: "ærø kaffe", role: "viewer", logo: "/logo.png" }],
       }),
     );

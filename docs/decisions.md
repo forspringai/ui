@@ -2052,3 +2052,14 @@ and tests used real customer and org names as examples. They are now fictional: 
 `globex`, and the site `bakery.example`. The demo's dialog and lead baselines were regenerated; no behaviour
 changed. The names stay in git history; rewriting history isn't worth it for example strings. New examples
 use invented names only.
+
+## D-56: The suite's one org picker (0.41.0, 2026-11-26)
+
+lead-ui (design approved by Peter; hub plan suite-org-picker-plan-2026-11-26), released by lead-brand.
+
+- **`orgPicker(o)` and `orgPickerPage(o)`** in `@forspring/ui/pages`, and **`OrgPicker`** in `@forspring/ui/react`.
+  This is the one org picker suite-wide (Peter): one clickable row per org, in one language. Each org is its
+  own POST form, so it works with no script. The account draws it after sign-in when a product asks for an org.
+- **One org is no page:** the caller skips the step. With none, it shows the no-org sentence.
+- `chooseOrgPage()` overlaps it (GET links to an org's home, and US spelling). Its future is lead-brand's
+  call under the one-picker rule: a follow-up tick.

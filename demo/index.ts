@@ -591,8 +591,8 @@ function orgPickerPages(out: Record<string, string>): void {
           lang,
           action: "#",
           fields: { csrf: "demo" },
-          connecting: { kind: lang === "da" ? "Slack-workspace" : "Slack workspace", name: "Noon" },
-          subtitle: lang === "da" ? "Hvilken organisation skal Slack-workspacet Noon forbindes med?" : "Which organisation should the Slack workspace Noon connect to?",
+          connecting: { kind: lang === "da" ? "Slack-workspace" : "Slack workspace", name: "Acme" },
+          subtitle: lang === "da" ? "Hvilken organisation skal Slack-workspacet Acme forbindes med?" : "Which organisation should the Slack workspace Acme connect to?",
           note:
             lang === "da"
               ? "Du kan kun ændre det senere ved at fjerne Spring fra workspacet og installere den igen."

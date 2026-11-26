@@ -51,14 +51,14 @@ export type OrgPickerOptions = {
     name?: string;
     /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
     fields?: Record<string, string>;
-    /** What is being connected, at the top, by its real display name: a Slack workspace "Noon" with its icon (an image
+    /** What is being connected, at the top, by its real display name: a Slack workspace "Acme" with its icon (an image
      *  URL; without one, the name's first letter). */
     connecting?: {
         kind: string;
         name: string;
         icon?: string;
     };
-    /** A line under the heading, e.g. "Hvilken organisation skal Slack-workspacet Noon forbindes med?". */
+    /** A line under the heading, e.g. "Hvilken organisation skal Slack-workspacet Acme forbindes med?". */
     subtitle?: string;
     /** The line under the list. Default: the choice cannot be changed here later. `false` leaves it out. */
     note?: string | false;
