@@ -2127,3 +2127,12 @@ lead-ui's follow-ups to D-58, released by lead-brand.
 - **Test:** one pins straight M/L paths, so lines are never smoothed.
 
 No visual baseline moved.
+
+
+## D-61: the allowlist takes rule names, said plainly (0.43.2, 2026-11-27)
+
+lead-brand, from lead-ui (DataSpring's CI, their PR #97, was the first consumer and asked).
+- **Docs only for the check:** `docs/usage.md` and `forspring-ui-check --help` now say that an entry's `rule` is a
+  rule NAME (`words`, `control`, `class`), that `file` is the path as the finding prints it, that one entry covers
+  every finding of that rule in that file, and show one example entry. No behaviour change.
+- **Also released:** #59's invented names in the demo and tests (no API change).

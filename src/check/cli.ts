@@ -12,9 +12,17 @@ export const USAGE = `forspring-ui-check org-lists [--allow <file>] [--json] <pa
 
 Finds a list of organisations a product draws by hand instead of @forspring/ui's orgList() (orgPicker,
 chooseOrgPage, the bar's org switcher). Paths are files or directories, relative to the current directory.
---allow  the allowlist (default .forspring-ui-allow.json): [{ "file", "rule", "reason", "tick" }]; an entry
-         without a tick fails the run.
---json   the result as JSON on stdout.`;
+--allow  the allowlist (default .forspring-ui-allow.json): [{ "file", "rule", "reason", "tick" }].
+         "file" is the path as the finding prints it (relative to where the check runs, with /);
+         "rule" is a rule NAME: words, control or class (not a line number or the matched text);
+         an entry without a tick fails the run, and an unused one is reported. Example:
+         [{ "file": "src/admin/switch.tsx", "rule": "control",
+            "reason": "operator-only switcher, moves to orgList() links", "tick": "abc" }]
+--json   the result as JSON on stdout.
+
+Rules: words (a picker's heading or label written by hand), control (a map over orgs that makes a
+choice control, a control carrying an org field, a select of orgs), class (the package's org-list
+classes or data-forspring-org-list written by hand).`;
 
 function main(argv: string[]): number {
   const [check, ...rest] = argv;
