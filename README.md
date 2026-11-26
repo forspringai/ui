@@ -478,6 +478,17 @@ table({
 React: `<Table {...sameOptions} />` and `<Pagination />` from `@forspring/ui/react` draw the same
 markup. The demo's "Tabel med mange rækker" section is the brand review's PulseSpring checks.
 
+### A chart as an SVG string (D-58)
+
+```ts
+import { chartSvg } from "@forspring/ui/chart-svg";
+const svg = chartSvg(chart, { theme: "light", width: 800, height: 400, lang: "da" });
+```
+
+`chart` is the rich answers `Chart` (line or bar, 1 to 4 series, up to 400 rows). The output is plain SVG for a rasteriser such as
+resvg: no script, no CSS variables, no fonts loaded. Load Archivo (TTF or OTF; resvg does not read woff2) into the rasteriser and set
+its default font family to `Archivo`. Danish formats by default (`12.345,6`, `17. nov 2026`); `lang: "en"` gives `12,345.6`, `17 Nov 2026`.
+
 ### Toast, tooltip and icons (D-26)
 
 **A toast** is the message after a POST and its 303: "Ændringerne er gemt." It floats at the bottom of

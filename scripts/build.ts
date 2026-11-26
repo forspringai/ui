@@ -33,7 +33,7 @@ try {
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json")], { stdio: "inherit" });
   // The design audit's bin, ui-audit, for the same reason.
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json")], { stdio: "inherit" });
-  console.log(`dist/: ${[...Object.keys(files), "html, icons, icons/paths, icons/lucide, refusals, pages, connect, react, theme, family, color (.js, .d.ts)", "audit/", "brand/<product>/ (3 SVG, 5 PNG, site.webmanifest)"].filter((n) => !n.startsWith("brand/") || n.includes("<")).join(", ")}`);
+  console.log(`dist/: ${[...Object.keys(files), "html, icons, icons/paths, icons/lucide, refusals, pages, connect, react, theme, chart-svg, family, color (.js, .d.ts)", "audit/", "brand/<product>/ (3 SVG, 5 PNG, site.webmanifest)"].filter((n) => !n.startsWith("brand/") || n.includes("<")).join(", ")}`);
 } catch (e) {
   if (!(e instanceof TokenProblems)) throw e;
   console.error(e.message);
