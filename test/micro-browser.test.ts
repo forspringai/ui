@@ -352,6 +352,10 @@ describe("5. hold to confirm", () => {
     const b = (await page.locator("#micro .hold-button").boundingBox())!;
     const at = { x: b.x + b.width / 2, y: b.y + b.height / 2 };
     await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ ...at, id: 1 }] });
+    // Anchor the hold before any fake time passes: under load the page may handle the touch after the clock
+    // moved, so the hold would start late and the samples read low (hub tick bsu). Polled from Node in real
+    // time, because the page's own timers are the fake clock's.
+    for (let i = 0; i < 200 && (await page.locator("#micro .hold-button").getAttribute("data-holding")) !== "true"; i++) await new Promise((r) => setTimeout(r, 10));
     const seen: number[] = [];
     let t = 0;
     for (const s of sample) {
@@ -407,9 +411,11 @@ describe("5. hold to confirm", () => {
   test("a quick tap is not a hold: it goes to the confirm and never posts", async () => {
     const page = await open({ touch: true, width: 390, clock: "2026-11-22T08:00:00Z" });
     await page.locator("#micro .hold-button").scrollIntoViewIfNeeded();
-    const cdp = await page.context().newCDPSession(page);
     await arm(page);
-    await hold(page, cdp, 60);
+    // A real tap: touch start and end back to back. Chrome tells a tap from a long press by REAL time, so a
+    // tap built from two CDP touches with fake time between them turns into a long press under load (bsu).
+    // The page's fake clock does not move, so the hold sees 0 ms: well under the 200 ms "early" line.
+    await page.locator("#micro .hold-button").tap();
     await page.clock.runFor(100);
     expect(await posted(page)).toBe(0);
     expect(await dialogOpen(page)).toBe(true);
