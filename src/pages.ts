@@ -9,7 +9,7 @@
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 
 import { REFUSALS, type Refusal } from "./refusals.ts";
-import { ACCESS_LEVEL_NAMES, button, errorRef, html, list, safeHref, tag, type Content, type Html, type Lang, type Org } from "./html.ts";
+import { ACCESS_LEVEL_NAMES, button, errorRef, html, icon, list, safeHref, tag, type AccessLevel, type Content, type Html, type Lang, type Org } from "./html.ts";
 
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
 export type StandardPage = { status: number; title: string; narrow: true; body: Html };
@@ -20,6 +20,9 @@ export type Person = { name?: string; email: string };
 const T = {
   da: {
     chooseTitle: "Vælg en organisation",
+    pickTitle: "Vælg organisation",
+    pickNote: "Du kan ikke ændre valget her bagefter.",
+    pickNone: "Du er ikke med i en organisation, du kan vælge her.",
     chooseText: (p?: string) => (p ? `Du er med i flere organisationer, der har ${p}. Hvilken vil du arbejde i?` : "Du er med i flere organisationer. Hvilken vil du arbejde i?"),
     lastHere: "Sidst brugt her",
     lastUsed: (d: string) => `sidst brugt ${d}`,
@@ -46,6 +49,9 @@ const T = {
   },
   en: {
     chooseTitle: "Choose an organization",
+    pickTitle: "Choose organisation",
+    pickNote: "You cannot change this choice here later.",
+    pickNone: "You are in no organisation you can choose here.",
     chooseText: (p?: string) => (p ? `You are in several organizations that have ${p}. Which one do you want to work in?` : "You are in several organizations. Which one do you want to work in?"),
     lastHere: "Last used here",
     lastUsed: (d: string) => `last used ${d}`,
@@ -119,6 +125,79 @@ export function chooseOrgPage(o: ChooseOrgOptions): StandardPage {
     })),
   );
   return page(200, t.chooseTitle, "choose-org", html`<h1>${t.chooseTitle}</h1><p>${t.chooseText(o.product)}</p>${items}`);
+}
+
+/** An organisation the picker offers: its name, your access level there, and the value the form sends back. */
+export type PickerOrg = {
+  name: string;
+  role: AccessLevel;
+  /** Sent back unchanged as the chosen button's value: opaque to the picker (the account seals a token in it).
+   *  The picker never builds a URL or anything else from it. */
+  value: string;
+  /** The org's logo, an image URL; without one the row shows the name's first letter. */
+  logo?: string;
+};
+
+export type OrgPickerOptions = {
+  /** The one language of the page, decided by the caller (the account's or the product's own locale logic). Required:
+   *  the picker never reads the browser (no navigator, Accept-Language or cookie) and never draws two languages. */
+  lang: Lang;
+  /** The organisations the person may choose, in this order. The picker draws exactly these: the CALLER filters by
+   *  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). */
+  orgs: PickerOrg[];
+  /** Where each choice is posted. Every org is its own form whose one button is the whole row, so choosing needs no
+   *  script. */
+  action: string;
+  /** The field the chosen org's value is sent in (default `org`). */
+  name?: string;
+  /** Hidden fields every form carries: the CSRF token, the handle of the sign-in request it answers. */
+  fields?: Record<string, string>;
+  /** What is being connected, at the top, by its real display name: a Slack workspace "Acme" with its icon (an image
+   *  URL; without one, the name's first letter). */
+  connecting?: { kind: string; name: string; icon?: string };
+  /** A line under the heading, e.g. "Hvilken organisation skal Slack-workspacet Acme forbindes med?". */
+  subtitle?: string;
+  /** The line under the list. Default: the choice cannot be changed here later. `false` leaves it out. */
+  note?: string | false;
+};
+
+/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
+function mark(name: string, src?: string): Html {
+  const inner = src ? html`<img src="${safeHref(src)}" alt="">` : (Array.from(name.trim())[0] ?? "?").toLocaleUpperCase();
+  return html`<span class="org-picker-mark" aria-hidden="true">${inner}</span>`;
+}
+
+/**
+ * Choose an organisation (the suite's org picker, hub plan 2026-11-26): the account shows it after sign-in when a
+ * product asks for an `org`. At the top, what is being connected; then one row per org (its mark, name and your
+ * access level, a chevron). The whole row is the `<button>` of its own POST form (`fields`, then `name`=the org's
+ * `value`), so it is server-rendered, works with no script, and Tab / Enter / Space work as for any button. One
+ * language per render.
+ *
+ * One org is no page: the caller skips the step and uses that org. Given one anyway, it draws that single row (the
+ * page still reads right); given none, it says there is no organisation to choose, never an empty list.
+ */
+export function orgPicker(o: OrgPickerOptions): Html {
+  const t = T[o.lang];
+  const field = o.name ?? "org";
+  const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`);
+  const c = o.connecting;
+  const subject = c
+    ? html`<p class="org-picker-subject">${mark(c.name, c.icon)}<span><span class="org-picker-kind">${c.kind}</span><span class="name">${c.name}</span></span></p>`
+    : "";
+  const rows = o.orgs.length === 0
+    ? html`<p>${t.pickNone}</p>`
+    : html`<ul class="org-picker-list">${o.orgs.map(
+        (g) =>
+          html`<li><form method="post" action="${safeHref(o.action)}">${hidden}<button class="org-picker-row" type="submit" name="${field}" value="${g.value}">${mark(g.name, g.logo)}<span class="org-picker-text"><span class="name">${g.name}</span><span class="meta">${ACCESS_LEVEL_NAMES[o.lang][g.role]}</span></span>${icon("chevron-right")}</button></form></li>`,
+      )}</ul>`;
+  const note = o.note === false || o.orgs.length === 0 ? "" : html`<p class="org-picker-note">${o.note ?? t.pickNote}</p>`;
+  return html`<div class="card std-page org-picker">${subject}<h1>${t.pickTitle}</h1>${o.subtitle ? html`<p>${o.subtitle}</p>` : ""}${rows}${note}</div>`;
+}
+
+/** The org picker as a page of its own (spread it into shell(), as the other standard pages). */
+export function orgPickerPage(o: OrgPickerOptions): StandardPage {
+  return { status: 200, title: T[o.lang].pickTitle, narrow: true, body: orgPicker(o) };
 }
 
 export type NoOrgOptions = {

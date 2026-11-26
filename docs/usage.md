@@ -64,6 +64,20 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   URL, `noOrgPage()` when they are in none that has the product, `refusedPage()` for any refusal, and
   `accountUnavailablePage()` when the account does not answer. Spread the result into `shell()` and
   answer with its `status`. Never draw your own version of these screens (hub D-99).
+- **Choosing an organisation at sign-in:** `orgPicker()` (or `orgPickerPage()` for a page of its own,
+  `OrgPicker` in React) is the suite's one org picker (hub plan 2026-11-26): the account draws it after
+  sign-in when a product asks for `scope=openid org`. At the top, what is being connected by its real
+  name (`connecting`: kind, name, optional icon URL); then one row per org: its logo or first letter,
+  its name, your access level, a chevron. The whole row is the submit button of its own POST form (the
+  caller's `action` and hidden `fields`, then `name`, default `org`, = the org's `value`), so it needs no
+  script and works with Tab, Enter and Space. It draws exactly the orgs it is given: the caller filters by
+  role and product (the account by `org_min_role`; Spring's install lists only owner and admin orgs). `value` is opaque (the account seals a token in it): it is
+  sent unchanged and the picker builds no URL from it. One language per render: `lang` is required and comes only from the
+  caller (the picker reads no browser language, header or cookie), never two stacked. An optional `subtitle` goes under the heading and a `note` under the list (default: the
+  choice cannot be changed here later; `false` for none). One org is no page: skip the step and use
+  that org. Given one anyway it draws that single row; given none it says so, never an empty list. It
+  is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET); the picker
+  posts the choice back to the sign-in, so the choice never sits in a URL.
 
 ### Actions
 

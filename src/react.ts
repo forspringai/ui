@@ -10,7 +10,7 @@
 import { createElement, type ReactElement } from "react";
 import { actions, approval, bar, button, changedValue, confirmDestructive, cutoff, holdToConfirm, progress, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip, type ActionsOptions, type ApprovalOptions, type BarOptions, type ButtonOptions, type ChangedValueOptions, type CutoffOptions, type HoldToConfirmOptions, type ProgressOptions, type ConfirmDestructiveOptions, type DialogOptions, type DiffOptions, type ErrorSummaryOptions, type ExplainOptions, type Html, type IconName, type Lang, type PaginationOptions, type TableOptions, type ToastOptions, type TooltipOptions } from "./html.ts";
 import { connectPanel, type ConnectPanelOptions } from "./connect.ts";
-import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type RefusedOptions } from "./pages.ts";
+import { accountUnavailablePage, chooseOrgPage, noOrgPage, orgPicker, refusedPage, type ChooseOrgOptions, type NoOrgOptions, type OrgPickerOptions, type RefusedOptions } from "./pages.ts";
 
 const UNESCAPE: Record<string, string> = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s: string) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]!);
@@ -39,6 +39,10 @@ export const Bar = (props: BarOptions): ReactElement => fromHtml(bar(props));
 
 /** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
 export const ChooseOrg = (props: ChooseOrgOptions): ReactElement => fromHtml(chooseOrgPage(props).body);
+
+/** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
+ *  in-app switcher can draw the same list. */
+export const OrgPicker = (props: OrgPickerOptions): ReactElement => fromHtml(orgPicker(props));
 
 /** No organization yet (noOrgPage). */
 export const NoOrg = (props: NoOrgOptions): ReactElement => fromHtml(noOrgPage(props).body);

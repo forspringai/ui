@@ -9,7 +9,7 @@
 import { createElement } from "react";
 import { actions, approval, bar, button, changedValue, confirmDestructive, cutoff, holdToConfirm, progress, dialog, diff, errorSummary, explain, icon, pagination, table, toast, toastRegion, tooltip } from "./html.js";
 import { connectPanel } from "./connect.js";
-import { accountUnavailablePage, chooseOrgPage, noOrgPage, refusedPage } from "./pages.js";
+import { accountUnavailablePage, chooseOrgPage, noOrgPage, orgPicker, refusedPage } from "./pages.js";
 const UNESCAPE = { "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": '"', "&#39;": "'" };
 const unescape = (s) => s.replace(/&(amp|lt|gt|quot|#39);/g, (e) => UNESCAPE[e]);
 // React names a few attributes in camelCase and warns on the HTML spelling; the bytes it writes are the
@@ -35,6 +35,9 @@ export function fromHtml(h, key) {
 export const Bar = (props) => fromHtml(bar(props));
 /** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
 export const ChooseOrg = (props) => fromHtml(chooseOrgPage(props).body);
+/** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
+ *  in-app switcher can draw the same list. */
+export const OrgPicker = (props) => fromHtml(orgPicker(props));
 /** No organization yet (noOrgPage). */
 export const NoOrg = (props) => fromHtml(noOrgPage(props).body);
 /** A refusal by its reason (refusedPage). */
