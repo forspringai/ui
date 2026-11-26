@@ -8,6 +8,7 @@ import { actions, approval, BUTTON_SCRIPT, button, CHANGED_SCRIPT, card, changed
 import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/connect.ts";
 import { chooseOrgPage, noOrgPage, orgPickerPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
+import { themePreviewPage } from "./theme-preview.ts";
 
 const PRODUCTS = [
   ["forspring", "Forspring"],
@@ -721,5 +722,6 @@ export function standardPages(): Record<string, string> {
   confirmPages(out);
   orgPickerPages(out);
   out["pages/lead.en.html"] = leadPage();
+  out["theme-preview.html"] = themePreviewPage();
   return out;
 }
