@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.44.0
+pnpm add github:forspringai/ui#v0.44.1
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -701,11 +701,11 @@ the person's approval. Values only, never geometry (D-34).
   to the light one that passes in dark), checked, and reported as a warning carrying the value, so
   the file can pin it.
 - The JSON Schema is `@forspring/ui/schema/customer-theme.schema.json`; it checks the shape only.
-- **Preview a theme** at https://ui.appspring.app/theme-preview (D-62): load or paste the file, and the
+- **Preview a theme** with `dist/demo/theme-preview.html` (D-62): load or paste the file, and the
   page runs `validateTheme()` (every error and warning, with the suggested value) and puts it on the
   family's own screens with `customerTheme()`, light and dark, in the browser; nothing is sent. The
-  address carries the file (`#theme=<base64url JSON>`), so an agent can hand a person a preview. The
-  same page is `dist/demo/theme-preview.html` under `pnpm demo`.
+  address carries the file (`#theme=<base64url JSON>`), so an agent can hand a person a preview. It
+  needs http, not file:// (`pnpm demo` in this repo serves it).
 
 ```ts
 import { customerTheme, validateTheme } from "@forspring/ui/theme";

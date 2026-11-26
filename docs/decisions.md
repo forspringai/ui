@@ -2155,3 +2155,11 @@ screens without this repository).
   (own files only, plus a theme's https: or data: logo). `pnpm publish:demo` publishes it after a release tag;
   the schema's description links it. AppSpring's theme setting can link the same address.
 - **Example:** an invented bakery's theme that passes with one warning, so the first look shows a warning too.
+
+
+## D-63: the theme preview's public host waits for Peter (0.44.1, 2026-11-27)
+
+cos: publishing to a new public host is Peter's call, so no released doc may point at ui.appspring.app until he
+says yes. The schema's description and the README now name `dist/demo/theme-preview.html` instead, and the release
+steps no longer run `pnpm publish:demo`. The page stays in dist/demo. If Peter says yes, the publish and the link go
+back in together (hub tick gj2 stays open). D-62's "Where" is the plan, not live.
