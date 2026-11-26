@@ -9,6 +9,8 @@
 #
 #   doppler run --project forspring --config prd_deploy -- pnpm publish:demo
 #
+# NOT RUN (D-63): a new public host is Peter's call. Until he says yes, nothing links it and nobody runs this.
+#
 # Nothing in it is secret: the repository is public and so is everything in dist/.
 set -euo pipefail
 cd "$(dirname "$0")/.."

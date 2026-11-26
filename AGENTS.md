@@ -121,7 +121,7 @@ The trigger, the stub and the repo connection were made through the Workers Buil
 ## Using it in a product
 
 ```
-"@forspring/ui": "github:forspringai/ui#v0.44.0"
+"@forspring/ui": "github:forspringai/ui#v0.44.1"
 ```
 
 - Server-rendered pages: `tokens.css`, `fonts.css`, `components.css` in that order (plus
@@ -215,6 +215,4 @@ The trigger, the stub and the repo connection were made through the Workers Buil
   the default favicon path carries it), and the tag is `v<that version>`.** Products serve
   the files under the version (account D-20) and cache them for a year, so a new tag with the old
   version would leave browsers on the old CSS.
-  After the tag, publish the demo from the tagged commit (`doppler run --project forspring --config
-  prd_deploy -- pnpm publish:demo`): https://ui.appspring.app/theme-preview is where a customer previews a theme (D-62).
 - Commit messages: `tick <id>: <summary>`, a body explaining why.
