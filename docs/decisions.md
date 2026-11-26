@@ -2084,3 +2084,35 @@ lead-ui for lead-forspring (rich answers v1, the `Chart` of the presentation con
 - **Fonts:** the text is `Archivo, Arial, sans-serif`. resvg-wasm has no system fonts and reads TTF/OTF, not woff2: the renderer must load Archivo as TTF or OTF (regular and bold) and set `defaultFontFamily` to `Archivo`. Nothing loads a font at runtime. Archivo here is a variable font; a renderer that cannot pick its weight draws the title at regular weight.
 - **Never throws:** more than 4 series or 400 points are cut and said so in a note under the chart; empty data draws "Ingen data" / "No data".
 - **Tests:** structure, escaping, da and en formats, colours from the tokens, clamping, empty, determinism, and resvg rendering both themes, both chart types, at 800x400 and 480x270 (`test/chart-svg.test.ts`, `@resvg/resvg-js` as a devDependency).
+
+## D-59: One org list suite wide, and the checks that keep it one (0.43.0, 2026-11-26)
+
+lead-ui (cos approved the plan; Peter: "make sure we only have ONE org picker suite wide"). Released by
+lead-brand.
+
+- **One list, two modes.** `orgList()` (in `@forspring/ui/html`, with `orgMark()`) draws every list of
+  organisations to choose from, in D-56's row look: the org's mark, its name, your access level. Choices
+  (`orgs`, `action`): each row is the submit button of its own POST form carrying the caller's opaque value.
+  Links (`links`): each row is a link to the `href` the caller gives, for navigation. The list builds no URL
+  from an org. `orgPicker()` takes either (`links` is its link mode).
+- **Thin wrappers.** `chooseOrgPage()`, `refusedPage()`'s "your organisations" and the bar's org switcher
+  now draw `orgList()`; their options and callers are unchanged. The look moves on purpose: the row is the
+  link (no separate "Open" button), with the mark and a chevron; in the bar's panel the rows have a smaller
+  mark and no chevron. "Last used here" stays a tag after the name.
+- **The marker.** Every `orgList()` carries `data-forspring-org-list`.
+- **`forspring-ui-check org-lists`** (a bin, `@forspring/ui/check` for tests): a static check a product runs
+  in its CI, no browser. Rules: `words` (a picker's heading written by hand), `control` (a map over orgs
+  that makes a choice control, a control carrying an org field, a select of orgs), `class` (the package's
+  org-list classes or marker written by hand). Exceptions live in the consuming repo's
+  `.forspring-ui-allow.json` (read from where the check runs), each with a tick, or the run fails; ui ships no
+  allowlist of other repos. Fixtures in `test/fixtures/org-lists/` copy the shapes of the hand-drawn lists the suite
+  had (invented code).
+- **ui-audit `own-org-list`** (error): on a rendered page, two or more controls in one list box that lead to
+  or choose different orgs (links to `/o/<org>/` or with `?org=`, submits, radios or checkboxes named `org`
+  or `org_id`), or a select of orgs, outside the marker. It sees what the static check cannot read
+  (Python-rendered or generated pages).
+- **One English spelling: British "organisation"** (lead-brand; as the brand texts: colour, licence). Every
+  user-visible English string says "organisation": the standard pages, the refusals, the bar. Exported
+  identifiers keep their names. "Organization settings" in the connect panel stays: it quotes another product's
+  menu. Closes hub tick akf.
+

@@ -37,14 +37,14 @@ export function fromHtml(h: Html, key?: string): ReactElement {
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
 export const Bar = (props: BarOptions): ReactElement => fromHtml(bar(props));
 
-/** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
+/** Choose an organisation (chooseOrgPage). The app sets the response status itself, if it has one. */
 export const ChooseOrg = (props: ChooseOrgOptions): ReactElement => fromHtml(chooseOrgPage(props).body);
 
 /** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
  *  in-app switcher can draw the same list. */
 export const OrgPicker = (props: OrgPickerOptions): ReactElement => fromHtml(orgPicker(props));
 
-/** No organization yet (noOrgPage). */
+/** No organisation yet (noOrgPage). */
 export const NoOrg = (props: NoOrgOptions): ReactElement => fromHtml(noOrgPage(props).body);
 
 /** A refusal by its reason (refusedPage). */

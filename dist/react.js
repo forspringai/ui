@@ -33,12 +33,12 @@ export function fromHtml(h, key) {
 }
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
 export const Bar = (props) => fromHtml(bar(props));
-/** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
+/** Choose an organisation (chooseOrgPage). The app sets the response status itself, if it has one. */
 export const ChooseOrg = (props) => fromHtml(chooseOrgPage(props).body);
 /** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
  *  in-app switcher can draw the same list. */
 export const OrgPicker = (props) => fromHtml(orgPicker(props));
-/** No organization yet (noOrgPage). */
+/** No organisation yet (noOrgPage). */
 export const NoOrg = (props) => fromHtml(noOrgPage(props).body);
 /** A refusal by its reason (refusedPage). */
 export const Refused = (props) => fromHtml(refusedPage(props).body);

@@ -32,13 +32,13 @@ export const REFUSALS = {
             agent: "En agent angiver den med --org, <PRODUKT>_ORG eller .forspring.json.",
         },
         en: {
-            title: "Choose an organization",
-            text: "You are in several organizations and none of them was named.",
+            title: "Choose an organisation",
+            text: "You are in several organisations and none of them was named.",
             fix: "Pick the one to work in.",
             agent: "An agent names it with --org, <PRODUCT>_ORG or .forspring.json.",
         },
     },
-    // A 404, the same as an organization that does not exist, so its name cannot be probed.
+    // A 404, the same as an organisation that does not exist, so its name cannot be probed.
     not_a_member: {
         status: 404,
         exit: 3,
@@ -48,9 +48,9 @@ export const REFUSALS = {
             fix: "Tjek adressen, eller vælg en af dine egne organisationer. En administrator i organisationen kan invitere dig.",
         },
         en: {
-            title: "This organization does not exist, or you are not in it",
-            text: "We cannot show you anything from an organization you are not in.",
-            fix: "Check the address, or pick one of your own organizations. An admin of the organization can add you.",
+            title: "This organisation does not exist, or you are not in it",
+            text: "We cannot show you anything from an organisation you are not in.",
+            fix: "Check the address, or pick one of your own organisations. An admin of the organisation can add you.",
         },
     },
     product_off: {
@@ -63,7 +63,7 @@ export const REFUSALS = {
         },
         en: {
             title: "This product is not switched on for you",
-            text: "You are in the organization, but you have not been given this product.",
+            text: "You are in the organisation, but you have not been given this product.",
             fix: "Ask an admin to switch it on for you.",
         },
     },
@@ -76,8 +76,8 @@ export const REFUSALS = {
             fix: "En ejer kan starte det igen under betaling.",
         },
         en: {
-            title: "This product is paused for the organization",
-            text: "Billing has stopped, so nobody in the organization can use the product right now.",
+            title: "This product is paused for the organisation",
+            text: "Billing has stopped, so nobody in the organisation can use the product right now.",
             fix: "An owner can start it again on the billing page.",
         },
     },
@@ -91,7 +91,7 @@ export const REFUSALS = {
         },
         en: {
             title: "Your access level cannot do this",
-            text: "You are in the organization, but this needs a higher access level.",
+            text: "You are in the organisation, but this needs a higher access level.",
             fix: "Ask an owner or admin to do it, or to raise your access level.",
         },
     },
@@ -104,9 +104,9 @@ export const REFUSALS = {
             fix: "Brug en nøgle til denne organisation, eller adressen for nøglens egen.",
         },
         en: {
-            title: "The key is for another organization",
-            text: "The key or token is for another organization than the one in the address.",
-            fix: "Use a key for this organization, or the address of the key's own.",
+            title: "The key is for another organisation",
+            text: "The key or token is for another organisation than the one in the address.",
+            fix: "Use a key for this organisation, or the address of the key's own.",
         },
     },
     account_unavailable: {

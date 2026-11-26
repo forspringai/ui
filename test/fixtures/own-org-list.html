@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Org lists</title></head>
+<body>
+<!-- Red: an org list drawn by hand, as links. -->
+<section id="links"><h2>Your organisations</h2><ul><li><a href="/o/acme/">Acme</a></li><li><a href="/o/globex/runs">Globex</a></li></ul></section>
+<!-- Red: a select of orgs. -->
+<form id="sel" method="post"><select name="org"><option value="">Choose</option><option value="acme">Acme</option><option value="globex">Globex</option></select></form>
+<!-- Red: radios named org. -->
+<fieldset id="radios"><legend>Organisation</legend><label><input type="radio" name="org" value="acme"> Acme</label><label><input type="radio" name="org" value="globex"> Globex</label></fieldset>
+<!-- Green: the package's list (it carries the marker). -->
+<ul class="org-picker-list" data-forspring-org-list><li><a class="org-picker-row" href="/o/acme/">Acme</a></li><li><a class="org-picker-row" href="/o/globex/">Globex</a></li></ul>
+<!-- Green: one org's pages, not a list of orgs. -->
+<nav id="apps"><a href="/o/acme/runs">Runs</a> <a href="/o/acme/boards">Boards</a></nav>
+</body>
+</html>

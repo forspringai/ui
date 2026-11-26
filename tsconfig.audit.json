@@ -9,5 +9,5 @@
     "removeComments": false
   },
   "include": [],
-  "files": ["src/audit/cli.ts", "src/audit/audit.ts"]
+  "files": ["src/audit/cli.ts", "src/audit/audit.ts", "src/check/cli.ts", "src/check/org-lists.ts"]
 }

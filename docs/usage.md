@@ -75,9 +75,19 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   sent unchanged and the picker builds no URL from it. One language per render: `lang` is required and comes only from the
   caller (the picker reads no browser language, header or cookie), never two stacked. An optional `subtitle` goes under the heading and a `note` under the list (default: the
   choice cannot be changed here later; `false` for none). One org is no page: skip the step and use
-  that org. Given one anyway it draws that single row; given none it says so, never an empty list. It
-  is not `chooseOrgPage()`: that page links to each org's home inside a product (a GET); the picker
-  posts the choice back to the sign-in, so the choice never sits in a URL.
+  that org. Given one anyway it draws that single row; given none it says so, never an empty list.
+  **The link mode** (`links` instead of `orgs`, `action`, `name`, `fields`): each row is a link to the
+  `href` the caller gives (`current` marks the org the page is in, `tag` and `meta` add words), for
+  navigation rather than a choice the server must trust. The picker builds no URL from an org either way.
+- **One org list, suite wide (D-59):** every list of organisations to choose from is `orgList()` (the
+  rows, with `orgMark()` for an org's logo or first letter): `orgPicker()`, `chooseOrgPage()`,
+  `refusedPage()`'s "your organisations" and the bar's org switcher all draw it, so they look the same
+  and carry the `data-forspring-org-list` marker. An in-app switcher draws `orgList({ lang, links })`
+  (`menu: true` inside a menu panel). Never draw your own org list: `forspring-ui-check org-lists` fails a
+  product's CI on one, and ui-audit's `own-org-list` rule finds one on a rendered page.
+  Run it from your repo's root in CI: `forspring-ui-check org-lists src` (your source paths). Exceptions
+  live in YOUR repo, in `.forspring-ui-allow.json` beside the run: `[{ "file", "rule", "reason", "tick" }]`;
+  an entry without a tick fails the run, and an unused one is reported. ui ships no allowlist.
 
 ### Actions
 

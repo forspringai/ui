@@ -6,12 +6,12 @@ import { type ChooseOrgOptions, type NoOrgOptions, type OrgPickerOptions, type R
 export declare function fromHtml(h: Html, key?: string): ReactElement;
 /** The bar: wordmark, org switcher, product switcher, user menu (bar() in @forspring/ui/html). */
 export declare const Bar: (props: BarOptions) => ReactElement;
-/** Choose an organization (chooseOrgPage). The app sets the response status itself, if it has one. */
+/** Choose an organisation (chooseOrgPage). The app sets the response status itself, if it has one. */
 export declare const ChooseOrg: (props: ChooseOrgOptions) => ReactElement;
 /** Choose an organisation at sign-in (orgPicker): one POST form and button per org, no handlers needed. An app's
  *  in-app switcher can draw the same list. */
 export declare const OrgPicker: (props: OrgPickerOptions) => ReactElement;
-/** No organization yet (noOrgPage). */
+/** No organisation yet (noOrgPage). */
 export declare const NoOrg: (props: NoOrgOptions) => ReactElement;
 /** A refusal by its reason (refusedPage). */
 export declare const Refused: (props: RefusedOptions) => ReactElement;

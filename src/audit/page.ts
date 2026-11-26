@@ -47,6 +47,9 @@ export type SlotObservation = {
 
 export type TargetObservation = { selector: string; width: number; height: number };
 
+/** A list of organisations the page draws outside @forspring/ui's orgList() (D-59): its box and how many orgs it offers. */
+export type OrgListObservation = { selector: string; orgs: number; kind: "links" | "choices" | "select" };
+
 export type Observations = {
   texts: TextObservation[];
   boxes: BoxObservation[];
@@ -58,6 +61,8 @@ export type Observations = {
   fonts: string[];
   /** Every rendered element with a data-slot; audit.ts checks the known ones under --rich-app. */
   slots: SlotObservation[];
+  /** Org lists drawn by hand, outside the package's data-forspring-org-list (D-59). */
+  orgLists?: OrgListObservation[];
 };
 
 export function collect(): Observations {
@@ -258,8 +263,46 @@ export function collect(): Observations {
     });
   }
 
+  // Org lists drawn by hand (D-59): in one list box, controls that each lead to or choose a different org (links to
+  // /o/<org>/ or with ?org=, submits, radios or checkboxes named org / org_id), or a select of orgs, outside the
+  // package's list (data-forspring-org-list). Hidden ones count too: a closed menu is still a list.
+  const orgLists: OrgListObservation[] = [];
+  {
+    const own = (el: Element) => el.closest("[data-forspring-org-list]") !== null;
+    const boxOf = (el: Element) => el.closest("ul, ol, menu, nav, fieldset, details, section, [role=menu], [role=listbox], [role=radiogroup]") ?? document.body;
+    const groups = new Map<Element, { orgs: Set<string>; kind: "links" | "choices" }>();
+    const add = (el: Element, org: string, kind: "links" | "choices") => {
+      const box = boxOf(el);
+      const g = groups.get(box) ?? { orgs: new Set<string>(), kind };
+      g.orgs.add(org);
+      groups.set(box, g);
+    };
+    for (const a of document.body.querySelectorAll("a[href]")) {
+      if (own(a)) continue;
+      let u: URL;
+      try {
+        u = new URL(a.getAttribute("href")!, location.href);
+      } catch {
+        continue;
+      }
+      const org = /^\/o\/([^/]+)/.exec(u.pathname)?.[1] ?? u.searchParams.get("org");
+      if (org) add(a, decodeURIComponent(org), "links");
+    }
+    for (const c of document.body.querySelectorAll('button[name="org"], button[name="org_id"], input[name="org"], input[name="org_id"]')) {
+      if (own(c) || (c instanceof HTMLInputElement && !["radio", "checkbox", "submit"].includes(c.type))) continue;
+      const v = (c as HTMLButtonElement | HTMLInputElement).value;
+      if (v) add(c, v, "choices");
+    }
+    for (const [box, g] of groups) if (g.orgs.size >= 2) orgLists.push({ selector: selector(box), orgs: g.orgs.size, kind: g.kind });
+    for (const sel of document.body.querySelectorAll('select[name="org"], select[name="org_id"]')) {
+      if (own(sel)) continue;
+      const n = new Set([...(sel as HTMLSelectElement).options].map((o) => o.value).filter(Boolean)).size;
+      if (n >= 2) orgLists.push({ selector: selector(sel), orgs: n, kind: "select" });
+    }
+  }
+
   const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
-  return { texts, boxes, smallTargets, primaries, fonts, slots };
+  return { texts, boxes, smallTargets, primaries, fonts, slots, orgLists };
 }
 
 // --- Layout: the spacing, alignment, popover and surface checks (D-41) ----------------------------

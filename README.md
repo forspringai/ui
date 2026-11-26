@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.42.0
+pnpm add github:forspringai/ui#v0.43.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -145,7 +145,7 @@ shell({
   menu: {
     label: "Main menu",
     toggle: "Menu",
-    context: { label: "Organization", name: org.name, items: orgs.map((o) => ({ label: o.name, href: `/o/${o.slug}/`, current: o.slug === org.slug })) },
+    context: { label: "Organisation", name: org.name, items: orgs.map((o) => ({ label: o.name, href: `/o/${o.slug}/`, current: o.slug === org.slug })) },
     groups: [
       { items: [{ label: "Overview", href: "/o/ops/", current: true, badge: { text: "2", signal: "down", label: "down" } }] },
       { label: "Projects", items: [{ label: "Hub", href: "/o/ops/projects/hub", current: "parent" }] },

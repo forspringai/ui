@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.42.0";
+export const VERSION = "0.43.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -168,8 +168,8 @@ const BAR = {
         signOut: "Log ud af Forspring",
     },
     en: {
-        orgs: "Your organizations",
-        switchOrg: "switch organization",
+        orgs: "Your organisations",
+        switchOrg: "switch organisation",
         people: (o) => `Manage people in ${o}`,
         products: "Products",
         has: (o) => `${o} has`,
@@ -201,13 +201,39 @@ export function initials(name, email = "") {
     return letters.toLocaleUpperCase() || "?";
 }
 const current = (on, value = "true") => raw(on ? ` aria-current="${value}"` : "");
+/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
+export function orgMark(name, src) {
+    const inner = src ? html `<img src="${safeHref(src)}" alt="">` : (Array.from(name.trim())[0] ?? "?").toLocaleUpperCase();
+    return html `<span class="org-picker-mark" aria-hidden="true">${inner}</span>`;
+}
+/** The rows of the suite's one org list; nothing when there are none (the caller says why). */
+export function orgList(o) {
+    const chevron = o.menu ? "" : icon("chevron-right");
+    const inner = (g) => html `${orgMark(g.name, g.logo)}<span class="org-picker-text"><span class="name">${g.name}${g.tag ? html ` ${tag(g.tag, "primary")}` : ""}</span><span class="meta">${ACCESS_LEVEL_NAMES[o.lang][g.role]}${g.meta ? ` · ${g.meta}` : ""}</span></span>${chevron}`;
+    let rows;
+    if ("links" in o) {
+        rows = o.links.map((g) => html `<li><a class="org-picker-row" href="${safeHref(g.href)}"${current(g.current)}>${inner(g)}</a></li>`);
+    }
+    else {
+        const field = o.name ?? "org";
+        const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html `<input type="hidden" name="${k}" value="${v}">`);
+        rows = o.orgs.map((g) => html `<li><form method="post" action="${safeHref(o.action)}">${hidden}<button class="org-picker-row" type="submit" name="${field}" value="${g.value}">${inner(g)}</button></form></li>`);
+    }
+    if (rows.length === 0)
+        return html ``;
+    return html `<ul class="org-picker-list${o.menu ? " org-picker-menu" : ""}" data-forspring-org-list>${rows}</ul>`;
+}
 function orgSwitcher(o, t, lang) {
     const orgs = o.orgs ?? [];
     if (orgs.length < 2)
         return html ``;
-    const items = orgs.map((g) => html `<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ACCESS_LEVEL_NAMES[lang][g.role]}</span></a></li>`);
+    const items = orgList({
+        lang,
+        menu: true,
+        links: orgs.map((g) => ({ name: g.name, role: g.role, href: g.href ?? orgPath(o.path ?? "/", g.slug), current: g.slug === o.current.slug })),
+    });
     const foot = o.peopleHref ? html `<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
-    return html `<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
+    return html `<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p>${items}${foot}</div></details>`;
 }
 function productSwitcher(p, t, org) {
     const items = p.items.map((i) => html `<li><a href="${safeHref(i.href)}"${current(i.current)}><span class="bar-item-name">${i.name}</span>${i.current ? html `<span class="bar-item-meta">${t.here}</span>` : ""}</a></li>`);

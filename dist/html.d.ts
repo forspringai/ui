@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.42.0";
+export declare const VERSION = "0.43.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.42.0/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.43.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -220,6 +220,49 @@ export type ShellOptions = BarOptions & {
 export declare function orgPath(path: string, slug: string): string;
 /** Up to two letters for the avatar: the first and last names' initials, else the address's first. */
 export declare function initials(name: string, email?: string): string;
+/** An organisation to choose: its name, your access level there, and the value the form sends back. */
+export type PickerOrg = {
+    name: string;
+    role: AccessLevel;
+    /** Sent back unchanged as the chosen button's value: opaque to the list (the account seals a token in it).
+     *  Nothing is built from it. */
+    value: string;
+    /** The org's logo, an image URL; without one the row shows the name's first letter. */
+    logo?: string;
+};
+/** An organisation to go to: its name, your access level there, and where its row leads. */
+export type OrgLink = {
+    name: string;
+    role: AccessLevel;
+    /** The row's link, as the caller gives it. */
+    href: string;
+    logo?: string;
+    /** The org this page is in (aria-current). */
+    current?: boolean;
+    /** A tag after the name, e.g. "Last used here". */
+    tag?: string;
+    /** Words after the access level, e.g. "last used 12 Oct 2026". */
+    meta?: string;
+};
+export type OrgListOptions = {
+    lang: Lang;
+    /** Inside a menu panel (the bar's switcher): no box of its own, a smaller mark, no chevron. */
+    menu?: boolean;
+} & ({
+    links: OrgLink[];
+} | {
+    orgs: PickerOrg[];
+    /** Where each choice is posted. */
+    action: string;
+    /** The field the chosen org's value is sent in (default `org`). */
+    name?: string;
+    /** Hidden fields every form carries: the CSRF token, the handle of the request it answers. */
+    fields?: Record<string, string>;
+});
+/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
+export declare function orgMark(name: string, src?: string): Html;
+/** The rows of the suite's one org list; nothing when there are none (the caller says why). */
+export declare function orgList(o: OrgListOptions): Html;
 /** The bar: wordmark, org switcher, product switcher, controls, user menu. The menus are details
  *  elements, so they open with no script. */
 export declare function bar(o: BarOptions): Html;

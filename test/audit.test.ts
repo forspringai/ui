@@ -329,6 +329,24 @@ describe("the broken fixture", () => {
 // The label's ink (D-42). Peter found day chips with the words 2 px high that the old line-box measure
 // passed. The measure (cap top to baseline, from the DOM) must be what a screenshot shows, and ui's
 // fonts must centre it.
+// own-org-list (D-59): an org list the page draws itself, outside the package's data-forspring-org-list.
+describe("own-org-list", () => {
+  test("a hand-drawn list of org links, a select of orgs and radios named org are errors; the package's list and one org's pages are not", async () => {
+    const r = await audit(options([`${base}/test/fixtures/own-org-list.html`], { widths: [1280], themes: ["light"] }), browser);
+    const own = all(r).filter((f) => f.rule === "own-org-list");
+    expect(own.map((f) => [f.selector, f.value, f.severity]).sort()).toEqual([
+      ["fieldset#radios", "2 organisations as choices, drawn by the page", "error"],
+      ["section#links > ul", "2 organisations as links, drawn by the page", "error"],
+      ["form#sel > select", "2 organisations as a select, drawn by the page", "error"],
+    ].sort());
+  }, 60_000);
+
+  test("the package's org lists pass: the picker in both modes' demo, choose an org", async () => {
+    const r = await audit(options([`${base}/dist/demo/pages/org-picker.en.html`, `${base}/dist/demo/pages/choose-org.en.html`], { widths: [1280], themes: ["light"] }), browser);
+    expect(all(r).filter((f) => f.rule === "own-org-list")).toEqual([]);
+  }, 60_000);
+});
+
 describe("the label's ink (D-42)", () => {
   test("control-text-centre's band is the screenshot's ink rows, within a pixel, and ui's controls pass", async () => {
     const page = await browser.newPage({ viewport: { width: 800, height: 600 }, deviceScaleFactor: 1 });

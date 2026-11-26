@@ -725,10 +725,12 @@
     vertical-align: middle;
   }
 
-  /* The org picker (hub plan 2026-11-26): what is being connected at the top, then one row per org.
-     The whole row is the form's button (no JS), so it drops the bare button's primary fill and takes
-     the list row's look: mark, name over access level, a chevron. Rows are full width and at least
-     the 44px touch floor, inset in the list so their hover and focus ring keep the button's radius. */
+  /* The suite's one org list (D-56, D-59): orgPicker, chooseOrgPage, refusedPage's orgs and the bar's
+     org switcher draw the same rows. A row is the whole control, a form's button (choices) or a link
+     (navigation), so it drops the bare button's primary fill and the link's colour and underline, and
+     takes the list row's look: mark, name over access level, a chevron. Rows are full width and at
+     least the 44px touch floor, inset in the list so their hover and focus ring keep the button's
+     radius. In a menu panel (.org-picker-menu) the panel is the box: a smaller mark, no chevron. */
   .org-picker-subject {
     display: flex;
     align-items: center;
@@ -768,7 +770,7 @@
 
   .org-picker-list {
     list-style: none;
-    margin: var(--space-5) 0 var(--space-4);
+    margin: var(--rhythm-stack) 0;
     padding: var(--space-1);
     border: 1px solid var(--border);
     border-radius: var(--radius-card);
@@ -783,7 +785,7 @@
     margin: 0;
   }
 
-  .org-picker .org-picker-row {
+  .org-picker-list .org-picker-row {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -796,14 +798,15 @@
     color: var(--foreground);
     font: 400 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     text-align: start;
+    text-decoration: none;
   }
 
-  .org-picker .org-picker-row:hover {
+  .org-picker-list .org-picker-row:hover {
     background: var(--muted);
     color: var(--foreground);
   }
 
-  .org-picker .org-picker-row:focus-visible {
+  .org-picker-list .org-picker-row:focus-visible {
     outline-offset: -2px;
   }
 
@@ -817,13 +820,46 @@
     overflow-wrap: anywhere;
   }
 
-  .org-picker .org-picker-text .meta {
+  .org-picker-list .org-picker-text .meta {
     margin: 0;
+    font-weight: 400;
+  }
+
+  /* The org this page is in: the muted surface, as the bar's chosen items (D-46). On the muted surface
+     (this row, or a hovered one) the mark takes the card's, so it still reads as a square. */
+  .org-picker-list .org-picker-row[aria-current] {
+    background: var(--muted);
+  }
+
+  .org-picker-list .org-picker-row:is(:hover, [aria-current]) .org-picker-mark {
+    background: var(--card);
   }
 
   .org-picker-row > .icon {
     flex: none;
     color: var(--muted-foreground);
+  }
+
+  .org-picker-menu {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .org-picker-menu li + li {
+    border-top: 0;
+  }
+
+  .org-picker-menu .org-picker-row {
+    min-height: var(--space-10);
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .org-picker-menu .org-picker-mark {
+    inline-size: var(--space-7);
+    block-size: var(--space-7);
+    font: 600 var(--text-chrome-meta)/var(--leading-solid) var(--font-sans);
   }
 
   .org-picker-note {
@@ -3379,7 +3415,8 @@
       min-width: var(--control-touch);
     }
 
-    .bar-panel a {
+    .bar-panel a,
+    .org-picker-menu .org-picker-row {
       min-height: var(--control-touch);
     }
 

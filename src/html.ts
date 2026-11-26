@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.42.0";
+export const VERSION = "0.43.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -331,8 +331,8 @@ const BAR = {
     signOut: "Log ud af Forspring",
   },
   en: {
-    orgs: "Your organizations",
-    switchOrg: "switch organization",
+    orgs: "Your organisations",
+    switchOrg: "switch organisation",
     people: (o: string) => `Manage people in ${o}`,
     products: "Products",
     has: (o: string) => `${o} has`,
@@ -369,15 +369,92 @@ export function initials(name: string, email = ""): string {
 
 const current = (on: boolean | undefined, value = "true") => raw(on ? ` aria-current="${value}"` : "");
 
+// --- The suite's one org list (D-59) ------------------------------------------------------------------
+// Every list of organisations to choose from is drawn here, so the suite has one org picker: orgPicker() at
+// sign-in, chooseOrgPage(), refusedPage()'s "your organisations" and the bar's org switcher. Two modes, one
+// row look (the org's mark, its name, your access level there):
+//   choices (`orgs`)  each row is the submit button of its own POST form, carrying the caller's opaque value;
+//   links (`links`)   each row is a link to the caller's href; the list builds no URL from an org.
+// The list carries data-forspring-org-list, which ui-audit's own-org-list rule looks for.
+
+/** An organisation to choose: its name, your access level there, and the value the form sends back. */
+export type PickerOrg = {
+  name: string;
+  role: AccessLevel;
+  /** Sent back unchanged as the chosen button's value: opaque to the list (the account seals a token in it).
+   *  Nothing is built from it. */
+  value: string;
+  /** The org's logo, an image URL; without one the row shows the name's first letter. */
+  logo?: string;
+};
+
+/** An organisation to go to: its name, your access level there, and where its row leads. */
+export type OrgLink = {
+  name: string;
+  role: AccessLevel;
+  /** The row's link, as the caller gives it. */
+  href: string;
+  logo?: string;
+  /** The org this page is in (aria-current). */
+  current?: boolean;
+  /** A tag after the name, e.g. "Last used here". */
+  tag?: string;
+  /** Words after the access level, e.g. "last used 12 Oct 2026". */
+  meta?: string;
+};
+
+export type OrgListOptions = {
+  lang: Lang;
+  /** Inside a menu panel (the bar's switcher): no box of its own, a smaller mark, no chevron. */
+  menu?: boolean;
+} & (
+  | { links: OrgLink[] }
+  | {
+      orgs: PickerOrg[];
+      /** Where each choice is posted. */
+      action: string;
+      /** The field the chosen org's value is sent in (default `org`). */
+      name?: string;
+      /** Hidden fields every form carries: the CSRF token, the handle of the request it answers. */
+      fields?: Record<string, string>;
+    }
+);
+
+/** A square mark: the image when there is one (decoration: the name beside it says who), else the first letter. */
+export function orgMark(name: string, src?: string): Html {
+  const inner = src ? html`<img src="${safeHref(src)}" alt="">` : (Array.from(name.trim())[0] ?? "?").toLocaleUpperCase();
+  return html`<span class="org-picker-mark" aria-hidden="true">${inner}</span>`;
+}
+
+/** The rows of the suite's one org list; nothing when there are none (the caller says why). */
+export function orgList(o: OrgListOptions): Html {
+  const chevron = o.menu ? "" : icon("chevron-right");
+  const inner = (g: { name: string; role: AccessLevel; logo?: string; tag?: string; meta?: string }) =>
+    html`${orgMark(g.name, g.logo)}<span class="org-picker-text"><span class="name">${g.name}${g.tag ? html` ${tag(g.tag, "primary")}` : ""}</span><span class="meta">${ACCESS_LEVEL_NAMES[o.lang][g.role]}${g.meta ? ` · ${g.meta}` : ""}</span></span>${chevron}`;
+  let rows: Html[];
+  if ("links" in o) {
+    rows = o.links.map((g) => html`<li><a class="org-picker-row" href="${safeHref(g.href)}"${current(g.current)}>${inner(g)}</a></li>`);
+  } else {
+    const field = o.name ?? "org";
+    const hidden = Object.entries(o.fields ?? {}).map(([k, v]) => html`<input type="hidden" name="${k}" value="${v}">`);
+    rows = o.orgs.map(
+      (g) => html`<li><form method="post" action="${safeHref(o.action)}">${hidden}<button class="org-picker-row" type="submit" name="${field}" value="${g.value}">${inner(g)}</button></form></li>`,
+    );
+  }
+  if (rows.length === 0) return html``;
+  return html`<ul class="org-picker-list${o.menu ? " org-picker-menu" : ""}" data-forspring-org-list>${rows}</ul>`;
+}
+
 function orgSwitcher(o: BarOrg, t: (typeof BAR)[Lang], lang: Lang): Html {
   const orgs = o.orgs ?? [];
   if (orgs.length < 2) return html``;
-  const items = orgs.map(
-    (g) =>
-      html`<li><a href="${safeHref(g.href ?? orgPath(o.path ?? "/", g.slug))}"${current(g.slug === o.current.slug)}><span class="bar-item-name">${g.name}</span><span class="bar-item-meta">${ACCESS_LEVEL_NAMES[lang][g.role]}</span></a></li>`,
-  );
+  const items = orgList({
+    lang,
+    menu: true,
+    links: orgs.map((g) => ({ name: g.name, role: g.role, href: g.href ?? orgPath(o.path ?? "/", g.slug), current: g.slug === o.current.slug })),
+  });
   const foot = o.peopleHref ? html`<p class="bar-panel-foot"><a href="${safeHref(o.peopleHref)}">${t.people(o.current.name)}</a></p>` : "";
-  return html`<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p><ul>${items}</ul>${foot}</div></details>`;
+  return html`<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">${o.current.name}</span><span class="visually-hidden">, ${t.switchOrg}</span></summary><div class="bar-panel"><p class="bar-panel-label">${t.orgs}</p>${items}${foot}</div></details>`;
 }
 
 function productSwitcher(p: BarProducts, t: (typeof BAR)[Lang], org: Org | undefined): Html {
