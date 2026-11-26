@@ -50,7 +50,7 @@ describe("the bar", () => {
 
   test("the org switcher names each customer with your role, keeps the path, and links to people", () => {
     expect(out).toContain('<details class="switcher bar-menu org-switcher"><summary><span class="bar-menu-name">Acme</span><span class="visually-hidden">, switch organisation</span></summary>');
-    // The rows are the suite's one org list (D-57, test/org-list.test.ts), in its menu form.
+    // The rows are the suite's one org list (D-59, test/org-list.test.ts), in its menu form.
     expect(out).toContain('<a class="org-picker-row" href="/o/globex/datacore/runs?state=failed"><span class="org-picker-mark" aria-hidden="true">G</span><span class="org-picker-text"><span class="name">Globex</span><span class="meta">owner</span></span></a>');
     expect(out).toContain('<a class="org-picker-row" href="/o/acme/datacore/runs?state=failed" aria-current="true">');
     expect(out).toContain(">Manage people in Acme</a>");
@@ -329,7 +329,7 @@ describe("the standard pages", () => {
     expect(b.indexOf("Globex")).toBeLessThan(b.indexOf("Acme"));
     expect(b).toContain('Globex <span class="tag primary">Last used here</span>');
     expect(b).toContain("admin · last used 12 Oct 2026");
-    // Each row is the link (the suite's one org list, D-57), no separate Open button.
+    // Each row is the link (the suite's one org list, D-59), no separate Open button.
     expect(b).toContain('<a class="org-picker-row" href="/o/globex/">');
     expect(b).toContain('<a class="org-picker-row" href="/o/acme/">');
   });

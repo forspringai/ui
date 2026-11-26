@@ -329,7 +329,7 @@ describe("the broken fixture", () => {
 // The label's ink (D-42). Peter found day chips with the words 2 px high that the old line-box measure
 // passed. The measure (cap top to baseline, from the DOM) must be what a screenshot shows, and ui's
 // fonts must centre it.
-// own-org-list (D-57): an org list the page draws itself, outside the package's data-forspring-org-list.
+// own-org-list (D-59): an org list the page draws itself, outside the package's data-forspring-org-list.
 describe("own-org-list", () => {
   test("a hand-drawn list of org links, a select of orgs and radios named org are errors; the package's list and one org's pages are not", async () => {
     const r = await audit(options([`${base}/test/fixtures/own-org-list.html`], { widths: [1280], themes: ["light"] }), browser);

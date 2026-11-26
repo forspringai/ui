@@ -17,6 +17,7 @@
     "src/pages.ts",
     "src/connect.ts",
     "src/react.ts",
-    "src/theme.ts"
+    "src/theme.ts",
+    "src/chart-svg.ts"
   ]
 }

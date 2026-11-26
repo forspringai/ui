@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// forspring-ui-check: static checks a product runs in its CI, with no browser (D-57). One check so far:
+// forspring-ui-check: static checks a product runs in its CI, with no browser (D-59). One check so far:
 //
 //   forspring-ui-check org-lists [--allow <file>] [--json] <path>...
 //

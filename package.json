@@ -1,6 +1,6 @@
 {
   "name": "@forspring/ui",
-  "version": "0.41.0",
+  "version": "0.43.0",
   "description": "Forspring suite UI: design tokens, fonts, brand files, a server-rendered component layer and the design audit (hub D-90, D-101)",
   "private": true,
   "type": "module",
@@ -52,6 +52,10 @@
       "types": "./dist/theme.d.ts",
       "default": "./dist/theme.js"
     },
+    "./chart-svg": {
+      "types": "./dist/chart-svg.d.ts",
+      "default": "./dist/chart-svg.js"
+    },
     "./schema/customer-theme.schema.json": "./schema/customer-theme.schema.json",
     "./tokens.css": "./dist/tokens.css",
     "./theme.css": "./dist/theme.css",
@@ -75,6 +79,7 @@
   "scripts": {
     "build": "node scripts/build.ts",
     "typecheck": "tsc --noEmit",
+    "name-guard": "node scripts/name-guard.ts",
     "test": "vitest run",
     "demo": "node scripts/demo.ts",
     "audit": "node dist/audit/cli.js",
@@ -85,6 +90,7 @@
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
     "@types/node": "24.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

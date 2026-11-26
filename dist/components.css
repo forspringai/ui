@@ -727,7 +727,7 @@
     vertical-align: middle;
   }
 
-  /* The suite's one org list (D-56, D-57): orgPicker, chooseOrgPage, refusedPage's orgs and the bar's
+  /* The suite's one org list (D-56, D-59): orgPicker, chooseOrgPage, refusedPage's orgs and the bar's
      org switcher draw the same rows. A row is the whole control, a form's button (choices) or a link
      (navigation), so it drops the bare button's primary fill and the link's colour and underline, and
      takes the list row's look: mark, name over access level, a chevron. Rows are full width and at

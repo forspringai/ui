@@ -1,4 +1,4 @@
-// The suite's ONE org list (D-57): every list of organisations to choose from in the package is drawn by orgList(),
+// The suite's ONE org list (D-59): every list of organisations to choose from in the package is drawn by orgList(),
 // in one row look (the org's mark, its name, your access level), in two modes: choices (each row a POST form's
 // button carrying an opaque value) and links (each row a link to the caller's href). orgPicker's link mode,
 // chooseOrgPage, refusedPage's "your organisations" and the bar's org switcher are thin wrappers on it, and every

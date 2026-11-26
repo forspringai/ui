@@ -208,7 +208,7 @@ export function collect() {
             fontSize: parseFloat(s.fontSize),
         });
     }
-    // Org lists drawn by hand (D-57): in one list box, controls that each lead to or choose a different org (links to
+    // Org lists drawn by hand (D-59): in one list box, controls that each lead to or choose a different org (links to
     // /o/<org>/ or with ?org=, submits, radios or checkboxes named org / org_id), or a select of orgs, outside the
     // package's list (data-forspring-org-list). Hidden ones count too: a closed menu is still a list.
     const orgLists = [];

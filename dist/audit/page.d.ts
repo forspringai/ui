@@ -47,7 +47,7 @@ export type TargetObservation = {
     width: number;
     height: number;
 };
-/** A list of organisations the page draws outside @forspring/ui's orgList() (D-57): its box and how many orgs it offers. */
+/** A list of organisations the page draws outside @forspring/ui's orgList() (D-59): its box and how many orgs it offers. */
 export type OrgListObservation = {
     selector: string;
     orgs: number;
@@ -64,7 +64,7 @@ export type Observations = {
     fonts: string[];
     /** Every rendered element with a data-slot; audit.ts checks the known ones under --rich-app. */
     slots: SlotObservation[];
-    /** Org lists drawn by hand, outside the package's data-forspring-org-list (D-57). */
+    /** Org lists drawn by hand, outside the package's data-forspring-org-list (D-59). */
     orgLists?: OrgListObservation[];
 };
 export declare function collect(): Observations;

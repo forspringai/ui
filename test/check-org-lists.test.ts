@@ -1,4 +1,4 @@
-// forspring-ui-check org-lists (D-57): a product's CI fails when it draws its own list of organisations instead of
+// forspring-ui-check org-lists (D-59): a product's CI fails when it draws its own list of organisations instead of
 // @forspring/ui's orgList(). The red fixtures copy the shapes of the hand-drawn lists the suite had (invented code);
 // each must be found, by the rule that names why. The green ones (the same screens drawn with the package, and
 // sentences that only mention an organisation) must not.

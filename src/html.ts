@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.41.0";
+export const VERSION = "0.43.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -369,7 +369,7 @@ export function initials(name: string, email = ""): string {
 
 const current = (on: boolean | undefined, value = "true") => raw(on ? ` aria-current="${value}"` : "");
 
-// --- The suite's one org list (D-57) ------------------------------------------------------------------
+// --- The suite's one org list (D-59) ------------------------------------------------------------------
 // Every list of organisations to choose from is drawn here, so the suite has one org picker: orgPicker() at
 // sign-in, chooseOrgPage(), refusedPage()'s "your organisations" and the bar's org switcher. Two modes, one
 // row look (the org's mark, its name, your access level there):

@@ -349,7 +349,7 @@ export function findings(obs: Observations, sc: Scale, width: number): Finding[]
       selector: g.selector,
       value: `${g.orgs} organisations as ${g.kind === "select" ? "a select" : g.kind}, drawn by the page`,
       expected: "@forspring/ui's org list: orgList(), orgPicker(), chooseOrgPage() or the bar's org switcher (data-forspring-org-list)",
-      note: "the suite has one org list (D-57); forspring-ui-check org-lists finds the source",
+      note: "the suite has one org list (D-59); forspring-ui-check org-lists finds the source",
     });
   return out;
 }

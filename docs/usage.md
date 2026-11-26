@@ -79,7 +79,7 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   **The link mode** (`links` instead of `orgs`, `action`, `name`, `fields`): each row is a link to the
   `href` the caller gives (`current` marks the org the page is in, `tag` and `meta` add words), for
   navigation rather than a choice the server must trust. The picker builds no URL from an org either way.
-- **One org list, suite wide (D-57):** every list of organisations to choose from is `orgList()` (the
+- **One org list, suite wide (D-59):** every list of organisations to choose from is `orgList()` (the
   rows, with `orgMark()` for an org's logo or first letter): `orgPicker()`, `chooseOrgPage()`,
   `refusedPage()`'s "your organisations" and the bar's org switcher all draw it, so they look the same
   and carry the `data-forspring-org-list` marker. An in-app switcher draws `orgList({ lang, links })`

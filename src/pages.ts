@@ -113,7 +113,7 @@ export function chooseOrgPage(o: ChooseOrgOptions): StandardPage {
   const t = T[o.lang];
   const last = o.orgs.find((g) => g.slug === o.lastHere);
   const orgs = last ? [last, ...o.orgs.filter((g) => g !== last)] : o.orgs;
-  // The suite's one org list in its link mode (D-57): the row is the link, the org used here first and tagged.
+  // The suite's one org list in its link mode (D-59): the row is the link, the org used here first and tagged.
   const items = orgList({
     lang: o.lang,
     links: orgs.map((g) => ({ name: g.name, role: g.role, href: g.href, tag: g === last ? t.lastHere : undefined, meta: g.lastUsed ? t.lastUsed(when(g.lastUsed, o.lang)) : undefined })),

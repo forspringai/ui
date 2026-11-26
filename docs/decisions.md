@@ -2064,10 +2064,31 @@ lead-ui (design approved by Peter; hub plan suite-org-picker-plan-2026-11-26), r
 - `chooseOrgPage()` overlaps it (GET links to an org's home, and US spelling). Its future is lead-brand's
   call under the one-picker rule: a follow-up tick.
 
-## D-57: One org list suite wide, and the checks that keep it one (2026-11-26)
+## D-57: A guard against customer names in this public repo (2026-11-26)
 
-lead-ui (cos approved the plan; Peter: "make sure we only have ONE org picker suite wide"). No release here:
-lead-brand releases.
+cos, after real names came back once (D-55, ui#53). ui-ci runs `scripts/name-guard.ts` before the tests.
+- **What it does:** scans every tracked text file for a live customer or org name of one to four whole words, and fails with file and line only.
+- **The list is not in the repo, not even as hashes.** UI_NAME_GUARD is a secret variable on the ui-ci trigger: the comma-separated SHA-256 of each normalized name.
+- **Who makes it:** whoever may read the account's customer list, with `node scripts/name-guard.ts --hash < names` on their own machine.
+- **Without the variable** (a fork, a laptop) the scan is skipped. No package or version change.
+
+## D-58: chartSvg, a chart as an SVG string for places with no browser (0.42.0, 2026-11-26)
+
+lead-ui for lead-forspring (rich answers v1, the `Chart` of the presentation contract). lead-brand releases; no version bump in this change.
+
+- **`chartSvg(chart, { theme, width, height, lang })`** in `@forspring/ui/chart-svg`, plus `formatNumber`, `formatDate` and `niceTicks`. Line and bar, up to 4 series and 400 points.
+- **Look:** the chart slots, `border`, `muted-foreground` and `card` of the theme, as the SpringML Chart draws them (2 px lines, a 1 px grid, 12 px labels, nothing under 11 px). One series uses `chart-1`. A series also has its own marker (circle, square, triangle, diamond) on a line of 31 points or fewer, so colour is never the only cue.
+- **Alt text and values:** the SVG carries `<title>` and `<desc>` (kind, series, x range, value range) so the PNG's alt text can come from it. A bar carries its value where it fits the bar's width; a line carries its last value (a second label that would overprint is dropped).
+- **Colours** are the generated role values of `src/family.ts` (chart slots, border, muted-foreground, card); the module holds no hex literal, and a test checks that.
+- **For a rasteriser, not a browser:** only plain presentation attributes. No script, no foreignObject, no external href, no `<style>`, no CSS variables. Pure and deterministic; months and number marks are tables, never Intl.
+- **Fonts:** the text is `Archivo, Arial, sans-serif`. resvg-wasm has no system fonts and reads TTF/OTF, not woff2: the renderer must load Archivo as TTF or OTF (regular and bold) and set `defaultFontFamily` to `Archivo`. Nothing loads a font at runtime. Archivo here is a variable font; a renderer that cannot pick its weight draws the title at regular weight.
+- **Never throws:** more than 4 series or 400 points are cut and said so in a note under the chart; empty data draws "Ingen data" / "No data".
+- **Tests:** structure, escaping, da and en formats, colours from the tokens, clamping, empty, determinism, and resvg rendering both themes, both chart types, at 800x400 and 480x270 (`test/chart-svg.test.ts`, `@resvg/resvg-js` as a devDependency).
+
+## D-59: One org list suite wide, and the checks that keep it one (0.43.0, 2026-11-26)
+
+lead-ui (cos approved the plan; Peter: "make sure we only have ONE org picker suite wide"). Released by
+lead-brand.
 
 - **One list, two modes.** `orgList()` (in `@forspring/ui/html`, with `orgMark()`) draws every list of
   organisations to choose from, in D-56's row look: the org's mark, its name, your access level. Choices
@@ -2094,3 +2115,4 @@ lead-brand releases.
   user-visible English string says "organisation": the standard pages, the refusals, the bar. Exported
   identifiers keep their names. "Organization settings" in the connect panel stays: it quotes another product's
   menu. Closes hub tick akf.
+

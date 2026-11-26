@@ -1,4 +1,4 @@
-// forspring-ui-check org-lists (D-57): the suite has ONE org list, @forspring/ui's orgList() (orgPicker, its link
+// forspring-ui-check org-lists (D-59): the suite has ONE org list, @forspring/ui's orgList() (orgPicker, its link
 // mode, chooseOrgPage, refusedPage's orgs and the bar's org switcher draw it). This finds a product drawing its own
 // list of organisations to choose from, by reading its source: no browser, so it runs in a product's CI.
 //
