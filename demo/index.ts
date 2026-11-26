@@ -143,11 +143,11 @@ const DELETE_SITE = (lang: Lang): ConfirmDestructiveOptions & { title: string } 
     ? {
         lang,
         id: "delete-site",
-        title: "Slet banegaarden.dk?",
+        title: "Slet bakery.example?",
         losses: ["181 sider", "4 formularer", "62 omdirigeringer"],
         text: "Domænet holder op med at svare med det samme.",
         irreversible: true,
-        confirmName: "banegaarden.dk",
+        confirmName: "bakery.example",
         action: "#",
         fields: { csrf: "demo" },
         keepLabel: "Behold hjemmesiden",
@@ -156,11 +156,11 @@ const DELETE_SITE = (lang: Lang): ConfirmDestructiveOptions & { title: string } 
     : {
         lang,
         id: "delete-site",
-        title: "Delete banegaarden.dk?",
+        title: "Delete bakery.example?",
         losses: ["181 pages", "4 forms", "62 redirects"],
         text: "The domain stops answering at once.",
         irreversible: true,
-        confirmName: "banegaarden.dk",
+        confirmName: "bakery.example",
         action: "#",
         fields: { csrf: "demo" },
         keepLabel: "Keep site",
@@ -643,7 +643,7 @@ function confirmPages(out: Record<string, string>) {
         narrow: true,
         brandBase: "../../brand/",
         head: raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`),
-        org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/sites/banegaarden.dk/delete", peopleHref: "#" },
+        org: { current: ORGS[0]!, orgs: ORGS, path: "/o/bager-hansen/sites/bakery.example/delete", peopleHref: "#" },
         products: { items: [{ name: "SiteSpring", href: "/o/bager-hansen/", current: true }, { name: "DataSpring", href: "#" }, { name: "PulseSpring", href: "#" }], accountHref: "#" },
         userMenu: METTE(lang, "delete-site.da.html", "delete-site.en.html"),
         footer: [da ? { label: "English", href: "delete-site.en.html", lang: "en" } : { label: "Dansk", href: "delete-site.da.html", lang: "da" }, { label: da ? "Alle komponenter" : "All components", href: "../index.html" }],
@@ -669,7 +669,7 @@ const STAGES = [
 ];
 
 function leadPage(): string {
-  const switcher = html`<nav aria-label="Products"><details class="switcher bar-menu product-switcher"><summary>Products</summary><div class="bar-panel"><p class="bar-panel-label">Noon has</p><ul>${LEAD_PRODUCTS.map(
+  const switcher = html`<nav aria-label="Products"><details class="switcher bar-menu product-switcher"><summary>Products</summary><div class="bar-panel"><p class="bar-panel-label">Acme has</p><ul>${LEAD_PRODUCTS.map(
     (p) => html`<li><a href="${p.href}"${raw(p.current ? ' aria-current="true"' : "")}><span class="bar-item-name">${p.name}</span></a></li>`,
   )}</ul></div></details></nav>`;
   const ours = html`${switcher}
