@@ -110,13 +110,13 @@ const PAGES: [string, string][] = [
 
 const ORGS: Org[] = [
   { slug: "bager-hansen", name: "Bager Hansen ApS", role: "admin" },
-  { slug: "osterbro-cykler", name: "Østerbro Cykler", role: "owner" },
-  { slug: "aero-kaffe", name: "Ærø Kaffebrænderi", role: "viewer" },
+  { slug: "olstue-globex", name: "Ølstue Globex", role: "owner" },
+  { slug: "aeble-example", name: "Æble & Co Example", role: "viewer" },
 ];
 
 // The person's user menu; `da` and `en` are this page in each language.
 const METTE = (_lang: Lang, da: string, en: string) => ({
-  name: "Mette Kjær",
+  name: "Mette Kexample",
   email: "mette@eksempel.dk",
   accountHref: "#",
   agentsHref: "#",
@@ -182,9 +182,9 @@ const REMINDERS = approval({
   why: { text: "Fakturaerne er mindst 14 dage forfaldne.", links: [{ label: "skillen Rykker for forfaldne fakturaer, trin 3", href: "#" }] },
   changes: {
     items: [
-      ["Nordkraft ApS #2041", "33 dage", "12.400 kr."],
+      ["Acme Nord ApS #2041", "33 dage", "12.400 kr."],
       ["Bager Hansen ApS #2038", "21 dage", "3.150 kr."],
-      ["Østerbro Cykler #2044", "16 dage", "8.720 kr."],
+      ["Ølstue Globex #2044", "16 dage", "8.720 kr."],
     ],
     total: 14,
     moreHref: "#",
@@ -213,10 +213,10 @@ const REMINDERS_DONE = approval({
   agent: "Spring",
   onBehalfOf: "Maria (Økonomi)",
   title: "Spring vil sende 3 betalingspåmindelser",
-  changes: { items: [["Ærø Kaffebrænderi #2011", "18 dage", "980 kr."], ["Nordkraft ApS #2016", "15 dage", "4.300 kr."], ["Bager Hansen ApS #2019", "14 dage", "1.250 kr."]] },
+  changes: { items: [["Æble & Co Example #2011", "18 dage", "980 kr."], ["Acme Nord ApS #2016", "15 dage", "4.300 kr."], ["Bager Hansen ApS #2019", "14 dage", "1.250 kr."]] },
   effects: [{ text: "Sender 3 mails fra finance@" }, { text: "Kan ikke fortrydes", tone: "warning" }],
   approve: { label: "Godkend og send", action: "#" },
-  outcome: { status: "approved", by: "Mette Kjær", at: new Date(Date.UTC(2026, 10, 4, 9, 41)), note: "Påmindelserne er sendt." },
+  outcome: { status: "approved", by: "Mette Kexample", at: new Date(Date.UTC(2026, 10, 4, 9, 41)), note: "Påmindelserne er sendt." },
 });
 
 // A change to a channel's setup, as Spring's channel card shows one: only what differs.
@@ -224,7 +224,7 @@ const BRIEF_DIFF = diff({
   lang: "da",
   label: "Kanalen #økonomi",
   fields: [
-    { label: "Ejere", before: "Maria Holm", after: "Maria Holm, Jonas Holm" },
+    { label: "Ejere", before: "Maria Hexample", after: "Maria Hexample, Jonas Hexample" },
     { label: "Procedurer", before: "", after: "Rykker for forfaldne fakturaer" },
   ],
   lines: [
@@ -236,9 +236,9 @@ const BRIEF_DIFF = diff({
 });
 
 const people = [
-  ["Mette Kjær", "mette@eksempel.dk", "Administrator", true, false, 1240],
-  ["Jonas Holm", "jonas@eksempel.dk", "Medlem", true, true, 87],
-  ["Aisha Rahman", "aisha@eksempel.dk", "Medlem", false, true, 3],
+  ["Mette Kexample", "mette@eksempel.dk", "Administrator", true, false, 1240],
+  ["Jonas Hexample", "jonas@eksempel.dk", "Medlem", true, true, 87],
+  ["Aisha Rexample", "aisha@eksempel.dk", "Medlem", false, true, 3],
 ] as const;
 
 // Små bevægelser (D-53): the seven micro-interactions, drawn as the server draws them. The scripts that
@@ -247,9 +247,9 @@ const people = [
 const MICRO_NOW = new Date("2026-11-22T08:00:00Z");
 const MICRO_SITES: [string, string, string][] = [
   ["Bager Hansen", "bager-hansen", "2026-11-22T09:20:00Z"],
-  ["Mette Frisør", "mette-frisor", "2026-11-22T08:40:00Z"],
-  ["Nørrebro Cykler", "norrebro-cykler", "2026-11-22T07:30:00Z"],
-  ["Kaffebaren", "kaffebaren", "2026-11-25T12:00:00Z"],
+  ["Example Frisør", "example-frisor", "2026-11-22T08:40:00Z"],
+  ["Example Cykler", "example-cykler", "2026-11-22T07:30:00Z"],
+  ["Café Example", "cafe-example", "2026-11-25T12:00:00Z"],
 ];
 const MICRO_ROWS = sortByCutoff(MICRO_SITES, (r) => r[2], MICRO_NOW);
 const microTable = table({
@@ -310,8 +310,8 @@ const wideTable = table({
   columns: [{ label: "Nummer" }, { label: "Kunde" }, { label: "Udstedt" }, { label: "Forfalder" }, { label: "Status" }, { label: "Beløb (kr.)", num: true }, { label: "Moms (kr.)", num: true }],
   rows: [
     ["2026-0412", "Bager Hansen ApS", "1. okt. 2026", "15. okt. 2026", tag("Betalt", "success"), "12.500,00", "3.125,00"],
-    ["2026-0413", "Østerbro Cykler", "3. okt. 2026", "17. okt. 2026", tag("Forfalder snart", "warning"), "4.180,00", "1.045,00"],
-    ["2026-0414", "Ærø Kaffebrænderi", "5. okt. 2026", "5. okt. 2026", tag("Overskredet", "danger"), "980,50", "245,13"],
+    ["2026-0413", "Ølstue Globex", "3. okt. 2026", "17. okt. 2026", tag("Forfalder snart", "warning"), "4.180,00", "1.045,00"],
+    ["2026-0414", "Æble & Co Example", "5. okt. 2026", "5. okt. 2026", tag("Overskredet", "danger"), "980,50", "245,13"],
   ],
 });
 
@@ -424,7 +424,7 @@ ${checksTable}
 <section><h2>Formular</h2>
 <p>Sådan ser formularen ud, når den er sendt med fejl: en oversigt øverst, der får fokus og linker til hvert felt, og fejlen ved feltet. De påkrævede felter står med ord, fordi de er færrest her.</p>
 ${card(html`${FORM_ERRORS}<form class="form" method="post" action="#">
-${field({ label: "Navn", name: "name", value: "Mette Kjær", autocomplete: "name" })}
+${field({ label: "Navn", name: "name", value: "Mette Kexample", autocomplete: "name" })}
 ${field({ label: "Mail", name: "email", type: "email", value: "mette@eksempel", required: true, error: "Skriv en hel mailadresse, fx navn@firma.dk.", autocomplete: "email" })}
 ${field({ label: "Rolle", name: "role", control: "select", required: true, hint: "Administratorer kan slå produkter til og fra for andre.", error: "Vælg, hvad Mette skal kunne.", options: [{ value: "", label: "Vælg en rolle", selected: true }, { value: "member", label: "Medlem" }, { value: "admin", label: "Administrator" }] })}
 ${field({ label: "Besked til Mette", name: "note", control: "textarea" })}
@@ -546,14 +546,14 @@ export function demoPage(): string {
 
 
 const ADMINS = [
-  { name: "Jonas Holm", email: "jonas@eksempel.dk" },
-  { name: "Aisha Rahman", email: "aisha@eksempel.dk" },
+  { name: "Jonas Hexample", email: "jonas@eksempel.dk" },
+  { name: "Aisha Rexample", email: "aisha@eksempel.dk" },
 ];
 
 function standard(name: string, lang: Lang): StandardPage {
   const orgs = ORGS.map((o) => ({ ...o, href: `/o/${o.slug}/` }));
   if (name === "choose-org")
-    return chooseOrgPage({ lang, product: "DataSpring", lastHere: "osterbro-cykler", orgs: orgs.map((o, i) => ({ ...o, lastUsed: new Date(Date.UTC(2026, 9, 12 - i * 3, 9, 30)) })) });
+    return chooseOrgPage({ lang, product: "DataSpring", lastHere: "olstue-globex", orgs: orgs.map((o, i) => ({ ...o, lastUsed: new Date(Date.UTC(2026, 9, 12 - i * 3, 9, 30)) })) });
   if (name === "no-org") return noOrgPage({ lang, product: "DataSpring", email: "mette@eksempel.dk", ask: ADMINS, accountHref: "#" });
   const reason = name.slice("refused-".length) as Refusal;
   return refusedPage({
@@ -561,7 +561,7 @@ function standard(name: string, lang: Lang): StandardPage {
     reason,
     org: ORGS[0]!.name,
     orgs,
-    people: reason === "org_suspended" ? [{ name: "Mette Kjær", email: "mette@eksempel.dk" }] : reason === "not_signed_in" || reason === "org_required" || reason === "org_mismatch" || reason === "account_unavailable" ? undefined : ADMINS,
+    people: reason === "org_suspended" ? [{ name: "Mette Kexample", email: "mette@eksempel.dk" }] : reason === "not_signed_in" || reason === "org_required" || reason === "org_mismatch" || reason === "account_unavailable" ? undefined : ADMINS,
     signInHref: "#",
     billingHref: "#",
     roleNeeded: "admin",

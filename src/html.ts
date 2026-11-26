@@ -1728,7 +1728,7 @@ const followsLinks = (links: Link[], t: AgentText, lang: Lang) =>
  *  D-52: one decision closes them all), so nobody approves something already rejected. */
 export type ApprovalOutcome = {
   status: "approved" | "rejected" | "expired";
-  /** Who decided: "Peter Engelbrecht". Not for an expired request. */
+  /** Who decided: "Petra Example". Not for an expired request. */
   by?: Content;
   at?: When;
   /** What follows from it, in Spring's words: "Påmindelserne er sendt." */
@@ -1759,7 +1759,7 @@ export type ApprovalOptions = {
    *  fakturaer, trin 3". */
   why?: { text: Content; links?: Link[] };
   /** What it changes, one item each: an item is one Content, or an array of parts written with " · "
-   *  between them (["Nordkraft ApS #2041", "33 dage", "12.400 kr."]). The first `show` (3) are drawn,
+   *  between them (["Acme Nord ApS #2041", "33 dage", "12.400 kr."]). The first `show` (3) are drawn,
    *  then "+k flere", where k is `total` (default: the items' count) less those drawn, linked to
    *  `moreHref`. So a caller can pass only the first few of a long list. */
   changes: { items: Content[]; total?: number; show?: number; moreHref?: string };

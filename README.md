@@ -180,7 +180,7 @@ const bar: BarOptions = {
   },
   products: { items: [{ name: "DataSpring", href: "/o/acme/", current: true }, { name: "SiteSpring", href: "https://…/o/acme/" }], accountHref: "https://account.forspring.ai/o/acme/" },
   userMenu: {
-    name: "Peter Engelbrecht", email: "peter@…",
+    name: "Petra Example", email: "petra@example.com",
     accountHref: "https://account.forspring.ai/",
     agentsHref: "https://account.forspring.ai/o/acme/agents?product=dataspring",
     languages: { da: "?lang=da", en: "?lang=en" },
@@ -410,7 +410,7 @@ approval({
 - **Effects:** short facts; `tone: "warning"` or `"danger"` adds a triangle or diamond and bold words.
 - **The decision is the server's.** Approve and reject are plain POST forms with your hidden fields.
   Check the CSRF token, that the person may decide, and that nobody decided first. Then draw every
-  copy of the request with `outcome` ("Godkendt af Mette Kjær · 4. nov. 2026, 10.41", "Afvist",
+  copy of the request with `outcome` ("Godkendt af Mette Kexample · 4. nov. 2026, 10.41", "Afvist",
   "Udløbet"), which replaces the buttons and the expiry, so nobody approves something already rejected.
 - **`diff({ lang, label, fields, lines })`** shows a change the caller computed: `fields` as a table of
   field, "Før" and "Efter" (a missing value is "Ingen"); `lines` with `kind: "same" | "added" |
