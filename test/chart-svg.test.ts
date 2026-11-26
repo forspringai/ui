@@ -47,7 +47,7 @@ describe("structure", () => {
   test("a single series has no legend and uses the first chart slot", () => {
     const one = { ...line, y: [line.y[0]!] };
     const s = chartSvg(one, opts);
-    expect(s).not.toContain("Butik");
+    expect(s).not.toContain("Butik (DKK)");
     expect(s).toContain(`stroke="${ROLES.light["chart-1"]}"`);
   });
 
@@ -163,6 +163,32 @@ describe("never throws", () => {
     expect(chartSvg({ ...line, rows: [line.rows[0]!] }, opts)).toContain("<path");
     expect(chartSvg({ ...line, rows: line.rows.map((r) => ({ ...r, shop: 7, web: 7 })) }, opts)).toContain("<path");
   });
+});
+
+describe("alt text and labelled values", () => {
+  test("an SVG title and desc say what the chart shows", () => {
+    const s = chartSvg(line, opts);
+    expect(s).toContain("<title>Omsætning pr. dag</title>");
+    const desc = /<desc>([^<]*)<\/desc>/.exec(s)![1]!;
+    expect(desc).toBe("Linjediagram. Serier: Butik, Webshop. Dag fra 17. nov 2026 til 21. nov 2026. Værdier fra 4.200 til 16.345.");
+    expect(/<desc>([^<]*)<\/desc>/.exec(chartSvg(bar, { ...opts, lang: "en" }))![1]).toBe("Bar chart. Series: Antal. Produkt from Rugbrød to Tebirkes. Values from 80 to 200.");
+    expect(chartSvg({ ...bar, rows: [] }, opts)).toContain("Ingen data.</desc>");
+  });
+
+  test("bars carry their values where they fit; a line carries its last value", () => {
+    const b = chartSvg(bar, opts);
+    for (const v of ["120", "80", "200"]) expect(b).toContain(`>${v}</text>`);
+    const l = chartSvg({ ...line, y: [line.y[0]!] }, opts);
+    expect(l).toContain(">16.345</text>");
+    // two series that end close together: the second label is dropped, never overprinted
+    const close = chartSvg({ ...line, rows: line.rows.map((r) => ({ ...r, web: r.shop ?? null })) }, opts);
+    expect(count(close, />16\.345</g)).toBe(1);
+  });
+});
+
+test("colours are token values: the module holds no hex literal of its own", async () => {
+  const src = await (await import("node:fs/promises")).readFile(new URL("../src/chart-svg.ts", import.meta.url), "utf8");
+  expect(src.replace(/\/\/.*$/gm, "")).not.toMatch(/#[0-9a-fA-F]{3,8}\b|rgb\(|hsl\(/);
 });
 
 test("deterministic: the same input gives the same string", () => {

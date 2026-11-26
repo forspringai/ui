@@ -147,6 +147,12 @@ function fit(s, size, max) {
     const keep = Math.max(1, Math.floor(max / (size * 0.56)) - 1);
     return `${s.slice(0, keep)}…`;
 }
+const defaultDecimals = (s) => s.decimals !== undefined && Number.isFinite(s.decimals) ? Math.max(0, Math.trunc(s.decimals)) : s.type === "money" ? 2 : 0;
+/** A value as its label shows it: the number in the reader's marks, with the percent sign for a percent. */
+function valueText(v, s, lang) {
+    const body = formatNumber(v, defaultDecimals(s), lang);
+    return s.type === "percent" ? `${body}${NBSP}%` : body;
+}
 /**
  * The chart as an SVG document string, `width` by `height` px. See the header for what the output promises and for the font
  * the rasteriser must load.
@@ -179,6 +185,31 @@ export function chartSvg(chart, opts) {
     // data: values[s][i] a finite number or null
     const values = series.map((s) => rows.map((r) => num(r[s.key])));
     const hasData = values.some((vs) => vs.some((v) => v !== null));
+    const describe = () => {
+        const kindWord = lang === "da" ? (kind === "bar" ? "Søjlediagram" : "Linjediagram") : kind === "bar" ? "Bar chart" : "Line chart";
+        const names = series.map((x) => x.label).join(", ");
+        const parts = [kindWord + "."];
+        if (names !== "")
+            parts.push(`${lang === "da" ? "Serier" : "Series"}: ${names}.`);
+        if (rows.length > 0) {
+            const at = (i) => {
+                const v = rows[i]?.[xKey];
+                return v === null || v === undefined ? "" : xType === "date" && typeof v === "string" ? formatDate(v, lang) : String(v);
+            };
+            const a = at(0);
+            const b = at(rows.length - 1);
+            if (a !== "" && b !== "")
+                parts.push(lang === "da" ? `${all.x?.label ?? ""} fra ${a} til ${b}.` : `${all.x?.label ?? ""} from ${a} to ${b}.`);
+        }
+        if (!hasData)
+            parts.push(words.noData + ".");
+        else {
+            const fl = values.flat().filter((v) => v !== null);
+            const s0 = series[0];
+            parts.push(lang === "da" ? `Værdier fra ${valueText(Math.min(...fl), s0, lang)} til ${valueText(Math.max(...fl), s0, lang)}.` : `Values from ${valueText(Math.min(...fl), s0, lang)} to ${valueText(Math.max(...fl), s0, lang)}.`);
+        }
+        return parts.join(" ");
+    };
     // header: title, then legend (2+ series)
     const left = 16;
     const right = W - 16;
@@ -222,7 +253,7 @@ export function chartSvg(chart, opts) {
     }
     if (!hasData) {
         body.push(text(W / 2, (top + bottom) / 2 + 4, words.noData, { size: 14, fill: muted, anchor: "middle" }));
-        return doc(W, H, bg, body, mode, lang, chart);
+        return doc(W, H, bg, body, lang, chart, describe());
     }
     // y domain
     const flat = values.flat().filter((v) => v !== null);
@@ -335,10 +366,15 @@ export function chartSvg(chart, opts) {
                 const top2 = Math.min(y, zero);
                 const h = Math.max(1, Math.abs(zero - y));
                 body.push(`<rect x="${n(x + 0.5)}" y="${n(top2)}" width="${n(Math.max(1, barW - 1))}" height="${n(h)}" fill="${hue}"/>`);
+                // the value on the bar when it fits the bar's own width
+                const t = valueText(v, series[si], lang);
+                if (textWidth(t, 11) <= barW + 2 && (v >= 0 ? top2 - 4 > plotT - 4 : true))
+                    body.push(text(x + barW / 2, v >= 0 ? top2 - 4 : top2 + h + 12, t, { size: 11, fill: ink, anchor: "middle" }));
             });
         });
     }
     else {
+        const labelYs = [];
         series.forEach((_, si) => {
             const hue = c[`chart-${si + 1}`];
             let d = "";
@@ -353,6 +389,16 @@ export function chartSvg(chart, opts) {
             });
             if (d !== "")
                 body.push(`<path d="${d}" fill="none" stroke="${hue}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`);
+            const lastAt = values[si].reduce((acc, v, i) => (v === null ? acc : i), -1);
+            if (lastAt >= 0) {
+                const lv = values[si][lastAt];
+                const ly = yAt(lv) - 8;
+                const clash = labelYs.some((y) => Math.abs(y - ly) < 13);
+                if (!clash) {
+                    labelYs.push(ly);
+                    body.push(text(Math.min(xs[lastAt], plotR), ly, valueText(lv, series[si], lang), { size: 11, fill: ink, anchor: "end" }));
+                }
+            }
             if (count <= 31) {
                 values[si].forEach((v, i) => {
                     if (v !== null)
@@ -361,12 +407,13 @@ export function chartSvg(chart, opts) {
             }
         });
     }
-    return doc(W, H, bg, body, mode, lang, chart);
+    return doc(W, H, bg, body, lang, chart, describe());
 }
 /** The accessible name: the title, else the series' words. A plain text node, escaped. */
-function doc(W, H, bg, body, _mode, lang, chart) {
+function doc(W, H, bg, body, lang, chart, desc) {
     const title = typeof chart?.title === "string" && chart.title !== "" ? chart.title : lang === "da" ? "Diagram" : "Chart";
     return (`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">` +
+        `<title>${esc(title)}</title><desc>${esc(desc)}</desc>` +
         `<rect x="0" y="0" width="${W}" height="${H}" fill="${bg}"/>` +
         body.join("") +
         `</svg>`);
