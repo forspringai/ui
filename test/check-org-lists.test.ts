@@ -57,6 +57,19 @@ describe("org-lists: the green cases", () => {
     ] as const)
       expect(scanText("f.ts", line).some((f) => f.rule === "words"), line).toBe(hit);
   });
+
+  test("words stands down in a file that draws ui's own picker (D-82); control still finds a hand-drawn list there", () => {
+    // The account's sign-in org choice: the page title next to the package's orgPicker.
+    const usesPicker = 'import { orgPicker } from "@forspring/ui/pages";\nconst title = "Vælg organisation";\nexport const page = orgPicker({ lang: "da", action, orgs, fields });\n';
+    expect(scanText("org-choice.ts", usesPicker)).toEqual([]);
+    expect(scanText("p.tsx", 'import { OrgPicker } from "@forspring/ui/react";\n<h1>Choose an organization</h1>\n<OrgPicker orgs={orgs} />\n')).toEqual([]);
+    // The phrase alone, or a call named orgPicker without the package, is still a hand-drawn heading.
+    expect(scanText("own.ts", 'const title = "Vælg organisation";\n').map((f) => f.rule)).toEqual(["words"]);
+    expect(scanText("own.ts", 'const orgPicker = () => "";\nconst title = "Vælg organisation";\norgPicker();\n').map((f) => f.rule)).toEqual(["words"]);
+    // A second list drawn by hand in the same file is still found by control.
+    const both = usesPicker + "export const rows = orgs.map((o) => `<li><a href=\"/o/${o.slug}/\">${o.name}</a></li>`);\n";
+    expect(scanText("both.ts", both).map((f) => f.rule)).toEqual(["control"]);
+  });
 });
 
 describe("org-lists: the allowlist", () => {
