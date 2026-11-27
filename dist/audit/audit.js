@@ -292,6 +292,8 @@ export function findings(obs, sc, width) {
         for (const t of obs.primaries)
             if (t.height < 43.5)
                 out.push({ rule: "target-primary", severity: "error", selector: t.selector, value: `${t.height}px tall`, expected: "at least 44px tall on a phone", note: "primary controls on phones (ui-standard §3)" });
+    if (!sc.rich && obs.buttons && obs.buttonTokens)
+        out.push(...buttonShapes(obs.buttons, obs.buttonTokens, width < PHONE_WIDTH));
     for (const g of obs.orgLists ?? [])
         out.push({
             rule: "own-org-list",
@@ -509,6 +511,58 @@ export function popoverFindings(list, t) {
     }
     return out;
 }
+export const BUTTON_SHAPES = {
+    desktop: [
+        { name: "default", height: "control", padY: "space3", padX: "space5", radius: "radius", font: "body", weight: "600", border: 1 },
+        { name: "small", height: "controlSmall", padY: "space1", padX: "space3", radius: "radius", font: "small", weight: "600", border: 1 },
+        { name: "icon-small", height: "controlSmall", padX: "square", radius: "radius", border: 1 },
+        { name: "tag-x", height: "space6", padX: "square", radius: "round", border: 0 },
+    ],
+    phone: [
+        { name: "default", height: "control", padY: "space3", padX: "space5", radius: "radius", font: "body", weight: "600", border: 1 },
+        { name: "small", height: "touch", padY: "space3", padX: "space3", radius: "radius", font: "small", weight: "600", border: 1 },
+        { name: "icon-small", height: "touch", padX: "square", radius: "radius", border: 1 },
+        { name: "tag-x", height: "touch", padX: "square", radius: "round", border: 0 },
+    ],
+};
+/** What keeps a button from a shape, in words ([] when it is that shape). */
+export function shapeMisses(b, s, t) {
+    const off = (a, e) => Math.abs(a - e) > 0.5;
+    const miss = [];
+    const h = t[s.height];
+    // A label that wraps makes the button taller than its size; it is not shorter.
+    if (b.lines > 1 ? b.height < h - 0.5 : off(b.height, h))
+        miss.push(`height ${b.height}px (${h})`);
+    if (s.padX === "square") {
+        if (off(b.width, b.height))
+            miss.push(`${b.width}x${b.height}px, not square`);
+    }
+    else if (s.padX !== undefined && off(b.padX, t[s.padX]))
+        miss.push(`padding x ${b.padX}px (${t[s.padX]})`);
+    if (s.padY !== undefined && off(b.padY, t[s.padY]))
+        miss.push(`padding y ${b.padY}px (${t[s.padY]})`);
+    if (s.radius === "round" ? b.radius < Math.min(b.width, b.height) / 2 - 0.5 : off(b.radius, t[s.radius]))
+        miss.push(`radius ${b.radius}px (${s.radius === "round" ? "round" : t[s.radius]})`);
+    if (s.font !== undefined && off(b.font, t[s.font]))
+        miss.push(`type ${b.font}px (${t[s.font]})`);
+    if (s.weight !== undefined && b.weight !== s.weight)
+        miss.push(`weight ${b.weight} (${s.weight})`);
+    if (off(b.border, s.border))
+        miss.push(`border ${b.border}px (${s.border})`);
+    return miss;
+}
+export function buttonShapes(list, t, phone) {
+    const shapes = phone ? BUTTON_SHAPES.phone : BUTTON_SHAPES.desktop;
+    const out = [];
+    for (const b of list) {
+        const tries = shapes.map((s) => ({ s, miss: shapeMisses(b, s, t) })).sort((a, c) => a.miss.length - c.miss.length);
+        if (tries[0].miss.length === 0)
+            continue;
+        const near = tries[0];
+        out.push({ rule: "button-shape", severity: "warning", selector: b.selector, value: `nearest the ${near.s.name} size: ${near.miss.join(", ")}`, expected: `one of the button inventory's sizes (${shapes.map((s) => s.name).join(", ")}) in the page's tokens`, note: "draw buttons with ui's button() or its classes (.small, .icon-only); never a size of your own (ui.appspring.app/buttons, D-69, D-78)" });
+    }
+    return out;
+}
 /**
  * menu-row-inset (D-76): in an open menu, every row and control that spans it (half its inner width or
  * more) sits on one inline inset, start and end, within 1px: the rows' hover and chosen surfaces, a
@@ -710,6 +764,9 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
     // url -> resource type, and whether Chromium fetched it (a redirect hop) or the audit answered it.
     const offOrigin = new Map();
     const scripts = [];
+    // Where the page went if a script took it elsewhere after load (D-78).
+    let navigatedTo = null;
+    let current = null;
     try {
         // Off-origin requests are recorded and answered empty, never fetched: the run stays offline
         // and the same in CI as on a laptop, and the finding does not depend on the third party.
@@ -771,6 +828,11 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
         let res;
         try {
             res = await page.goto(url, { waitUntil: "load", timeout: 30_000 });
+            current = page;
+            page.on("framenavigated", (f) => {
+                if (f === page.mainFrame())
+                    navigatedTo = f.url();
+            });
         }
         catch (e) {
             found.push({ rule: "page-load", severity: "error", selector: "document", value: e.message.split("\n")[0], expected: "the page loads", note: "check the URL and that the server is running" });
@@ -806,6 +868,12 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
             found.push({ rule: "page-load", severity: "review", selector: "document", value: `still changing ${SETTLE_MAX / 1000} s after load`, expected: `no requests or DOM changes for ${SETTLE_QUIET} ms`, note: "measured anyway; give --wait-for the element that shows the page is drawn" });
         if (opts.settle)
             await page.waitForTimeout(opts.settle);
+        // A page that a script took elsewhere is not the page asked for: say so rather than measure another page under its
+        // address (D-78). A change of fragment, or of the query alone by history.replaceState, is the same page.
+        const here = new URL(page.url());
+        const asked = new URL(res.url());
+        if (here.origin !== asked.origin || here.pathname !== asked.pathname)
+            throw new Error("because of a navigation");
         await page.evaluate(() => document.fonts.ready.then(() => undefined));
         const obs = await page.evaluate(collect);
         found.push(...findings(obs, sc, width));
@@ -846,6 +914,18 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
         const bytes = (await Promise.all(scripts)).reduce((a, b) => a + b, 0);
         if (bytes > opts.budgetJs)
             found.push({ rule: "js-budget", severity: "error", selector: "script", value: `${kb(bytes)} gzipped in ${scripts.length} file${scripts.length === 1 ? "" : "s"}`, expected: `at most ${kb(opts.budgetJs)} (--budget-js)`, note: "console pages ship no script files by default; htmx pages about 20 KB" });
+    }
+    catch (e) {
+        // A page that leaves itself by script after load (a redirect to sign-in, a client router) ends that page's audit,
+        // not the run (D-78): before, the whole audit died and wrote no report.
+        const message = e?.message ?? String(e);
+        if (!/Execution context was destroyed|because of a navigation|frame was detached/.test(message))
+            throw e;
+        // The error can come before the navigation commits: give it a moment, then the page's own address says where it went.
+        const left = current;
+        await left?.waitForLoadState("domcontentloaded", { timeout: 5_000 }).catch(() => undefined);
+        const to = navigatedTo ?? (left && left.url() !== url ? left.url() : undefined);
+        found.push({ rule: "page-load", severity: "error", selector: "document", value: `left for ${to ?? "another page"} after load`, expected: "the page itself, not a script redirect", note: "a script navigated away while the audit measured: audit the page it goes to, or give --wait-for the element that shows it is drawn; with --cookie-env, check the session is one the page accepts" });
     }
     finally {
         await context.close();

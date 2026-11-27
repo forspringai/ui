@@ -47,6 +47,11 @@ export type SlotObservation = {
 
 export type TargetObservation = { selector: string; width: number; height: number };
 
+/** A button as drawn (D-78): its box, padding, corner, type and border, and how many lines its label takes. */
+export type ButtonObservation = { selector: string; height: number; width: number; padY: number; padX: number; radius: number; weight: string; font: number; border: number; lines: number };
+/** The page's own values of the tokens the button inventory's sizes are made of (ui's defaults where it has none). */
+export type ButtonTokens = { control: number; controlSmall: number; touch: number; space1: number; space3: number; space5: number; space6: number; radius: number; body: number; small: number };
+
 /** A list of organisations the page draws outside @forspring/ui's orgList() (D-59): its box and how many orgs it offers. */
 export type OrgListObservation = { selector: string; orgs: number; kind: "links" | "choices" | "select" };
 
@@ -63,6 +68,9 @@ export type Observations = {
   slots: SlotObservation[];
   /** Org lists drawn by hand, outside the package's data-forspring-org-list (D-59). */
   orgLists?: OrgListObservation[];
+  /** Every button that draws a box, and the page's token values, for button-shape (D-78). */
+  buttons?: ButtonObservation[];
+  buttonTokens?: ButtonTokens;
 };
 
 export function collect(): Observations {
@@ -302,7 +310,51 @@ export function collect(): Observations {
   }
 
   const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
-  return { texts, boxes, smallTargets, primaries, fonts, slots, orgLists };
+  // button-shape (D-78): every button that draws a box (a fill or a border), as the button inventory measures one.
+  // Not the switch or Google's button (their own sizes), an org list's rows (list rows), or a link-styled button.
+  const tokenPx = (name: string, fallback: number) => {
+    if (!getComputedStyle(document.documentElement).getPropertyValue(name).trim()) return fallback;
+    const probe = document.createElement("div");
+    probe.style.cssText = `position:absolute;visibility:hidden;inline-size:var(${name})`;
+    document.body.append(probe);
+    const w = probe.getBoundingClientRect().width;
+    probe.remove();
+    return Math.round(w * 100) / 100;
+  };
+  const buttonTokens: ButtonTokens = {
+    control: tokenPx("--control-height", 44),
+    controlSmall: tokenPx("--control-height-small", 32),
+    touch: tokenPx("--control-touch", 44),
+    space1: tokenPx("--space-1", 4),
+    space3: tokenPx("--space-3", 12),
+    space5: tokenPx("--space-5", 20),
+    space6: tokenPx("--space-6", 24),
+    radius: tokenPx("--radius-button", 3),
+    body: tokenPx("--text-chrome-body", 14),
+    small: tokenPx("--text-content-small", 13),
+  };
+  const buttons: ButtonObservation[] = [];
+  for (const el of document.querySelectorAll('button, .button, input[type="submit"], input[type="button"], input[type="reset"]')) {
+    if (el.matches('[role="switch"], .switch, .org-picker-row') || el.closest(".gsi, [data-slot]") || !rendered(el)) continue;
+    const r = el.getBoundingClientRect();
+    if (!onScreen(r) || r.width < 1) continue;
+    const cs = getComputedStyle(el);
+    const border = parseFloat(cs.borderTopWidth);
+    if (border === 0 && parse(cs.backgroundColor)[3] === 0 && !el.matches(".tag-remove")) continue;
+    let lines = 0;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const tops: number[] = [];
+    while (walker.nextNode()) {
+      const range = document.createRange();
+      range.selectNodeContents(walker.currentNode);
+      for (const q of range.getClientRects()) if (q.width > 0 && !tops.some((t) => Math.abs(t - q.top) < 4)) tops.push(q.top);
+    }
+    lines = tops.length;
+    const r1 = (n: number) => Math.round(n * 10) / 10;
+    buttons.push({ selector: selector(el), height: r1(r.height), width: r1(r.width), padY: r1(parseFloat(cs.paddingTop)), padX: r1(parseFloat(cs.paddingLeft)), radius: r1(Math.min(parseFloat(cs.borderTopLeftRadius), 999)), weight: cs.fontWeight, font: r1(parseFloat(cs.fontSize)), border: r1(border), lines });
+  }
+
+  return { texts, boxes, smallTargets, primaries, fonts, slots, orgLists, buttons, buttonTokens };
 }
 
 // --- Layout: the spacing, alignment, popover and surface checks (D-41) ----------------------------

@@ -255,7 +255,56 @@ export function collect() {
         }
     }
     const fonts = [...new Set([...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/^["']|["']$/g, "")))];
-    return { texts, boxes, smallTargets, primaries, fonts, slots, orgLists };
+    // button-shape (D-78): every button that draws a box (a fill or a border), as the button inventory measures one.
+    // Not the switch or Google's button (their own sizes), an org list's rows (list rows), or a link-styled button.
+    const tokenPx = (name, fallback) => {
+        if (!getComputedStyle(document.documentElement).getPropertyValue(name).trim())
+            return fallback;
+        const probe = document.createElement("div");
+        probe.style.cssText = `position:absolute;visibility:hidden;inline-size:var(${name})`;
+        document.body.append(probe);
+        const w = probe.getBoundingClientRect().width;
+        probe.remove();
+        return Math.round(w * 100) / 100;
+    };
+    const buttonTokens = {
+        control: tokenPx("--control-height", 44),
+        controlSmall: tokenPx("--control-height-small", 32),
+        touch: tokenPx("--control-touch", 44),
+        space1: tokenPx("--space-1", 4),
+        space3: tokenPx("--space-3", 12),
+        space5: tokenPx("--space-5", 20),
+        space6: tokenPx("--space-6", 24),
+        radius: tokenPx("--radius-button", 3),
+        body: tokenPx("--text-chrome-body", 14),
+        small: tokenPx("--text-content-small", 13),
+    };
+    const buttons = [];
+    for (const el of document.querySelectorAll('button, .button, input[type="submit"], input[type="button"], input[type="reset"]')) {
+        if (el.matches('[role="switch"], .switch, .org-picker-row') || el.closest(".gsi, [data-slot]") || !rendered(el))
+            continue;
+        const r = el.getBoundingClientRect();
+        if (!onScreen(r) || r.width < 1)
+            continue;
+        const cs = getComputedStyle(el);
+        const border = parseFloat(cs.borderTopWidth);
+        if (border === 0 && parse(cs.backgroundColor)[3] === 0 && !el.matches(".tag-remove"))
+            continue;
+        let lines = 0;
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        const tops = [];
+        while (walker.nextNode()) {
+            const range = document.createRange();
+            range.selectNodeContents(walker.currentNode);
+            for (const q of range.getClientRects())
+                if (q.width > 0 && !tops.some((t) => Math.abs(t - q.top) < 4))
+                    tops.push(q.top);
+        }
+        lines = tops.length;
+        const r1 = (n) => Math.round(n * 10) / 10;
+        buttons.push({ selector: selector(el), height: r1(r.height), width: r1(r.width), padY: r1(parseFloat(cs.paddingTop)), padX: r1(parseFloat(cs.paddingLeft)), radius: r1(Math.min(parseFloat(cs.borderTopLeftRadius), 999)), weight: cs.fontWeight, font: r1(parseFloat(cs.fontSize)), border: r1(border), lines });
+    }
+    return { texts, boxes, smallTargets, primaries, fonts, slots, orgLists, buttons, buttonTokens };
 }
 /**
  * The layout measurements (D-41), as collect(): one self-contained function sent to Chromium as

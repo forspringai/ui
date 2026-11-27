@@ -47,6 +47,32 @@ export type TargetObservation = {
     width: number;
     height: number;
 };
+/** A button as drawn (D-78): its box, padding, corner, type and border, and how many lines its label takes. */
+export type ButtonObservation = {
+    selector: string;
+    height: number;
+    width: number;
+    padY: number;
+    padX: number;
+    radius: number;
+    weight: string;
+    font: number;
+    border: number;
+    lines: number;
+};
+/** The page's own values of the tokens the button inventory's sizes are made of (ui's defaults where it has none). */
+export type ButtonTokens = {
+    control: number;
+    controlSmall: number;
+    touch: number;
+    space1: number;
+    space3: number;
+    space5: number;
+    space6: number;
+    radius: number;
+    body: number;
+    small: number;
+};
 /** A list of organisations the page draws outside @forspring/ui's orgList() (D-59): its box and how many orgs it offers. */
 export type OrgListObservation = {
     selector: string;
@@ -66,6 +92,9 @@ export type Observations = {
     slots: SlotObservation[];
     /** Org lists drawn by hand, outside the package's data-forspring-org-list (D-59). */
     orgLists?: OrgListObservation[];
+    /** Every button that draws a box, and the page's token values, for button-shape (D-78). */
+    buttons?: ButtonObservation[];
+    buttonTokens?: ButtonTokens;
 };
 export declare function collect(): Observations;
 /** A border box in page coordinates (viewport ones for popovers), px. */

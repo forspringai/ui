@@ -133,6 +133,11 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   invitation"), never "OK", "Submit" or "Klik her" (voice §6). An icon-only button needs `ariaLabel`.
   Don't pass `disabled`: it stays only so the account's markup keeps working (D-5); section 4 has
   what to do instead.
+- **Every button is one of the inventory's sizes** (ui.appspring.app/buttons, D-69): default, small,
+  icon-only small, or a tag's x. On a phone a small one takes the 44 px touch box and keeps its type.
+  ui-audit's `button-shape` (D-78, a warning for now) measures every button that draws a box against those
+  sizes, in the page's own tokens, and names what is off: a height, padding or type size of your own is
+  drift. Draw buttons with `button()` or ui's classes (`.small`, `.icon-only`), never with sizes of yours.
 - **`actions()`** is the row under a form or a card: `primary` (one, first), then `secondary` (ghost
   actions, Annuller as a link back), and `destructive` (a danger button or a `dialogTrigger()` to a
   confirm) apart at the far end (D-41). It keeps one height and the `--rhythm-actions` gap, and on a

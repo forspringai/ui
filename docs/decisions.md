@@ -2445,3 +2445,26 @@ each product's consent route uses, with a test, and the per-product Cache-Contro
 - **Also, papercut brand (d)1, a doc only:** usage.md's page frame now says that Forspring is `shell()`'s default
   chrome, not a tenant. A customer's surface passes its `app` or theme, so it never shows Forspring's brand by
   omission.
+
+## D-78: button-shape, and a page that leaves by script (0.55.0, 2026-11-27)
+
+cos's systemic live pass: hold each product's live pages to the button inventory and the red-lines.
+- **`button-shape` (a warning):** every button that draws a box (a fill or a border) is one of the inventory's
+  sizes: default, small, icon-only small, or a tag's x.
+  - On a phone a small control takes the 44 px touch box and keeps its type (D-65).
+  - The sizes are in token terms (control heights, space steps, the button radius, the chrome and small type),
+    resolved in the page's own tokens. ui's defaults apply where a page has none.
+  - Not held: the switch, Google's button, an org list's rows, a link-styled button, and a rich app (`--rich-app`,
+    which its data-slot checks hold).
+  - The finding names the nearest size and what is off ("padding x 10px (20)").
+  - The table is what the inventory measures. A browser test runs the audit on the inventory and expects no finding
+    at either width, so a size changed in components.css without the table fails ui's own CI. It is a warning until
+    the products' first live results are triaged.
+- **A page that leaves by script after load** (a redirect to sign-in, a client router) was a crash of the whole run,
+  with no report: "Execution context was destroyed". It is now a page-load error for that page, naming where it
+  went, and the other pages are audited. A page whose address changed while it settled is not measured under the
+  address it was asked for. The live pass met it on SiteSpring's console and DataSpring's app.
+- **Tests:**
+  - ui's buttons pass, and two drawn to sizes of their own warn at both widths;
+  - the inventory itself is clean;
+  - a page that redirects by script is a page-load error while the next page is still audited.
