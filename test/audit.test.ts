@@ -277,8 +277,9 @@ describe("single-page apps (D-16)", () => {
     const start = Date.now();
     await audit(options([`${base}/dist/demo/`], one), browser);
     // Well under the 10 s settle cap. The alignment measurer (D-66) takes about 2.5 s of it on the demo's
-    // index as it is now; each closed menu's own pass (D-74) adds about 15 ms.
-    expect(Date.now() - start).toBeLessThan(7_000);
+    // index as it is now; each closed menu's own pass (D-74) adds about 15 ms. 8 s, not 7: the whole run is about
+    // 6.2 s on an idle ralph and went past 7 at a load of 7 (27 Nov), which says nothing about settling.
+    expect(Date.now() - start).toBeLessThan(8_000);
   }, 60_000);
 });
 
@@ -546,10 +547,14 @@ describe("button-shape and a script redirect (D-78)", () => {
     const r = await audit(options([`${base}/dist/demo/buttons.html`], { budgetJs: 20 * 1024 }), browser);
     expect(all(r).filter((f) => f.rule === "button-shape").map((f) => `${f.width} ${f.selector} ${f.value}`)).toEqual([]);
   }, 120_000);
-  test("with a session, two pages in a row that bounce away stop the run (D-79): no sign-in started for each page left", async () => {
-    const r = await audit(options([`${base}/redirect/test/fixtures/alignment.html`, `${base}/redirect/test/fixtures/layout.html`, `${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"], cookie: "session=abcdefgh" }), browser);
+  test("with a session, two pages in a row that bounce to a sign-in stop the run (D-79): no sign-in started for each page left", async () => {
+    const r = await audit(options([`${base}/redirect/test/fixtures/sign-in.html`, `${base}/redirect/test/fixtures/sign-in.html`, `${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"], cookie: "session=abcdefgh" }), browser);
     expect(r.pages).toHaveLength(2);
-    expect(r.pages[1]!.findings.map((f) => f.value)).toContain("stopped: two pages in a row bounced away");
+    expect(r.pages[1]!.findings.map((f) => f.value)).toContain("stopped: two pages in a row bounced to a sign-in");
+  }, 120_000);
+  test("a redirect within the product to a page that is not a sign-in (one org's chooser to its home) does not stop the run (0.56.1)", async () => {
+    const r = await audit(options([`${base}/redirect/test/fixtures/alignment.html`, `${base}/redirect/test/fixtures/layout.html`, `${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"], cookie: "session=abcdefgh" }), browser);
+    expect(r.pages).toHaveLength(3);
   }, 120_000);
   test("a page that leaves by script after load is a page-load error for it; the other pages are still audited", async () => {
     const r = await audit(options([`${base}/test/fixtures/script-redirect.html`, `${base}/test/fixtures/button-shapes.html`], { widths: [1280], themes: ["light"] }), browser);

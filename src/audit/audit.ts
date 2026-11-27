@@ -992,7 +992,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     if (!/Execution context was destroyed|because of a navigation|frame was detached/.test(message)) throw e;
     // The error can come before the navigation commits: give it a moment, then the page's own address says where it went.
     const left = current as Page | null;
-    await left?.waitForLoadState("domcontentloaded", { timeout: 5_000 }).catch(() => undefined);
+    await left?.waitForURL((u) => u.href !== url, { timeout: 5_000, waitUntil: "commit" }).catch(() => undefined);
     const to = navigatedTo ?? (left && left.url() !== url ? left.url() : undefined);
     found.push({ rule: "page-load", severity: "error", selector: "document", value: `left for ${to ?? "another page"} after load`, expected: "the page itself, not a script redirect", note: "a script navigated away while the audit measured: audit the page it goes to, or give --wait-for the element that shows it is drawn; with --cookie-env, check the session is one the page accepts" });
   } finally {
@@ -1008,17 +1008,27 @@ export async function audit(opts: AuditOptions, browser: Browser): Promise<Audit
   const redlines: Redline[] = [];
   const pageShots: PageShot[] = [];
   const pages: PageResult[] = [];
-  // With a session, two pages in a row that bounce away (redirected, or left by script) mean the session no longer
-  // reaches the pages: the run stops there rather than send each remaining page into the product's sign-in (D-79).
+  // With a session, two pages in a row that bounce to a sign-in (redirected, or left by script, to another origin or a
+  // sign-in path) mean the session no longer reaches the pages: the run stops there rather than send each remaining
+  // page into the product's sign-in (D-79). A redirect within the product to a page that is not a sign-in (an org
+  // chooser with one org going to its home) is the product's design, not a lost session (0.56.1).
+  const signIn = (to: string, from: string) => {
+    try {
+      const t = new URL(to);
+      return t.origin !== new URL(from).origin || /sign-?in|log-?in|auth|oidc/i.test(t.pathname);
+    } catch {
+      return true;
+    }
+  };
   let bounced = 0;
   run: for (const url of opts.urls)
     for (const width of opts.widths)
       for (const theme of opts.themes) {
         const r = await auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines, pageShots);
         pages.push(r);
-        bounced = opts.cookie && r.findings.some((f) => f.rule === "page-load" && /^(redirected to|left for) /.test(f.value)) ? bounced + 1 : 0;
+        bounced = opts.cookie && r.findings.some((f) => f.rule === "page-load" && /^(redirected to|left for) /.test(f.value) && signIn(f.value.replace(/^(redirected to|left for) /, "").replace(/ after load$/, ""), url)) ? bounced + 1 : 0;
         if (bounced >= 2) {
-          r.findings.push({ rule: "page-load", severity: "error", selector: "document", value: "stopped: two pages in a row bounced away", expected: "a session that reaches the pages", note: "the --cookie-env session no longer reaches the audited pages, so the run stopped rather than start a sign-in for each page left; check the session, then run again (D-79)" });
+          r.findings.push({ rule: "page-load", severity: "error", selector: "document", value: "stopped: two pages in a row bounced to a sign-in", expected: "a session that reaches the pages", note: "the --cookie-env session no longer reaches the audited pages, so the run stopped rather than start a sign-in for each page left; check the session, then run again (D-79)" });
           break run;
         }
       }

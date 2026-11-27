@@ -2491,3 +2491,8 @@ areas/brand/live-audit-2026-11-27/. Most of what it found goes with each product
   - the report holds the page JPEGs;
   - a session run stops after two bounced pages;
   - the visual baselines are updated for `.go`.
+- **0.56.1: a bounce means a sign-in.** Only a page that goes to another origin or to a sign-in path (sign-in, login,
+  auth, oidc) counts towards the two-in-a-row stop. FlowSpring's `/` for an owner of one org redirects to that org's home,
+  as designed. 0.56.0 counted it and stopped the run after the first page. A page that leaves by script is now reported
+  with where it went once the address has changed. Before, a fast redirect was caught before it committed and was
+  reported as "another page".
