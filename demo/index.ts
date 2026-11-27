@@ -368,7 +368,7 @@ const FORM_ERRORS = raw(
 
 const body = html`${controls}
 ${crumbs("Placering", [{ label: "Forside", href: "#" }, { label: "Komponenter", href: "#" }])}
-<h1>Din Forspring-konto</h1>
+<h1>Din konto</h1>
 <p class="lede">Logget ind som <b>mette@eksempel.dk</b>. Alt på siden er tegnet af @forspring/ui uden script.</p>
 
 <section><h2>Beskeder</h2>
@@ -389,15 +389,15 @@ ${notice({ signal: "ok", title: "Alt kører", text: "Alle 14 tjek har meldt sig 
 </section>
 
 <section><h2>Knapper og mærker</h2>
-<div class="demo-row">${button({ label: "Gem" })}${button({ label: "Annuller", variant: "ghost", type: "button" })}${button({ label: "Slet kunden", variant: "danger", type: "button" })}${button({ label: "Åbn SiteSpring", href: "#" })}</div>
-<p class="fine">Ingen knap er slået fra (D-23). Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
+<div class="demo-row">${button({ label: "Gem" })}${button({ label: "Annuller", variant: "ghost", type: "button" })}${dialogTrigger({ dialog: "delete-site", href: "pages/delete-site.da.html", label: "Slet hjemmesiden", variant: "danger" })}${button({ label: "Åbn SiteSpring", href: "#" })}</div>
+<p class="fine">Ingen knap er slået fra. Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
 <div class="demo-row">${button({ label: "Tag imod", small: true })}${button({ label: "Afslå", variant: "ghost", small: true })}${button({ label: "Fjern", variant: "danger", small: true })}</div>
 <div class="demo-row">${tag("platform")}${tag("Denne enhed")}${tag("Ny", "primary")}${tag("Aktiv", "success")}${tag("Afventer", "warning")}${tag("Spærret", "danger")}</div>
 <div class="demo-row">${removableTag({ text: "Kok", remove: { label: "Fjern Kok fra Carla Ferreira", name: "role", value: "kok" } })}${removableTag({ text: "Bogholder", remove: { label: "Fjern Bogholder fra Carla Ferreira", name: "role", value: "bogholder" } })}</div>
 </section>
 
 <section><h2>Værktøjslinje</h2>
-<p>Felter, valg og knapper har samme højde i hver størrelse og står på én linje.</p>
+<p>Felter, valg og knapper har samme højde i hver størrelse og står på én linje, når der er plads. Ellers giver feltet plads først.</p>
 <form class="toolbar demo-row" method="get" action="#" role="search" aria-label="Søg i kunder"><input type="search" name="q" aria-label="Søg i kunder" placeholder="Søg i kunder"><select name="status" aria-label="Status"><option>Alle</option><option>Aktive</option><option>Spærrede</option></select>${button({ label: "Søg" })}${button({ label: "Ryd", variant: "ghost", type: "reset" })}</form>
 <div class="toolbar demo-row"><input class="small" type="search" aria-label="Filtrer fakturaer" placeholder="Filtrer"><select class="small" aria-label="Periode"><option>Denne måned</option><option>Sidste måned</option></select>${button({ label: "Eksporter", variant: "ghost", small: true, type: "button" })}<select class="small" aria-label="Valuta" disabled><option>DKK</option></select></div>
 </section>
@@ -677,10 +677,10 @@ function leadPage(): string {
   )}</ul></div></details></nav>`;
   const ours = html`${switcher}
 <form>${field({ name: "stage", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
-${field({ name: "owner", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}<button type="submit" class="ghost">Save</button></form>
+${field({ name: "owner", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}<button type="submit">Save</button></form>
 <p>${dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "ghost" })}</p>
 ${dialog({ id: "remove", title: "Remove the lead?", body: "This removes the lead and its notes.", close: "Keep", alert: true, actions: html`<button type="submit" class="danger">Remove</button>`, form: { action: "#" } })}`;
-  const withActions = html`<section><h2>With actions()</h2>
+  const withActions = html`<section><h2>Save, cancel and remove in one row</h2>
 <form>${field({ name: "stage2", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
 ${field({ name: "owner2", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}
 ${actions({ primary: button({ label: "Save" }), secondary: button({ label: "Cancel", variant: "ghost", href: "#" }), destructive: dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "danger" }) })}</form>

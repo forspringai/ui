@@ -18,7 +18,7 @@
 <fieldset><legend>Tema</legend><label><input type="radio" name="theme" value="system" checked> Som systemet</label><label><input type="radio" name="theme" value="light"> Lyst</label><label><input type="radio" name="theme" value="dark"> Mørkt</label></fieldset>
 </form>
 <nav class="crumbs" aria-label="Placering"><ol><li><a href="#">Forside</a></li><li><a href="#">Komponenter</a></li></ol></nav>
-<h1>Din Forspring-konto</h1>
+<h1>Din konto</h1>
 <p class="lede">Logget ind som <b>mette@eksempel.dk</b>. Alt på siden er tegnet af @forspring/ui uden script.</p>
 
 <section><h2>Beskeder</h2>
@@ -39,15 +39,15 @@
 </section>
 
 <section><h2>Knapper og mærker</h2>
-<div class="demo-row"><button type="submit">Gem</button><button class="ghost" type="button">Annuller</button><button class="danger" type="button">Slet kunden</button><a class="button" href="#">Åbn SiteSpring</a></div>
-<p class="fine">Ingen knap er slået fra (D-23). Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
+<div class="demo-row"><button type="submit">Gem</button><button class="ghost" type="button">Annuller</button><a class="button danger" href="pages/delete-site.da.html" data-dialog-open="delete-site">Slet hjemmesiden</a><a class="button" href="#">Åbn SiteSpring</a></div>
+<p class="fine">Ingen knap er slået fra. Må man ikke gøre noget, står knappen der ikke, og siden siger hvorfor: “Kun administratorer kan invitere folk.”</p>
 <div class="demo-row"><button class="small" type="submit">Tag imod</button><button class="ghost small" type="submit">Afslå</button><button class="danger small" type="submit">Fjern</button></div>
 <div class="demo-row"><span class="tag">platform</span><span class="tag">Denne enhed</span><span class="tag primary">Ny</span><span class="tag success">Aktiv</span><span class="tag warning">Afventer</span><span class="tag danger">Spærret</span></div>
 <div class="demo-row"><span class="tag removable">Kok<button class="tag-remove" type="submit" name="role" value="kok"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span class="visually-hidden">Fjern Kok fra Carla Ferreira</span></button></span><span class="tag removable">Bogholder<button class="tag-remove" type="submit" name="role" value="bogholder"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span class="visually-hidden">Fjern Bogholder fra Carla Ferreira</span></button></span></div>
 </section>
 
 <section><h2>Værktøjslinje</h2>
-<p>Felter, valg og knapper har samme højde i hver størrelse og står på én linje.</p>
+<p>Felter, valg og knapper har samme højde i hver størrelse og står på én linje, når der er plads. Ellers giver feltet plads først.</p>
 <form class="toolbar demo-row" method="get" action="#" role="search" aria-label="Søg i kunder"><input type="search" name="q" aria-label="Søg i kunder" placeholder="Søg i kunder"><select name="status" aria-label="Status"><option>Alle</option><option>Aktive</option><option>Spærrede</option></select><button type="submit">Søg</button><button class="ghost" type="reset">Ryd</button></form>
 <div class="toolbar demo-row"><input class="small" type="search" aria-label="Filtrer fakturaer" placeholder="Filtrer"><select class="small" aria-label="Periode"><option>Denne måned</option><option>Sidste måned</option></select><button class="ghost small" type="button">Eksporter</button><select class="small" aria-label="Valuta" disabled><option>DKK</option></select></div>
 </section>
