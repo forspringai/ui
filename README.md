@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.49.0
+pnpm add github:forspringai/ui#v0.49.1
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -501,7 +501,9 @@ by words onto at most three lines and stepped down from 72 to 48 px to fit, the 
 light theme only. `size: "1080x1080"` for a square post; `logo: { href, aspect, alt }` (https: or data:image/)
 or `name` for a customer's site. The text is drawn with the fonts the renderer has: pass `fontBase` (where the
 package's `fonts/` is served) to load them with `@font-face` when rendering in a browser. Render it to PNG at
-build time (SiteSpring does, per page).
+build time (SiteSpring does, per page). A renderer that reads TrueType but not WOFF2 (resvg) loads
+`fonts/archivo-condensed-800.ttf` (static, Archivo Condensed ExtraBold, the advances shareImage() measures) and
+`fonts/space-mono.ttf` (D-71).
 
 ### Toast, tooltip and icons (D-26)
 
