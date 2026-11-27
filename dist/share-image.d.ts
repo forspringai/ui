@@ -19,6 +19,7 @@ export type ShareImageOptions = {
     /** Where the package's fonts/ are served, ending in "/", to load the faces with @font-face. */
     fontBase?: string;
 };
+export declare const ADVANCE: Record<string, number>;
 /** The headline's width at a size, in px, as the condensed face sets it. */
 export declare function headlineWidth(text: string, size: number): number;
 /** The share image as an SVG document, light theme only (a share image never follows a viewer's theme). */

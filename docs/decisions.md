@@ -2301,3 +2301,16 @@ name, size, fontBase })`, the template as an SVG string:
 - **Text, not outlines:** the renderer supplies the faces; `fontBase` points `@font-face` at the package's
   fonts/ for a browser render. Rendering to PNG is the product's (SiteSpring's build step, tick for
   lead-sitespring).
+
+## D-71: TrueType copies of the share image's faces (0.49.1, 2026-11-27)
+
+lead-sitespring renders shareImage() to PNG with resvg in its build container (tick goe), and resvg's font
+database reads TrueType and OpenType, not WOFF2. ui ships `fonts/archivo-condensed-800.ttf` and
+`fonts/space-mono.ttf`, written by `scripts/ttf.py` (fontTools) from the WOFF2 files:
+- **Archivo Condensed is instanced at 800**, the weight shareImage() sets and measures, as a static face
+  named family "Archivo Condensed", style ExtraBold, weight class 800, so a renderer that ignores a
+  variable font's wght axis, or matches by family and weight, draws the right face.
+- **test/fonts-ttf.test.ts** reads the TTF's own tables: static, the names and weight, and every advance in
+  shareImage()'s table equal to the TTF's to a thousandth of an em; Space Mono regular and monospaced.
+- **Licence:** both families are OFL 1.1 with no Reserved Font Name, so the instanced copy keeps its name;
+  OFL-archivo.txt and OFL-spacemono.txt travel with them in fonts/.
