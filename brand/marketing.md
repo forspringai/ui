@@ -141,6 +141,8 @@ Every product site (appspring.app, sitespring.app, dataspring.app, pulsespring.a
 and forspring.ai when it carries the suite) shows the same four things, so a reader who lands on one
 can find the rest (lead-brand, 2026-11-25).
 
+- **Made by `@forspring/ui/suite` (D-73):** `suiteRow({ lang, current })` and `suiteLlms({ current })` draw the
+  two below from one list, `SUITE`; a site imports or vendors them rather than copying the markup.
 - **A suite row in the footer,** in every language the page has. It names Forspring first, then the other
   products in vision.md's order, each linked to its site in the page's language. The page's own product is
   plain text with `aria-current="page"`, not a link. BrainSpring and Spring have no site yet, so they aren't

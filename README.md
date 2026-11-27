@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.49.3
+pnpm add github:forspringai/ui#v0.50.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -489,6 +489,19 @@ const svg = chartSvg(chart, { theme: "light", width: 800, height: 400, lang: "da
 resvg: no script, no CSS variables, no fonts loaded. Load Archivo (TTF or OTF; resvg does not read woff2) into the rasteriser and set
 its default font family to `Archivo`. Danish formats by default (`12.345,6`, `17. nov 2026`); `lang: "en"` gives `12,345.6`, `17 Nov 2026`.
 
+### The suite on a product site (D-73)
+
+```ts
+import { suiteRow, suiteLlms } from "@forspring/ui/suite";
+footer += suiteRow({ lang: "da", current: "dataspring" }); // "En del af Forspring: DataSpring · ..."
+llmsTxt += "\n" + suiteLlms({ current: "dataspring" });    // "## The Forspring suite" and each product's line
+```
+
+`SUITE` is the list once (brand/marketing.md section 10): the products with a site, in vision.md's order,
+each with its address per language and its one line. `suiteRow()` is the footer's row (`.suite-row`, the page's
+own product plain text with `aria-current`); `suiteLlms()` is llms.txt's closing section. The module imports
+nothing, so a SiteSpring site vendors `dist/suite.js` beside the tokens. A new product's site is one edit here.
+
 ### A share image from a page's h1 (D-70)
 
 ```ts
@@ -811,6 +824,8 @@ gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every m
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
 apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
 from `@forspring/ui/audit` after it opens a state.
+**New in 0.50 (D-73):** `SUITE`, `suiteRow()` and `suiteLlms()` from `@forspring/ui/suite`, below.
+
 **New in 0.49 (D-70):** `shareImage()` from `@forspring/ui/share-image`, below.
 
 **Upgrading to 0.48 (D-69):** a form's action row stays one row on a phone (it was a column of full-width

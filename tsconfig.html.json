@@ -19,6 +19,7 @@
     "src/react.ts",
     "src/theme.ts",
     "src/share-image.ts",
+    "src/suite.ts",
     "src/chart-svg.ts"
   ]
 }

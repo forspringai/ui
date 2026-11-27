@@ -1234,6 +1234,18 @@
     font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
     color: var(--muted-foreground);
   }
+  /* The suite row (suiteRow(), marketing.md section 10, D-73): the products on a line of its own under the
+     footer's links, quiet: muted words at the content's small step, the links in the same ink. */
+  .suite-row {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-content-small);
+    color: var(--muted-foreground);
+  }
+
+  .suite-row a {
+    color: inherit;
+  }
+
 
   .foot {
     display: flex;
