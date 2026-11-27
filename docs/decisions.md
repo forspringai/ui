@@ -2241,3 +2241,13 @@ that passes", a grey, and the hue was lost. Two causes, both in `nearestPassing(
   tried from the most chroma sRGB holds at that hue (up to the colour's own) down to grey.
 Yellow now gets #6e6e00 (an olive at its own hue, 109.8°); light green, light blue and cyan keep theirs too.
 The theme preview's "Use" button applies it.
+
+## D-68: the theme preview's frame shrinks back (0.47.1, 2026-11-27)
+
+cos, capturing the review set on 0.47.0: after the window went to a phone's width and back, the page was
+47,718 px tall with ~36,000 px of blank frame under the screen's footer. The frame was sized from the framed
+document's `scrollHeight`, which is never less than the frame's own height, so a frame grown for a taller
+state (a phone width, a longer screen) could not shrink. It is now sized from the body (whose min-height
+the page takes off), and `test/theme-preview-browser.test.ts` (in test:browser) checks, in light and dark,
+that after every control change and window width the frame is as tall as its screen: no blank below, no
+scroll inside. On the old code it fails at "back to a desktop window: frame 17599 for content 12141".

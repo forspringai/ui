@@ -114,11 +114,16 @@ function wear() {
   fit();
 }
 
-// The frame is as tall as its screen, so the page scrolls and the frame never does.
+// The frame is as tall as its screen, so the page scrolls and the frame never does. Measured on the body
+// (its min-height is taken off above), not the document: a document is never shorter than its window, so
+// a frame grown for a taller state (a phone width, a longer screen) could never shrink back (D-68).
 function fit() {
   const doc = frame.contentDocument;
   if (!doc?.body) return;
-  frame.style.blockSize = Math.max(doc.documentElement.scrollHeight, 480) + "px";
+  const body = doc.body, m = getComputedStyle(body);
+  const content = Math.max(body.getBoundingClientRect().bottom + doc.defaultView.scrollY, body.scrollHeight) + parseFloat(m.marginBottom);
+  const want = Math.max(Math.ceil(content), 480) + "px";
+  if (frame.style.blockSize !== want) frame.style.blockSize = want;
 }
 
 function problems(title, list) {
