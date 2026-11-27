@@ -725,5 +725,18 @@ export function collectPopovers() {
     for (const p of document.querySelectorAll(":popover-open"))
         if (visible(p))
             panels2.push([p, triggerOf(p)]);
-    return panels2.map(([p, t]) => ({ selector: selector(p), trigger: t ? selector(t) : null, box: box(p.getBoundingClientRect()), triggerBox: t ? box(t.getBoundingClientRect()) : null, viewport: vp }));
+    // menu-row-inset (D-76): the rows and controls that span the panel (half its inner width or more) and
+    // how far each sits in from the panel's inner edges, so the audit can hold them to one inset.
+    const rowsOf = (p) => {
+        const r = p.getBoundingClientRect();
+        const s = getComputedStyle(p);
+        const [l, e] = [r.left + parseFloat(s.borderLeftWidth), r.right - parseFloat(s.borderRightWidth)];
+        return [...p.querySelectorAll("a[href], button, summary, input:not([type=hidden]), select, textarea, [role=menuitem], [role=option]")]
+            .filter((c) => visible(c) && c.getBoundingClientRect().width >= (e - l) / 2)
+            .map((c) => {
+            const b = c.getBoundingClientRect();
+            return { selector: selector(c), start: Math.round((b.left - l) * 10) / 10, end: Math.round((e - b.right) * 10) / 10 };
+        });
+    };
+    return panels2.map(([p, t]) => ({ selector: selector(p), trigger: t ? selector(t) : null, box: box(p.getBoundingClientRect()), triggerBox: t ? box(t.getBoundingClientRect()) : null, viewport: vp, rows: rowsOf(p) }));
 }

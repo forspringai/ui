@@ -1,5 +1,5 @@
 export type Severity = "error" | "warning" | "review";
-export type Rule = "page-load" | "contrast" | "text-min" | "font-size" | "font-family" | "radius" | "spacing" | "target-size" | "target-primary" | "palette" | "primitive" | "axe" | "third-party" | "js-budget" | "control-gap" | "control-text-centre" | "stack-rhythm" | "popover-anchor" | "surface-distinct" | "off-scale" | "clip" | "own-org-list" | "alignment-shared-edge" | "alignment-shared-baseline" | "alignment-ink-centre" | "alignment-padding-over-gap" | "alignment-even-gaps" | "alignment-symbol-line";
+export type Rule = "page-load" | "contrast" | "text-min" | "font-size" | "font-family" | "radius" | "spacing" | "target-size" | "target-primary" | "palette" | "primitive" | "axe" | "third-party" | "js-budget" | "control-gap" | "control-text-centre" | "stack-rhythm" | "popover-anchor" | "menu-row-inset" | "surface-distinct" | "off-scale" | "clip" | "own-org-list" | "alignment-shared-edge" | "alignment-shared-baseline" | "alignment-ink-centre" | "alignment-padding-over-gap" | "alignment-even-gaps" | "alignment-symbol-line";
 export type Finding = {
     rule: Rule;
     severity: Severity;

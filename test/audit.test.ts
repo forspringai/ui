@@ -15,7 +15,7 @@ import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
-import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, NO_ANCHOR, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
+import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, rowInsetFindings, NO_ANCHOR, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
 import { collectLayout, type LayoutObservations } from "../src/audit/page.ts";
 import { fontFaces } from "../src/html.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
@@ -525,7 +525,7 @@ describe("the layout rules in a browser (D-41, D-42)", () => {
   let found: Finding[];
   beforeAll(async () => {
     const r = await audit(options([`${base}/test/fixtures/layout.html`], { widths: [1280], themes: ["light"] }), browser);
-    found = all(r).filter((f) => ["control-gap", "control-text-centre", "stack-rhythm", "popover-anchor", "surface-distinct", "off-scale", "clip"].includes(f.rule));
+    found = all(r).filter((f) => ["control-gap", "control-text-centre", "stack-rhythm", "popover-anchor", "surface-distinct", "off-scale", "clip", "menu-row-inset"].includes(f.rule));
   }, 60_000);
   const of = (rule: string) => found.filter((f) => f.rule === rule).map((f) => f.selector);
 
@@ -571,6 +571,12 @@ describe("the layout rules in a browser (D-41, D-42)", () => {
       ["details#far > div (trigger details#far > summary)", expect.stringMatching(/^\d+(\.\d)?px below its trigger$/)],
       ["div#menu2 (trigger button#ctrl)", expect.stringMatching(/px (below|above) its trigger|outside its trigger's inline span/)],
       ["div#orphan", "no trigger found"],
+    ]);
+  });
+
+  test("menu-row-inset (D-76): in an open menu, a button 4px further in than the rows fails; one inset, or a content disclosure, passes", () => {
+    expect(found.filter((f) => f.rule === "menu-row-inset").map((f) => [f.selector, f.severity, f.value])).toEqual([
+      ["div > form > button (in details#inset-bad > div)", "error", "inset 8px at the start and 8px at the end; the menu's other rows 4px and 4px"],
     ]);
   });
 
@@ -825,14 +831,26 @@ describe("layout rules on measurements (D-41, D-42)", () => {
   });
 
   test("popover-anchor: next to its trigger, across its span, inside the window; flipped up is fine", () => {
-    const pop = (box: ReturnType<typeof b>, trigger = b(16, 100, 100, 32)) => popoverFindings([{ selector: "div.bar-panel", trigger: "summary", box, triggerBox: trigger, viewport: { w: 390, h: 800 } }], t);
+    const pop = (box: ReturnType<typeof b>, trigger = b(16, 100, 100, 32)) => popoverFindings([{ selector: "div.bar-panel", trigger: "summary", box, triggerBox: trigger, viewport: { w: 390, h: 800 }, rows: [] }], t);
     expect(pop(b(16, 136, 288, 200))).toEqual([]);
     expect(pop(b(16, 300, 288, 200), b(16, 504, 100, 32))).toEqual([]);
     expect(pop(b(16, 700, 288, 200)).map((f) => f.value)).toEqual(["568px below its trigger; past the window's bottom"]);
     expect(pop(b(200, 136, 288, 200)).map((f) => f.value)).toEqual(["outside its trigger's inline span; past the window's end"]);
     // An open popover with nothing that names it is a finding, not nothing.
-    const orphan = popoverFindings([{ selector: "div#menu", trigger: null, box: b(16, 136, 288, 200), triggerBox: null, viewport: { w: 390, h: 800 } }], t);
+    const orphan = popoverFindings([{ selector: "div#menu", trigger: null, box: b(16, 136, 288, 200), triggerBox: null, viewport: { w: 390, h: 800 }, rows: [] }], t);
     expect(orphan.map((f) => [f.rule, f.selector, f.value])).toEqual([["popover-anchor", "div#menu", "no trigger found"]]);
+  });
+
+  test("menu-row-inset (D-76): the inset most rows share is the menu's; a row more than 1px off it is an error", () => {
+    const menu = (rows: [number, number][]) =>
+      rowInsetFindings({ selector: "div.bar-panel", trigger: "summary", box: b(16, 136, 288, 200), triggerBox: b(16, 100, 100, 32), viewport: { w: 390, h: 800 }, rows: rows.map(([start, end], i) => ({ selector: `a#r${i}`, start, end })) });
+    expect(menu([[4, 4], [4, 4], [4.8, 3.2]])).toEqual([]);
+    expect(menu([[4, 4], [4, 4], [8, 8]]).map((f) => [f.rule, f.severity, f.selector, f.value])).toEqual([["menu-row-inset", "error", "a#r2 (in div.bar-panel)", "inset 8px at the start and 8px at the end; the menu's other rows 4px and 4px"]]);
+    // Only the end off (a toggle that stops short) is a finding too; one row alone has nothing to share.
+    expect(menu([[4, 4], [4, 4], [4, 10]]).map((f) => f.selector)).toEqual(["a#r2 (in div.bar-panel)"]);
+    expect(menu([[8, 8]])).toEqual([]);
+    // A tie goes to the smaller inset: the panel's own padding, before anything added.
+    expect(menu([[4, 4], [8, 8]]).map((f) => f.selector)).toEqual(["a#r1 (in div.bar-panel)"]);
   });
 });
 

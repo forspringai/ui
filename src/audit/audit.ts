@@ -547,6 +547,7 @@ export function layoutFindings(obs: LayoutObservations, t: LayoutScale): Finding
 export function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[] {
   const out: Finding[] = [];
   const edge = (b: Box) => ({ l: b.x, r: b.x + b.w, t: b.y, b: b.y + b.h });
+  for (const p of list) out.push(...rowInsetFindings(p));
   for (const p of list) {
     if (!p.triggerBox || !p.trigger) {
       out.push({ rule: "popover-anchor", severity: "warning", selector: p.selector, value: "no trigger found", expected: "a trigger that names it (popovertarget, aria-controls, a summary) or an anchor", note: "open a popover from the button it belongs to, so it can be anchored to it (D-41)" });
@@ -564,6 +565,35 @@ export function popoverFindings(list: PopoverObservation[], t: LayoutScale): Fin
       out.push({ rule: "popover-anchor", severity: "warning", selector: `${p.selector} (trigger ${p.trigger})`, value: problems.join("; "), expected: `within ${t.anchorGap}px of its trigger, across its inline span, inside the window`, note: "anchor a menu to its trigger: ui's details menus and tooltips do (D-41)" });
   }
   return out;
+}
+
+/**
+ * menu-row-inset (D-76): in an open menu, every row and control that spans it (half its inner width or
+ * more) sits on one inline inset, start and end, within 1px: the rows' hover and chosen surfaces, a
+ * toggle, a sign-out button. The inset most of them share is the menu's; a row off it is the finding.
+ * From the 0.51.0 red-line triage (D-74): the user menu's sign-out sat 4px further in than the rows above
+ * it, and no rule saw it. Menus only (a positioned panel: a details menu or an open popover): a content
+ * disclosure's links and fields are inline in prose and hold no such line.
+ */
+export function rowInsetFindings(p: PopoverObservation): Finding[] {
+  if (p.rows.length < 2) return [];
+  const usual = (side: "start" | "end") => {
+    const counts = new Map<number, number>();
+    for (const r of p.rows) counts.set(Math.round(r[side]), (counts.get(Math.round(r[side])) ?? 0) + 1);
+    // The inset most rows share; on a tie, the smaller (the panel's own padding, before any extra).
+    return [...counts].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]![0];
+  };
+  const [start, end] = [usual("start"), usual("end")];
+  return p.rows
+    .filter((r) => Math.abs(r.start - start) > 1 || Math.abs(r.end - end) > 1)
+    .map((r) => ({
+      rule: "menu-row-inset" as const,
+      severity: "error" as const,
+      selector: `${r.selector} (in ${p.selector})`,
+      value: `inset ${r1(r.start)}px at the start and ${r1(r.end)}px at the end; the menu's other rows ${start}px and ${end}px`,
+      expected: "every row and control across a menu on the menu's one inset, start and end, within 1px",
+      note: "a menu's rows, toggles and buttons share its inner edge: take the panel's padding, add none of your own (D-74, D-76)",
+    }));
 }
 
 /**
