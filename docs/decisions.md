@@ -2331,3 +2331,14 @@ least 0.6 of the longer).
   and the dashes go with the word after them; "&" holds both its neighbours, since it is usually inside a
   name ("Anker & Ankerkæde", "Æble & Co"). The Koncert title now sets "Koncert: Anker & Ankerkæde," /
   "9. november", balance's choice with the name and the date whole.
+
+## D-73: the suite, once (0.50.0, 2026-11-27)
+
+Papercut (hub tick q2v, brand.md b2): marketing.md section 10's suite row and llms.txt's suite section were
+copied into five sites (two SuiteRow.astro files, three hand-written), so a new product's site meant five hand
+edits. `@forspring/ui/suite` exports `SUITE` (the products with a site, vision.md's order, each one's address
+per language and its one line word for word), `suiteRow({ lang, current })` (the footer row, `.suite-row` in
+components.css) and `suiteLlms({ current })` (llms.txt's "## The Forspring suite"). Their output is what the
+sites served by hand (tests hold pulsespring.app's row and appspring.app's section), with one choice made for
+all: the site's own product is plain text in both, as pulsespring.app had it. The module imports nothing and
+returns strings, so a SiteSpring site vendors the one file and a server-rendered product imports it.
