@@ -3,7 +3,7 @@
 // is D-9. Playwright is the consumer's (a peer dependency); axe-core is ours, injected from
 // node_modules, never a CDN.
 
-import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -11,6 +11,7 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page, Request } from "playwright";
 import { collect, collectLayout, collectPopovers, type Box, type LayoutObservations, type Observations, type PopoverObservation, type Rgba, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
+import { alignmentFindings, measureSource, plainBaselineSpread, redlineCrops, redlineReport, type RawAlignment, type Redline } from "./alignment.js";
 
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 
@@ -674,13 +675,13 @@ async function settled(page: Page, open: Set<Request>, lastNet: () => number): P
   }
 }
 
-async function auditPage(browser: Browser, url: string, width: number, theme: Theme, sc: Scale, opts: AuditOptions, axe: string): Promise<PageResult> {
+async function auditPage(browser: Browser, url: string, width: number, theme: Theme, sc: Scale, opts: AuditOptions, axe: string, measure: string, redlines: Redline[]): Promise<PageResult> {
   const origin = new URL(url).origin;
   // The page's own origin and the ones the run allows (its API on another port): requests to these
   // go through, and are not third-party (D-16).
   const own = new Set([origin, ...(opts.allowOrigins ?? []).map((o) => new URL(o).origin)]);
   // bypassCSP lets the audit inject axe into a page whose strict CSP (as it should be) forbids it.
-  const context: BrowserContext = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, bypassCSP: true, serviceWorkers: "block" });
+  const context: BrowserContext = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: theme, bypassCSP: true, serviceWorkers: "block", deviceScaleFactor: opts.redlines ? 2 : 1 });
   const found: Finding[] = [];
   // url -> resource type, and whether Chromium fetched it (a redirect hop) or the audit answered it.
   const offOrigin = new Map<string, { type: string; fetched: boolean }>();
@@ -791,6 +792,19 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     for (const v of violations)
       for (const target of v.targets) found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
 
+    // Alignment (D-66), before the popover probe opens anything: measured from the top of the page.
+    await page.evaluate(() => scrollTo(0, 0));
+    const aligned = alignmentFindings(((await page.evaluate(measure)) as { findings: RawAlignment[] }).findings);
+    for (const f of aligned)
+      if (f.rule === "alignment-shared-baseline" && f.severity === "error") {
+        const spread = await page.evaluate(plainBaselineSpread, f.box);
+        if (spread === null || spread < 2) Object.assign(f, { severity: "review", note: `${f.note}; text in a control or on a surface, which centres in its own box (D-66)` });
+      }
+    // Its review findings are for the red-line report, where a person sees them on a crop; a run without
+    // --redlines carries only the errors (D-66).
+    found.push(...aligned.filter((f) => opts.redlines || f.severity === "error").map(({ box: _box, measured: _measured, ...f }) => f));
+    if (opts.redlines && aligned.length) for (const c of await redlineCrops(page, aligned, width)) redlines.push({ url, width, theme, ...c });
+
     // Last, since it opens things: every menu and popover, one at a time (D-41).
     found.push(...(await probePopovers(page, sc.layout!)));
 
@@ -808,7 +822,15 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
 export async function audit(opts: AuditOptions, browser: Browser): Promise<AuditResult> {
   const sc = await scale(browser, opts);
   const axe = axeSource();
+  const measure = measureSource();
+  const redlines: Redline[] = [];
   const pages: PageResult[] = [];
-  for (const url of opts.urls) for (const width of opts.widths) for (const theme of opts.themes) pages.push(await auditPage(browser, url, width, theme, sc, opts, axe));
+  for (const url of opts.urls) for (const width of opts.widths) for (const theme of opts.themes) pages.push(await auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines));
+  if (opts.redlines) {
+    const { html, files } = redlineReport(redlines, new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC");
+    mkdirSync(opts.redlines, { recursive: true });
+    writeFileSync(join(opts.redlines, "index.html"), html);
+    for (const [name, png] of files) writeFileSync(join(opts.redlines, name), png);
+  }
   return { ok: pages.every((p) => p.findings.every((f) => f.severity !== "error")), pages };
 }

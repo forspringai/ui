@@ -25,7 +25,12 @@ export type Rule =
   | "surface-distinct"
   | "off-scale"
   | "clip"
-  | "own-org-list";
+  | "own-org-list"
+  | "alignment-shared-edge"
+  | "alignment-shared-baseline"
+  | "alignment-ink-centre"
+  | "alignment-padding-over-gap"
+  | "alignment-even-gaps";
 
 export type Finding = {
   rule: Rule;
@@ -93,4 +98,9 @@ export type AuditOptions = {
   settle?: number;
   widths: number[];
   themes: Theme[];
+  /**
+   * A directory for the alignment red-line report (D-66): index.html and a 2x crop per alignment
+   * finding, each outlined in red. Pages are drawn at device scale 2 when this is set.
+   */
+  redlines?: string;
 };

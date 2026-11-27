@@ -28,6 +28,9 @@ Audits each page at 1280 and 380 px wide, in light and dark, against @forspring/
   --settle <ms>           wait this much longer once the page is quiet (default 0). Every page is
                           measured once its network is idle and its DOM has not changed for 300 ms
                           (at most 10 s after load)
+  --redlines <dir>        write the alignment red-line report to dir: index.html and a 2x crop of
+                          each alignment finding, outlined in red. Only a shared edge or a
+                          single-line shared baseline 2 px or more off is an error (D-66)
   --format json|text      json is the default (also --json); text for a person reading a build
   --help
 
@@ -66,7 +69,7 @@ export function parseArgs(argv, products, env = {}) {
             const name = a.slice(2, eq === -1 ? undefined : eq);
             if (name === "marketing" || name === "rich-app")
                 return usage(`--${name} takes no value`);
-            if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "allow-origin", "wait-for", "wait-timeout", "settle", "format"].includes(name))
+            if (!["budget-js", "product", "allow-spacing", "allow-status", "cookie-env", "allow-origin", "wait-for", "wait-timeout", "settle", "format", "redlines"].includes(name))
                 return usage(`unknown option --${name}`);
             const value = eq === -1 ? argv[++i] : a.slice(eq + 1);
             if (value === undefined || value.startsWith("--"))
@@ -169,7 +172,10 @@ export function parseArgs(argv, products, env = {}) {
     const waitFor = flags.get("wait-for");
     if (waitFor !== undefined && !waitFor.trim())
         return invalid("invalid_wait_for", "--wait-for takes a CSS selector, such as main h1");
-    return { opts: { urls, budgetJs, product, marketing, richApp, allowSpacing, allowStatus, cookie, allowOrigins, waitFor, waitTimeout, settle, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES }, format };
+    const redlines = flags.get("redlines");
+    if (redlines !== undefined && !redlines.trim())
+        return invalid("invalid_redlines", "--redlines takes a directory, such as alignment-report");
+    return { opts: { urls, budgetJs, product, marketing, richApp, allowSpacing, allowStatus, cookie, allowOrigins, waitFor, waitTimeout, settle, widths: DEFAULT_WIDTHS, themes: DEFAULT_THEMES, redlines }, format };
 }
 /**
  * Takes the cookie, and each value in it, out of text about to be printed. Nothing the audit

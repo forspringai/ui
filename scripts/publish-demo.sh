@@ -14,7 +14,8 @@
 # user token with only Workers Scripts Write on the account and Workers Routes, DNS Write and Zone Read on
 # appspring.app; the suite's deploy token has no rights on appspring.app.
 #
-# Nothing in it is secret: the repository is public and so is everything in dist/.
+# Nothing in it is secret: the repository is public and so is everything in dist/ (the red-line report shows
+# only the demo's invented data).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export CLOUDFLARE_API_TOKEN="${UI_DEMO_DEPLOY_TOKEN:?run it under doppler run --project forspring --config prd_deploy}"
@@ -23,6 +24,19 @@ version=$(node -p 'require("./package.json").version')
 site=$(mktemp -d)
 trap 'rm -rf "$site"' EXIT
 cp -R dist fonts "$site/"
+# The alignment red-line report (D-66) at /alignment: the audit's 2x crops of every alignment finding on the
+# demo's pages, drawn from this commit's dist/ by the local demo server. Errors show in the report; CI has
+# already failed a release that has any.
+port=4329
+PORT=$port node scripts/demo.ts >/dev/null 2>&1 &
+server=$!
+trap 'kill $server 2>/dev/null; rm -rf "$site"' EXIT
+for _ in $(seq 150); do curl -sf -o /dev/null "http://127.0.0.1:$port/dist/demo/" && break; sleep 0.2; done
+demo="http://127.0.0.1:$port/dist/demo"
+node dist/audit/cli.js "$demo/" "$demo/theme-preview.html" "$demo/pages/lead.en.html" "$demo/pages/delete-site.en.html" \
+  "$demo/pages/connect.en.html" "$demo/pages/org-picker.en.html" "$demo/pages/refused-role_too_low.en.html" \
+  --budget-js 20kb --redlines "$site/alignment" >/dev/null || echo "alignment: the audit found errors; they are in the report"
+kill $server
 cat >"$site/_redirects" <<'EOF'
 / /dist/demo/theme-preview 302
 /theme-preview /dist/demo/theme-preview 302
@@ -47,4 +61,4 @@ cat >"$site/wrangler.jsonc" <<EOF
 EOF
 printf 'wrangler.jsonc\n' >"$site/.assetsignore"
 (cd "$site" && wrangler deploy --message "ui v${version}")
-echo "published ui v${version}: https://ui.appspring.app/theme-preview"
+echo "published ui v${version}: https://ui.appspring.app/theme-preview, red-lines at https://ui.appspring.app/alignment/"

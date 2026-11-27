@@ -4,7 +4,7 @@
 // brand PNGs need Playwright's Chromium.
 
 import { execFileSync } from "node:child_process";
-import { cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { assets } from "../src/assets.ts";
 import { TokenProblems, build, familyTs, model } from "../src/emit.ts";
@@ -33,6 +33,9 @@ try {
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json")], { stdio: "inherit" });
   // The design audit's bin, ui-audit, for the same reason.
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json")], { stdio: "inherit" });
+  // The vendored alignment measurer (D-66) is plain JavaScript the audit injects into the page; tsc does not copy it.
+  mkdirSync(join(root, "dist", "audit", "vendor"), { recursive: true });
+  copyFileSync(join(root, "src", "audit", "vendor", "alignment-measure.js"), join(root, "dist", "audit", "vendor", "alignment-measure.js"));
   console.log(`dist/: ${[...Object.keys(files), "html, icons, icons/paths, icons/lucide, refusals, pages, connect, react, theme, chart-svg, family, color (.js, .d.ts)", "audit/", "brand/<product>/ (3 SVG, 5 PNG, site.webmanifest)"].filter((n) => !n.startsWith("brand/") || n.includes("<")).join(", ")}`);
 } catch (e) {
   if (!(e instanceof TokenProblems)) throw e;

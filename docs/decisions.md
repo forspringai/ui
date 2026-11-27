@@ -2201,3 +2201,27 @@ own product and theme switchers are hidden, and the one set of controls above th
 check says so; an uploaded file is laid out like the example; an error's suggestion has a "Use" button that
 puts it in the file. The words are for a customer, not a developer. The components screen's delete button opens
 the destructive confirm; the record screen's Save is the primary button.
+
+## D-66: alignment red-lines in ui-audit (0.46.0, 2026-11-27)
+
+Peter asked whether an agent can review alignment the way a design lead does, with red lines. cos ran the
+open-source alignment skill's `measure.js` (raphaelsalaja/skill, commit aa9f452, MIT, no network calls) on the
+theme preview, and brand checked every finding on 2x crops (coordinator areas/brand/theme-preview-qa-2026-11-27).
+Two rules held up as faults; most of the rest were false on our pages (icon-only buttons, items in closed
+menus, left-aligned table headers, Google's own button, a frame clipped by its card).
+- **Vendored unchanged** at `src/audit/vendor/alignment-measure.js`, under its licence header, copied to
+  `dist/audit/vendor/` by the build. The audit evaluates it in the page after axe and before the popover probe.
+- **Errors, from 2 px:** `alignment-shared-edge`, and `alignment-shared-baseline` when the texts are on one line
+  (the spread under half the smaller size) and plain: our own re-measure leaves out text inside a control or
+  on a surface, since a control centres its label in its own box (the bar's wordmark against the org switcher
+  was flagged on every page). Under 2 px, or not plain, they are review.
+- **Review:** `alignment-ink-centre` (the vertical case), `alignment-padding-over-gap`, `alignment-even-gaps`,
+  in the red-line report only: a run without `--redlines` carries just the errors, so a product's JSON and the
+  demo's "no finding at all" tests stay quiet.
+- **Dropped** until one proves itself: on-scale (our `spacing` rule already holds the 4 px scale),
+  icon-side-padding, icon-with-label, optical-glyph, whole-pixels, concentric-radius and concentric-floor.
+- **The red-line report:** `--redlines <dir>` draws the pages at device scale 2 and writes `index.html` with a
+  crop of each finding, its box outlined in red and, for a shared edge, the edge it missed. `publish:demo`
+  writes the demo's to https://ui.appspring.app/alignment/ (ui-ci is Workers Builds, which keeps no artifacts).
+- **Fixed with it:** the bar's small label ("ui" beside "Forspring") sat 2 to 2.5 px above the wordmark's
+  baseline; `top: 0.2em` brings it within half a px at both bar sizes.

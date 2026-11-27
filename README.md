@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.45.0
+pnpm add github:forspringai/ui#v0.46.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -794,6 +794,15 @@ gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every m
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
 apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
 from `@forspring/ui/audit` after it opens a state.
+Alignment red-lines (D-66): the audit also runs the alignment skill's `measure.js` (vendored from
+raphaelsalaja/skill at aa9f452, MIT) and fails on two of its rules, from 2 px: `alignment-shared-edge`
+(text a few px off the start edge the other text in its surface shares) and `alignment-shared-baseline`
+(plain text of two sizes in one row, on one line, on different baselines; a control's label is not
+measured against a wordmark). `alignment-ink-centre` (vertical), `alignment-padding-over-gap` and
+`alignment-even-gaps` are for review, in the red-line report only: `--redlines <dir>` writes it there: `index.html` and
+a 2x crop of each finding outlined in red. The demo's is at https://ui.appspring.app/alignment/.
+**Upgrading to 0.46:** a page with such a fault now fails the audit; the bar's own "ui"-style label is
+fixed in components.css.
 It prints JSON (`--format text` for people) and exits 0 when there are no errors, 1 when there
 are, 2 on an invalid value, 5 when Playwright or its browser is missing, 64 on a usage error.
 
