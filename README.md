@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.49.1
+pnpm add github:forspringai/ui#v0.49.2
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -497,7 +497,8 @@ const svg = shareImage({ headline: "Agenter i trin, du kan se", domain: "flowspr
 ```
 
 The family's 1200 × 630 share image (`og:image`) as an SVG string, pure (no file, no network): the h1 wrapped
-by words onto at most three lines and stepped down from 72 to 48 px to fit, the product's lockup and the domain,
+by words onto at most three lines, balanced, never inside a date, price or time ("9. november", "120 kr.",
+"kl. 19"), and stepped down from 72 to 48 px to fit, the product's lockup and the domain,
 light theme only. `size: "1080x1080"` for a square post; `logo: { href, aspect, alt }` (https: or data:image/)
 or `name` for a customer's site. The text is drawn with the fonts the renderer has: pass `fontBase` (where the
 package's `fonts/` is served) to load them with `@font-face` when rendering in a browser. Render it to PNG at
