@@ -69,10 +69,25 @@ test("fontBase loads the package's faces; without it nothing loads from anywhere
 });
 
 // D-72: dates, prices and times are never split, and the lines are balanced (cos, SiteSpring's first cards).
-test("a date stays whole: 'Koncert: Anker & Ankerkæde, 9. november' no longer ends a line on '9.'", () => {
-  const ls = lines(shareImage({ headline: "Koncert: Anker & Ankerkæde, 9. november", domain: "x.example" }));
+test("'Koncert: Anker & Ankerkæde, 9. november': the date and the name stay whole, no line ends on a joiner", () => {
+  const ls = lines(shareImage({ headline: "Koncert: Anker & Ankerkæde, 9. november", domain: "x.example" })).map((l) => l.replace(/&amp;/g, "&"));
   expect(ls.some((l) => l.endsWith(" 9.") || l === "november")).toBe(false);
+  expect(ls.some((l) => l.includes("Anker & Ankerkæde,"))).toBe(true);
   expect(ls.at(-1)).toContain("9. november");
+  for (const l of ls.slice(0, -1)) expect(l).not.toMatch(/\s(&|og|and|\+|–)$/);
+});
+
+test("no line ends on a joiner: og, and, +, – go with the next word; & holds both neighbours", () => {
+  expect(tokens("Æble & Co og Bager Hansen ApS + Ølstue – nu sammen")).toEqual(["Æble & Co", "og Bager", "Hansen", "ApS", "+ Ølstue", "– nu", "sammen"]);
+  for (const h of [
+    "Regnskab, løn og moms for små virksomheder og deres revisorer og bogholdere",
+    "Websites, forms and analytics and search for every small business and its agency",
+    "Bager Hansen & Søn, Æble & Co Example og Ølstue Globex samler alt ét sted",
+  ])
+    for (const size of ["1200x630", "1080x1080"] as const) {
+      const ls = lines(shareImage({ headline: h, domain: "x.example", size })).map((l) => l.replace(/&amp;/g, "&"));
+      for (const l of ls.slice(0, -1)) expect(l, `${size}: ${JSON.stringify(ls)}`).not.toMatch(/\s(&|og|and|\+|–)$/);
+    }
 });
 
 test("numbers keep their unit, month or next number; months keep their day; short abbreviations their word", () => {
@@ -98,11 +113,6 @@ test("for every date, price and time in a headline, no line breaks inside it, at
 });
 
 test("balanced: two lines are about even, not a full line and a stub", () => {
-  const svg = shareImage({ headline: "Koncert: Anker & Ankerkæde, 9. november", domain: "x.example" });
-  const n = size(svg);
-  const widths = lines(svg).map((l) => headlineWidth(l.replace(/&amp;/g, "&"), n));
-  expect(widths).toHaveLength(2);
-  expect(Math.min(...widths) / Math.max(...widths)).toBeGreaterThan(0.6);
   const long = shareImage({ headline: "Et sandt billede af forretningen og mindre manuelt arbejde.", domain: "x.example" });
   const w2 = lines(long).map((l) => headlineWidth(l, size(long)));
   expect(Math.min(...w2) / Math.max(...w2)).toBeGreaterThan(0.6);
