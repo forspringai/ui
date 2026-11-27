@@ -2163,3 +2163,17 @@ cos: publishing to a new public host is Peter's call, so no released doc may poi
 says yes. The schema's description and the README now name `dist/demo/theme-preview.html` instead, and the release
 steps no longer run `pnpm publish:demo`. The page stays in dist/demo. If Peter says yes, the publish and the link go
 back in together (hub tick gj2 stays open). D-62's "Where" is the plan, not live.
+
+
+## D-64: the theme preview is live on ui.appspring.app (0.44.2, 2026-11-27)
+
+Peter approved the host (Inbox, 2026-11-27: "Yes, on ui.appspring.app"), so D-63 is undone in one change:
+- **Live:** https://ui.appspring.app/theme-preview, the assets-only Worker `ui-demo` (custom domain ui.appspring.app).
+  Proven on the live page: the example theme passes with its one warning and the framed screen wears it (the
+  primary button #6c3012); a `#theme=` link with a refused file opens with the file and its error.
+- **Linked again** from the schema's description and the README; the release steps publish it after every tag.
+- **Its token:** `UI_DEMO_DEPLOY_TOKEN` in forspring/prd_deploy (user token 79516a21, minted with cf-tokens):
+  Workers Scripts Write on the account, Workers Routes, DNS Write and Zone Read on appspring.app only. The
+  suite's deploy token had no rights on appspring.app, so the first publish uploaded the Worker but could not
+  attach the domain.
+- **One redirect, not two:** `/theme-preview` goes straight to `/dist/demo/theme-preview`.
