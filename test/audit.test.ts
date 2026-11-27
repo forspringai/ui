@@ -812,6 +812,10 @@ describe("layout rules on measurements (D-41, D-42)", () => {
     // 11 above, 10 below: half a pixel off, the closest whole pixels allow.
     expect(run({ texts: [text(12, 21)] })).toEqual([]);
     expect(run({ texts: [text(11, 21)] })).toEqual([]);
+    // D-81: macOS Chromium's 11.1 above and 10 below for ui's bar summary (0.55 px off) passes, as on Linux; a
+    // label 1.5 px apart passes; a whole pixel off (9 above, 11 below, below) still fails.
+    expect(run({ texts: [{ selector: "summary", inkTop: 12.1, inkBottom: 22, lines: 1, boxTop: 1, boxBottom: 32 }] })).toEqual([]);
+    expect(run({ texts: [{ selector: "summary", inkTop: 12.5, inkBottom: 21, lines: 1, boxTop: 1, boxBottom: 31 }] })).toEqual([]);
     // Peter's day chip (D-42): 8 above, 12 below in a 31px box.
     const chip = run({ texts: [{ selector: "a.chip", inkTop: 8, inkBottom: 19, lines: 1, boxTop: 0, boxBottom: 31 }] });
     expect(chip.map((f) => [f.severity, f.value])).toEqual([["error", "8px above the label, 12px below"]]);

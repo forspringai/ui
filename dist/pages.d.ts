@@ -118,6 +118,23 @@ export type RefusedOptions = {
 };
 /** A refusal, by its reason: what happened, what it means, and the fix (D-17, hub D-99). */
 export declare function refusedPage(o: RefusedOptions): StandardPage;
+export type SignInFailedOptions = {
+    lang: Lang;
+    /** The refusal suite-signin returned (its CallbackRefusal, or the start's rate_limited). Any string is safe:
+     *  an unknown one, as from a URL, gets the general words. */
+    reason: string;
+    /** Where "Sign in again" starts a new sign-in (the product's own start, with the page to come back to). None: no button. */
+    retryHref?: string;
+    /** product_refused's detail from the product's onSignIn hook: the product's own words, shown as given. */
+    detail?: string;
+    /** The request's short ref, for support (D-30). */
+    ref?: string;
+};
+/**
+ * The sign-in failed page (D-80): the same words in every product for each suite-signin refusal, Danish first,
+ * never a command (D-35), with "Sign in again" when the product gives its start. Status as the refusal's.
+ */
+export declare function signInFailedPage(o: SignInFailedOptions): StandardPage;
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */
 export declare function accountUnavailablePage(o: {
     lang: Lang;

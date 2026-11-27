@@ -8,7 +8,7 @@
 //
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
 
-import { REFUSALS, type Refusal } from "./refusals.ts";
+import { REFUSALS, signInRefusal, type Refusal } from "./refusals.ts";
 import { ACCESS_LEVEL_NAMES, button, errorRef, html, orgList, orgMark, safeHref, type OrgLink, type PickerOrg, type Content, type Html, type Lang, type Org } from "./html.ts";
 
 /** What a page helper returns: spread it into shell(), and answer with `status`. */
@@ -43,6 +43,7 @@ const T = {
     signIn: "Log ind",
     billing: "Gå til betaling",
     retry: "Prøv igen",
+    signInAgain: "Log ind igen",
     agent: "Fra en agent:",
   },
   en: {
@@ -70,6 +71,7 @@ const T = {
     signIn: "Sign in",
     billing: "Go to billing",
     retry: "Try again",
+    signInAgain: "Sign in again",
     agent: "From an agent:",
   },
 };
@@ -258,6 +260,34 @@ export function refusedPage(o: RefusedOptions): StandardPage {
   if (o.command) parts.push(html`<p class="fine">${t.agent} <code>${o.command}</code></p>`);
   if (o.ref) parts.push(errorRef({ lang: o.lang, ref: o.ref }));
   return page(r.status, words.title, "refused", html`<h1>${words.title}</h1>${parts}`, o.reason);
+}
+
+export type SignInFailedOptions = {
+  lang: Lang;
+  /** The refusal suite-signin returned (its CallbackRefusal, or the start's rate_limited). Any string is safe:
+   *  an unknown one, as from a URL, gets the general words. */
+  reason: string;
+  /** Where "Sign in again" starts a new sign-in (the product's own start, with the page to come back to). None: no button. */
+  retryHref?: string;
+  /** product_refused's detail from the product's onSignIn hook: the product's own words, shown as given. */
+  detail?: string;
+  /** The request's short ref, for support (D-30). */
+  ref?: string;
+};
+
+/**
+ * The sign-in failed page (D-80): the same words in every product for each suite-signin refusal, Danish first,
+ * never a command (D-35), with "Sign in again" when the product gives its start. Status as the refusal's.
+ */
+export function signInFailedPage(o: SignInFailedOptions): StandardPage {
+  const t = T[o.lang];
+  const w = signInRefusal(o.reason, o.lang);
+  const parts: Content[] = [html`<p>${w.text}</p>`];
+  if (o.detail) parts.push(html`<p>${o.detail}</p>`);
+  parts.push(html`<p>${w.fix}</p>`);
+  if (o.retryHref) parts.push(html`<div class="actions">${button({ label: w.reason === "rate_limited" || w.reason === "token_exchange_failed" ? t.retry : t.signInAgain, href: o.retryHref })}</div>`);
+  if (o.ref) parts.push(errorRef({ lang: o.lang, ref: o.ref }));
+  return { status: w.status, title: w.title, narrow: true, body: html`<div class="card std-page refused" data-reason="${w.reason}">${html`<h1>${w.title}</h1>`}${parts}</div>` };
 }
 
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */

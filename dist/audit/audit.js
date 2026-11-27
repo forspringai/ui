@@ -405,13 +405,16 @@ export function layoutFindings(obs, t) {
         }
     // control-text-centre (D-42): the label's ink, cap top to baseline, in the middle of the padding
     // box: as much room above it as below, to 1 px. Measured on the ink, not the line box, which a font
-    // with more ascent than descent centres while its letters sit high.
+    // with more ascent than descent centres while its letters sit high. The ink's centre may sit up to
+    // 0.75 px from the box's (above and below up to 1.5 px apart): two platforms rasterise the same font
+    // half a pixel apart, so ui's own bar summary measured 11.1 above and 10 below on macOS Chromium and
+    // passed on Linux (D-81). A label a whole pixel off (2 px apart) still fails.
     for (const c of obs.texts) {
         const off = (c.inkTop + c.inkBottom) / 2 - (c.boxTop + c.boxBottom) / 2;
-        if (Math.abs(off) <= 0.51)
+        if (Math.abs(off) <= 0.75)
             continue;
         const [above, below] = [c.inkTop - c.boxTop, c.boxBottom - c.inkBottom];
-        out.push({ rule: "control-text-centre", severity: "error", selector: c.selector, value: `${r1(above)}px above the label, ${r1(below)}px below${c.lines > 1 ? ` (${c.lines} lines)` : ""}`, expected: "the label's ink (cap top to baseline) in the middle of the control: above and below within 1px", note: "size the control from --control-height with ui's font faces (fonts.css or fontFaces()), whose metrics centre the cap band; never nudge with padding alone (D-14, D-42)" });
+        out.push({ rule: "control-text-centre", severity: "error", selector: c.selector, value: `${r1(above)}px above the label, ${r1(below)}px below${c.lines > 1 ? ` (${c.lines} lines)` : ""}`, expected: "the label's ink (cap top to baseline) in the middle of the control: above and below within 1.5px (a whole pixel off fails)", note: "size the control from --control-height with ui's font faces (fonts.css or fontFaces()), whose metrics centre the cap band; never nudge with padding alone (D-14, D-42)" });
     }
     // stack-rhythm: the gaps between a stack's children equal (within 1 px), or each a rhythm token.
     for (const st of obs.stacks) {

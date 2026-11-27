@@ -214,6 +214,20 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   check a reason from another service with `isRefusal()` before you trust it. `fix` is the person's
   words and never names a command; where an agent has its own way out (`auth login`, `--org`), it is
   in `agent`, and **`agentFix()`** joins the two for an API, CLI or MCP answer. A page shows `fix` alone.
+- **A sign-in that failed** (D-80): suite-signin's callback (or its start) refuses with a reason and draws
+  nothing. Answer it with **`signInFailedPage({ lang, reason, retryHref, detail, ref })`**, spread into
+  `shell()`, never with words of your own.
+  - Every product then says the same thing for each reason, Danish first, never a command. For
+    `binding_mismatch`, for example, it says to open the page in the browser you want and finish there.
+  - `retryHref` is your own sign-in start, with the page to come back to. It is "Sign in again", or
+    "Try again" after `rate_limited` or `token_exchange_failed`.
+  - `detail` is `product_refused`'s words from your `onSignIn` hook.
+  - The reason comes from a URL, so any string is safe: one this version does not know gets the general
+    words and `data-reason="unknown"`.
+
+  For an API, CLI or MCP: **`signInRefusal(reason, lang)`** gives `{ title, text, fix, status, reason }`.
+  **`SIGN_IN_REFUSALS`**, **`SIGN_IN_REFUSAL_REASONS`**, **`SIGN_IN_REFUSAL_FALLBACK`** and
+  **`isSignInRefusal()`** are the table and its checks.
 
 ### Data
 
