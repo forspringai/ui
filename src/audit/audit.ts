@@ -11,7 +11,7 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page, Request } from "playwright";
 import { collect, collectLayout, collectPopovers, type Box, type LayoutObservations, type Observations, type PopoverObservation, type Rgba, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
-import { alignmentFindings, collectSymbols, measureSource, symbolFindings, plainBaselineSpread, redlineCrops, redlineReport, type RawAlignment, type Redline } from "./alignment.js";
+import { alignmentFindings, boxesInDetails, closedDetails, collectSymbols, hideUnseen, inkBoxes, measureSource, measureWithin, plainBaselineSpread, redlineCrops, redlineReport, setDetails, showUnseen, symbolFindings, type AlignmentFinding, type RawAlignment, type Redline } from "./alignment.js";
 
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 
@@ -675,6 +675,51 @@ async function settled(page: Page, open: Set<Request>, lastNet: () => number): P
   }
 }
 
+/**
+ * The alignment findings of one page (D-66, D-74): measure.js and the symbol rule with every closed
+ * menu closed (their items left out), then once more for each closed menu with only it open (only
+ * its items kept). `crop` draws each pass's red-lines while that pass's menu is open.
+ */
+async function measureAlignment(page: Page, measure: string, crop: ((f: AlignmentFinding[]) => Promise<void>) | null): Promise<AlignmentFinding[]> {
+  const pass = async (only?: number) => {
+    await page.evaluate(measureWithin, only ?? null);
+    let aligned: AlignmentFinding[];
+    try {
+      aligned = [...alignmentFindings(((await page.evaluate(measure)) as { findings: RawAlignment[] }).findings), ...symbolFindings(await page.evaluate(collectSymbols, only ?? null))];
+    } finally {
+      await page.evaluate(measureWithin, null);
+    }
+    const ink = aligned.filter((f) => f.rule === "alignment-ink-centre");
+    const keep = await page.evaluate(inkBoxes, ink.map((f) => f.box));
+    aligned = aligned.filter((f) => f.rule !== "alignment-ink-centre" || keep[ink.indexOf(f)]);
+    const where = await page.evaluate(boxesInDetails, { boxes: aligned.map((f) => f.box), only });
+    aligned = aligned.filter((_, k) => (only === undefined ? where[k] === -1 : where[k] === only));
+    for (const f of aligned)
+      if (f.rule === "alignment-shared-baseline" && f.severity === "error") {
+        const spread = await page.evaluate(plainBaselineSpread, f.box);
+        if (spread === null || spread < 2) Object.assign(f, { severity: "review", note: `${f.note}; text in a control or on a surface, which centres in its own box (D-66)` });
+      }
+    if (crop && aligned.length) await crop(aligned);
+    return aligned;
+  };
+  // The labels only a screen reader reads stay hidden for every pass; hidden, they move nothing and show nothing.
+  await page.evaluate(hideUnseen);
+  try {
+    const out = await pass();
+    for (const i of await page.evaluate(closedDetails)) {
+      await page.evaluate(setDetails, { i, open: true });
+      try {
+        out.push(...(await pass(i)));
+      } finally {
+        await page.evaluate(setDetails, { i, open: false });
+      }
+    }
+    return out;
+  } finally {
+    await page.evaluate(showUnseen);
+  }
+}
+
 async function auditPage(browser: Browser, url: string, width: number, theme: Theme, sc: Scale, opts: AuditOptions, axe: string, measure: string, redlines: Redline[]): Promise<PageResult> {
   const origin = new URL(url).origin;
   // The page's own origin and the ones the run allows (its API on another port): requests to these
@@ -792,18 +837,14 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     for (const v of violations)
       for (const target of v.targets) found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
 
-    // Alignment (D-66), before the popover probe opens anything: measured from the top of the page.
+    // Alignment (D-66), before the popover probe opens anything: measured from the top of the page,
+    // first with every menu closed, then each closed menu or disclosure open on its own (D-74), with
+    // the labels only a screen reader reads hidden throughout.
     await page.evaluate(() => scrollTo(0, 0));
-    const aligned = [...alignmentFindings(((await page.evaluate(measure)) as { findings: RawAlignment[] }).findings), ...symbolFindings(await page.evaluate(collectSymbols))];
-    for (const f of aligned)
-      if (f.rule === "alignment-shared-baseline" && f.severity === "error") {
-        const spread = await page.evaluate(plainBaselineSpread, f.box);
-        if (spread === null || spread < 2) Object.assign(f, { severity: "review", note: `${f.note}; text in a control or on a surface, which centres in its own box (D-66)` });
-      }
+    const aligned = await measureAlignment(page, measure, opts.redlines ? (f) => redlineCrops(page, f, width).then((cs) => { for (const c of cs) redlines.push({ url, width, theme, ...c }); }) : null);
     // Its review findings are for the red-line report, where a person sees them on a crop; a run without
     // --redlines carries only the errors (D-66).
     found.push(...aligned.filter((f) => opts.redlines || f.severity === "error").map(({ box: _box, measured: _measured, ...f }) => f));
-    if (opts.redlines && aligned.length) for (const c of await redlineCrops(page, aligned, width)) redlines.push({ url, width, theme, ...c });
 
     // Last, since it opens things: every menu and popover, one at a time (D-41).
     found.push(...(await probePopovers(page, sc.layout!)));

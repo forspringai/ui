@@ -561,6 +561,14 @@
     overflow-wrap: anywhere;
   }
 
+  /* A row with a meta word ("here") keeps both on one baseline (D-74), still centred in the row:
+     a single wrapped line, centred by align-content, its items on the baseline. */
+  .switcher a:has(> .bar-item-meta) {
+    flex-wrap: wrap;
+    align-content: center;
+    align-items: baseline;
+  }
+
   .bar-item-meta {
     font: 400 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
     color: var(--muted-foreground);
@@ -688,9 +696,11 @@
     justify-content: center;
   }
 
+  /* One divider rule in every bar panel (D-74): 4px, the rule, 4px, like the language row and the
+     foot, and the button on the same inset as the rows and the language toggle above it. */
   .user-signout {
     margin: var(--space-1) 0 0;
-    padding: var(--space-2) var(--space-1) var(--space-1);
+    padding: var(--space-1) 0 0;
     border-top: 1px solid var(--border);
   }
 

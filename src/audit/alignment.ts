@@ -10,6 +10,9 @@
 // Three more are reported for a person to look at (severity review): ink-centre (the vertical case
 // only), padding-over-gap and even-gaps. The rest were false on the demo (icon-only buttons, items in
 // closed menus, left-aligned headers, Google's own button) and are dropped until one proves itself.
+// D-74: what a sighted reader sees is what is measured: labels only a screen reader reads are hidden
+// while it runs, each closed menu is measured (and cropped) on its own with only it open, and
+// ink-centre keeps only a box with a surface of its own holding one line of text.
 
 import { readFileSync } from "node:fs";
 import type { Finding } from "./types.js";
@@ -89,6 +92,106 @@ export async function redlineCrops(page: Shooter, found: readonly AlignmentFindi
   }
   await page.evaluate(() => document.querySelectorAll("[data-ui-audit-redline]").forEach((e) => e.remove()), undefined);
   return out;
+}
+
+/**
+ * What a sighted reader sees is what is measured (D-74). measure.js takes every text node as ink, so a
+ * label only a screen reader reads (.visually-hidden: 1 px, clipped) counted as text: the toast's
+ * "Luk" behind its ×, a table's "Vælg" column, the language row's "Language:". On the 0.50.0 demo
+ * those were 70 of the 178 findings, and none was a fault. These hide such labels (display: none,
+ * which moves nothing, since they are out of flow) while measure.js runs, and bring them back.
+ */
+export function hideUnseen(): number {
+  // All reads first, then the writes: a write between reads would make the browser lay out again each time.
+  const unseen = [...document.querySelectorAll<HTMLElement>("body *")].filter((el) => {
+    const s = getComputedStyle(el);
+    if (s.position !== "absolute" && s.position !== "fixed") return false;
+    const r = el.getBoundingClientRect();
+    const clipped = s.clipPath === "inset(50%)" || /rect\(0(px)?,? 0(px)?,? 0(px)?,? 0(px)?\)/.test(s.clip) || (r.width <= 1 && r.height <= 1 && s.overflow === "hidden");
+    return clipped && !!(el.textContent ?? "").trim();
+  });
+  for (const el of unseen) {
+    el.setAttribute("data-ui-audit-unseen", el.style.getPropertyValue("display"));
+    el.style.setProperty("display", "none", "important");
+  }
+  return unseen.length;
+}
+
+/** measure.js measures within window.__alignmentOptions.root: one details element (its index), or the body. */
+export function measureWithin(i: number | null): void {
+  (window as unknown as { __alignmentOptions?: { root: Element } }).__alignmentOptions = i === null ? undefined : { root: document.querySelectorAll("details")[i]! };
+}
+
+export function showUnseen(): void {
+  for (const el of document.querySelectorAll<HTMLElement>("[data-ui-audit-unseen]")) {
+    const was = el.getAttribute("data-ui-audit-unseen")!;
+    if (was) el.style.setProperty("display", was);
+    else el.style.removeProperty("display");
+    el.removeAttribute("data-ui-audit-unseen");
+  }
+}
+
+/**
+ * The page's closed menus and disclosures (D-74): each closed details element that is not inside
+ * another closed one. Their items are laid out but not painted, so measured with the menu closed a
+ * finding had a box and a blank crop. The audit measures each with only it open.
+ */
+export function closedDetails(): number[] {
+  const all = [...document.querySelectorAll("details")];
+  return all.flatMap((d, i) => (!d.open && !d.parentElement?.closest("details:not([open])") ? [i] : []));
+}
+
+export function setDetails({ i, open }: { i: number; open: boolean }): void {
+  const d = document.querySelectorAll("details")[i];
+  if (d) d.open = open;
+}
+
+/**
+ * For each box, the index of the closed details element (of closedDetails' list, or of `only` when
+ * given, open or not) whose content holds an element with that box, or -1. The summary is outside:
+ * it shows when the details is closed.
+ */
+export function boxesInDetails({ boxes, only }: { boxes: { x: number; y: number; width: number; height: number }[]; only?: number }): number[] {
+  const near = (a: number, b: number) => Math.abs(a - b) < 0.6;
+  const all = [...document.querySelectorAll("details")];
+  const which = only === undefined ? all.map((d, i) => (!d.open ? i : -1)).filter((i) => i >= 0) : [only];
+  const content = which.map((i) => ({ i, rects: [...all[i]!.querySelectorAll("*")].filter((e) => !e.closest("summary") || e.closest("details") !== all[i]).map((e) => e.getBoundingClientRect()) }));
+  return boxes.map((b) => {
+    for (const { i, rects } of content) if (rects.some((r) => near(r.x, b.x) && near(r.y, b.y) && near(r.width, b.width) && near(r.height, b.height))) return i;
+    return -1;
+  });
+}
+
+/**
+ * Whether each ink-centre finding's box is one the eye centres text in (D-74): a box with a surface of
+ * its own (a fill, a shadow, or a border all round: a button, a chip, a badge) holding one line of
+ * text. A panel's foot or sign-out row is a section under a divider, not a box: the reader weighs the
+ * text against the divider and the panel's edge, which measure.js does not see (12 findings on the
+ * 0.50.0 demo, none a fault); wrapped text is weighed by its first line (the diff's lines).
+ */
+export function inkBoxes(boxes: RawAlignment["rect"][]): boolean[] {
+  const near = (a: number, b: number) => Math.abs(a - b) < 0.6;
+  const rects = [...document.querySelectorAll("body *")].map((e) => ({ e, r: e.getBoundingClientRect() }));
+  return boxes.map((box) => {
+    const el = rects.find(({ r }) => near(r.x, box.x) && near(r.y, box.y) && near(r.width, box.width) && near(r.height, box.height))?.e;
+    if (!el) return true;
+    const s = getComputedStyle(el);
+    const borders = ["top", "right", "bottom", "left"].every((side) => parseFloat(s.getPropertyValue(`border-${side}-width`)) > 0);
+    const surface = borders || s.backgroundColor !== "rgba(0, 0, 0, 0)" || s.backgroundImage !== "none" || s.boxShadow !== "none";
+    if (!surface) return false;
+    // Lines: text rects that do not overlap vertically (rects of one line, at two sizes, overlap).
+    const lines: DOMRect[] = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.textContent!.trim()) continue;
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      for (const r of range.getClientRects()) if (r.width > 0 && r.height > 0) lines.push(r);
+    }
+    lines.sort((a, b) => a.top - b.top);
+    return lines.every((r, k) => k === 0 || r.top < lines[k - 1]!.bottom - 2);
+  });
 }
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -183,7 +286,9 @@ export type SymbolObservation = { selector: string; text: string; symbol: { x: n
  * so it missed Peter's case (a signal's diamond above a notice's title, review of 0.47.1). The cap centre
  * is the baseline less half the cap height, from the font's own metrics, as measure.js reads it.
  */
-export function collectSymbols(): SymbolObservation[] {
+export function collectSymbols(within: number | null = null): SymbolObservation[] {
+  // One closed menu's pass (D-74) looks only inside that menu.
+  const root: ParentNode = within === null ? document : document.querySelectorAll("details")[within]!;
   const canvas = document.createElement("canvas").getContext("2d")!;
   const visible = (el: Element) => {
     const r = el.getBoundingClientRect();
@@ -225,7 +330,7 @@ export function collectSymbols(): SymbolObservation[] {
     return null;
   };
   const out: SymbolObservation[] = [];
-  for (const symbol of document.querySelectorAll("svg.icon, .signal-mark")) {
+  for (const symbol of root.querySelectorAll("svg.icon, .signal-mark")) {
     if (!visible(symbol)) continue;
     // The row: the nearest ancestor that lays the symbol beside other content (flex row, or inline).
     let row: Element | null = symbol.parentElement;
