@@ -286,6 +286,13 @@
       transition: none !important;
       animation: none !important;
     }
+
+    /* Except the org list's arming delay (D-75), which moves nothing: it is a second of not taking a
+       click, and a reader who asked for less motion is as open to a double-click trap as anyone. Here,
+       in this layer, because an !important in an earlier layer beats one in a later. */
+    .org-picker-choices::after {
+      animation: forspring-arm 1s step-end both !important;
+    }
   }
 }
 
@@ -802,6 +809,29 @@
 
   .org-picker-list form {
     margin: 0;
+  }
+
+  /* A choice list (D-75: consent, the org to sign in with) takes no click for its first second. A
+     one-tap row is a big target and ?org= decides which row is on top, so a page that asks for a double
+     click and then opens this one could land the second click on a row and give consent. A transparent
+     layer over the rows catches pointer clicks, and an animation of its visibility (which every engine
+     animates, discretely) takes it away after 1s. No script; the keyboard is not held up, since a page
+     cannot aim a key press at a row. */
+  .org-picker-choices {
+    position: relative;
+  }
+
+  .org-picker-choices::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    animation: forspring-arm 1s step-end both;
+  }
+
+  @keyframes forspring-arm {
+    to {
+      visibility: hidden;
+    }
   }
 
   .org-picker-list .org-picker-row {

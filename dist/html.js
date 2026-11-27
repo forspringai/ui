@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.51.0";
+export const VERSION = "0.52.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -221,7 +221,9 @@ export function orgList(o) {
     }
     if (rows.length === 0)
         return html ``;
-    return html `<ul class="org-picker-list${o.menu ? " org-picker-menu" : ""}" data-forspring-org-list>${rows}</ul>`;
+    // A choice list takes no click for its first second (D-75): components.css's .org-picker-choices.
+    const kind = `${o.menu ? " org-picker-menu" : ""}${"links" in o ? "" : " org-picker-choices"}`;
+    return html `<ul class="org-picker-list${kind}" data-forspring-org-list>${rows}</ul>`;
 }
 function orgSwitcher(o, t, lang) {
     const orgs = o.orgs ?? [];
