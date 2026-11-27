@@ -131,6 +131,15 @@ export declare function layoutFindings(obs: LayoutObservations, t: LayoutScale):
  */
 export declare function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[];
 /**
+ * menu-row-inset (D-76): in an open menu, every row and control that spans it (half its inner width or
+ * more) sits on one inline inset, start and end, within 1px: the rows' hover and chosen surfaces, a
+ * toggle, a sign-out button. The inset most of them share is the menu's; a row off it is the finding.
+ * From the 0.51.0 red-line triage (D-74): the user menu's sign-out sat 4px further in than the rows above
+ * it, and no rule saw it. Menus only (a positioned panel: a details menu or an open popover): a content
+ * disclosure's links and fields are inline in prose and hold no such line.
+ */
+export declare function rowInsetFindings(p: PopoverObservation): Finding[];
+/**
  * Opens every menu and popover trigger on the page in turn, measures it open, and closes it (D-41).
  * Exported for a probe of its own (the screens bench): call it on a loaded page.
  */

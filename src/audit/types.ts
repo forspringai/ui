@@ -22,6 +22,7 @@ export type Rule =
   | "control-text-centre"
   | "stack-rhythm"
   | "popover-anchor"
+  | "menu-row-inset"
   | "surface-distinct"
   | "off-scale"
   | "clip"

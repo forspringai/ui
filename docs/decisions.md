@@ -2399,3 +2399,21 @@ and orgPicker at sign-in.
   Both run with and without reduced motion, the arming animation paused and then finished rather than waited
   for. A list of links carries no layer.
 Not ui's: Cache-Control: no-store on consent pages (they carry the CSRF token) is each product's.
+
+## D-76: menu-row-inset, a gate (0.53.0, 2026-11-27)
+
+cos, on D-74's proposal: "GO on the menu-row-inset gate (menus only, 1px, as prototyped)". With every menu and
+popover open in turn (the D-41 probe), each row and control at least half the panel's inner width is
+measured: its inset from the panel's inner edges, at the start and the end.
+- **The menu's inset** is the one most of those rows share. On a tie it is the smaller, the panel's own
+  padding before anything added.
+- **An error:** a row or control more than 1px off that inset, at either end. The finding names the row
+  and its menu.
+- **Menus only:** a positioned panel (a details menu, an open popover), as popover-anchor measures. A content
+  disclosure's links and fields are inline in prose and hold no such line, and the prototype flagged them
+  falsely.
+- **Evidence:** the 0.50.0 demo's user menu failed on every page at both widths (the sign-out, 8px against
+  the rows' 4px), and 0.52.0's demo passes, every page, both widths and themes.
+- **Tests:** a fixture menu with that sign-out fails, the same menu on one inset passes, and a content
+  disclosure with an indented field is not held. Unit tests cover the majority inset, the 1px tolerance, an
+  end-only miss, a lone row and a tie.

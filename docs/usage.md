@@ -334,8 +334,10 @@ your own between blocks; if a screen needs a different gap, it is a token and a 
   faces (`fonts.css`, `fontFaces()`) make true at every size (D-42). Never nudge one with padding.
 - **Nothing is cut**: a label wraps, or its box says the cut is meant (an ellipsis, a line clamp, a
   scroller); nothing runs out of its box or past the window.
-- `ui-audit` checks all of it: `control-text-centre`, `off-scale` and `clip` are errors (D-42);
-  `control-gap`, `stack-rhythm`, `popover-anchor` and `surface-distinct` warn (D-41).
+- **A menu's rows share one inset**: its rows, toggles and buttons take the panel's padding and add none
+  of their own, so their hover surfaces and edges line up (D-76).
+- `ui-audit` checks all of it: `control-text-centre`, `off-scale`, `clip` and `menu-row-inset` are errors
+  (D-42, D-76); `control-gap`, `stack-rhythm`, `popover-anchor` and `surface-distinct` warn (D-41).
 
 ## 4. Forms
 
@@ -471,5 +473,5 @@ tilbage hertil." (voice §6).
       person.
 - [ ] Buttons together are an `actions()` row; no margins of your own between blocks; a pane is a card.
 - [ ] `ui-audit` exits 0 at 1280 and 380 px, light and dark, with axe finding nothing (brand §9): no
-      `control-text-centre`, `off-scale` or `clip` (D-42), and no `control-gap`, `stack-rhythm`,
+      `control-text-centre`, `off-scale`, `clip` (D-42) or `menu-row-inset` (D-76), and no `control-gap`, `stack-rhythm`,
       `popover-anchor` or `surface-distinct` warnings.

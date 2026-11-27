@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.52.0
+pnpm add github:forspringai/ui#v0.53.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -822,8 +822,11 @@ past the window's sides, or a scroller with more below and no cue). Four layout 
 in any containers), `stack-rhythm` (a stack's
 gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every menu and popover and
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
-apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
+apart from the ground behind it). With every menu open, `menu-row-inset` (D-76) is an error: a row or control
+across a menu (half its width or more) off the inset the menu's other rows share, by more than 1px.
+A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
 from `@forspring/ui/audit` after it opens a state.
+**New in 0.53 (D-76):** `ui-audit`'s `menu-row-inset` fails a run on a menu row or control off the menu's one inset.
 **New in 0.50 (D-73):** `SUITE`, `suiteRow()` and `suiteLlms()` from `@forspring/ui/suite`, below.
 
 **New in 0.49 (D-70):** `shareImage()` from `@forspring/ui/share-image`, below.

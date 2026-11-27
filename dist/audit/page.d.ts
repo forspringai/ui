@@ -135,6 +135,12 @@ export type PopoverObservation = {
         w: number;
         h: number;
     };
+    /** Its rows and controls at least half its inner width, each one's inset from its inner edges (D-76). */
+    rows: {
+        selector: string;
+        start: number;
+        end: number;
+    }[];
 };
 export type RegionObservation = {
     selector: string;
