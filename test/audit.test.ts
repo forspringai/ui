@@ -6,9 +6,10 @@
 
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { createReadStream, readFileSync, statSync } from "node:fs";
+import { createReadStream, mkdtempSync, readFileSync, rmSync, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
+import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
 import { promisify } from "node:util";
 import { chromium, type Browser } from "playwright";
@@ -266,7 +267,8 @@ describe("single-page apps (D-16)", () => {
   test("a static page settles quickly", async () => {
     const start = Date.now();
     await audit(options([`${base}/dist/demo/`], one), browser);
-    expect(Date.now() - start).toBeLessThan(5_000);
+    // Well under the 10 s settle cap; the alignment measurer (D-66) takes about half a second of it.
+    expect(Date.now() - start).toBeLessThan(7_000);
   }, 60_000);
 });
 
@@ -443,6 +445,46 @@ describe("the label's ink (D-42)", () => {
     } finally {
       await page.close();
     }
+  });
+});
+
+// D-66: the vendored alignment measurer. Only a shared edge or a single-line shared baseline 2 px or
+// more off fails the run; text inside a control is not measured against a wordmark; the red-line
+// report holds a 2x crop of each finding.
+describe("alignment red-lines (D-66)", () => {
+  let r: AuditResult;
+  let dir: string;
+  beforeAll(async () => {
+    dir = mkdtempSync(join(tmpdir(), "ui-redlines-"));
+    r = await audit(options([`${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"], redlines: dir }), browser);
+  }, 60_000);
+  afterAll(() => rmSync(dir, { recursive: true, force: true }));
+  test("without --redlines a run carries only the errors", async () => {
+    const plain = await audit(options([`${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"] }), browser);
+    expect(all(plain).filter((f) => f.rule.startsWith("alignment-")).every((f) => f.severity === "error")).toBe(true);
+  }, 60_000);
+  const of = (sev: string) => all(r).filter((f) => f.rule.startsWith("alignment-") && f.severity === sev).map((f) => `${f.rule} ${f.selector}`).sort();
+
+  test("a 3 px edge and a 4 px baseline between plain texts fail the run", () => {
+    expect(of("error")).toEqual(['alignment-shared-baseline div#baseline "Wordmarksub"', 'alignment-shared-edge div#edge > p "Off by three"']);
+    expect(r.ok).toBe(false);
+  });
+
+  test("a 1 px edge and a control's label beside a wordmark are for a person to look at; a row on one baseline is not reported", () => {
+    expect(of("review")).toEqual(expect.arrayContaining(['alignment-shared-baseline div#baseline-control "WordmarkSwitch"', 'alignment-shared-edge div#edge-small > p "Off by one"']));
+    expect(all(r).some((f) => f.rule === "alignment-shared-baseline" && f.selector.startsWith("div#baseline-ok"))).toBe(false);
+  });
+
+  test("the red-line report: a page naming each finding and a 2x crop beside it", () => {
+    const html = readFileSync(join(dir, "index.html"), "utf8");
+    expect(html).toContain("<title>Alignment red-lines</title>");
+    expect(html).toContain("raphaelsalaja/skill aa9f452");
+    expect(html).toContain("Fails the run");
+    const png = readFileSync(join(dir, "1.png"));
+    expect(png.subarray(1, 4).toString()).toBe("PNG");
+    // 2x: the crop's pixel width is twice the width the page shows it at.
+    const shown = Number(/<img src="1\.png"[^>]* width="(\d+)"/.exec(html)![1]);
+    expect(png.readUInt32BE(16)).toBe(shown * 2);
   });
 });
 

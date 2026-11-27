@@ -1,5 +1,5 @@
 export type Severity = "error" | "warning" | "review";
-export type Rule = "page-load" | "contrast" | "text-min" | "font-size" | "font-family" | "radius" | "spacing" | "target-size" | "target-primary" | "palette" | "primitive" | "axe" | "third-party" | "js-budget" | "control-gap" | "control-text-centre" | "stack-rhythm" | "popover-anchor" | "surface-distinct" | "off-scale" | "clip" | "own-org-list";
+export type Rule = "page-load" | "contrast" | "text-min" | "font-size" | "font-family" | "radius" | "spacing" | "target-size" | "target-primary" | "palette" | "primitive" | "axe" | "third-party" | "js-budget" | "control-gap" | "control-text-centre" | "stack-rhythm" | "popover-anchor" | "surface-distinct" | "off-scale" | "clip" | "own-org-list" | "alignment-shared-edge" | "alignment-shared-baseline" | "alignment-ink-centre" | "alignment-padding-over-gap" | "alignment-even-gaps";
 export type Finding = {
     rule: Rule;
     severity: Severity;
@@ -65,4 +65,9 @@ export type AuditOptions = {
     settle?: number;
     widths: number[];
     themes: Theme[];
+    /**
+     * A directory for the alignment red-line report (D-66): index.html and a 2x crop per alignment
+     * finding, each outlined in red. Pages are drawn at device scale 2 when this is set.
+     */
+    redlines?: string;
 };

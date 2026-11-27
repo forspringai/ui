@@ -34,8 +34,10 @@ test("dist/audit/ matches a fresh compile of src/audit/", () => {
   const out = mkdtempSync(join(tmpdir(), "forspring-ui-audit-"));
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.audit.json"), "--outDir", out]);
   const built = readdirSync(join(out, "audit")).sort();
-  expect(readdirSync(join(root, "dist/audit")).sort()).toEqual(built);
+  // Plus vendor/, which the build copies (the alignment measurer, D-66): plain JavaScript tsc does not emit.
+  expect(readdirSync(join(root, "dist/audit")).sort()).toEqual([...built, "vendor"].sort());
   for (const f of built) expect(readFileSync(join(out, "audit", f), "utf8")).toBe(readFileSync(join(root, "dist/audit", f), "utf8"));
+  expect(readFileSync(join(root, "dist/audit/vendor/alignment-measure.js"), "utf8")).toBe(readFileSync(join(root, "src/audit/vendor/alignment-measure.js"), "utf8"));
 });
 
 test("fonts.css points at the package's fonts/ folder, swaps, and covers the files' Latin subset", () => {

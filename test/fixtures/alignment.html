@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alignment (D-66)</title>
+<!-- Broken on purpose, for the alignment red-lines (test/audit.test.ts). Inline styles only. -->
+<style>
+  body { margin: 0; background: #ffffff; color: #14151a; font: 15px/1.5 Arial, sans-serif; }
+  .card { background: #f4f4f1; padding: 16px; margin: 16px; }
+  .card p { margin: 0 0 8px; }
+  .row { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 16px; }
+</style>
+</head>
+<body>
+<!-- shared-edge, an error: the third line starts 3px right of the edge the other two share. -->
+<div class="card" id="edge"><p>One line</p><p>Another line</p><p style="padding-left: 3px">Off by three</p></div>
+<!-- shared-edge, under 2px: reported, not an error. -->
+<div class="card" id="edge-small"><p>One line</p><p>Another line</p><p style="padding-left: 1px">Off by one</p></div>
+<!-- shared-baseline, an error: plain text of two sizes, each centred, so their baselines differ. -->
+<div class="row" id="baseline"><span style="font: 700 24px/1 Arial, sans-serif">Wordmark</span><span style="font: 12px/1 Arial, sans-serif">sub</span></div>
+<!-- shared-baseline against a control's label: not a fault, the label centres in its own box. -->
+<div class="row" id="baseline-control"><span style="font: 700 24px/1 Arial, sans-serif">Wordmark</span><span><span style="display: inline-block; border: 1px solid #14151a; padding: 4px 8px; font: 12px/1 Arial, sans-serif">Switch</span></span></div>
+<!-- the same row on one baseline: nothing to report. -->
+<div class="row" id="baseline-ok" style="align-items: baseline"><span style="font: 700 24px/1 Arial, sans-serif">Wordmark</span><span style="font: 12px/1 Arial, sans-serif">sub</span></div>
+</body>
+</html>

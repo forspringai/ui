@@ -417,6 +417,10 @@
     border-inline-start: 1px solid var(--input);
     padding-inline-start: var(--space-3);
     margin-inline-start: var(--space-1);
+    /* Centred beside the wordmark, the small word sat 2 to 2.5 px above its baseline (the alignment
+       measurer, D-66). A nudge in its own em brings it within half a px at both bar sizes. */
+    position: relative;
+    top: 0.2em;
   }
 
   .spacer {
