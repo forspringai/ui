@@ -67,10 +67,15 @@ const snippet = (src, at) => src.slice(src.lastIndexOf("\n", at - 1) + 1, src.in
 export function scanText(file, src) {
     const out = [];
     const lines = src.split("\n");
+    // A file that draws the package's own picker (it imports @forspring/ui and calls orgPicker, orgPickerPage,
+    // chooseOrgPage, orgList or <OrgPicker>) names that picker's page: its "Vælg organisation" is the title of ui's
+    // list, not a list of its own (the account's sign-in org choice, lead-ui 2026-11-27, D-82). The words rule stands
+    // down there; control and class still look at the file, so a second, hand-drawn list in it is still found.
+    const drawsUiPicker = /@forspring\/ui\b/.test(src) && /\b(?:orgPicker|orgPickerPage|chooseOrgPage|orgList)\s*\(|<OrgPicker[\s/>]/.test(src);
     lines.forEach((l, i) => {
         if (COMMENT.test(l))
             return;
-        if (PHRASE.test(l))
+        if (PHRASE.test(l) && !drawsUiPicker)
             out.push({ file, line: i + 1, rule: "words", text: l.trim().slice(0, 160) });
         if (CLASS.test(l))
             out.push({ file, line: i + 1, rule: "class", text: l.trim().slice(0, 160) });

@@ -2536,3 +2536,17 @@ at 1280 (17.1 and 16 at 380), on macOS Chromium, light and dark. The same page p
   the products menu's bare text in a flex summary, and Firefox does not support it.
 - **Effect:** every product's bar has the same summary, so the patch fixes the Mac run for all of them with the bump.
 - **Tests:** the Mac case (11.1/10) and 1.5 px apart pass; 9/11 still fails.
+
+## D-82: org-lists' words rule stands down where ui's picker is drawn (0.57.1, 2026-11-27)
+
+lead-ui: `forspring-ui-check org-lists` flagged the account's src/signin/org-choice.ts:333 ("Vælg organisation") as a
+hand-written picker heading. That page is ui's `orgPicker`: the words title the package's own list, and the account had to
+allowlist it (tick ad5).
+- **The rule:** in a file that imports `@forspring/ui` and calls `orgPicker`, `orgPickerPage`, `chooseOrgPage`, `orgList` or
+  `<OrgPicker>`, the words rule does not report.
+- **Still checked:** the control and class rules still read that file, so a second list drawn by hand in it is still found.
+- **Still a finding:** the phrase in a file without the package's picker, including one with a local function named
+  orgPicker.
+- **Tests:** the account's case and React's `<OrgPicker>` pass; the phrase alone and a fake orgPicker are still found; a
+  hand-drawn list beside ui's picker is still found by control.
+- **For the account:** with the bump, the ad5 allowlist entry becomes unused, which the check reports, so it can go.
