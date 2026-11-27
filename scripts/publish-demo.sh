@@ -30,13 +30,13 @@ cp -R dist fonts "$site/"
 port=4329
 PORT=$port node scripts/demo.ts >/dev/null 2>&1 &
 server=$!
-trap 'kill $server 2>/dev/null; rm -rf "$site"' EXIT
+trap 'kill $server 2>/dev/null || true; rm -rf "$site"' EXIT
 for _ in $(seq 150); do curl -sf -o /dev/null "http://127.0.0.1:$port/dist/demo/" && break; sleep 0.2; done
 demo="http://127.0.0.1:$port/dist/demo"
 node dist/audit/cli.js "$demo/" "$demo/theme-preview.html" "$demo/pages/lead.en.html" "$demo/pages/delete-site.en.html" \
   "$demo/pages/connect.en.html" "$demo/pages/org-picker.en.html" "$demo/pages/refused-role_too_low.en.html" \
   --budget-js 20kb --redlines "$site/alignment" >/dev/null || echo "alignment: the audit found errors; they are in the report"
-kill $server
+kill $server 2>/dev/null || true
 cat >"$site/_redirects" <<'EOF'
 / /dist/demo/theme-preview 302
 /theme-preview /dist/demo/theme-preview 302

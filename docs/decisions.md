@@ -2225,3 +2225,5 @@ menus, left-aligned table headers, Google's own button, a frame clipped by its c
   writes the demo's to https://ui.appspring.app/alignment/ (ui-ci is Workers Builds, which keeps no artifacts).
 - **Fixed with it:** the bar's small label ("ui" beside "Forspring") sat 2 to 2.5 px above the wordmark's
   baseline; `top: 0.2em` brings it within half a px at both bar sizes.
+- **0.46.1:** `publish:demo` stopped the demo server, and its exit trap's second `kill` then failed under
+  `set -e`, so a successful publish exited 1. Both kills now ignore a server that is already gone.
