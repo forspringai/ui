@@ -2314,3 +2314,16 @@ database reads TrueType and OpenType, not WOFF2. ui ships `fonts/archivo-condens
   shareImage()'s table equal to the TTF's to a thousandth of an em; Space Mono regular and monospaced.
 - **Licence:** both families are OFL 1.1 with no Reserved Font Name, so the instanced copy keeps its name;
   OFL-archivo.txt and OFL-spacemono.txt travel with them in fonts/.
+
+## D-72: share-image headlines: balanced, and dates, prices and times whole (0.49.2, 2026-11-27)
+
+cos, on SiteSpring's first live cards: "Koncert: Anker & Ankerkæde, 9." / "november". Two rules in shareImage():
+- **No break inside a date, price or time.** The headline is cut into tokens first: a number keeps a unit,
+  currency, month or the next number beside it ("9. november", "12 kr", "3 dage", "1. december 2026",
+  "30 %"), a month its day ("November 9"), a short abbreviation its word ("kl. 19", "nr. 4"). A number
+  before an ordinary word may still break ("Top 10" / "tips").
+- **Balanced lines**, as text-wrap: balance sets a heading: at the chosen size, the fewest lines the greedy
+  wrap needs, made as even as they can be (the narrowest width that still gives that many lines, found
+  by halving). "Koncert: Anker &" / "Ankerkæde, 9. november".
+Tests: that title, Danish and English dates, prices and times at both sizes, and balance (the shorter line at
+least 0.6 of the longer).

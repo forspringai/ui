@@ -1,6 +1,6 @@
 // shareImage() (D-70, hub tick ayt): the family's share image as SVG, pure, from a page's h1.
 import { expect, test } from "vitest";
-import { headlineWidth, shareImage } from "../src/share-image.ts";
+import { headlineWidth, shareImage, tokens } from "../src/share-image.ts";
 import { ROLES } from "../src/family.ts";
 import { LOCKUPS } from "../src/lockups.ts";
 
@@ -66,4 +66,44 @@ test("a customer: their logo (https: or data:image/ only) or their name; text is
 test("fontBase loads the package's faces; without it nothing loads from anywhere", () => {
   expect(shareImage({ headline: "x", domain: "x.example" })).not.toMatch(/url\(|https?:\/\/(?!www\.w3\.org)/);
   expect(shareImage({ headline: "x", domain: "x.example", fontBase: "/fonts/" })).toContain('src: url("/fonts/archivo-condensed.woff2")');
+});
+
+// D-72: dates, prices and times are never split, and the lines are balanced (cos, SiteSpring's first cards).
+test("a date stays whole: 'Koncert: Anker & Ankerkæde, 9. november' no longer ends a line on '9.'", () => {
+  const ls = lines(shareImage({ headline: "Koncert: Anker & Ankerkæde, 9. november", domain: "x.example" }));
+  expect(ls.some((l) => l.endsWith(" 9.") || l === "november")).toBe(false);
+  expect(ls.at(-1)).toContain("9. november");
+});
+
+test("numbers keep their unit, month or next number; months keep their day; short abbreviations their word", () => {
+  expect(tokens("Billetter fra 120 kr. lørdag den 12. december kl. 19")).toEqual(["Billetter", "fra", "120 kr.", "lørdag", "den", "12. december", "kl. 19"]);
+  expect(tokens("Spar 30 % i 3 dage fra 1. december 2026")).toEqual(["Spar", "30 %", "i", "3 dage", "fra", "1. december 2026"]);
+  expect(tokens("Doors open November 9 at 7 pm, from €15")).toEqual(["Doors", "open", "November 9", "at", "7 pm,", "from", "€15"]);
+  expect(tokens("1.200 kr. pr. måned i 12 måneder")).toEqual(["1.200 kr.", "pr.", "måned", "i", "12 måneder"]);
+  // A number before an ordinary word may break after it.
+  expect(tokens("Top 10 tips for spring")).toEqual(["Top", "10", "tips", "for", "spring"]);
+});
+
+test("for every date, price and time in a headline, no line breaks inside it, at every size", () => {
+  const cases: [string, string[]][] = [
+    ["Billetter fra 120 kr. til koncerten lørdag den 12. december kl. 19 på Store Vega", ["120 kr.", "12. december", "kl. 19"]],
+    ["Spar 30 % på alle abonnementer i 3 dage fra 1. december 2026, kun for nye kunder", ["30 %", "3 dage", "1. december 2026"]],
+    ["Doors open November 9 at 7 pm, tickets from €15 at the door or online in advance", ["November 9", "7 pm,"]],
+  ];
+  for (const [h, keep] of cases)
+    for (const size of ["1200x630", "1080x1080"] as const) {
+      const ls = lines(shareImage({ headline: h, domain: "x.example", size }));
+      for (const k of keep) expect(ls.some((l) => l.includes(k.replace(/&/g, "&amp;"))), `${size}: "${k}" in ${JSON.stringify(ls)}`).toBe(true);
+    }
+});
+
+test("balanced: two lines are about even, not a full line and a stub", () => {
+  const svg = shareImage({ headline: "Koncert: Anker & Ankerkæde, 9. november", domain: "x.example" });
+  const n = size(svg);
+  const widths = lines(svg).map((l) => headlineWidth(l.replace(/&amp;/g, "&"), n));
+  expect(widths).toHaveLength(2);
+  expect(Math.min(...widths) / Math.max(...widths)).toBeGreaterThan(0.6);
+  const long = shareImage({ headline: "Et sandt billede af forretningen og mindre manuelt arbejde.", domain: "x.example" });
+  const w2 = lines(long).map((l) => headlineWidth(l, size(long)));
+  expect(Math.min(...w2) / Math.max(...w2)).toBeGreaterThan(0.6);
 });

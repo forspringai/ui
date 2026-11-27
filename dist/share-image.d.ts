@@ -22,5 +22,7 @@ export type ShareImageOptions = {
 export declare const ADVANCE: Record<string, number>;
 /** The headline's width at a size, in px, as the condensed face sets it. */
 export declare function headlineWidth(text: string, size: number): number;
+/** The headline as tokens: words, and the groups that must not break inside. */
+export declare function tokens(headline: string): string[];
 /** The share image as an SVG document, light theme only (a share image never follows a viewer's theme). */
 export declare function shareImage(o: ShareImageOptions): string;

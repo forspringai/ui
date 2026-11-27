@@ -19,23 +19,68 @@ export function headlineWidth(text, size) {
         units += ADVANCE[ch] ?? WIDE;
     return (units / 1000 + TRACKING * [...text].length) * size;
 }
-/** Words onto lines no wider than width; a word wider than a line is cut to fit with an ellipsis. */
-function wrap(words, size, width) {
+// Words that stay on one line together (D-72): no break between a number and its unit, month or the next
+// number ("9. november", "12 kr", "3 dage", "1. december 2026"), none between a month and its day
+// ("November 9"), none after a short abbreviation
+// ("kl. 19", "nr. 4", "ca. 30"). cos saw "Koncert: Anker & Ankerkæde, 9." / "november" on SiteSpring's first
+// live cards.
+const NUMBER = /^[(#€$£]?\d[\d.,:/–-]*\.?(?:[%€$£)]|kr\.?)?[,;:]?$/i;
+const MONTHS = /^(januar|februar|marts|april|maj|juni|juli|august|september|oktober|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|okt|oct|nov|dec|january|february|march|may|june|july|october)\.?,?$/i;
+const ABBREVIATION = /^(kl|nr|ca|fx|pkt|tlf|no|st|dr|mr|ms|mrs)\.$/i;
+// What a number keeps beside it: a unit, a currency, a month, another number ("1. december 2026").
+const UNIT = /^(kr|dkk|eur|usd|nok|sek|kr\.|%|‰|€|\$|£|dage?|døgn|timer?|min|minutter|sek|uger?|måneder?|år|km|m|cm|kg|g|l|ml|stk\.?|pers\.?|personer|gange|days?|hours?|mins?|minutes?|weeks?|months?|years?|times|am|pm|h|x)[.,;:!?)]?$/i;
+/** The headline as tokens: words, and the groups that must not break inside. */
+export function tokens(headline) {
+    const words = headline.trim().split(/\s+/).filter(Boolean);
+    const out = [];
+    for (const w of words) {
+        const prev = out.at(-1);
+        const prevLast = prev?.split(" ").at(-1);
+        const glue = prevLast !== undefined && ((NUMBER.test(prevLast) && (UNIT.test(w) || MONTHS.test(w) || NUMBER.test(w))) || ABBREVIATION.test(prevLast) || (MONTHS.test(prevLast) && /^\d/.test(w)));
+        if (glue)
+            out[out.length - 1] = prev + " " + w;
+        else
+            out.push(w);
+    }
+    return out;
+}
+/** Tokens onto lines no wider than width, greedily; a token wider than a line is cut to fit with an ellipsis. */
+function greedy(toks, size, width) {
     const lines = [];
     let line = "";
-    for (const w of words) {
-        const next = line ? line + " " + w : w;
+    for (const t of toks) {
+        const next = line ? line + " " + t : t;
         if (headlineWidth(next, size) <= width)
             line = next;
         else {
             if (line)
                 lines.push(line);
-            line = headlineWidth(w, size) <= width ? w : clip(w, size, width);
+            line = headlineWidth(t, size) <= width ? t : clip(t, size, width);
         }
     }
     if (line)
         lines.push(line);
     return lines;
+}
+/**
+ * Balanced, as text-wrap: balance sets a heading: the fewest lines the greedy wrap needs, made as even
+ * as they can be. The narrowest width that still gives that many lines, found by halving (D-72).
+ */
+function wrap(toks, size, width) {
+    const lines = greedy(toks, size, width);
+    if (lines.length < 2)
+        return lines;
+    let [lo, hi] = [Math.max(...toks.map((t) => Math.min(headlineWidth(t, size), width))), width];
+    let best = lines;
+    for (let i = 0; i < 20 && hi - lo > 0.5; i++) {
+        const mid = (lo + hi) / 2;
+        const l = greedy(toks, size, mid);
+        if (l.length <= lines.length)
+            [best, hi] = [l, mid];
+        else
+            lo = mid;
+    }
+    return best;
 }
 function clip(text, size, width) {
     let t = text;
@@ -54,7 +99,7 @@ const STEPS = [72, 64, 56, 48];
 export function shareImage(o) {
     const s = SIZES[o.size ?? "1200x630"];
     const width = s.w - 2 * s.pad;
-    const words = o.headline.trim().split(/\s+/).filter(Boolean);
+    const words = tokens(o.headline);
     // The largest step at which the headline fits its lines; at the smallest, the last line is cut.
     let size = STEPS[STEPS.length - 1];
     let lines = wrap(words, size, width);
