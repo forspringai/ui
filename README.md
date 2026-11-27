@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.47.1
+pnpm add github:forspringai/ui#v0.48.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -794,6 +794,12 @@ gaps neither equal nor rhythm tokens), `popover-anchor` (the audit opens every m
 finds one away from its trigger or past the window) and `surface-distinct` (a pane that does not read
 apart from the ground behind it). A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
 from `@forspring/ui/audit` after it opens a state.
+**Upgrading to 0.48 (D-69):** a form's action row stays one row on a phone (it was a column of full-width
+buttons); focus is one 2 px ring, 2 px out, on every control, fields included (no accent border); an icon-only
+`button({ icon, label: "" })` is a square (`.icon-only`); a leading icon or signal mark sits on its words'
+first line, and `ui-audit` fails one 1.5 px off (`alignment-symbol-line`). Every button, measured:
+https://ui.appspring.app/buttons.
+
 Alignment red-lines (D-66): the audit also runs the alignment skill's `measure.js` (vendored from
 raphaelsalaja/skill at aa9f452, MIT) and fails on two of its rules, from 2 px: `alignment-shared-edge`
 (text a few px off the start edge the other text in its surface shares) and `alignment-shared-baseline`

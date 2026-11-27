@@ -71,7 +71,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.47.1";
+export const VERSION = "0.48.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.
@@ -372,18 +372,20 @@ function buttonProgress(o, variant) {
 export function button(o) {
     const label = o.icon ? html `${icon(o.icon)}${o.label}` : o.label;
     const variant = o.variant && o.variant !== "primary" ? o.variant : null;
+    // An icon with no words is a square of the control's height (D-69): .icon-only.
+    const only = o.icon && !String(o.label).trim() ? "icon-only" : null;
     if (o.progress && o.href === undefined)
         return buttonProgress(o, variant);
     if (o.href !== undefined) {
-        return html `<a${raw(attrs({ class: cls("button", variant, o.small && "small", o.wide && "wide"), href: safeHref(o.href), "aria-label": o.ariaLabel }))}>${label}</a>`;
+        return html `<a${raw(attrs({ class: cls("button", variant, o.small && "small", o.wide && "wide", only), href: safeHref(o.href), "aria-label": o.ariaLabel }))}>${label}</a>`;
     }
-    const a = { class: cls(variant, o.small && "small", o.wide && "wide"), type: o.type ?? "submit", name: o.name, value: o.value, "aria-label": o.ariaLabel, disabled: o.disabled };
+    const a = { class: cls(variant, o.small && "small", o.wide && "wide", only), type: o.type ?? "submit", name: o.name, value: o.value, "aria-label": o.ariaLabel, disabled: o.disabled };
     return html `<button${raw(attrs(a))}>${label}</button>`;
 }
 /**
  * A row of actions (D-41): one height and the actions gap, the primary first, then the secondary
- * ones, and the destructive one apart at the far end. On a phone it is a column of full-width
- * buttons with the same gap. The order is the helper's, so a page cannot get it wrong. (A
+ * ones, and the destructive one apart at the far end, wrapping only when there is no room (D-69;
+ * it was a column of full-width buttons on a phone). The order is the helper's, so a page cannot get it wrong. (A
  * destructive confirm puts the safe action first instead: that is dialog()'s own row, D-23.)
  */
 export function actions(o) {
@@ -661,7 +663,9 @@ export function dialog(o) {
     const titleId = `${o.id}-title`;
     const closeId = `${o.id}-close`;
     const close = o.page
-        ? html `<a class="button ghost" href="${safeHref(o.page.closeHref)}" autofocus>${o.close}</a>`
+        ? // The fallback page sets no autofocus (D-69): a page load has no keyboard behind it, yet browsers
+            // draw the focus ring on an autofocused control, which read as a second border (Peter's review).
+            html `<a class="button ghost" href="${safeHref(o.page.closeHref)}">${o.close}</a>`
         : html `<button type="submit" class="ghost" form="${closeId}" value="close" autofocus>${o.close}</button>`;
     const inner = html `<div class="dialog-body" id="${`${o.id}-body`}">${o.body}</div><div class="dialog-actions">${close}${o.actions}</div>`;
     const fields = Object.entries(o.form?.fields ?? {}).map(([name, value]) => html `<input type="hidden" name="${name}" value="${value}">`);
@@ -813,7 +817,7 @@ export function toast(o) {
         ? html `<form class="toast-undo-form" method="post" action="${safeHref(o.undo.action)}">${hidden(o.undo.fields)}<button type="submit" class="ghost small" aria-describedby="${textId}">${o.undo.label ?? t.undo}</button></form>`
         : "";
     const action = o.action ? html `<a class="button ghost small" href="${safeHref(o.action.href)}" aria-describedby="${textId}">${o.action.label}</a>` : undo;
-    return html `<div${a}>${icon(TOAST_ICON[tone])}<p class="toast-text" id="${textId}"><span class="visually-hidden">${t.tone[tone]}: </span>${o.text}</p><span class="toast-actions">${action}<a class="button ghost small toast-dismiss" href="${safeHref(o.dismissHref)}" data-toast-dismiss="${id}" aria-describedby="${textId}">${icon("x")}<span class="visually-hidden">${t.dismiss}</span></a></span></div>`;
+    return html `<div${a}>${icon(TOAST_ICON[tone])}<p class="toast-text" id="${textId}"><span class="visually-hidden">${t.tone[tone]}: </span>${o.text}</p><span class="toast-actions">${action}<a class="button ghost small icon-only toast-dismiss" href="${safeHref(o.dismissHref)}" data-toast-dismiss="${id}" aria-describedby="${textId}">${icon("x")}<span class="visually-hidden">${t.dismiss}</span></a></span></div>`;
 }
 /** Several toasts stacked at the bottom of the window, newest last, in a region named "Beskeder" /
  *  "Messages" that a screen reader can jump to. */

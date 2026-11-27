@@ -22,6 +22,7 @@ describe("org-lists: the red cases", () => {
     expect(rulesIn("red")).toEqual({
       "red/DeviceApproval.tsx": ["control", "words"],
       "red/bind-picker.ts": ["control", "words"],
+      "red/client-options.ts": ["control"],
       "red/connect_picker.py": ["control", "words"],
       "red/consent-select.ts": ["control"],
       "red/hand-marker.html": ["class"],

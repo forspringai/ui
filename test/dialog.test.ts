@@ -38,7 +38,7 @@ describe("dialog()", () => {
   test("as the fallback page it is a section with an h1, and close is a link back", () => {
     const p = String(dialog({ id: "x", title: "T", body: "B", close: "Back", alert: true, page: { closeHref: "javascript:alert(1)" } }));
     expect(p).toMatch(/^<section class="dialog dialog-page" id="x" aria-labelledby="x-title"><h1 class="dialog-title" id="x-title">T<\/h1>/);
-    expect(p).toContain('<a class="button ghost" href="#" autofocus>Back</a>');
+    expect(p).toContain('<a class="button ghost" href="#">Back</a>');
     expect(p).not.toContain("<dialog");
     expect(p).not.toContain('method="dialog"');
     expect(p).not.toContain("alertdialog");
@@ -124,7 +124,7 @@ describe("confirmDestructive()", () => {
   test("the fallback page keeps the POST, the field and the CSRF token; Keep links back", () => {
     const p = String(confirmDestructive({ ...SITE, page: { keepHref: "/o/bager-hansen/sites/bakery.example" } }));
     expect(p).toMatch(/^<section class="dialog dialog-page" id="delete-site" aria-labelledby="delete-site-title"><h1/);
-    expect(p).toContain('<a class="button ghost" href="/o/bager-hansen/sites/bakery.example" autofocus>Keep site</a><button class="danger" type="submit">Delete site</button>');
+    expect(p).toContain('<a class="button ghost" href="/o/bager-hansen/sites/bakery.example">Keep site</a><button class="danger" type="submit">Delete site</button>');
     expect(p).toContain('<input type="hidden" name="csrf" value="tok-123">');
     expect(p).toContain('pattern="bakery\\.example"');
   });

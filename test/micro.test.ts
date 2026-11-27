@@ -135,7 +135,7 @@ describe("3. undo toast", () => {
   test("Undo is a POST form with the hidden fields, named by the toast's text, and the toast says how long", () => {
     const h = String(toast(SAVED));
     expect(h).toContain('data-toast-undo="10"');
-    expect(h).toContain('<span class="toast-actions"><form class="toast-undo-form" method="post" action="/sites/7/undo"><input type="hidden" name="csrf" value="tok"><button type="submit" class="ghost small" aria-describedby="toast-text">Undo</button></form><a class="button ghost small toast-dismiss"');
+    expect(h).toContain('<span class="toast-actions"><form class="toast-undo-form" method="post" action="/sites/7/undo"><input type="hidden" name="csrf" value="tok"><button type="submit" class="ghost small" aria-describedby="toast-text">Undo</button></form><a class="button ghost small icon-only toast-dismiss"');
     expect(h).not.toContain("data-toast-autohide");
   });
 

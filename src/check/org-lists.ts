@@ -7,7 +7,8 @@
 //            which organisation?"): an imperative phrase starts its string or tag and ends it, a question ends in
 //            "?", so a sentence that only mentions an organisation is not one. Comment lines are skipped.
 //   control  a .map over orgs (orgs, organizations, memberships, candidates, customers, tenants) whose mapped row is a
-//            choice control (a list item, link, button, input, option, SelectItem, DropdownMenuItem, ui's button());
+//            choice control (a list item, link, button, input, option, SelectItem, DropdownMenuItem, ui's button(),
+//            or one built in client script: createElement/el/h("option"), new Option());
 //            any .map whose row is a control carrying an org field (name="org" / "org_id"); a select's options made
 //            from orgs; in Python, a loop over orgs that builds <li>, <a>, <button>, <input> or <option>.
 //   class    the package's own org-list class names or its data-forspring-org-list marker written by hand: only
@@ -40,7 +41,10 @@ const PHRASE =
   /(?:^|["'`>{]\s*)(?:(?:choose|select|pick|switch)(?: an?)? organi[sz]ations?|(?:vælg|skift)(?: en)? organisation)\s*[.:]?\s*(?=["'`<]|\$\{|$)|\b(?:which|hvilken) organi[sz]ation\?/i;
 const COLLECTION = /\b(orgs|organi[sz]ations|memberships|candidates|customers|tenants)\??\s*\.\s*map\s*\(\s*(?:async\s*)?(?:\w+|\([^)]*\))\s*=>/g;
 const ANY_MAP = /\.\s*map\s*\(\s*(?:async\s*)?(?:\w+|\([^)]*\))\s*=>/g;
-const CONTROL = /<li[\s>]|<a\s|<button[\s>]|<input\s|<option[\s>]|<SelectItem[\s>]|<DropdownMenuItem[\s>]|\bbutton\(\s*\{/;
+// Markup, or a control built in client script: createElement("option"), a helper such as el("li", ...)
+// or h("option", ...), new Option(...) (lead-ui's suite scan, 2026-11-27: SiteSpring filled two empty
+// selects from r.orgs.map((o) => el("option", ...)), which the markup alone did not show).
+const CONTROL = /<li[\s>]|<a\s|<button[\s>]|<input\s|<option[\s>]|<SelectItem[\s>]|<DropdownMenuItem[\s>]|\bbutton\(\s*\{|\b(?:createElement|el|h)\(\s*["'](?:li|a|button|input|option)["']|\bnew\s+Option\s*\(/;
 const ORG_FIELD = /\bname\s*[=:]\s*\\?["'`]org(?:_id)?\\?["'`]/;
 const OPTIONS_OF_ORGS = /\boptions\s*:\s*[\w.?]*\b(orgs|organi[sz]ations|memberships|tenants)\??\s*\.\s*map\s*\(/g;
 const COMMENT = /^\s*(\/\/|\/\*|\*|#|"""|''')/;

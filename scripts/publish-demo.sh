@@ -33,7 +33,7 @@ server=$!
 trap 'kill $server 2>/dev/null || true; rm -rf "$site"' EXIT
 for _ in $(seq 150); do curl -sf -o /dev/null "http://127.0.0.1:$port/dist/demo/" && break; sleep 0.2; done
 demo="http://127.0.0.1:$port/dist/demo"
-node dist/audit/cli.js "$demo/" "$demo/theme-preview.html" "$demo/pages/lead.en.html" "$demo/pages/delete-site.en.html" \
+node dist/audit/cli.js "$demo/" "$demo/theme-preview.html" "$demo/buttons.html" "$demo/pages/lead.en.html" "$demo/pages/delete-site.en.html" \
   "$demo/pages/connect.en.html" "$demo/pages/org-picker.en.html" "$demo/pages/refused-role_too_low.en.html" \
   --budget-js 20kb --redlines "$site/alignment" >/dev/null || echo "alignment: the audit found errors; they are in the report"
 kill $server 2>/dev/null || true
@@ -41,6 +41,7 @@ cat >"$site/_redirects" <<'EOF'
 / /dist/demo/theme-preview 302
 /theme-preview /dist/demo/theme-preview 302
 /components /dist/demo/ 302
+/buttons /dist/demo/buttons 302
 EOF
 # The demo frames its own pages (same origin) and loads only its own files, plus a theme's https: or data: logo.
 cat >"$site/_headers" <<'EOF'

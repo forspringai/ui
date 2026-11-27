@@ -51,7 +51,8 @@ test("every class in the demo page and the standard pages has a rule", () => {
   // which is the plain state and only names the kind for a product's own rules; likewise the bar menus'
   // and standard pages' kinds (D-17), hooks for a product's own rules.
   const demoOnly = ["demo-controls", "demo-row", "demo-grid", "demo-toasts", "demo-icons", "mark", "fill", "coil", "empty", "org-switcher", "product-switcher", "choose-org", "org-picker", "no-org", "refused"];
-  const missing = [...used].filter((c) => !demoOnly.includes(c) && !new RegExp(`\\.${c}\\b`).test(css + gsi));
+  // The button inventory's own table (inv-*, demo/buttons.ts) is styled on its page.
+  const missing = [...used].filter((c) => !demoOnly.includes(c) && !c.startsWith("inv-") && !new RegExp(`\\.${c}\\b`).test(css + gsi));
   expect(missing).toEqual([]);
 });
 
