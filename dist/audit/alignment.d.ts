@@ -48,6 +48,49 @@ export declare function redlineCrops(page: Shooter, found: readonly AlignmentFin
     png: Buffer;
     cssWidth: number;
 }[]>;
+/**
+ * What a sighted reader sees is what is measured (D-74). measure.js takes every text node as ink, so a
+ * label only a screen reader reads (.visually-hidden: 1 px, clipped) counted as text: the toast's
+ * "Luk" behind its ×, a table's "Vælg" column, the language row's "Language:". On the 0.50.0 demo
+ * those were 70 of the 178 findings, and none was a fault. These hide such labels (display: none,
+ * which moves nothing, since they are out of flow) while measure.js runs, and bring them back.
+ */
+export declare function hideUnseen(): number;
+/** measure.js measures within window.__alignmentOptions.root: one details element (its index), or the body. */
+export declare function measureWithin(i: number | null): void;
+export declare function showUnseen(): void;
+/**
+ * The page's closed menus and disclosures (D-74): each closed details element that is not inside
+ * another closed one. Their items are laid out but not painted, so measured with the menu closed a
+ * finding had a box and a blank crop. The audit measures each with only it open.
+ */
+export declare function closedDetails(): number[];
+export declare function setDetails({ i, open }: {
+    i: number;
+    open: boolean;
+}): void;
+/**
+ * For each box, the index of the closed details element (of closedDetails' list, or of `only` when
+ * given, open or not) whose content holds an element with that box, or -1. The summary is outside:
+ * it shows when the details is closed.
+ */
+export declare function boxesInDetails({ boxes, only }: {
+    boxes: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    }[];
+    only?: number;
+}): number[];
+/**
+ * Whether each ink-centre finding's box is one the eye centres text in (D-74): a box with a surface of
+ * its own (a fill, a shadow, or a border all round: a button, a chip, a badge) holding one line of
+ * text. A panel's foot or sign-out row is a section under a divider, not a box: the reader weighs the
+ * text against the divider and the panel's edge, which measure.js does not see (12 findings on the
+ * 0.50.0 demo, none a fault); wrapped text is weighed by its first line (the diff's lines).
+ */
+export declare function inkBoxes(boxes: RawAlignment["rect"][]): boolean[];
 /** The report: one self-contained page and the crops beside it (index.html, 1.png, 2.png, ...). */
 export declare function redlineReport(shots: readonly Redline[], when: string): {
     html: string;
@@ -80,7 +123,7 @@ export type SymbolObservation = {
  * so it missed Peter's case (a signal's diamond above a notice's title, review of 0.47.1). The cap centre
  * is the baseline less half the cap height, from the font's own metrics, as measure.js reads it.
  */
-export declare function collectSymbols(): SymbolObservation[];
+export declare function collectSymbols(within?: number | null): SymbolObservation[];
 /** A symbol 1.5 px or more off its line's cap centre is an error (D-69); under that, nothing. */
 export declare function symbolFindings(obs: readonly SymbolObservation[]): AlignmentFinding[];
 export {};

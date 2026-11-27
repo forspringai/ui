@@ -267,7 +267,8 @@ describe("single-page apps (D-16)", () => {
   test("a static page settles quickly", async () => {
     const start = Date.now();
     await audit(options([`${base}/dist/demo/`], one), browser);
-    // Well under the 10 s settle cap; the alignment measurer (D-66) takes about half a second of it.
+    // Well under the 10 s settle cap. The alignment measurer (D-66) takes about 2.5 s of it on the demo's
+    // index as it is now; each closed menu's own pass (D-74) adds about 15 ms.
     expect(Date.now() - start).toBeLessThan(7_000);
   }, 60_000);
 });
@@ -466,7 +467,7 @@ describe("alignment red-lines (D-66)", () => {
   const of = (sev: string) => all(r).filter((f) => f.rule.startsWith("alignment-") && f.severity === sev).map((f) => `${f.rule} ${f.selector}`).sort();
 
   test("a 3 px edge and a 4 px baseline between plain texts fail the run", () => {
-    expect(of("error")).toEqual(['alignment-shared-baseline div#baseline "Wordmarksub"', 'alignment-shared-edge div#edge > p "Off by three"', "alignment-symbol-line div#symbol-off.row > span.signal-mark"]);
+    expect(of("error").filter((s) => !s.includes("details#menu"))).toEqual(['alignment-shared-baseline div#baseline "Wordmarksub"', 'alignment-shared-edge div#edge > p "Off by three"', "alignment-symbol-line div#symbol-off.row > span.signal-mark"]);
     expect(all(r).some((f) => f.rule === "alignment-symbol-line" && f.selector.includes("symbol-ok"))).toBe(false);
     expect(r.ok).toBe(false);
   });
@@ -474,6 +475,36 @@ describe("alignment red-lines (D-66)", () => {
   test("a 1 px edge and a control's label beside a wordmark are for a person to look at; a row on one baseline is not reported", () => {
     expect(of("review")).toEqual(expect.arrayContaining(['alignment-shared-baseline div#baseline-control "WordmarkSwitch"', 'alignment-shared-edge div#edge-small > p "Off by one"']));
     expect(all(r).some((f) => f.rule === "alignment-shared-baseline" && f.selector.startsWith("div#baseline-ok"))).toBe(false);
+  });
+
+  // D-74: what a sighted reader sees is what is measured.
+  test("a label only a screen reader reads is not ink, and a divider's section is not a box", () => {
+    expect(all(r).some((f) => f.rule.startsWith("alignment-") && f.selector.includes("sr-close"))).toBe(false);
+    expect(all(r).some((f) => f.rule.startsWith("alignment-") && f.selector.includes("p#foot"))).toBe(false);
+    expect(of("review")).toContain('alignment-ink-centre div.row > span#ink-off "Badge"');
+  });
+
+  test("a fault in a closed menu is measured, once, with the menu open, and its crop shows it", async () => {
+    expect(of("error").filter((s) => s.includes("details#menu"))).toEqual(['alignment-shared-edge details#menu > div.card > p "Off by three"']);
+    const html = readFileSync(join(dir, "index.html"), "utf8");
+    const name = new RegExp(`details#menu[^<]*</code><br>[^<]*</figcaption><img src="(\\d+\\.png)"`).exec(html.replace(/&gt;/g, ">").replace(/&quot;/g, '"'))![1]!;
+    // The crop shows the menu's words, not a blank: dark text pixels on it.
+    const page = await browser.newPage();
+    const dark = await page.evaluate(async (src) => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      const c = document.createElement("canvas");
+      [c.width, c.height] = [img.width, img.height];
+      const g = c.getContext("2d")!;
+      g.drawImage(img, 0, 0);
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (d[i]! < 80 && d[i + 1]! < 80 && d[i + 2]! < 80) n++;
+      return n;
+    }, `data:image/png;base64,${readFileSync(join(dir, name)).toString("base64")}`);
+    await page.close();
+    expect(dark).toBeGreaterThan(200);
   });
 
   test("the red-line report: a page naming each finding and a 2x crop beside it", () => {

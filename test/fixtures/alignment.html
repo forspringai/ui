@@ -10,6 +10,10 @@
   .card { background: #f4f4f1; padding: 16px; margin: 16px; }
   .card p { margin: 0 0 8px; }
   .row { display: flex; align-items: center; gap: 8px; min-height: 44px; margin: 16px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .panel { width: 240px; margin: 16px; padding: 4px; border: 1px solid #c8c8c0; }
+  .panel > p { margin: 4px 0 0; padding-top: 4px; border-top: 1px solid #c8c8c0; }
+  .panel a { display: flex; align-items: center; min-height: 40px; padding: 0 12px; }
 </style>
 </head>
 <body>
@@ -27,5 +31,13 @@
 <div class="row" id="symbol-off" style="align-items: flex-start"><span class="signal-mark" style="display: inline-block; width: 10px; height: 10px; background: #c0392b"></span><div><b style="display: block; font: 600 15px/1.55 Arial, sans-serif">2 checks are down</b><span>Monthly invoices, nightly backup</span></div></div>
 <!-- symbol-line, right: the same mark moved onto the title's line. -->
 <div class="row" id="symbol-ok" style="align-items: flex-start"><span class="signal-mark" style="display: inline-block; width: 10px; height: 10px; background: #2e7d32; translate: 0 calc((15px * 1.55 - 100%) / 2)"></span><div><b style="display: block; font: 600 15px/1.55 Arial, sans-serif">All running</b><span>All 14 checks reported in time</span></div></div>
+<!-- D-74: an icon button whose name only a screen reader reads; the label is not ink, so nothing to report. -->
+<div class="row"><a id="sr-close" href="#" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #14151a; border-radius: 3px"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 1l10 10M11 1L1 11" stroke="#14151a" stroke-width="1.5"/></svg><span class="vh">Close</span></a></div>
+<!-- D-74: a fault inside a closed menu, measured (and cropped) with the menu open, then closed again. -->
+<details id="menu"><summary>Menu</summary><div class="card"><p>One line</p><p>Another line</p><p style="padding-left: 3px">Off by three</p></div></details>
+<!-- D-74: a panel's foot under a divider is a section, not a box: its text is not held to its centre. -->
+<div class="panel" id="foot-panel"><a href="#">A row</a><p id="foot"><a href="#">The foot's link</a></p></div>
+<!-- ink-centre, for review: a badge with its own border and its words 3px low. -->
+<div class="row"><span id="ink-off" style="display: inline-block; border: 1px solid #14151a; padding: 10px 8px 4px; font: 13px/1 Arial, sans-serif">Badge</span></div>
 </body>
 </html>

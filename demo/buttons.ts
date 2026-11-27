@@ -97,6 +97,7 @@ const STYLE = raw(`<style>
 .inv-m .bad { color: var(--danger); font-weight: 700; }
 .inv-m .bad::before { content: "≠ "; }
 #inv-summary .notice { margin: 0 0 var(--space-6); }
+#inv-sizes { margin: 0 0 var(--space-4); padding-inline-start: var(--space-5); }
 </style>`);
 
 // Measures every sample against its size's tokens, and writes what it found beside it. data-drift on the
@@ -176,7 +177,7 @@ export function buttonsPage(): string {
 </form>
 <div id="inv-summary" aria-live="polite"></div>
 <h2>The sizes</h2>
-<ul>${Object.entries(SIZES).map(([k, v]) => html`<li><b>${k}</b>: ${v}</li>`)}</ul>
+<ul id="inv-sizes">${Object.entries(SIZES).map(([k, v]) => html`<li><b>${k}</b>: ${v}</li>`)}</ul>
 <div class="table-wrap" tabindex="0"><table id="inv-table" class="inv-table"><caption>Every variant and state</caption>
 <thead><tr><th scope="col">Variant</th><th scope="col">At rest</th><th scope="col">Focus ring</th><th scope="col">Box</th><th scope="col">Type</th><th scope="col">Paint</th><th scope="col">Ring</th></tr></thead>
 ${ROWS.map((g) => html`<tbody><tr><th colspan="7" scope="rowgroup">${g.group}</th></tr>${g.rows.map(rowHtml)}</tbody>`)}

@@ -2342,3 +2342,39 @@ components.css) and `suiteLlms({ current })` (llms.txt's "## The Forspring suite
 sites served by hand (tests hold pulsespring.app's row and appspring.app's section), with one choice made for
 all: the site's own product is plain text in both, as pulsespring.app had it. The module imports nothing and
 returns strings, so a SiteSpring site vendors the one file and a server-rendered product imports it.
+
+## D-74: the red-line queue, triaged: measure what a reader sees (0.51.0, 2026-11-27)
+
+cos: triage the 178 review findings at ui.appspring.app/alignment, fix the real ones at component level,
+propose any rule that proves reliable for gating. The 178 were 89 findings, each in light and dark. Each was
+judged on its 2x crop, and those in menus also with the menu open. Three of them were faults, all in the
+bar's menus; the rest were the measurer seeing what a reader does not.
+- **Faults, fixed in components.css.**
+  - The user menu's sign-out button sat 4px further in than the language toggle and the rows above it, with
+    8px under its divider where the panel's other dividers have 4px. It now has one divider rule (4px, the
+    rule, 4px) and the rows' inset.
+  - The product menu's "here" sat 1.3px off its product's baseline. A row with a meta word is now one
+    wrapped flex line, centred by align-content, its items on the baseline.
+- **What a sighted reader sees is what is measured** (ui-audit, src/audit/alignment.ts).
+  - Labels only a screen reader reads (.visually-hidden, any clipped 1px box) are hidden while measure.js
+    runs. It took them as ink: the toast's "Luk" behind its ×, the table's "Vælg", "Language:",
+    "Henter kunder". That was 70 of the 178.
+  - Each closed menu or disclosure is measured on its own, with only it open, and its crops are taken then.
+    Before, its items were measured closed and cropped blank. With every menu closed, their items are left
+    out. A menu's pass measures within that menu only (measure.js's own root option), about 15 ms each.
+  - ink-centre keeps only a box with a surface of its own (a fill, a shadow, a border all round) and one
+    line of text. A panel's foot or sign-out row under a divider is a section the reader weighs against the
+    divider and the panel's edge, and wrapped text was weighed by its first line (12 findings, none a
+    fault).
+  - Not a fault, and still reported for a person:
+    - padding-over-gap: toasts' 8px padding around 44px buttons, a menu's section gap, the demo's own
+      controls;
+    - shared-baseline: wrapped rows, and a wordmark against a control.
+  - The queue is now 56 findings, 28 in each theme. The run's other 4 errors were the buttons page's 15px
+    list margin, now on the scale, so the demo audits clean.
+- **Proposed for gating, not built:** menu-row-inset. In an open menu (a switcher's panel, [role=menu], a
+  popover list), every row or control at least half the panel's width shares the panel's inline inset,
+  within 1px. Prototyped on the demo's menus at 1280 and 380 px, it flagged the sign-out on every page of
+  0.50.0 and nothing on 0.51.0. On content disclosures (a details with prose links or a form) it is false,
+  hence menus only. ink-centre is not proposed: control-text-centre (D-42) already gates a control's label
+  to 1px, and what ink-centre adds, badges and chips, had no fault to prove it on.
