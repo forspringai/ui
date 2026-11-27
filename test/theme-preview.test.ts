@@ -17,3 +17,13 @@ test("the page imports validateTheme and customerTheme from the package's dist a
   expect(typeof theme.customerTheme).toBe("function");
   expect(page).not.toMatch(/<(script|link|iframe)[^>]+(src|href)="https?:/);
 });
+
+// D-65: only the frame wears the theme; the page keeps the family's look, and one set of controls drives the frame.
+test("the page puts the theme on the frame only, and hides the frame's own switchers", () => {
+  const page = themePreviewPage();
+  expect(page).not.toContain("wear(document)");
+  expect(page).toContain(".demo-controls { display: none; }");
+  expect(page).toContain('selector: "#tp-swatches"');
+  expect(page).toContain("There is no theme to check yet.");
+  expect(page).not.toMatch(/validateTheme\(\)<\/code>|customerTheme\(\)<\/code>/);
+});

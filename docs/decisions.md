@@ -2177,3 +2177,27 @@ Peter approved the host (Inbox, 2026-11-27: "Yes, on ui.appspring.app"), so D-63
   suite's deploy token had no rights on appspring.app, so the first publish uploaded the Worker but could not
   attach the domain.
 - **One redirect, not two:** `/theme-preview` goes straight to `/dist/demo/theme-preview`.
+
+## D-65: the theme preview's papercuts, fixed where they live (0.45.0, 2026-11-27)
+
+Peter looked at the live preview ("many small errors and papercuts … check alignments and spacing everywhere");
+cos's pass found 22. The ui-wide ones are fixed in the components, not on the page:
+- **Display headings** (h1, h2): the condensed face's narrow space, minus the negative tracking, ran words
+  together ("Preview a customer theme"). They get `word-spacing` back (0.12em, 0.08em).
+- **A notice with text straight in the box** (no `.notice-body`) has no margins on its text, so its padding is
+  even top and bottom.
+- **A toolbar's text input** gives way first (`flex: 1 1 8rem; min-width: 0`), so a button doesn't wrap
+  while the field could still shrink.
+- **A removable tag on a phone** stays a tag's size: its x keeps the 44 px touch box but overhangs by negative
+  margins and draws a 24 px circle, so the pill is no longer 44 px tall (D-52 amended).
+- **A file input's button** is a ghost button, not the browser's grey one.
+- **A table's caption** keeps its cells' start edge on a phone (the cells' padding drops to 12 px there; the
+  caption's didn't). Found with the open-source alignment measurer (raphaelsalaja/skill), confirmed on a 2x crop.
+
+The page itself: the preview takes the page's width (the desktop layout; "Width: Phone" shows 390 px) and its
+screen's full height, so the page scrolls and the frame doesn't. The file, the buttons and the result sit in a
+column that stays in view. Only the frame wears the theme (the page's own logo and background had); the frame's
+own product and theme switchers are hidden, and the one set of controls above the frame sets both. An empty
+check says so; an uploaded file is laid out like the example; an error's suggestion has a "Use" button that
+puts it in the file. The words are for a customer, not a developer. The components screen's delete button opens
+the destructive confirm; the record screen's Save is the primary button.

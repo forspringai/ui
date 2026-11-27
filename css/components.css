@@ -55,12 +55,16 @@
   h1 {
     font: 800 clamp(var(--text-content-h1-min), 4.4vw, var(--text-content-h1))/var(--leading-content-h1) var(--font-display);
     letter-spacing: -0.02em;
+    /* The condensed face's space is narrow and the tracking takes more from it: words run together
+       ("Preview a customer theme"). Give the space back (D-65). */
+    word-spacing: 0.12em;
     margin-bottom: var(--rhythm-stack);
   }
 
   h2 {
     font: 800 var(--text-content-h2)/var(--leading-content-h2) var(--font-display);
     letter-spacing: -0.01em;
+    word-spacing: 0.08em;
     margin-bottom: var(--rhythm-field);
   }
 
@@ -1445,6 +1449,27 @@
     background: transparent;
   }
 
+  /* A file input's button is a ghost button, not the browser's grey one (D-65): the field keeps the
+     control height, the button sits inside it and the file's name follows. */
+  input[type="file"] {
+    padding: var(--space-1);
+  }
+
+  input[type="file"]::file-selector-button {
+    font: 600 var(--text-chrome-body)/var(--_control-line) var(--font-sans);
+    cursor: pointer;
+    border: 1px solid var(--input);
+    border-radius: var(--radius-button);
+    background: transparent;
+    color: var(--foreground);
+    padding: var(--space-2) var(--space-4);
+    margin-inline-end: var(--space-3);
+  }
+
+  input[type="file"]::file-selector-button:hover {
+    border-color: var(--foreground);
+  }
+
   /* Destructive, and never the loudest thing on the page: danger text on the surface. */
   :is(button, .button).danger {
     background: transparent;
@@ -1581,7 +1606,8 @@
   }
 
   .toolbar > input:not([type="checkbox"], [type="radio"]) {
-    flex: 1 1 12rem;
+    flex: 1 1 8rem;
+    min-width: 0;
   }
 
   /* --- Forms ---------------------------------------------------------------------------------- */
@@ -2007,8 +2033,14 @@
     min-width: 0;
   }
 
-  .notice-body > :last-child {
+  .notice-body > :last-child,
+  .notice > :last-child {
     margin-bottom: 0;
+  }
+
+  /* Text straight in the box (no .notice-body) has no top margin either, so top and bottom match (D-65). */
+  .notice > p {
+    margin-block-start: 0;
   }
 
   /* The label: the kind of message in words, small caps in the tone colour, real text (D-120). */
@@ -3437,6 +3469,11 @@
       padding: var(--space-2) var(--space-3);
     }
 
+    /* A table's caption keeps its cells' start edge (D-65). */
+    .table-wrap caption {
+      padding-inline: var(--space-3);
+    }
+
     /* Text links that stand alone get a 24px target where fingers are used. */
     .go,
     footer a {
@@ -3551,10 +3588,16 @@
       min-width: var(--control-touch);
     }
 
-    /* A removable tag's x is a button here too: the touch floor's box (the rule below gives the
-       height), and the pill grows round it. */
+    /* A removable tag's x is a touch-floor button that doesn't grow the pill (D-65): its 44 px box
+       overhangs by negative margins, and its drawn circle (the hover fill) stays 24 px. */
     .tag-remove {
       width: var(--control-touch);
+      min-height: var(--control-touch);
+      margin: calc(-1 * var(--space-2));
+    }
+
+    .tag-remove:hover {
+      background: radial-gradient(circle, var(--muted) calc(var(--space-6) / 2), transparent calc(var(--space-6) / 2 + 0.5px));
     }
 
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */
