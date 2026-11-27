@@ -197,7 +197,10 @@ export function inkBoxes(boxes: RawAlignment["rect"][]): boolean[] {
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 /** The report: one self-contained page and the crops beside it (index.html, 1.png, 2.png, ...). */
-export function redlineReport(shots: readonly Redline[], when: string): { html: string; files: Map<string, Buffer> } {
+/** A page as audited (D-79): the whole page at one width, light, for the findings that have no crop of their own. */
+export type PageShot = { url: string; width: number; jpeg: Buffer };
+
+export function redlineReport(shots: readonly Redline[], when: string, pages: readonly PageShot[] = []): { html: string; files: Map<string, Buffer> } {
   const files = new Map<string, Buffer>();
   const groups = new Map<string, Redline[]>();
   for (const s of shots) {
@@ -226,6 +229,7 @@ code { overflow-wrap: anywhere; }
 <p>${shots.length} finding${shots.length === 1 ? "" : "s"}, ${errors} that fail${errors === 1 ? "s" : ""} the run. Measured ${esc(when)} by ui-audit with the alignment skill's measure.js (raphaelsalaja/skill aa9f452, MIT). Red: the box measured, and for a shared edge, the edge the text missed. Crops are at 2x.</p>
 <p>Only a shared edge or a single-line shared baseline 2 px or more off fails the run (ui D-66). The rest are for a person to judge.</p>
 ${sections.join("\n") || "<p>Nothing to show.</p>"}
+${pages.length ? `<h2 id="pages">The pages as audited</h2><p>Each page at each width, light, as the audit measured it: the picture for a finding that has no crop of its own (spacing, a button's size, a menu's inset).</p>${pages.map((p, i) => { const name = `page-${i + 1}.jpg`; files.set(name, p.jpeg); return `<figure><figcaption><code>${esc(p.url)}</code> at ${p.width} px</figcaption><a href="${name}"><img src="${name}" alt="${esc(p.url)} at ${p.width} px" loading="lazy" width="${Math.min(p.width, 640)}"></a></figure>`; }).join("")}` : ""}
 </body></html>
 `;
   return { html, files };

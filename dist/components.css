@@ -1465,7 +1465,12 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* A standalone link ("Se alle ›") is a 24px target at every width (WCAG 2.2 2.5.8, D-79): two stacked in a table's
+     row header were 17px lines 0px apart on a desktop (AppSpring's deliveries, live pass 27 Nov). */
   .go {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--space-6);
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
@@ -3552,8 +3557,7 @@
       padding-inline: var(--space-3);
     }
 
-    /* Text links that stand alone get a 24px target where fingers are used. */
-    .go,
+    /* A footer's links get a 24px target where fingers are used (.go has one everywhere, D-79). */
     footer a {
       display: inline-flex;
       align-items: center;
