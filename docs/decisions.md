@@ -2327,3 +2327,7 @@ cos, on SiteSpring's first live cards: "Koncert: Anker & Ankerkæde, 9." / "nove
   by halving). "Koncert: Anker &" / "Ankerkæde, 9. november".
 Tests: that title, Danish and English dates, prices and times at both sizes, and balance (the shorter line at
 least 0.6 of the longer).
+- **0.49.3: no line ends on a joiner** (cos: "Koncert: Anker &" split a name). "og", "and", "eller", "or", "+"
+  and the dashes go with the word after them; "&" holds both its neighbours, since it is usually inside a
+  name ("Anker & Ankerkæde", "Æble & Co"). The Koncert title now sets "Koncert: Anker & Ankerkæde," /
+  "9. november", balance's choice with the name and the date whole.

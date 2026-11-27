@@ -29,6 +29,10 @@ const MONTHS = /^(januar|februar|marts|april|maj|juni|juli|august|september|okto
 const ABBREVIATION = /^(kl|nr|ca|fx|pkt|tlf|no|st|dr|mr|ms|mrs)\.$/i;
 // What a number keeps beside it: a unit, a currency, a month, another number ("1. december 2026").
 const UNIT = /^(kr|dkk|eur|usd|nok|sek|kr\.|%|‰|€|\$|£|dage?|døgn|timer?|min|minutter|sek|uger?|måneder?|år|km|m|cm|kg|g|l|ml|stk\.?|pers\.?|personer|gange|days?|hours?|mins?|minutes?|weeks?|months?|years?|times|am|pm|h|x)[.,;:!?)]?$/i;
+// A line never ends on a joiner (D-72, cos): "og", "and", "+", "–" go with the word after them; "&" holds
+// both its neighbours, since it is usually inside a name ("Anker & Ankerkæde", "Æble & Co").
+const JOINER = /^(og|and|eller|or|\+|–|—|-)$/i;
+const AMPERSAND = /^&$/;
 /** The headline as tokens: words, and the groups that must not break inside. */
 export function tokens(headline) {
     const words = headline.trim().split(/\s+/).filter(Boolean);
@@ -36,7 +40,13 @@ export function tokens(headline) {
     for (const w of words) {
         const prev = out.at(-1);
         const prevLast = prev?.split(" ").at(-1);
-        const glue = prevLast !== undefined && ((NUMBER.test(prevLast) && (UNIT.test(w) || MONTHS.test(w) || NUMBER.test(w))) || ABBREVIATION.test(prevLast) || (MONTHS.test(prevLast) && /^\d/.test(w)));
+        const glue = prevLast !== undefined &&
+            ((NUMBER.test(prevLast) && (UNIT.test(w) || MONTHS.test(w) || NUMBER.test(w))) ||
+                ABBREVIATION.test(prevLast) ||
+                (MONTHS.test(prevLast) && /^\d/.test(w)) ||
+                JOINER.test(prevLast) ||
+                AMPERSAND.test(prevLast) ||
+                AMPERSAND.test(w));
         if (glue)
             out[out.length - 1] = prev + " " + w;
         else
