@@ -160,3 +160,96 @@ export function plainBaselineSpread(box) {
     const b = texts.map((t) => t.baseline);
     return Math.max(...b) - Math.min(...b);
 }
+/**
+ * Symbols with words (D-69): every icon (svg.icon) or signal mark (.signal-mark) that leads or trails
+ * words in a row sits with its centre on the cap centre of the words' first line, the line beside it.
+ * measure.js's icon-with-label sees only SVG icons in controls under 56 px with a surface of their own,
+ * so it missed Peter's case (a signal's diamond above a notice's title, review of 0.47.1). The cap centre
+ * is the baseline less half the cap height, from the font's own metrics, as measure.js reads it.
+ */
+export function collectSymbols() {
+    const canvas = document.createElement("canvas").getContext("2d");
+    const visible = (el) => {
+        const r = el.getBoundingClientRect();
+        if (!r.width || !r.height)
+            return false;
+        for (let n = el; n; n = n.parentElement) {
+            const s = getComputedStyle(n);
+            if (s.visibility === "hidden" || s.display === "none" || Number(s.opacity) < 0.05)
+                return false;
+            if (n.tagName === "DETAILS" && !n.open && n !== el && !el.closest("summary"))
+                return false;
+        }
+        return !el.closest("[inert], [hidden], .sr-only, .visually-hidden");
+    };
+    const path = (el) => {
+        const parts = [];
+        for (let n = el; n && n !== document.body && parts.length < 3; n = n.parentElement)
+            parts.unshift(n.tagName.toLowerCase() + (n.id ? `#${n.id}` : "") + [...n.classList].slice(0, 2).map((c) => `.${c}`).join(""));
+        return parts.join(" > ");
+    };
+    // The first line of words after (or before) the symbol in its row: a text node's first client rect.
+    const firstLine = (row, symbol) => {
+        const walker = document.createTreeWalker(row, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+            const node = walker.currentNode;
+            if (!node.textContent.trim() || symbol.contains(node))
+                continue;
+            const parent = node.parentElement;
+            if (!visible(parent) || parent.closest(".sr-only, .visually-hidden, [aria-hidden=true]"))
+                continue;
+            // Words inside a control of their own (a notice's action button) are not this symbol's line.
+            if (parent.closest("button, .button, a.button, input, select, textarea") !== symbol.closest("button, .button"))
+                continue;
+            const range = document.createRange();
+            range.selectNodeContents(node);
+            const rect = [...range.getClientRects()].find((r) => r.width > 0);
+            if (!rect)
+                continue;
+            const s = getComputedStyle(parent);
+            canvas.font = `${s.fontStyle} ${s.fontWeight} ${s.fontSize} ${s.fontFamily}`;
+            const m = canvas.measureText(node.textContent.trim());
+            const cap = canvas.measureText("H").actualBoundingBoxAscent;
+            const baseline = rect.top + m.fontBoundingBoxAscent;
+            return { text: node.textContent.trim().slice(0, 40), left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, capCentre: baseline - cap / 2 };
+        }
+        return null;
+    };
+    const out = [];
+    for (const symbol of document.querySelectorAll("svg.icon, .signal-mark")) {
+        if (!visible(symbol))
+            continue;
+        // The row: the nearest ancestor that lays the symbol beside other content (flex row, or inline).
+        let row = symbol.parentElement;
+        while (row && row.children.length < 2 && !(row.textContent ?? "").trim())
+            row = row.parentElement;
+        if (!row)
+            continue;
+        const line = firstLine(row, symbol);
+        if (!line)
+            continue;
+        const r = symbol.getBoundingClientRect();
+        // Leading the words, not above or below them (a stacked icon is not on a line). A trailing symbol (a
+        // list row's chevron) centres on the row, as lists do, so only a leading one is held to the line.
+        const beside = r.right <= line.left + 1;
+        if (!beside || r.bottom < line.top - 24 || r.top > line.bottom + 24)
+            continue;
+        out.push({ selector: path(symbol), text: line.text, symbol: { x: r.x + scrollX, y: r.y + scrollY, width: r.width, height: r.height }, offset: Math.round((r.top + r.height / 2 - line.capCentre) * 10) / 10 });
+    }
+    return out;
+}
+/** A symbol 1.5 px or more off its line's cap centre is an error (D-69); under that, nothing. */
+export function symbolFindings(obs) {
+    return obs
+        .filter((o) => Math.abs(o.offset) >= 1.5)
+        .map((o) => ({
+        rule: "alignment-symbol-line",
+        severity: "error",
+        selector: o.selector,
+        value: `centre ${Math.abs(o.offset)}px ${o.offset > 0 ? "below" : "above"} the cap centre of "${o.text}"`,
+        expected: "the symbol centred on the cap centre of its words' first line (within 1.5 px)",
+        note: "an icon or signal mark beside words (D-69); see the red-line report (--redlines)",
+        box: o.symbol,
+        measured: { offset: o.offset },
+    }));
+}

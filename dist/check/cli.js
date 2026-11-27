@@ -19,8 +19,8 @@ chooseOrgPage, the bar's org switcher). Paths are files or directories, relative
 --json   the result as JSON on stdout.
 
 Rules: words (a picker's heading or label written by hand), control (a map over orgs that makes a
-choice control, a control carrying an org field, a select of orgs), class (the package's org-list
-classes or data-forspring-org-list written by hand).`;
+choice control, in markup or built in client script, a control carrying an org field, a select of
+orgs), class (the package's org-list classes or data-forspring-org-list written by hand).`;
 function main(argv) {
     const [check, ...rest] = argv;
     if (check === "--help" || check === "-h") {

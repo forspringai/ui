@@ -131,8 +131,8 @@ describe("the demo page", () => {
     expect(r.ok).toBe(true);
   }, 120_000);
 
-  // The founder's case (D-41): his markup with no class, and the same lead with actions(). No finding
-  // at all, the five layout rules' warnings included.
+  // The record (D-41, D-69): one form, its actions in one row from actions(). No finding at all, the
+  // five layout rules' warnings included.
   test("the regression page passes, layout rules too, both widths and themes", async () => {
     const r = await audit(options([`${base}/dist/demo/pages/lead.en.html`], { product: "appspring" }), browser);
     expect(r.pages).toHaveLength(4);
@@ -466,7 +466,8 @@ describe("alignment red-lines (D-66)", () => {
   const of = (sev: string) => all(r).filter((f) => f.rule.startsWith("alignment-") && f.severity === sev).map((f) => `${f.rule} ${f.selector}`).sort();
 
   test("a 3 px edge and a 4 px baseline between plain texts fail the run", () => {
-    expect(of("error")).toEqual(['alignment-shared-baseline div#baseline "Wordmarksub"', 'alignment-shared-edge div#edge > p "Off by three"']);
+    expect(of("error")).toEqual(['alignment-shared-baseline div#baseline "Wordmarksub"', 'alignment-shared-edge div#edge > p "Off by three"', "alignment-symbol-line div#symbol-off.row > span.signal-mark"]);
+    expect(all(r).some((f) => f.rule === "alignment-symbol-line" && f.selector.includes("symbol-ok"))).toBe(false);
     expect(r.ok).toBe(false);
   });
 

@@ -9,6 +9,7 @@ import { connectPanel, connectScript, type ConnectPanelOptions } from "../src/co
 import { chooseOrgPage, noOrgPage, orgPickerPage, refusedPage, type StandardPage } from "../src/pages.ts";
 import { REFUSAL_REASONS, type Refusal } from "../src/refusals.ts";
 import { themePreviewPage } from "./theme-preview.ts";
+import { buttonsPage } from "./buttons.ts";
 
 const PRODUCTS = [
   ["forspring", "Forspring"],
@@ -97,7 +98,7 @@ const head = raw(`<link rel="stylesheet" href="../tokens.css"><link rel="stylesh
 .demo-grid { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
 .demo-grid > * { margin: 0; }
 .demo-toasts > .toast-region { position: static; inline-size: auto; max-inline-size: 30rem; margin-bottom: var(--space-6); }
-.demo-icons { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); }
+.demo-icons { list-style: none; margin: var(--space-4) 0 0; padding: 0; display: grid; gap: var(--space-2); grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
 .demo-icons li { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--card); }
 .demo-icons .icon { font-size: var(--text-content-h2); color: var(--foreground); }
 </style>`);
@@ -675,20 +676,17 @@ function leadPage(): string {
   const switcher = html`<nav aria-label="Products"><details class="switcher bar-menu product-switcher"><summary>Products</summary><div class="bar-panel"><p class="bar-panel-label">Acme has</p><ul>${LEAD_PRODUCTS.map(
     (p) => html`<li><a href="${p.href}"${raw(p.current ? ' aria-current="true"' : "")}><span class="bar-item-name">${p.name}</span></a></li>`,
   )}</ul></div></details></nav>`;
+  // One rule for a form's actions (D-69, Peter's review of 0.47.1): one row, the primary first, the
+  // destructive one at the end, wrapping only when there is no room. The record has one form, made with
+  // actions(), where it used to show a bare form beside the actions() one.
   const ours = html`${switcher}
 <form>${field({ name: "stage", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
-${field({ name: "owner", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}<button type="submit">Save</button></form>
-<p>${dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "ghost" })}</p>
-${dialog({ id: "remove", title: "Remove the lead?", body: "This removes the lead and its notes.", close: "Keep", alert: true, actions: html`<button type="submit" class="danger">Remove</button>`, form: { action: "#" } })}`;
-  const withActions = html`<section><h2>Save, cancel and remove in one row</h2>
-<form>${field({ name: "stage2", label: "Stage", control: "select", options: STAGES, lang: "en", hint: "Where the lead stands." })}
-${field({ name: "owner2", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}
+${field({ name: "owner", label: "Owner", control: "select", options: [{ value: "a", label: "Anna", selected: true }], lang: "en" })}
 ${actions({ primary: button({ label: "Save" }), secondary: button({ label: "Cancel", variant: "ghost", href: "#" }), destructive: dialogTrigger({ dialog: "remove", href: "#remove", label: "Remove lead", variant: "danger" }) })}</form>
-</section>`;
+${dialog({ id: "remove", title: "Remove the lead?", body: "This removes the lead and its notes.", close: "Keep", alert: true, actions: html`<button type="submit" class="danger">Remove</button>`, form: { action: "#" } })}`;
   const css = raw(`<link rel="stylesheet" href="../../tokens.css"><link rel="stylesheet" href="../../fonts.css"><link rel="stylesheet" href="../../components.css">`);
   return String(
-    html`<!doctype html><html lang="en" data-product="appspring"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lead</title>${css}</head><body><main id="main" class="wrap"><h1>Lead</h1>${ours}
-${withActions}</main>${dialogScript()}
+    html`<!doctype html><html lang="en" data-product="appspring"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Lead</title>${css}</head><body><main id="main" class="wrap"><h1>Lead</h1>${ours}</main>${dialogScript()}
 <script>if (new URLSearchParams(location.search).get("open") === "products") document.querySelector("details.product-switcher").open = true;</script></body></html>`,
   ) + "\n";
 }
@@ -723,5 +721,6 @@ export function standardPages(): Record<string, string> {
   orgPickerPages(out);
   out["pages/lead.en.html"] = leadPage();
   out["theme-preview.html"] = themePreviewPage();
+  out["buttons.html"] = buttonsPage();
   return out;
 }

@@ -11,7 +11,7 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page, Request } from "playwright";
 import { collect, collectLayout, collectPopovers, type Box, type LayoutObservations, type Observations, type PopoverObservation, type Rgba, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
-import { alignmentFindings, measureSource, plainBaselineSpread, redlineCrops, redlineReport, type RawAlignment, type Redline } from "./alignment.js";
+import { alignmentFindings, collectSymbols, measureSource, symbolFindings, plainBaselineSpread, redlineCrops, redlineReport, type RawAlignment, type Redline } from "./alignment.js";
 
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 
@@ -794,7 +794,7 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
 
     // Alignment (D-66), before the popover probe opens anything: measured from the top of the page.
     await page.evaluate(() => scrollTo(0, 0));
-    const aligned = alignmentFindings(((await page.evaluate(measure)) as { findings: RawAlignment[] }).findings);
+    const aligned = [...alignmentFindings(((await page.evaluate(measure)) as { findings: RawAlignment[] }).findings), ...symbolFindings(await page.evaluate(collectSymbols))];
     for (const f of aligned)
       if (f.rule === "alignment-shared-baseline" && f.severity === "error") {
         const spread = await page.evaluate(plainBaselineSpread, f.box);

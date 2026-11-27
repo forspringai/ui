@@ -61,4 +61,26 @@ export declare function redlineReport(shots: readonly Redline[], when: string): 
  * returns the plain texts' baseline spread, or null when fewer than two texts of two sizes are left.
  */
 export declare function plainBaselineSpread(box: RawAlignment["rect"]): number | null;
+/** A symbol beside text whose centre misses the text's first line (D-69). */
+export type SymbolObservation = {
+    selector: string;
+    text: string;
+    symbol: {
+        x: number;
+        y: number;
+        width: number;
+        height: number;
+    };
+    offset: number;
+};
+/**
+ * Symbols with words (D-69): every icon (svg.icon) or signal mark (.signal-mark) that leads or trails
+ * words in a row sits with its centre on the cap centre of the words' first line, the line beside it.
+ * measure.js's icon-with-label sees only SVG icons in controls under 56 px with a surface of their own,
+ * so it missed Peter's case (a signal's diamond above a notice's title, review of 0.47.1). The cap centre
+ * is the baseline less half the cap height, from the font's own metrics, as measure.js reads it.
+ */
+export declare function collectSymbols(): SymbolObservation[];
+/** A symbol 1.5 px or more off its line's cap centre is an error (D-69); under that, nothing. */
+export declare function symbolFindings(obs: readonly SymbolObservation[]): AlignmentFinding[];
 export {};

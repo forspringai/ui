@@ -23,5 +23,9 @@
 <div class="row" id="baseline-control"><span style="font: 700 24px/1 Arial, sans-serif">Wordmark</span><span><span style="display: inline-block; border: 1px solid #14151a; padding: 4px 8px; font: 12px/1 Arial, sans-serif">Switch</span></span></div>
 <!-- the same row on one baseline: nothing to report. -->
 <div class="row" id="baseline-ok" style="align-items: baseline"><span style="font: 700 24px/1 Arial, sans-serif">Wordmark</span><span style="font: 12px/1 Arial, sans-serif">sub</span></div>
+<!-- symbol-line (D-69), an error: a signal's mark at the top of a two-line block, above its title's line. -->
+<div class="row" id="symbol-off" style="align-items: flex-start"><span class="signal-mark" style="display: inline-block; width: 10px; height: 10px; background: #c0392b"></span><div><b style="display: block; font: 600 15px/1.55 Arial, sans-serif">2 checks are down</b><span>Monthly invoices, nightly backup</span></div></div>
+<!-- symbol-line, right: the same mark moved onto the title's line. -->
+<div class="row" id="symbol-ok" style="align-items: flex-start"><span class="signal-mark" style="display: inline-block; width: 10px; height: 10px; background: #2e7d32; translate: 0 calc((15px * 1.55 - 100%) / 2)"></span><div><b style="display: block; font: 600 15px/1.55 Arial, sans-serif">All running</b><span>All 14 checks reported in time</span></div></div>
 </body>
 </html>

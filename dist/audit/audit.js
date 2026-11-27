@@ -8,7 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { collect, collectLayout, collectPopovers } from "./page.js";
-import { alignmentFindings, measureSource, plainBaselineSpread, redlineCrops, redlineReport } from "./alignment.js";
+import { alignmentFindings, collectSymbols, measureSource, symbolFindings, plainBaselineSpread, redlineCrops, redlineReport } from "./alignment.js";
 export const DEFAULT_WIDTHS = [1280, 380];
 export const DEFAULT_THEMES = ["light", "dark"];
 /** Below this width the phone floors apply: primary controls 44 px tall (D-5's 560 px breakpoint, the
@@ -740,7 +740,7 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
                 found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
         // Alignment (D-66), before the popover probe opens anything: measured from the top of the page.
         await page.evaluate(() => scrollTo(0, 0));
-        const aligned = alignmentFindings((await page.evaluate(measure)).findings);
+        const aligned = [...alignmentFindings((await page.evaluate(measure)).findings), ...symbolFindings(await page.evaluate(collectSymbols))];
         for (const f of aligned)
             if (f.rule === "alignment-shared-baseline" && f.severity === "error") {
                 const spread = await page.evaluate(plainBaselineSpread, f.box);

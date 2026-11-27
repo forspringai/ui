@@ -29,7 +29,7 @@ describe("toast()", () => {
       '<div class="toast toast-success" id="toast" role="status" aria-live="polite" data-toast-autohide="true">' +
         String(icon("check")) +
         '<p class="toast-text" id="toast-text"><span class="visually-hidden">Udført: </span>Ændringerne er gemt.</p>' +
-        '<span class="toast-actions"><a class="button ghost small toast-dismiss" href="/o/bager-hansen/sites" data-toast-dismiss="toast" aria-describedby="toast-text">' +
+        '<span class="toast-actions"><a class="button ghost small icon-only toast-dismiss" href="/o/bager-hansen/sites" data-toast-dismiss="toast" aria-describedby="toast-text">' +
         String(icon("x")) +
         '<span class="visually-hidden">Luk</span></a></span></div>',
     );
@@ -62,14 +62,14 @@ describe("toast()", () => {
   test("dismiss works with no script: a link to the page without the flash, named and described", () => {
     const h = String(toast({ ...SAVED, id: "saved", dismissHref: "/o/bager-hansen/sites?q=bager" }));
     const dismiss = /<a [^>]*data-toast-dismiss[^>]*>/.exec(h)![0];
-    expect(dismiss).toBe('<a class="button ghost small toast-dismiss" href="/o/bager-hansen/sites?q=bager" data-toast-dismiss="saved" aria-describedby="saved-text">');
+    expect(dismiss).toBe('<a class="button ghost small icon-only toast-dismiss" href="/o/bager-hansen/sites?q=bager" data-toast-dismiss="saved" aria-describedby="saved-text">');
     expect(h).toContain('<p class="toast-text" id="saved-text">');
     expect(h).not.toMatch(/<button|<form|onclick/);
   });
 
   test("an action is a link after the text; a toast with one, a warning or a danger never auto-hides", () => {
     const h = String(toast({ ...SAVED, action: { label: "Fortryd", href: "/undo" } }));
-    expect(h).toContain('<span class="toast-actions"><a class="button ghost small" href="/undo" aria-describedby="toast-text">Fortryd</a><a class="button ghost small toast-dismiss"');
+    expect(h).toContain('<span class="toast-actions"><a class="button ghost small" href="/undo" aria-describedby="toast-text">Fortryd</a><a class="button ghost small icon-only toast-dismiss"');
     expect(h).not.toContain("data-toast-autohide");
     for (const tone of ["warning", "danger"] as const) expect(String(toast({ ...SAVED, tone }))).not.toContain("data-toast-autohide");
     expect(String(toast({ ...SAVED, tone: "info" }))).toContain('data-toast-autohide="true"');
@@ -239,7 +239,7 @@ describe("button() with an icon", () => {
     expect(String(button({ label: "Hent CSV", icon: "download", variant: "ghost", type: "button" }))).toBe(`<button class="ghost" type="button">${icon("download")}Hent CSV</button>`);
     expect(String(button({ label: "Åbn", icon: "external-link", href: "/x" }))).toBe(`<a class="button" href="/x">${icon("external-link")}Åbn</a>`);
     expect(String(button({ label: "Gem" }))).toBe('<button type="submit">Gem</button>');
-    expect(String(button({ label: "", icon: "trash", ariaLabel: "Slet kunden", variant: "danger", small: true }))).toBe(`<button class="danger small" type="submit" aria-label="Slet kunden">${icon("trash")}</button>`);
+    expect(String(button({ label: "", icon: "trash", ariaLabel: "Slet kunden", variant: "danger", small: true }))).toBe(`<button class="danger small icon-only" type="submit" aria-label="Slet kunden">${icon("trash")}</button>`);
   });
 });
 

@@ -30,7 +30,8 @@ export type Rule =
   | "alignment-shared-baseline"
   | "alignment-ink-centre"
   | "alignment-padding-over-gap"
-  | "alignment-even-gaps";
+  | "alignment-even-gaps"
+  | "alignment-symbol-line";
 
 export type Finding = {
   rule: Rule;

@@ -2251,3 +2251,33 @@ state (a phone width, a longer screen) could not shrink. It is now sized from th
 the page takes off), and `test/theme-preview-browser.test.ts` (in test:browser) checks, in light and dark,
 that after every control change and window width the frame is as tall as its screen: no blank below, no
 scroll inside. On the old code it fails at "back to a desktop window: frame 17599 for content 12141".
+
+## D-69: Peter's review of 0.47.1: symbols on their line, one action row, one focus ring, one button system (0.48.0, 2026-11-27)
+
+Peter annotated the theme preview's review set (coordinator areas/brand/theme-preview-qa-2026-11-27/review-0.47.1).
+- **Symbols on their line.** A notice's signal mark sat 7 px above its title's line, its icon 2 px off; a phone's
+  toast icon 2 px low; a signal whose words wrap had its mark between the lines. A leading symbol now centres on
+  the cap centre of its words' first line: the notice sets the line (`--_line`, the body's or the small label's)
+  and moves the symbol by half the room it leaves; a signal aligns to the top and does the same. measure.js's
+  icon-with-label could not see this (only SVG icons, only in controls under 56 px with a surface), so ui-audit
+  has a rule of its own, **`alignment-symbol-line`**, an error from 1.5 px: every `svg.icon` or `.signal-mark`
+  leading words in a row. Trailing symbols (a list row's chevron) centre on their row and are not held to it.
+  On the demo's 8 pages at both widths every leading symbol is within 0.5 px.
+- **One action row.** A form's actions are one row everywhere: the primary first, the destructive one at the end,
+  wrapping only when there is no room. The phone's column of full-width buttons (D-41) is gone. The record screen
+  is one form on `actions()` (it showed a bare form beside the actions() one).
+- **One focus ring.** cos's rule: a separate ring, not a border change: an outline (it survives forced colours)
+  in `--ring`, 2 px out, for `:focus-visible` only, the same on every control. Fields lose their own (offset 0
+  and an accent border); buttons go from 3 to 2 px. The destructive confirm's fallback page sets no autofocus:
+  a page load drew the ring on "Keep site" with no keyboard behind it (Peter's "double border"). The dialog
+  keeps it; opened by mouse it shows no ring, by keyboard it does (tested).
+- **One button system, with evidence.** `dist/demo/buttons.html` (https://ui.appspring.app/buttons) draws every
+  button the package has, at rest and with the ring, and measures each against its size's tokens (default 44,
+  small 32, icon-only squares, the tag's 24 px x, the filter chip, Google's own). It found five drifts, fixed: an
+  icon-only small button 39 px wide (now `.icon-only`, a square, at the touch floor on a phone), a toast's close
+  31 px wide, the file input's button 36 px with its own padding and 14 px type (now the small ghost button's
+  box), and the strip's action a 24 px box with 12 px type (now the small button's). `test/buttons-browser.test.ts`
+  (test:browser) loads it in every product and theme and fails on any mark, and on a `:is(button, .button).x`
+  variant in components.css that has no row, so a new variant cannot drift unseen.
+- **org-lists** (lead-ui's suite scan): a map over orgs that builds a control in client script
+  (`el("option", ...)`, `createElement`, `h`, `new Option`) is a `control` finding too.

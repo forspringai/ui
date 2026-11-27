@@ -22,7 +22,7 @@ export type Product = "forspring" | "spring" | "sitespring" | "dataspring" | "ap
 /** Each product's name as its wordmark writes it (hub D-101): never lowercase, never split. */
 export declare const PRODUCT_NAMES: Record<Product, string>;
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export declare const VERSION = "0.47.1";
+export declare const VERSION = "0.48.0";
 export type Theme = "light" | "dark";
 /**
  * The @font-face rules, with the font files under `base` ("/assets/fonts/" when a product serves the
@@ -59,7 +59,7 @@ export type Favicon = {
 };
 /** Where shell() expects the package's dist/brand/ by default: /assets/ui/<version>/brand/, the path
  *  products copy the package's files to (account D-20), versioned so a year-long cache stays right. */
-export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.47.1/brand/";
+export declare const DEFAULT_BRAND_BASE = "/assets/ui/0.48.0/brand/";
 /** A product's favicon files under `base`, the URL where dist/brand/ is served (ending in /). */
 export declare function faviconFor(product: Product, base?: string): Favicon;
 /**
@@ -352,8 +352,8 @@ export type ActionsOptions = {
 };
 /**
  * A row of actions (D-41): one height and the actions gap, the primary first, then the secondary
- * ones, and the destructive one apart at the far end. On a phone it is a column of full-width
- * buttons with the same gap. The order is the helper's, so a page cannot get it wrong. (A
+ * ones, and the destructive one apart at the far end, wrapping only when there is no room (D-69;
+ * it was a column of full-width buttons on a phone). The order is the helper's, so a page cannot get it wrong. (A
  * destructive confirm puts the safe action first instead: that is dialog()'s own row, D-23.)
  */
 export declare function actions(o: ActionsOptions): Html;

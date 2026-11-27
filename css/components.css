@@ -97,9 +97,14 @@
     color: var(--_hover);
   }
 
-  :focus-visible {
+  /* Focus (D-69): one ring, the same on every control. An outline (it survives forced colours, a
+     box-shadow does not) in the accent's ring colour, 2px out from the control so it never reads as
+     a second border, and only for :focus-visible. [data-focus-ring] draws the same ring on a sample
+     that is not focused, so the button inventory (demo/buttons.html) can show every variant's. */
+  :focus-visible,
+  [data-focus-ring] {
     outline: 2px solid var(--ring);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
 
   label {
@@ -192,13 +197,7 @@
     cursor: not-allowed;
   }
 
-  input:focus-visible,
-  select:focus-visible,
-  textarea:focus-visible {
-    outline: 2px solid var(--ring);
-    outline-offset: 0;
-    border-color: var(--ring);
-  }
+
 
   input[type="checkbox"],
   input[type="radio"] {
@@ -1180,9 +1179,12 @@
 
   /* The word carries the meaning; the mark repeats it in colour and in shape, so red and green are
      told apart without colour: up a dot, late a triangle, down a diamond, not judged a hollow ring. */
+  /* The mark sits on the words' first line (D-69): the row aligns to the top and the mark moves down by
+     half the room the line leaves it, so a signal whose words wrap keeps its mark beside the first. */
   .signal {
+    --_line: calc(var(--text-chrome-body) * var(--leading-chrome-body));
     display: inline-flex;
-    align-items: center;
+    align-items: flex-start;
     gap: var(--space-2);
     font: 500 var(--text-chrome-body)/var(--leading-chrome-body) var(--font-sans);
     color: var(--foreground);
@@ -1195,6 +1197,10 @@
     width: 10px;
     height: 10px;
     background: var(--signal-off);
+  }
+
+  .signal > .signal-mark {
+    translate: 0 calc((var(--_line) - 100%) / 2);
   }
 
   .signal-mark.ok {
@@ -1460,13 +1466,14 @@
   }
 
   input[type="file"]::file-selector-button {
-    font: 600 var(--text-chrome-body)/var(--_control-line) var(--font-sans);
+    font: 600 var(--text-content-small)/var(--_control-line-small) var(--font-sans);
     cursor: pointer;
     border: 1px solid var(--input);
     border-radius: var(--radius-button);
     background: transparent;
     color: var(--foreground);
-    padding: var(--space-2) var(--space-4);
+    /* The small ghost button's box (D-69): the inventory measured it 36px with its own padding. */
+    padding: var(--space-1) var(--space-3);
     margin-inline-end: var(--space-3);
   }
 
@@ -1545,6 +1552,20 @@
     line-height: var(--_control-line-small);
   }
 
+  /* An icon with no words (button({ icon, label: "" }), .icon-only): a square of the control's height,
+     the glyph in its middle (D-69). The button inventory measured the small one 39px wide. */
+  :is(button, .button).icon-only {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-inline: 0;
+    min-inline-size: var(--control-height);
+  }
+
+  :is(button, .button).icon-only.small {
+    min-inline-size: var(--control-height-small);
+  }
+
   :is(button, .button).wide {
     width: 100%;
   }
@@ -1566,9 +1587,9 @@
   }
 
   /* An action row (D-41, actions()): one height, the actions gap, the primary first, then the
-     secondary ones, and a destructive action apart at the far end. On a phone it is a column of
-     full-width buttons with the same gap (below). A span.actions is the inline pair of links in a
-     list row, and stays inline. */
+     secondary ones, and a destructive action apart at the far end. One row at every width, wrapping
+     only when there is no room (D-69, Peter's review: it was a column of full-width buttons on a
+     phone). A span.actions is the inline pair of links in a list row, and stays inline. */
   .actions {
     display: flex;
     flex-wrap: wrap;
@@ -1957,17 +1978,18 @@
     display: contents;
   }
 
+  /* The small button's box (D-69; it was a 24px box of its own, 12px type), in the strip's ink. */
   .strip-action {
     flex: none;
     display: inline-flex;
     align-items: center;
-    min-height: var(--space-6);
-    padding: 0 var(--space-2);
+    min-height: var(--control-height-small);
+    padding: var(--space-1) var(--space-3);
     border: 1px solid currentColor;
     border-radius: var(--radius-button);
     background: transparent;
     color: inherit;
-    font: 600 var(--text-chrome-meta)/var(--leading-chrome-meta) var(--font-sans);
+    font: 600 var(--text-content-small)/var(--_control-line-small) var(--font-sans);
     text-decoration: none;
     cursor: pointer;
   }
@@ -2022,10 +2044,20 @@
     --_fill: light-dark(color-mix(in srgb, var(--danger) 14%, var(--card)), color-mix(in srgb, var(--danger) 9%, var(--card)));
   }
 
-  /* The icon (or a signal's mark) in the tone, beside the first line. */
+  /* The icon (or a signal's mark) in the tone, centred on the body's first line (D-69): the title's or
+     the text's, or the small label's when the notice has one. Its own height is the 100%. */
+  .notice {
+    --_line: calc(var(--text-content-body) * var(--leading-content-body));
+  }
+
+  .notice:has(> .notice-body > .notice-label:first-child) {
+    --_line: calc(var(--text-chrome-label) * var(--leading-chrome-label));
+  }
+
   .notice > .icon,
   .notice > .signal-mark {
     color: var(--_tone);
+    translate: 0 calc((var(--_line) - 100%) / 2);
   }
 
   .notice > .icon {
@@ -2647,7 +2679,6 @@
   /* Dismiss is the small ghost button's box with only the x, and no border until it is pointed at. */
   .toast-dismiss.button.ghost {
     border-color: transparent;
-    padding-inline: var(--space-2);
   }
 
   .toast-dismiss.button.ghost:hover {
@@ -3432,17 +3463,6 @@
       min-width: min(18rem, calc(100vw - 2 * var(--space-4)));
     }
 
-    /* An action row is a column of full-width buttons, the same gap apart, the destructive one
-       last (D-41). */
-    .actions:not(span),
-    .actions-end {
-      flex-direction: column;
-    }
-
-    .actions-end {
-      margin-inline-start: 0;
-    }
-
     .bar-menu > summary {
       max-width: 11rem;
     }
@@ -3580,8 +3600,11 @@
       max-inline-size: none;
     }
 
+    /* The icon's box is the touch height here, but it centres on the words' first line (D-69), which
+       their 8 px of padding puts a little higher than the box's middle. */
     .toast > .icon {
       block-size: var(--control-touch);
+      translate: 0 calc(var(--space-2) + var(--text-content-body) * var(--leading-content-body) / 2 - var(--control-touch) / 2);
     }
 
     .toast-text {
@@ -3602,6 +3625,11 @@
 
     .tag-remove:hover {
       background: radial-gradient(circle, var(--muted) calc(var(--space-6) / 2), transparent calc(var(--space-6) / 2 + 0.5px));
+    }
+
+    /* An icon-only button is a square at the touch floor too. */
+    :is(button, .button).icon-only.small {
+      min-inline-size: var(--control-touch);
     }
 
     /* Small controls and the bar's grow to the touch floor; the default size is already there. */
