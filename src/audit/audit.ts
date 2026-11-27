@@ -11,6 +11,7 @@ import { gzipSync } from "node:zlib";
 import type { Browser, BrowserContext, Page, Request } from "playwright";
 import { collect, collectLayout, collectPopovers, type Box, type LayoutObservations, type Observations, type PopoverObservation, type Rgba, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, PageResult, Theme } from "./types.js";
+import { consentHeaderGaps } from "../headers.js";
 import { alignmentFindings, boxesInDetails, closedDetails, collectSymbols, hideUnseen, inkBoxes, measureSource, measureWithin, plainBaselineSpread, redlineCrops, redlineReport, setDetails, showUnseen, symbolFindings, type AlignmentFinding, type RawAlignment, type Redline } from "./alignment.js";
 
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
@@ -866,6 +867,17 @@ async function auditPage(browser: Browser, url: string, width: number, theme: Th
     }, AXE_TAGS);
     for (const v of violations)
       for (const target of v.targets) found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
+
+    // consent-headers (D-77): a page with a choice list (one click gives consent or picks the org to
+    // sign in with) is never framed and never stored. Checked once the page has drawn, since a console
+    // may insert its rows by script. A list whose forms post to "#" (ui's own demo sample, which the
+    // theme preview frames) gives nothing and is not held.
+    if (await page.evaluate(() => [...document.querySelectorAll(".org-picker-choices form")].some((f) => (f.getAttribute("method") ?? "").toLowerCase() === "post" && f.getAttribute("action") !== "#"))) {
+      const headers = await res.allHeaders();
+      const gaps = consentHeaderGaps((name) => headers[name]);
+      if (gaps.length)
+        found.push({ rule: "consent-headers", severity: "error", selector: "document", value: gaps.join("; "), expected: "Content-Security-Policy frame-ancestors 'none' and Cache-Control: no-store", note: "answer a consent or org-choice page with consentHeaders() from @forspring/ui/html: never in a frame, never in a cache (D-77)" });
+    }
 
     // Alignment (D-66), before the popover probe opens anything: measured from the top of the page,
     // first with every menu closed, then each closed menu or disclosure open on its own (D-74), with

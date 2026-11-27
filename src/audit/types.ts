@@ -27,6 +27,7 @@ export type Rule =
   | "off-scale"
   | "clip"
   | "own-org-list"
+  | "consent-headers"
   | "alignment-shared-edge"
   | "alignment-shared-baseline"
   | "alignment-ink-centre"

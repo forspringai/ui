@@ -12,6 +12,8 @@ import { safeLogo } from "./logo.ts";
 import { ICON_NAMES, ICON_PATHS, type IconName } from "./icons/lucide.ts";
 
 export { ICON_NAMES, type IconName };
+// A consent page's headers (D-77): never framed, never stored.
+export { consentHeaders, consentHeaderGaps, NO_FRAMES } from "./headers.ts";
 
 // A registered symbol rather than instanceof, so Html from a second copy of this module (src/ and
 // dist/, or two installed versions) still passes through instead of being escaped twice.
@@ -90,7 +92,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.53.0";
+export const VERSION = "0.54.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------

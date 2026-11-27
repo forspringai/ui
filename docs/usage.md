@@ -36,6 +36,11 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   may put them in the bar instead with `nav` (D-46): the pages follow the wordmark, the switchers move
   to the end with the person, and a phone folds the same pages under "Menu". One page needs no nav.
   `narrow: true` is for one card alone: sign-in, a refusal, a confirm page.
+- **Forspring is the default, not a tenant** (hub D-98): with no `product`, `shell()` draws the suite's
+  own chrome: Forspring's favicon and " · Forspring" after the title. That is right for the account and
+  the suite's own pages, and wrong for anything a customer's people see as theirs. A product's page
+  passes its `product`; a customer's surface (an AppSpring app, a SiteSpring site's console page) passes
+  its `app` or theme (`customerTheme()`), so it never shows Forspring's brand by omission.
 - **`app`** (on `bar()` and `shell()`) is an app frame's own brand, for AppSpring's apps: the app's
   name as the wordmark and its logo, if any, where the doll would be (D-47); without a logo, its
   catalog `icon` (a ui icon name the app's author chose) in ink (D-49). An app's bar never shows
@@ -79,6 +84,24 @@ A thin console page (sign-in, settings, keys, members, approvals, status) is nev
   **The link mode** (`links` instead of `orgs`, `action`, `name`, `fields`): each row is a link to the
   `href` the caller gives (`current` marks the org the page is in, `tag` and `meta` add words), for
   navigation rather than a choice the server must trust. The picker builds no URL from an org either way.
+- **A consent page is never framed and never stored (D-75, D-77):** any page where one click on a row
+  gives consent or picks the org to sign in with (the choice mode: `orgPicker()`, `chooseOrgPage()`, an
+  `orgList({ orgs, action })` on a product's own consent) answers with `consentHeaders()` from
+  `@forspring/ui/html` (or `@forspring/ui/headers`) spread over its own headers:
+
+  ```ts
+  return new Response(html, { headers: consentHeaders({ "content-type": "text/html; charset=utf-8", ...pageSecurityHeaders() }) });
+  ```
+
+  It keeps your CSP's other directives and sets `frame-ancestors 'none'` (a page in another's frame
+  could put its own button over a row), `X-Frame-Options: DENY` for older browsers, and
+  `Cache-Control: no-store` (the page carries a CSRF token and the person's orgs). The headers are each
+  product's, on its consent routes; ui cannot send them. The rows themselves take no click for their
+  first second, so a double-click trap on the page before cannot land on one (D-75). ui-audit's
+  `consent-headers` rule fails a page whose choice rows post somewhere without `frame-ancestors 'none'`
+  and `no-store`. A sample whose rows post to `#` gives nothing and is not held. A product's own test can
+  hold a response to the same answer: `consentHeaderGaps((name) => res.headers.get(name))` is `[]` when it
+  is safe, else what is missing in words; `NO_FRAMES` is the directive itself.
 - **One org list, suite wide (D-59):** every list of organisations to choose from is `orgList()` (the
   rows, with `orgMark()` for an org's logo or first letter): `orgPicker()`, `chooseOrgPage()`,
   `refusedPage()`'s "your organisations" and the bar's org switcher all draw it, so they look the same
