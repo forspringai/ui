@@ -446,3 +446,19 @@ describe("schema/customer-theme.schema.json", () => {
     expect(pkg.exports["./theme"]).toEqual({ types: "./dist/theme.d.ts", default: "./dist/theme.js" });
   });
 });
+
+// D-67: a contrast fix keeps the hue. A bright yellow accent darkens to an olive at its own hue, not to the
+// grey that was the nearest colour also clear of warning's amber (the clash is a warning since D-45).
+test("an accent's contrast fix keeps its hue: yellow to olive, not grey", () => {
+  for (const [c, hue] of [["#ffff00", 109.8], ["#ffee00", 104.3], ["#90ee90", 144.1], ["#a0d0ff", 248.3]] as const) {
+    const v = validateTheme({ level: "brand", brand: { accent: { light: c, dark: "#e08a5c" } } }, { product: "appspring" });
+    const fix = v.errors.find((e) => e.code === "theme.accent.contrast")?.fix;
+    expect(fix, c).toMatch(/^#[0-9a-f]{6}$/);
+    const [, chroma, h] = oklch(fix!);
+    expect(chroma, `${c} -> ${fix}`).toBeGreaterThan(0.05);
+    expect(Math.abs(h - hue), `${c} -> ${fix}`).toBeLessThan(2);
+    // The fix clears the error; a clash with a status colour, if any, is only a warning.
+    const again = validateTheme({ level: "brand", brand: { accent: { light: fix!, dark: "#e08a5c" } } }, { product: "appspring" });
+    expect(again.ok, `${c} -> ${fix}`).toBe(true);
+  }
+});

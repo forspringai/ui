@@ -2227,3 +2227,17 @@ menus, left-aligned table headers, Google's own button, a frame clipped by its c
   baseline; `top: 0.2em` brings it within half a px at both bar sizes.
 - **0.46.1:** `publish:demo` stopped the demo server, and its exit trap's second `kill` then failed under
   `set -e`, so a successful publish exited 1. Both kills now ignore a server that is already gone.
+
+## D-67: a contrast fix keeps the colour's hue (0.47.0, 2026-11-27)
+
+Peter's review of the theme preview (#19): a bright yellow accent (#ffff00) was told "#636361 is the nearest
+that passes", a grey, and the hue was lost. Two causes, both in `nearestPassing()`:
+- **The search asked for more than the error.** The accent's `passes` also wants the colour clear of the
+  status colours, a warning since D-45; every olive is near warning's amber, so the nearest colour clear of
+  everything was a grey. A contrast or label error now searches `readable` (contrast and a label only); the
+  clash, if the fix has one, stays a warning and the author's call. A clash alone still searches `passes`.
+- **Chroma past the gamut.** Each lightness was tried at the colour's own chroma and fractions of it; at a
+  low lightness a yellow's chroma is out of sRGB, so only near-greys were left there. Each lightness is now
+  tried from the most chroma sRGB holds at that hue (up to the colour's own) down to grey.
+Yellow now gets #6e6e00 (an olive at its own hue, 109.8°); light green, light blue and cyan keep theirs too.
+The theme preview's "Use" button applies it.
