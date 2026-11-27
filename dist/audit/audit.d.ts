@@ -1,5 +1,5 @@
 import type { Browser, Page } from "playwright";
-import { type LayoutObservations, type Observations, type PopoverObservation, type SlotObservation } from "./page.js";
+import { type ButtonObservation, type ButtonTokens, type LayoutObservations, type Observations, type PopoverObservation, type SlotObservation } from "./page.js";
 import type { AuditOptions, AuditResult, Finding, Theme } from "./types.js";
 export type { AuditOptions, AuditResult, Finding, PageResult } from "./types.js";
 export declare const DEFAULT_WIDTHS: number[];
@@ -130,6 +130,30 @@ export declare function layoutFindings(obs: LayoutObservations, t: LayoutScale):
  * popover with no trigger to measure against is a finding of its own, never skipped.
  */
 export declare function popoverFindings(list: PopoverObservation[], t: LayoutScale): Finding[];
+/**
+ * button-shape (D-78): every button that draws a box is one of the button inventory's shapes (ui.appspring.app/buttons),
+ * in the page's own tokens. On a phone a small control takes the touch floor and keeps its smaller type (D-65).
+ * The table is what the inventory itself measures; test/buttons-browser.test.ts holds the two to each other, so a
+ * size added to components.css and not here fails ui's own CI. A rich app (--rich-app) is held by its slots instead.
+ */
+type ShapeToken = keyof ButtonTokens;
+export type ButtonShape = {
+    name: string;
+    height: ShapeToken;
+    padY?: ShapeToken;
+    padX?: ShapeToken | "square";
+    radius: ShapeToken | "round";
+    font?: ShapeToken;
+    weight?: string;
+    border: number;
+};
+export declare const BUTTON_SHAPES: {
+    desktop: readonly ButtonShape[];
+    phone: readonly ButtonShape[];
+};
+/** What keeps a button from a shape, in words ([] when it is that shape). */
+export declare function shapeMisses(b: ButtonObservation, s: ButtonShape, t: ButtonTokens): string[];
+export declare function buttonShapes(list: readonly ButtonObservation[], t: ButtonTokens, phone: boolean): Finding[];
 /**
  * menu-row-inset (D-76): in an open menu, every row and control that spans it (half its inner width or
  * more) sits on one inline inset, start and end, within 1px: the rows' hover and chosen surfaces, a

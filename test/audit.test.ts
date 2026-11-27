@@ -529,6 +529,27 @@ describe("alignment red-lines (D-66)", () => {
   });
 });
 
+// D-78: every button that draws a box is one of the inventory's shapes; and a page that leaves by script ends its own
+// audit, not the run.
+describe("button-shape and a script redirect (D-78)", () => {
+  test("ui's buttons pass; a size of its own and the default box with 16px type are warnings, naming what is off", async () => {
+    const r = await audit(options([`${base}/test/fixtures/button-shapes.html`]), browser);
+    const at = (w: number) => [...new Set(all(r).filter((f) => f.rule === "button-shape" && f.width === w).map((f) => `${f.severity} ${f.selector} | ${f.value}`))].sort();
+    expect(at(1280)).toEqual(["warning a#bigtype | nearest the default size: type 16px (14)", "warning button#odd | nearest the default size: padding x 10px (20), padding y 6px (12)"]);
+    expect(at(380).map((x) => x.split(" | ")[0])).toEqual(["warning a#bigtype", "warning button#odd"]);
+  }, 120_000);
+  test("the button inventory is the table: none of its buttons is off a shape, at either width, in either theme", async () => {
+    const r = await audit(options([`${base}/dist/demo/buttons.html`], { budgetJs: 20 * 1024 }), browser);
+    expect(all(r).filter((f) => f.rule === "button-shape").map((f) => `${f.width} ${f.selector} ${f.value}`)).toEqual([]);
+  }, 120_000);
+  test("a page that leaves by script after load is a page-load error for it; the other pages are still audited", async () => {
+    const r = await audit(options([`${base}/test/fixtures/script-redirect.html`, `${base}/test/fixtures/button-shapes.html`], { widths: [1280], themes: ["light"] }), browser);
+    expect(r.pages).toHaveLength(2);
+    expect(r.pages[0]!.findings.map((f) => [f.rule, f.value])).toContainEqual(["page-load", `left for ${base}/test/fixtures/alignment.html after load`]);
+    expect(r.pages[1]!.findings.some((f) => f.rule === "button-shape")).toBe(true);
+  }, 120_000);
+});
+
 // D-77: a page where one click gives consent is never framed and never stored.
 describe("consent-headers (D-77)", () => {
   const run = async (kind: string) => all(await audit(options([`${base}/consent/${kind}`], { widths: [1280], themes: ["light"] }), browser)).filter((f) => f.rule === "consent-headers");

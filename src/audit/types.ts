@@ -28,6 +28,7 @@ export type Rule =
   | "clip"
   | "own-org-list"
   | "consent-headers"
+  | "button-shape"
   | "alignment-shared-edge"
   | "alignment-shared-baseline"
   | "alignment-ink-centre"

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Button shapes (D-78)</title>
+<!-- For button-shape (test/audit.test.ts): ui's own buttons pass; two drawn to sizes of their own do not. -->
+<link rel="stylesheet" href="/dist/tokens.css">
+<link rel="stylesheet" href="/dist/fonts.css">
+<link rel="stylesheet" href="/dist/components.css">
+</head>
+<body>
+<main id="main" class="wrap">
+<h1>Buttons</h1>
+<p class="actions"><button type="button">Save</button><button type="button" class="ghost">Cancel</button></p>
+<p class="actions"><button type="button" class="small">Small</button><button type="button" class="small icon-only" aria-label="Close"><svg class="icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13" stroke="currentColor"/></svg></button></p>
+<!-- Drift: a size of its own (38px, 6/10 padding), and the default box with 16px type. -->
+<p class="actions"><button type="button" id="odd" style="min-height: 38px; padding: 6px 10px">Odd</button><a class="button" id="bigtype" href="#x" style="font-size: 16px">Big type</a></p>
+</main>
+</body>
+</html>
