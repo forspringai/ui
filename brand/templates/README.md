@@ -47,6 +47,9 @@ Figures are placeholders on purpose: every number needs a source (voice.md secti
 
 ## social-1200x630.svg and social-1080x1080.svg
 
+- **Generated, not by hand (D-70):** `shareImage({ headline, domain, product })` from `@forspring/ui/share-image`
+  returns this template filled in, the h1 wrapped and sized to fit; SiteSpring renders it per page at build
+  time. The steps below are for a one-off by hand.
 - **No placeholders:** replace the headline's `<tspan>` lines (one line each; about 33 characters at
   1200 × 630, about 28 at 1080 × 1080) and the domain. The headline is the page's h1 for a share image.
 - **A product image:** paste the paths from `brand/<product>/logo.svg` in place of the lockup and set
