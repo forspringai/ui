@@ -2468,3 +2468,26 @@ cos's systemic live pass: hold each product's live pages to the button inventory
   - ui's buttons pass, and two drawn to sizes of their own warn at both widths;
   - the inventory itself is clean;
   - a page that redirects by script is a page-load error while the next page is still audited.
+
+## D-79: what the live pass changed in ui (0.56.0, 2026-11-27)
+
+cos's systemic pass audited every product's live signed-in pages with `coordinator/bin/test-owner-audit` (ui-audit at
+1280 and 380 px, light and dark, with red-lines). The counts and the product-side ticks are in coordinator
+areas/brand/live-audit-2026-11-27/. Most of what it found goes with each product's next ui bump. What was ui's:
+- **`.go` is a 24 px target at every width** (WCAG 2.2 2.5.8). It had one only on phones. Two stacked in a table's row
+  header were 17 px lines 0 px apart at 1280 on AppSpring's deliveries: 218 errors (axe target-size and the audit's own).
+  The demo's lists gain a pixel, and its visual baselines are updated with that.
+- **`--redlines` saves each page as audited**, light, at each width, at most 4000 px down, as JPEG in the report
+  ("The pages as audited"). It is the before picture for a finding with no crop of its own: spacing, a button's size, a
+  menu's inset.
+- **A session goes into the browser's jar over https.** It is one host-only, HttpOnly, Secure cookie per pair for each
+  audited and allowed origin; over local http it stays a header.
+  - The fixed header overrode the cookies a product sets or rotates as it answers.
+  - On SiteSpring's console every request after a rotation went out signed out and started a new sign-in, until its limit
+    (10 sign-in starts a minute per IP) stopped the run.
+- **With a session, the audit paces its page loads** (500 ms apart). It stops after two pages in a row bounce away
+  (redirected, or left by script), rather than send every remaining page into the product's sign-in.
+- **Tests:**
+  - the report holds the page JPEGs;
+  - a session run stops after two bounced pages;
+  - the visual baselines are updated for `.go`.

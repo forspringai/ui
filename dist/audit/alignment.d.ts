@@ -92,7 +92,13 @@ export declare function boxesInDetails({ boxes, only }: {
  */
 export declare function inkBoxes(boxes: RawAlignment["rect"][]): boolean[];
 /** The report: one self-contained page and the crops beside it (index.html, 1.png, 2.png, ...). */
-export declare function redlineReport(shots: readonly Redline[], when: string): {
+/** A page as audited (D-79): the whole page at one width, light, for the findings that have no crop of their own. */
+export type PageShot = {
+    url: string;
+    width: number;
+    jpeg: Buffer;
+};
+export declare function redlineReport(shots: readonly Redline[], when: string, pages?: readonly PageShot[]): {
     html: string;
     files: Map<string, Buffer>;
 };

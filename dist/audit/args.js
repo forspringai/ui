@@ -29,8 +29,9 @@ Audits each page at 1280 and 380 px wide, in light and dark, against @forspring/
                           measured once its network is idle and its DOM has not changed for 300 ms
                           (at most 10 s after load)
   --redlines <dir>        write the alignment red-line report to dir: index.html and a 2x crop of
-                          each alignment finding, outlined in red. Only a shared edge or a
-                          single-line shared baseline 2 px or more off is an error (D-66)
+                          each alignment finding, outlined in red, and each page as audited (light,
+                          per width). Only a shared edge or a single-line shared baseline 2 px or
+                          more off is an error (D-66, D-79)
   --format json|text      json is the default (also --json); text for a person reading a build
   --help
 

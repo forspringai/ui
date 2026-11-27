@@ -526,6 +526,10 @@ describe("alignment red-lines (D-66)", () => {
     // 2x: the crop's pixel width is twice the width the page shows it at.
     const shown = Number(/<img src="1\.png"[^>]* width="(\d+)"/.exec(html)![1]);
     expect(png.readUInt32BE(16)).toBe(shown * 2);
+    // D-79: the page as audited, light, at each width: the picture for a finding with no crop of its own.
+    expect(html).toContain("The pages as audited");
+    const jpeg = readFileSync(join(dir, "page-1.jpg"));
+    expect([jpeg[0], jpeg[1]]).toEqual([0xff, 0xd8]);
   });
 });
 
@@ -541,6 +545,11 @@ describe("button-shape and a script redirect (D-78)", () => {
   test("the button inventory is the table: none of its buttons is off a shape, at either width, in either theme", async () => {
     const r = await audit(options([`${base}/dist/demo/buttons.html`], { budgetJs: 20 * 1024 }), browser);
     expect(all(r).filter((f) => f.rule === "button-shape").map((f) => `${f.width} ${f.selector} ${f.value}`)).toEqual([]);
+  }, 120_000);
+  test("with a session, two pages in a row that bounce away stop the run (D-79): no sign-in started for each page left", async () => {
+    const r = await audit(options([`${base}/redirect/test/fixtures/alignment.html`, `${base}/redirect/test/fixtures/layout.html`, `${base}/test/fixtures/alignment.html`], { widths: [1280], themes: ["light"], cookie: "session=abcdefgh" }), browser);
+    expect(r.pages).toHaveLength(2);
+    expect(r.pages[1]!.findings.map((f) => f.value)).toContain("stopped: two pages in a row bounced away");
   }, 120_000);
   test("a page that leaves by script after load is a page-load error for it; the other pages are still audited", async () => {
     const r = await audit(options([`${base}/test/fixtures/script-redirect.html`, `${base}/test/fixtures/button-shapes.html`], { widths: [1280], themes: ["light"] }), browser);

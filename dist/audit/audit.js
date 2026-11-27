@@ -753,7 +753,10 @@ async function measureAlignment(page, measure, crop) {
         await page.evaluate(showUnseen);
     }
 }
-async function auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines) {
+/** With a session, the least time between two page loads (D-79). */
+const SESSION_PACE_MS = 500;
+let lastGoto = 0;
+async function auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines, pageShots = []) {
     const origin = new URL(url).origin;
     // The page's own origin and the ones the run allows (its API on another port): requests to these
     // go through, and are not third-party (D-16).
@@ -780,12 +783,19 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
             return route.continue();
         });
         if (opts.cookie) {
-            // The session goes as a header on the context's requests rather than a cookie in the jar: no
-            // Domain, Secure or __Host- rules to get right over local http, and nothing a page's script
-            // can read. (route.continue cannot set Cookie; Chromium drops it.) It reaches the audited
-            // origin and the allowed ones only: every other HTTP request is answered above without leaving
-            // the browser, and a WebSocket to anywhere else is closed unopened (D-10, D-16).
-            await context.setExtraHTTPHeaders({ cookie: opts.cookie });
+            // Over https the session goes into the browser's own jar, one host-only, HttpOnly, Secure cookie per pair for each
+            // audited and allowed origin (D-79): a page's script cannot read it, and the cookies the product sets or rotates
+            // as it answers (a language, a refreshed session) are kept, as a person's browser keeps them. A fixed header
+            // overrode them, so a product that rotated its session saw every later request signed out, and each one started
+            // a new sign-in (SiteSpring's limit stopped the live pass, 27 Nov). Over local http, where Secure and __Host-
+            // cookies cannot be set, it stays a header (route.continue cannot set Cookie; Chromium drops it). Either way it
+            // reaches the audited origin and the allowed ones only: every other HTTP request is answered above without
+            // leaving the browser, and a WebSocket to anywhere else is closed unopened (D-10, D-16).
+            const pairs = opts.cookie.split(";").map((p) => p.trim()).filter(Boolean).map((p) => [p.slice(0, p.indexOf("=")).trim(), p.slice(p.indexOf("=") + 1).trim()]).filter(([n]) => n !== "");
+            if ([...own].every((o) => o.startsWith("https:")))
+                await context.addCookies([...own].flatMap((o) => pairs.map(([name, value]) => ({ name, value, url: `${o}/`, httpOnly: true, secure: true, sameSite: "Lax" }))));
+            else
+                await context.setExtraHTTPHeaders({ cookie: opts.cookie });
             const hosts = new Set([...own].map((o) => new URL(o).host));
             await context.routeWebSocket((u) => !hosts.has(u.host), (ws) => ws.close());
         }
@@ -827,6 +837,14 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
         });
         let res;
         try {
+            // With a session, pages open at most two a second (D-79): a product's sign-in limits count each page that
+            // bounces to it.
+            if (opts.cookie) {
+                const wait = lastGoto + SESSION_PACE_MS - Date.now();
+                if (wait > 0)
+                    await page.waitForTimeout(wait);
+                lastGoto = Date.now();
+            }
             res = await page.goto(url, { waitUntil: "load", timeout: 30_000 });
             current = page;
             page.on("framenavigated", (f) => {
@@ -907,6 +925,12 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
         // Its review findings are for the red-line report, where a person sees them on a crop; a run without
         // --redlines carries only the errors (D-66).
         found.push(...aligned.filter((f) => opts.redlines || f.severity === "error").map(({ box: _box, measured: _measured, ...f }) => f));
+        // The page as audited (D-79), light only, at most 4000 px down: the before picture for every finding without a crop.
+        if (opts.redlines && theme === "light") {
+            await page.evaluate(() => scrollTo(0, 0));
+            const height = Math.min(await page.evaluate(() => document.documentElement.scrollHeight), 4000);
+            pageShots.push({ url, width, jpeg: await page.screenshot({ type: "jpeg", quality: 70, fullPage: true, clip: { x: 0, y: 0, width, height } }) });
+        }
         // Last, since it opens things: every menu and popover, one at a time (D-41).
         found.push(...(await probePopovers(page, sc.layout)));
         for (const [u, { type, fetched }] of offOrigin)
@@ -937,13 +961,24 @@ export async function audit(opts, browser) {
     const axe = axeSource();
     const measure = measureSource();
     const redlines = [];
+    const pageShots = [];
     const pages = [];
-    for (const url of opts.urls)
+    // With a session, two pages in a row that bounce away (redirected, or left by script) mean the session no longer
+    // reaches the pages: the run stops there rather than send each remaining page into the product's sign-in (D-79).
+    let bounced = 0;
+    run: for (const url of opts.urls)
         for (const width of opts.widths)
-            for (const theme of opts.themes)
-                pages.push(await auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines));
+            for (const theme of opts.themes) {
+                const r = await auditPage(browser, url, width, theme, sc, opts, axe, measure, redlines, pageShots);
+                pages.push(r);
+                bounced = opts.cookie && r.findings.some((f) => f.rule === "page-load" && /^(redirected to|left for) /.test(f.value)) ? bounced + 1 : 0;
+                if (bounced >= 2) {
+                    r.findings.push({ rule: "page-load", severity: "error", selector: "document", value: "stopped: two pages in a row bounced away", expected: "a session that reaches the pages", note: "the --cookie-env session no longer reaches the audited pages, so the run stopped rather than start a sign-in for each page left; check the session, then run again (D-79)" });
+                    break run;
+                }
+            }
     if (opts.redlines) {
-        const { html, files } = redlineReport(redlines, new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC");
+        const { html, files } = redlineReport(redlines, new Date().toISOString().slice(0, 16).replace("T", " ") + " UTC", pageShots);
         mkdirSync(opts.redlines, { recursive: true });
         writeFileSync(join(opts.redlines, "index.html"), html);
         for (const [name, png] of files)
