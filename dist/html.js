@@ -10,6 +10,8 @@ import { iconSvg } from "./icons.js";
 import { safeLogo } from "./logo.js";
 import { ICON_NAMES, ICON_PATHS } from "./icons/lucide.js";
 export { ICON_NAMES };
+// A consent page's headers (D-77): never framed, never stored.
+export { consentHeaders, consentHeaderGaps, NO_FRAMES } from "./headers.js";
 // A registered symbol rather than instanceof, so Html from a second copy of this module (src/ and
 // dist/, or two installed versions) still passes through instead of being escaped twice.
 const BRAND = Symbol.for("@forspring/ui/html");
@@ -71,7 +73,7 @@ export const PRODUCT_NAMES = {
     flowspring: "FlowSpring",
 };
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.53.0";
+export const VERSION = "0.54.0";
 // --- Fonts ------------------------------------------------------------------------------------------
 // The files' own coverage: Google Fonts' "latin" subset (Basic Latin, Latin-1 and the common
 // punctuation), as forspring.ai and the account ship them. Roboto is Latin-1 only.

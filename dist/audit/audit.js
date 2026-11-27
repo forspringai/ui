@@ -8,6 +8,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { gzipSync } from "node:zlib";
 import { collect, collectLayout, collectPopovers } from "./page.js";
+import { consentHeaderGaps } from "../headers.js";
 import { alignmentFindings, boxesInDetails, closedDetails, collectSymbols, hideUnseen, inkBoxes, measureSource, measureWithin, plainBaselineSpread, redlineCrops, redlineReport, setDetails, showUnseen, symbolFindings } from "./alignment.js";
 export const DEFAULT_WIDTHS = [1280, 380];
 export const DEFAULT_THEMES = ["light", "dark"];
@@ -819,6 +820,16 @@ async function auditPage(browser, url, width, theme, sc, opts, axe, measure, red
         for (const v of violations)
             for (const target of v.targets)
                 found.push({ rule: "axe", severity: "error", selector: target, value: v.id, expected: "no violation", note: `${v.help} (${v.impact})` });
+        // consent-headers (D-77): a page with a choice list (one click gives consent or picks the org to
+        // sign in with) is never framed and never stored. Checked once the page has drawn, since a console
+        // may insert its rows by script. A list whose forms post to "#" (ui's own demo sample, which the
+        // theme preview frames) gives nothing and is not held.
+        if (await page.evaluate(() => [...document.querySelectorAll(".org-picker-choices form")].some((f) => (f.getAttribute("method") ?? "").toLowerCase() === "post" && f.getAttribute("action") !== "#"))) {
+            const headers = await res.allHeaders();
+            const gaps = consentHeaderGaps((name) => headers[name]);
+            if (gaps.length)
+                found.push({ rule: "consent-headers", severity: "error", selector: "document", value: gaps.join("; "), expected: "Content-Security-Policy frame-ancestors 'none' and Cache-Control: no-store", note: "answer a consent or org-choice page with consentHeaders() from @forspring/ui/html: never in a frame, never in a cache (D-77)" });
+        }
         // Alignment (D-66), before the popover probe opens anything: measured from the top of the page,
         // first with every menu closed, then each closed menu or disclosure open on its own (D-74), with
         // the labels only a screen reader reads hidden throughout.

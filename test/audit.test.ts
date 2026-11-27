@@ -17,7 +17,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { parseArgs, parseSize, redactor } from "../src/audit/args.ts";
 import { audit, DEFAULT_THEMES, DEFAULT_WIDTHS, dedupe, findings, layoutFindings, layoutScale, marketingLadder, oklabL, popoverFindings, primitives, rowInsetFindings, NO_ANCHOR, RICH_SLOTS, withoutAnchorPositioning } from "../src/audit/audit.ts";
 import { collectLayout, type LayoutObservations } from "../src/audit/page.ts";
-import { fontFaces } from "../src/html.ts";
+import { consentHeaders, fontFaces, orgList } from "../src/html.ts";
 import type { AuditOptions, AuditResult, Finding } from "../src/audit/types.ts";
 import * as tokens from "../dist/tokens.js";
 
@@ -62,6 +62,15 @@ beforeAll(async () => {
         res.writeHead(200, { "content-type": TYPES[".css"] });
         return void res.end(withoutAnchorPositioning(readFileSync(file, "utf8")));
       }
+    } else if (path.startsWith("/consent/")) {
+      // D-77: a consent page whose rows post somewhere, answered three ways; and the demo's sample, whose
+      // rows post to "#".
+      const kind = path.slice("/consent/".length);
+      const rows = String(orgList({ lang: "en", action: kind === "sample" ? "#" : "/approve", fields: { csrf: "t" }, orgs: [{ name: "Acme", role: "admin", value: "v1" }] }));
+      const page = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Consent</title></head><body><main><h1>Allow</h1>${rows}</main></body></html>`;
+      const own = { "content-type": TYPES[".html"]!, "content-security-policy": "default-src 'self'; frame-ancestors 'self'" };
+      res.writeHead(200, kind === "safe" ? consentHeaders(own) : kind === "framed" ? { ...own, "cache-control": "no-store" } : own);
+      return void res.end(page);
     } else if (path.startsWith("/status/403/")) {
       // The document only: a stylesheet answered 403 would not apply.
       if (path.endsWith("/")) status = 403;
@@ -518,6 +527,19 @@ describe("alignment red-lines (D-66)", () => {
     const shown = Number(/<img src="1\.png"[^>]* width="(\d+)"/.exec(html)![1]);
     expect(png.readUInt32BE(16)).toBe(shown * 2);
   });
+});
+
+// D-77: a page where one click gives consent is never framed and never stored.
+describe("consent-headers (D-77)", () => {
+  const run = async (kind: string) => all(await audit(options([`${base}/consent/${kind}`], { widths: [1280], themes: ["light"] }), browser)).filter((f) => f.rule === "consent-headers");
+  test("a choice list answered without them fails, naming what is missing; with consentHeaders() it passes", async () => {
+    expect((await run("open")).map((f) => [f.severity, f.value])).toEqual([["error", "CSP frame-ancestors 'self'; Cache-Control missing"]]);
+    expect((await run("framed")).map((f) => f.value)).toEqual(["CSP frame-ancestors 'self'"]);
+    expect(await run("safe")).toEqual([]);
+  }, 60_000);
+  test("a sample whose rows post to # gives nothing and is not held", async () => {
+    expect(await run("sample")).toEqual([]);
+  }, 60_000);
 });
 
 // A marketing page on text.marketing (D-22): on scale only when the run asks for that ladder (D-29).

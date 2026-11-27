@@ -2417,3 +2417,31 @@ measured: its inset from the panel's inner edges, at the start and the end.
 - **Tests:** a fixture menu with that sign-out fails, the same menu on one inset passes, and a content
   disclosure with an indented field is not held. Unit tests cover the majority inset, the 1px tolerance, an
   end-only miss, a lone row and a tie.
+
+## D-77: a consent page is never framed and never stored (0.54.0, 2026-11-27)
+
+cos, on tick 39b, after D-75's first second: consent and picker pages must refuse framing, through a ui helper
+each product's consent route uses, with a test, and the per-product Cache-Control no-store documented.
+- **`consentHeaders(own)`** (`@forspring/ui/html`, also `@forspring/ui/headers`; no imports, plain records).
+  It takes the page's own headers and sets, over them:
+  - its CSP with every other directive kept and `frame-ancestors 'none'` in place of any it had;
+  - `X-Frame-Options: DENY`, for browsers older than frame-ancestors;
+  - `Cache-Control: no-store`, since the page carries a CSRF token and the person's orgs.
+
+  Framing is refused outright because a framing page could put its own button over a row at any moment;
+  the first second (D-75) covers only the click before the page.
+- **ui-audit `consent-headers`, an error:** a page whose choice rows (`.org-picker-choices`) post somewhere is
+  answered without `frame-ancestors 'none'` (`'self'` is a gap too) or without `no-store`. X-Frame-Options
+  alone is not enough, and its absence is not a gap. It is checked once the page has drawn, because
+  SiteSpring's console inserts the rows by script. A list posting to `#` (ui's own demo sample, which the
+  theme preview frames) gives nothing and is not held.
+- **Per product, 27 Nov:**
+  - the account's org choice (its layout) and SiteSpring's device and OAuth consent (its console's headers)
+    already send both;
+  - PulseSpring's MCP consent sends `frame-ancestors 'none'` but no `no-store`, so it is the one to change;
+  - Spring and DataSpring draw no choice list on main.
+- **Tests:** unit tests for the helper's merge and the gaps. Audit fixtures served three ways (no headers;
+  no-store but framed by `'self'`; consentHeaders()) and a `#` sample.
+- **Also, papercut brand (d)1, a doc only:** usage.md's page frame now says that Forspring is `shell()`'s default
+  chrome, not a tenant. A customer's surface passes its `app` or theme, so it never shows Forspring's brand by
+  omission.
