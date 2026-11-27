@@ -2281,3 +2281,23 @@ Peter annotated the theme preview's review set (coordinator areas/brand/theme-pr
   variant in components.css that has no row, so a new variant cannot drift unseen.
 - **org-lists** (lead-ui's suite scan): a map over orgs that builds a control in client script
   (`el("option", ...)`, `createElement`, `h`, `new Option`) is a `control` finding too.
+
+## D-70: shareImage(): a page's share image from its h1 (0.49.0, 2026-11-27)
+
+Papercut (hub tick ayt, brand.md b1): share images were made by hand from brand/templates/social-1200x630.svg,
+by opening it, typing the h1, swapping the lockup and taking a screenshot, for every page, and a customer's
+SiteSpring site got none. `@forspring/ui/share-image` exports `shareImage({ headline, domain, product | logo |
+name, size, fontBase })`, the template as an SVG string:
+- **Pure.** No file read, no network, no font engine, so a SiteSpring build step or a Worker can call it. The
+  lockups are data (`src/lockups.ts`, written by the build from src/brand.ts like family.ts, light colours
+  inline); the colours are the family's roles.
+- **Fits the h1.** Wrapped by words with the condensed face's own advances (measured from
+  fonts/archivo-condensed.woff2 at 800, a table in the module), at most three lines (four in the square),
+  stepped down 72, 64, 56, 48 (text.marketing.h1's range); past that the last line ends in an ellipsis.
+  test/share-image-browser.test.ts sets headlines in Chromium with the real face: every line inside the
+  margin, the table within 3% of the measured width.
+- **A customer's site:** their logo (https: or data:image/ only, as a theme's logo) or their name in the
+  headline face. Light theme only, as the template: a share image never follows a viewer's theme.
+- **Text, not outlines:** the renderer supplies the faces; `fontBase` points `@font-face` at the package's
+  fonts/ for a browser render. Rendering to PNG is the product's (SiteSpring's build step, tick for
+  lead-sitespring).

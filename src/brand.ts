@@ -120,3 +120,19 @@ export function brandSvgs(m: Model, w: Wordmarks): Record<string, string> {
   }
   return out;
 }
+
+/**
+ * src/lockups.ts (D-70): each product's lockup in its light colours as data, so shareImage() draws it
+ * with no file read at run time. The same paths and layout as logo.svg; the colours are inline, since a
+ * share image is light only.
+ */
+export function lockupsTs(m: Model, w: Wordmarks): string {
+  const rows = m.products.map((p) => {
+    const { mark, word } = brandColours(m, p as Product);
+    const l = lockup(w, p as Product);
+    const b = l.box;
+    const body = `${MARK_PATHS.replace(/class="fill"/g, `fill="${mark.light}"`).replace(/class="coil"/g, `stroke="${mark.light}"`)}<path fill="${word.light}" transform="translate(${r1(l.x)} ${r1(l.baseline)}) scale(${Math.round(l.scale * 1e5) / 1e5})" d="${l.name.d}"/>`;
+    return `  ${JSON.stringify(p)}: { name: ${JSON.stringify(PRODUCT_NAMES[p as Product])}, viewBox: ${JSON.stringify(`${r1(b.x)} ${r1(b.y)} ${r1(b.width)} ${r1(b.height)}`)}, aspect: ${Math.round((b.width / b.height) * 1e4) / 1e4}, body: ${JSON.stringify(body)} },`;
+  });
+  return `// ${GENERATED}\n// Each product's lockup in its light colours, for shareImage() (D-70). Written by scripts/build.ts from\n// src/brand.ts; edit that, not this.\n\nimport type { Product } from "./html.ts";\n\nexport const LOCKUPS: Readonly<Record<Product, { name: string; viewBox: string; aspect: number; body: string }>> = {\n${rows.join("\n")}\n};\n`;
+}

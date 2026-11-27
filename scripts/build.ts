@@ -9,6 +9,7 @@ import { dirname, join } from "node:path";
 import { assets } from "../src/assets.ts";
 import { TokenProblems, build, familyTs, model } from "../src/emit.ts";
 import { renderPngs } from "./brand-png.ts";
+import { lockupsTs, readWordmarks } from "../src/brand.ts";
 
 const root = join(import.meta.dirname, "..");
 try {
@@ -28,6 +29,8 @@ try {
   // src/family.ts, the role values src/theme.ts checks a customer's theme against (ui D-34): a source
   // file, written before the compile below picks it up.
   writeFileSync(join(root, "src", "family.ts"), familyTs(model(join(root, "tokens"))));
+  // src/lockups.ts, each product's light lockup for shareImage() (D-70), the same way.
+  writeFileSync(join(root, "src", "lockups.ts"), lockupsTs(model(join(root, "tokens")), readWordmarks(root)));
   // html, refusals, pages, connect, react and theme (.js and .d.ts), so a product imports the helpers with no TypeScript loader (Node will not
   // strip types inside node_modules).
   execFileSync(join(root, "node_modules/.bin/tsc"), ["-p", join(root, "tsconfig.html.json")], { stdio: "inherit" });
