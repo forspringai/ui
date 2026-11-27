@@ -271,7 +271,14 @@ function accentRule(mode: Mode, s: Surfaces) {
     const f = findings(hex);
     return !f.contrast.length && f.label !== null && !f.clashes.length;
   };
-  return { findings, passes };
+  // Readable: the errors cleared (contrast and a label), the clash, a warning since D-45, not asked for.
+  // A contrast fix searches this, so a yellow darkens to an olive, not to the grey that is the nearest
+  // colour also clear of warning's amber (D-67).
+  const readable = (hex: string) => {
+    const f = findings(hex);
+    return !f.contrast.length && f.label !== null;
+  };
+  return { findings, passes, readable };
 }
 
 function tintRule(mode: Mode) {
@@ -332,22 +339,37 @@ function closest(a: string, b: string): { normal: number; cvd: number } {
   return { normal: distance(a, b), cvd: Math.min(...VISIONS.map((v) => distance(a, b, v))) };
 }
 
-// The nearest colour that passes, at the same hue: every lightness on a 0.002 grid at the colour's own
-// chroma and every step down to grey, the one with the least OKLab distance from the original wins.
-// The way D-20 fixed DataSpring's teal (the smallest darkening that passes), searched instead of by
-// hand. null when nothing at that hue passes.
+// The nearest colour that passes, at the same hue: every lightness on a 0.002 grid, and at each the
+// colour's own chroma, or as much of it as sRGB holds there, down to grey in steps; the one with the
+// least OKLab distance from the original wins. The way D-20 fixed DataSpring's teal (the smallest
+// darkening that passes), searched instead of by hand. Clamping the chroma to the gamut per lightness
+// keeps the hue (D-67): a bright yellow darkens to an olive, not to the grey it reached when a
+// lightness was tried only at the full chroma (out of gamut) or at a fraction of it. null when nothing
+// at that hue passes.
 function nearestPassing(hex: string, passes: (hex: string) => boolean): string | null {
   if (passes(hex)) return hex;
   const [, c0, h] = oklch(hex);
   const o = oklab(hex);
   const [ca, sa] = [Math.cos((h * Math.PI) / 180), Math.sin((h * Math.PI) / 180)];
+  // The most chroma, up to c0, that sRGB holds at lightness L and this hue.
+  const reach = (L: number) => {
+    if (fromOklch(L, c0, h)) return c0;
+    let [lo, hi] = [0, c0];
+    for (let k = 0; k < 14; k++) {
+      const mid = (lo + hi) / 2;
+      if (fromOklch(L, mid, h)) lo = mid;
+      else hi = mid;
+    }
+    return lo;
+  };
   const n = Math.ceil(c0 / 0.004);
   let best: string | null = null;
   let bestD = Infinity;
-  for (let k = 0; k <= n; k++) {
-    const c = n === 0 ? 0 : (c0 * (n - k)) / n;
-    for (let i = 0; i <= 500; i++) {
-      const L = i / 500;
+  for (let i = 0; i <= 500; i++) {
+    const L = i / 500;
+    const top = reach(L);
+    for (let k = 0; k <= n; k++) {
+      const c = n === 0 ? 0 : (top * (n - k)) / n;
       if (100 * Math.hypot(L - o[0], c * ca - o[1], c * sa - o[2]) >= bestD + 0.5) continue;
       const cand = fromOklch(L, c, h);
       if (!cand || !passes(cand)) continue;
@@ -465,7 +487,7 @@ function check(file: unknown, options: ValidateOptions): Sink & { resolved: Reso
         s.warnings.push({ path, code: "theme.accent.dark_derived", message: `no dark accent: derived ${hex}, the nearest to ${accent.light} that passes on the dark surfaces; write brand.accent.dark to choose another`, fix: hex });
       } else {
         const f = rule.findings(hex);
-        const fix = f.contrast.length || !f.label || f.clashes.length ? nearestPassing(hex, rule.passes) : null;
+        const fix = f.contrast.length || !f.label ? nearestPassing(hex, rule.readable) : f.clashes.length ? nearestPassing(hex, rule.passes) : null;
         // The clash is taste since ui D-45: a warning, so the colour stays the author's.
         const tail = fix ? `; ${fix} is the nearest that passes` : "";
         const withFix = fix ? { fix } : {};
