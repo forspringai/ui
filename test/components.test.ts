@@ -95,7 +95,11 @@ test("the select draws its chevron without an image request", () => {
 });
 
 // D-27: motion, elevation and leading are tokens, as spacing is (D-14).
-test.each(sheets)("%s: durations come from the motion tokens: no bare 0.15s or 1.4s", (_file, code) => {
+test.each(sheets)("%s: durations come from the motion tokens: no bare 0.15s or 1.4s", (file, sheet) => {
+  // The one exception (D-75): the org list's arming second is not motion. It moves nothing and must hold
+  // under reduced motion, where every motion token is 0s, so it is written out, in exactly these two places.
+  const code = sheet.replace(/animation: forspring-arm 1s step-end both( !important)?;/g, "");
+  expect(sheet.match(/animation: forspring-arm 1s step-end both( !important)?;/g)?.length ?? 0).toBe(file.endsWith("components.css") ? 2 : 0);
   expect(code.match(/(?<![\w-])\d*\.?\d+m?s\b/g)).toBeNull();
   // Easing is a token or a keyword; a cubic-bezier() written here would be a curve no token names.
   expect(code).not.toMatch(/cubic-bezier\(/);

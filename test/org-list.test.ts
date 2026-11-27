@@ -28,6 +28,8 @@ describe("orgList", () => {
     const b = String(orgList({ lang: "da", action: "/pick", fields: { csrf: "c" }, orgs: [{ ...acme, value: "sealed.1" }] }));
     expect(b).toContain('<li><form method="post" action="/pick"><input type="hidden" name="csrf" value="c"><button class="org-picker-row" type="submit" name="org" value="sealed.1">');
     expect(b).toContain('<span class="meta">administrator</span>');
+    // D-75: a choice list takes no click for its first second; a list of links is not held up.
+    expect(b).toMatch(/^<ul class="org-picker-list org-picker-choices" data-forspring-org-list>/);
   });
 
   test("a tag after the name and words after the access level", () => {

@@ -520,3 +520,44 @@ describe("7. the progress bar", () => {
     expect(shot.length).toBeGreaterThan(0);
   });
 });
+
+// D-75: a choice list (consent, the org to sign in with) takes no click for its first second, so the second
+// click of a double-click trap on the page before cannot land on a row. With and without reduced motion
+// (the guard moves nothing). The arming animation is paused, then finished, so no test waits a second.
+describe("the org list's first second", () => {
+  for (const reduce of [false, true])
+    test(`a click on a choice row in its first second does nothing; after it, it chooses${reduce ? " (reduced motion)" : ""}`, async () => {
+      const page = await open({ reduce, live: false });
+      await page.goto(`${base}/dist/demo/pages/org-picker.en.html`, { waitUntil: "load" });
+      expect(await page.evaluate(() => {
+        const a = document.getAnimations().find((x) => (x as CSSAnimation).animationName === "forspring-arm")!;
+        a.pause();
+        a.currentTime = 0;
+        return a.effect!.getTiming().duration;
+      })).toBe(1000);
+      const row = page.locator("button.org-picker-row").first();
+      const box = (await row.boundingBox())!;
+      const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+      // Over the row, the list's arming layer takes the pointer, not the row.
+      expect(await page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.className, [x, y])).toContain("org-picker-choices");
+      let posted = 0;
+      page.on("request", (r) => void (r.method() === "POST" && posted++));
+      await page.mouse.click(x, y);
+      await page.mouse.dblclick(x, y);
+      await page.waitForTimeout(200);
+      expect(posted).toBe(0);
+      // A second on, the layer is gone and the row takes the click.
+      await page.evaluate(() => document.getAnimations().find((x) => (x as CSSAnimation).animationName === "forspring-arm")!.finish());
+      expect(await page.evaluate(([x, y]) => document.elementFromPoint(x!, y!)?.closest("button")?.className, [x, y])).toBe("org-picker-row");
+      const post = page.waitForRequest((r) => r.method() === "POST");
+      await page.mouse.click(x, y);
+      expect((await post).method()).toBe("POST");
+    });
+
+  test("a list of links (the bar's switcher, navigation) is not held up", async () => {
+    const page = await open({ live: false });
+    await page.goto(`${base}/dist/demo/pages/connect.en.html`, { waitUntil: "load" });
+    expect(await page.evaluate(() => document.querySelectorAll(".org-picker-choices").length)).toBe(0);
+    expect(await page.evaluate(() => document.querySelectorAll("[data-forspring-org-list]").length)).toBeGreaterThan(0);
+  });
+});

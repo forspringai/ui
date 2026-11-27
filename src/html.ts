@@ -90,7 +90,7 @@ export const PRODUCT_NAMES: Record<Product, string> = {
 };
 
 /** This package's version, the same as package.json's (a test checks), for the default brand path. */
-export const VERSION = "0.51.0";
+export const VERSION = "0.52.0";
 export type Theme = "light" | "dark";
 
 // --- Fonts ------------------------------------------------------------------------------------------
@@ -442,7 +442,9 @@ export function orgList(o: OrgListOptions): Html {
     );
   }
   if (rows.length === 0) return html``;
-  return html`<ul class="org-picker-list${o.menu ? " org-picker-menu" : ""}" data-forspring-org-list>${rows}</ul>`;
+  // A choice list takes no click for its first second (D-75): components.css's .org-picker-choices.
+  const kind = `${o.menu ? " org-picker-menu" : ""}${"links" in o ? "" : " org-picker-choices"}`;
+  return html`<ul class="org-picker-list${kind}" data-forspring-org-list>${rows}</ul>`;
 }
 
 function orgSwitcher(o: BarOrg, t: (typeof BAR)[Lang], lang: Lang): Html {

@@ -2378,3 +2378,24 @@ bar's menus; the rest were the measurer seeing what a reader does not.
   0.50.0 and nothing on 0.51.0. On content disclosures (a details with prose links or a form) it is false,
   hence menus only. ink-centre is not proposed: control-text-centre (D-42) already gates a control's label
   to 1px, and what ink-centre adds, badges and chips, had no fault to prove it on.
+
+## D-75: a choice list takes no click for its first second (0.52.0, 2026-11-27)
+
+lead-ui, from lead-forspring's security read of PulseSpring's MCP consent (forspringai/pulsespring#53): double-click
+clickjacking. A one-tap org row is a bigger target than the old Allow button, and ?org= decides which row is on
+top. A page could ask for a double click, then open the consent page in its place, and the second click would
+land on a row and give consent. orgList's choice mode (each row a POST form's button) now arms after a second.
+Every consent page gets it, with no script: SiteSpring's device and OAuth consent, PulseSpring's MCP consent,
+and orgPicker at sign-in.
+- **How:** the list carries `.org-picker-choices`, with a transparent `::after` layer over the rows. An
+  animation of the layer's visibility (`forspring-arm`, 1s, step-end) takes it away. Visibility is animated,
+  discretely, by every engine; pointer-events is not certain to be in older WebKit.
+- **Reduced motion keeps it.** It moves nothing, and a reader who asked for less motion is as open to the trap
+  as anyone. The override sits in forspring.base, beside the reduced-motion rule that sets
+  `animation: none !important`: an !important in an earlier layer beats one in a later.
+- **Not held up:** a list of links (the bar's switcher, navigation), and the keyboard, since a page cannot aim
+  a key press at a row.
+- Tests: a click and a double-click on a row in the first second post nothing, and a click after it posts.
+  Both run with and without reduced motion, the arming animation paused and then finished rather than waited
+  for. A list of links carries no layer.
+Not ui's: Cache-Control: no-store on consent pages (they carry the CSRF token) is each product's.
