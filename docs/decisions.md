@@ -2496,3 +2496,43 @@ areas/brand/live-audit-2026-11-27/. Most of what it found goes with each product
   as designed. 0.56.0 counted it and stopped the run after the first page. A page that leaves by script is now reported
   with where it went once the address has changed. Before, a fast redirect was caught before it committed and was
   reported as "another page".
+
+## D-80: the sign-in failed words, once (0.57.0, 2026-11-27)
+
+lead-ui for lead-sitespring: suite-signin returns only a refusal reason, so each product drew its own sign-in failed
+page, with different words for each reason and none for most. Peter met binding_mismatch on his phone: a sign-in started
+in an app's own browser and finished in Safari.
+- **`SIGN_IN_REFUSALS`** (`@forspring/ui/refusals`, no markup) holds every suite-signin refusal. It is CallbackRefusal
+  at suite-signin 972c94c plus the start's rate_limited: 12 reasons.
+  - Each has a title, a text and a fix, Danish first, then English.
+  - Each has the status a page answers with: 429 to wait, 502 when the account did not answer, 401 to sign in again,
+    403 when refused, otherwise 400.
+  - The words never name a command (D-35).
+  - binding_mismatch and rate_limited start from SiteSpring's texts.
+- **`signInRefusal(reason, lang)`** takes any string, since a reason from a URL is untrusted. One this version does not
+  know gets `SIGN_IN_REFUSAL_FALLBACK` ("Login mislykkedes" / "Sign-in failed") and reason "unknown".
+- **`signInFailedPage({ lang, reason, retryHref?, detail?, ref? })`** (`@forspring/ui/pages`) is refusedPage's card:
+  - the title as h1, the text, then product_refused's detail from the product's onSignIn hook, escaped;
+  - the fix;
+  - "Log ind igen" / "Sign in again" when the product gives its start ("Prøv igen" / "Try again" after a wait or an
+    unanswered account);
+  - the ref for support.
+- **Tests:**
+  - the reasons match suite-signin's list;
+  - both languages are complete, with distinct titles;
+  - no command in any text;
+  - unknown and hostile reasons fall back;
+  - the page with its status, detail escaping, buttons and ref.
+
+## D-81: control-text-centre holds across platforms (0.57.0, 2026-11-27)
+
+t21, verifying FlowSpring on a Mac, saw ui-audit fail ui's own bar summary. It was 11.1 px above the label and 10 below
+at 1280 (17.1 and 16 at 380), on macOS Chromium, light and dark. The same page passes on Linux.
+- **The cause:** the ink's centre sat 0.55 px from the box's. Two platforms rasterise the same font about half a pixel
+  apart, and the rule allowed 0.51.
+- **The fix:** it now allows the ink's centre 0.75 px from the box's (above and below up to 1.5 px apart). A label a
+  whole pixel off (above and below 2 px apart) still fails.
+- **Why not CSS:** `text-box-trim` could not fix it in components.css. It applies to a block container's lines, not to
+  the products menu's bare text in a flex summary, and Firefox does not support it.
+- **Effect:** every product's bar has the same summary, so the patch fixes the Mac run for all of them with the bump.
+- **Tests:** the Mac case (11.1/10) and 1.5 px apart pass; 9/11 still fails.

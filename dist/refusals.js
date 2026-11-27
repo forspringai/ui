@@ -133,3 +133,87 @@ export function agentFix(reason, lang = "en") {
     const w = REFUSALS[reason][lang];
     return w.agent ? `${w.fix} ${w.agent}` : w.fix;
 }
+const AGAIN = { da: "Start login forfra.", en: "Start signing in again." };
+export const SIGN_IN_REFUSALS = {
+    rate_limited: {
+        status: 429,
+        da: { title: "For mange login lige nu", text: "Der er startet mange login fra dit netværk lige nu.", fix: "Vent et minut, og prøv igen." },
+        en: { title: "Too many sign-ins right now", text: "Many sign-ins were started from your network just now.", fix: "Wait a minute and try again." },
+    },
+    account_error: {
+        status: 400,
+        da: { title: "Login blev ikke gennemført", text: "Din Forspring-konto stoppede login, fx fordi det blev annulleret.", fix: "Prøv at logge ind igen." },
+        en: { title: "The sign-in was not completed", text: "Your Forspring account stopped the sign-in, for example because it was cancelled.", fix: "Try signing in again." },
+    },
+    bad_request: {
+        status: 400,
+        da: { title: "Login-linket var ufuldstændigt", text: "Siden fik ikke alt det, den skal bruge for at logge dig ind.", fix: AGAIN.da },
+        en: { title: "The sign-in link was incomplete", text: "This page did not get everything it needs to sign you in.", fix: AGAIN.en },
+    },
+    no_login: {
+        status: 400,
+        da: { title: "Dette login er allerede brugt", text: "Linket hører til et login, der allerede er brugt, eller som vi ikke kender.", fix: AGAIN.da },
+        en: { title: "This sign-in has been used already", text: "The link belongs to a sign-in that has been used already, or that we don't know.", fix: AGAIN.en },
+    },
+    expired: {
+        status: 400,
+        da: { title: "Login udløb", text: "Der gik mere end 10 minutter, fra login blev startet, til det blev gennemført.", fix: AGAIN.da },
+        en: { title: "The sign-in expired", text: "More than 10 minutes passed between starting the sign-in and finishing it.", fix: AGAIN.en },
+    },
+    binding_mismatch: {
+        status: 400,
+        da: {
+            title: "Login blev startet i en anden browser",
+            text: "Et login skal gennemføres i den browser, det blev startet i. Det sker fx, når et link åbner i en apps egen browser.",
+            fix: "Åbn siden i den browser, du vil bruge (fx Safari), og gennemfør login dér.",
+        },
+        en: {
+            title: "The sign-in was started in another browser",
+            text: "A sign-in has to finish in the browser it was started in. This happens, for example, when a link opens in an app's own browser.",
+            fix: "Open this page in the browser you want to use (for example Safari) and finish signing in there.",
+        },
+    },
+    iss_mismatch: {
+        status: 400,
+        da: { title: "Svaret kom ikke fra Forspring", text: "Svaret på dit login kom ikke fra din Forspring-konto, så vi brugte det ikke.", fix: AGAIN.da },
+        en: { title: "The answer did not come from Forspring", text: "The answer to your sign-in did not come from your Forspring account, so we did not use it.", fix: AGAIN.en },
+    },
+    token_exchange_failed: {
+        status: 502,
+        da: { title: "Vi kunne ikke gennemføre login", text: "Din Forspring-konto svarede ikke, da vi skulle gennemføre login.", fix: "Prøv igen om lidt." },
+        en: { title: "We could not finish the sign-in", text: "Your Forspring account did not answer when we tried to finish the sign-in.", fix: "Try again in a moment." },
+    },
+    invalid_id_token: {
+        status: 400,
+        da: { title: "Login kunne ikke bekræftes", text: "Svaret fra din Forspring-konto bestod ikke vores kontrol.", fix: AGAIN.da },
+        en: { title: "The sign-in could not be confirmed", text: "The answer from your Forspring account did not pass our checks.", fix: AGAIN.en },
+    },
+    email_not_verified: {
+        status: 403,
+        da: { title: "Din e-mail er ikke bekræftet", text: "Din Forspring-konto har ingen bekræftet e-mailadresse.", fix: "Bekræft din e-mail fra mailen fra Forspring, og log ind igen." },
+        en: { title: "Your email is not confirmed", text: "Your Forspring account has no confirmed email address.", fix: "Confirm your email from Forspring's mail, then sign in again." },
+    },
+    auth_too_old: {
+        status: 401,
+        da: { title: "Log ind igen", text: "Det er for længe siden, du sidst loggede ind på din Forspring-konto.", fix: "Log ind igen, så kommer du tilbage hertil." },
+        en: { title: "Please sign in again", text: "It has been too long since you last signed in to your Forspring account.", fix: "Sign in again and you will come back here." },
+    },
+    product_refused: {
+        status: 403,
+        da: { title: "Du kan ikke logge ind her", text: "Din Forspring-konto er i orden, men dette produkt lukkede dig ikke ind.", fix: "Spørg en administrator i din organisation." },
+        en: { title: "You can't sign in here", text: "Your Forspring account is fine, but this product did not let you in.", fix: "Ask an admin in your organisation." },
+    },
+};
+/** For a reason this package does not know yet (a newer suite-signin): the general words. */
+export const SIGN_IN_REFUSAL_FALLBACK = {
+    status: 400,
+    da: { title: "Login mislykkedes", text: "Noget gik galt, mens vi loggede dig ind.", fix: AGAIN.da },
+    en: { title: "Sign-in failed", text: "Something went wrong while signing you in.", fix: AGAIN.en },
+};
+export const SIGN_IN_REFUSAL_REASONS = Object.keys(SIGN_IN_REFUSALS);
+export const isSignInRefusal = (s) => typeof s === "string" && Object.hasOwn(SIGN_IN_REFUSALS, s);
+/** The words for a sign-in refusal (any string: a reason from the URL is untrusted), and its HTTP status. */
+export function signInRefusal(reason, lang) {
+    const info = isSignInRefusal(reason) ? SIGN_IN_REFUSALS[reason] : SIGN_IN_REFUSAL_FALLBACK;
+    return { ...info[lang], status: info.status, reason: isSignInRefusal(reason) ? reason : "unknown" };
+}

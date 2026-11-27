@@ -15,7 +15,7 @@ When to use which helper, and how forms and errors behave, is [docs/usage.md](do
 By git tag; each product pins a version and upgrades on purpose (D-2):
 
 ```
-pnpm add github:forspringai/ui#v0.56.1
+pnpm add github:forspringai/ui#v0.57.0
 ```
 
 Install with pnpm, or npm 11 or later (Node 24). npm 10 crashes while preparing a git dependency
@@ -826,6 +826,7 @@ apart from the ground behind it). With every menu open, `menu-row-inset` (D-76) 
 across a menu (half its width or more) off the inset the menu's other rows share, by more than 1px.
 A probe of your own can call `probePopovers(page, layoutScale(rhythm))`
 from `@forspring/ui/audit` after it opens a state.
+**New in 0.57 (D-80):** `signInFailedPage()` and `signInRefusal()`: the sign-in failed words, once, for every suite-signin refusal, in Danish and English. `control-text-centre` allows 0.75 px (D-81), so the bar passes on macOS as on Linux.
 **New in 0.56 (D-79):** `.go` links are a 24 px target at every width; `--redlines` also saves each page as audited.
 **New in 0.55 (D-78):** `ui-audit`'s `button-shape` (warning): every button is one of the inventory's sizes; a page that leaves by script after load is a `page-load` error for that page, not a crashed run.
 **New in 0.54 (D-77):** `consentHeaders()` (`@forspring/ui/html`) for a consent page: `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `no-store`; `ui-audit`'s `consent-headers` fails a choice page without them.

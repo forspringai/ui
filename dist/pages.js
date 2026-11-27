@@ -7,7 +7,7 @@
 //   new Response(String(shell({ ...bar, ...page })), { status: page.status, headers })
 //
 // The bodies are one card each, so a rich app can draw them in its own frame (the React wrappers).
-import { REFUSALS } from "./refusals.js";
+import { REFUSALS, signInRefusal } from "./refusals.js";
 import { ACCESS_LEVEL_NAMES, button, errorRef, html, orgList, orgMark, safeHref } from "./html.js";
 const T = {
     da: {
@@ -34,6 +34,7 @@ const T = {
         signIn: "Log ind",
         billing: "Gå til betaling",
         retry: "Prøv igen",
+        signInAgain: "Log ind igen",
         agent: "Fra en agent:",
     },
     en: {
@@ -60,6 +61,7 @@ const T = {
         signIn: "Sign in",
         billing: "Go to billing",
         retry: "Try again",
+        signInAgain: "Sign in again",
         agent: "From an agent:",
     },
 };
@@ -151,6 +153,23 @@ export function refusedPage(o) {
     if (o.ref)
         parts.push(errorRef({ lang: o.lang, ref: o.ref }));
     return page(r.status, words.title, "refused", html `<h1>${words.title}</h1>${parts}`, o.reason);
+}
+/**
+ * The sign-in failed page (D-80): the same words in every product for each suite-signin refusal, Danish first,
+ * never a command (D-35), with "Sign in again" when the product gives its start. Status as the refusal's.
+ */
+export function signInFailedPage(o) {
+    const t = T[o.lang];
+    const w = signInRefusal(o.reason, o.lang);
+    const parts = [html `<p>${w.text}</p>`];
+    if (o.detail)
+        parts.push(html `<p>${o.detail}</p>`);
+    parts.push(html `<p>${w.fix}</p>`);
+    if (o.retryHref)
+        parts.push(html `<div class="actions">${button({ label: w.reason === "rate_limited" || w.reason === "token_exchange_failed" ? t.retry : t.signInAgain, href: o.retryHref })}</div>`);
+    if (o.ref)
+        parts.push(errorRef({ lang: o.lang, ref: o.ref }));
+    return { status: w.status, title: w.title, narrow: true, body: html `<div class="card std-page refused" data-reason="${w.reason}">${html `<h1>${w.title}</h1>`}${parts}</div>` };
 }
 /** The account did not answer: 503, never a guess (hub one-way-in). The same as refusedPage's account_unavailable. */
 export function accountUnavailablePage(o) {
